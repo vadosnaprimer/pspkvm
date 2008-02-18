@@ -145,7 +145,7 @@ class CldcPlatformRequest implements PlatformRequest {
             throws ConnectionNotFoundException {
         if ("".equals(URL)) {
             if (Configuration.getIntProperty(
-                    "useJavaInstallerForPlaformRequest", 0) != 0) {
+                    "useJavaInstallerForPlaformRequest", 1) != 0) {
                 /*
                  * This is request to try to cancel the last request.
                  *
@@ -182,7 +182,7 @@ class CldcPlatformRequest implements PlatformRequest {
          * or the native installer will not be launched.
          */
         if (Configuration.getIntProperty(
-                "useJavaInstallerForPlaformRequest", 0) != 0) {
+                "useJavaInstallerForPlaformRequest", 1) != 0) {
             if (isMidletSuiteUrl(URL)) {
                 return dispatchMidletSuiteUrl(URL);
             }
