@@ -345,11 +345,12 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
 
     struct in_addr addr;
     (void)pContext;
-    
+
+    printf("javacall_network_gethostbyname_start: %s\n", hostname);
     if(sceNetInetInetAton(hostname, &addr) != 0) {
-    	char* ip = inet_ntoa(addr);
-    	if (ip && (strlen(ip) < maxLen)) {
-           strncpy(pAddress, ip, maxLen);
+    	if (sizeof(addr) <= maxLen) {
+           memcpy(pAddress, &addr.s_addr, sizeof(addr));
+           *pLen = sizeof(addr);
     	    return JAVACALL_OK;
     	}
     }
