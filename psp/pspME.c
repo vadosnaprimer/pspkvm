@@ -2,23 +2,28 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <pspthreadman.h>
+#include <psprtc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include <pspiofilemgr.h>
 #include <pspiofilemgr_fcntl.h>
+#include <psputility_sysparam.h>
 
 #include <javacall_keypress.h>
 #include <javacall_lifecycle.h>
 #include <javacall_file.h>
 
 /* Define the module info section */
-PSP_MODULE_INFO("pspME", 0, 1, 1);
+PSP_MODULE_INFO("pspME", 0x1000, 1, 1);
 
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
+PSP_MAIN_THREAD_ATTR(0);
 
 /* Define printf, just to make typing easier */
 //#define printf	pspDebugScreenPrintf
@@ -180,19 +185,21 @@ int KeyThread(SceSize args, void *argp)
 	return 0;
 }
 
-int main(void)
+int java_main(void)
 {
 	SceUID id;
 
 	//pspDebugScreenInit();
 	
 	SetupCallbacks();
-	
+
 	id = sceKernelSetAlarm(1000000, alarm_handler, (void*)0);
 	if (id < 0) {
 		printf("sceKernelSetAlarm error!\n");
+		return -1;
 	}
-	
+
+	printf("timezone:%s\n", javacall_time_get_local_timezone());
 	printf("Wait..\n");
 	int thid = sceKernelCreateThread("key_thread", KeyThread,
 				     0x11, 0xFA0, 0, 0);
@@ -205,6 +212,35 @@ int main(void)
 	}
 	
 	javacall_media_finalize();
-	sceKernelExitGame();	
 	return 0;
 }
+
+int main(void)
+{
+	SceUID thid;
+	printf("Loading network modules\n");
+    	if(pspSdkLoadInetModules() < 0)	{	
+    		printf("Error, could not load inet modules\n");	
+    		sceKernelExitGame();	
+    		return -1;
+    	}
+
+    	printf("Network module loaded\n");
+    	
+	/* create user thread */
+	thid = sceKernelCreateThread("Java Thread", java_main,
+											0x2f, // default priority
+											256 * 1024, // stack size (256KB is regular default)
+											PSP_THREAD_ATTR_USER, NULL); //# user mode
+
+	// start user thread, then wait for it to do everything else
+	sceKernelStartThread(thid, 0, 0);
+	sceKernelWaitThreadEnd(thid, NULL);
+
+	/* quick clean exit */
+	sceKernelExitGame();
+
+	return 0;
+
+}
+

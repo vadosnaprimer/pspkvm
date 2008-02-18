@@ -443,6 +443,12 @@ char * javacall_inet_ntoa(void *address);
  */
 javacall_result javacall_server_socket_set_notifier(javacall_handle handle, javacall_bool set);
 
+char* javacall_network_get_profile(int index);
+
+javacall_result javacall_network_connect_profile(int index);
+javacall_result javacall_network_connect_state();
+void javacall_network_disconnect();
+
 /** @} */
 
 /** @} */

@@ -44,6 +44,8 @@ interface ApplicationManager {
     /** Launch the CA manager. */
     void launchCaManager();
 
+    void launchWifiManager();
+
     /**
      * Launches a suite.
      *

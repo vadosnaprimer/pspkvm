@@ -393,7 +393,7 @@ pcsl_file_openfilelist(const pcsl_string * string) {
     if (PCSL_STRING_OK != pcsl_string_convert_from_utf8 ((jbyte *)wd, 1, &path))
       return NULL;
   } else {
-    if (PCSL_STRING_OK != pcsl_string_substring (string, 0, pathLen, &path))
+    if (PCSL_STRING_OK != pcsl_string_substring (string, 0, pathLen+1, &path)) //just copy
       return NULL;
   }
 

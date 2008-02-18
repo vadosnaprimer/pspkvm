@@ -94,7 +94,7 @@ USE_CONTROL_ARGS_FROM_JAD       = false
 USE_GCOV                = false
 
 # SERVER SOCKET
-USE_SERVER_SOCKET       = true
+USE_SERVER_SOCKET       = false
 
 # JPEG decoding for putpixel
 USE_JPEG                = true

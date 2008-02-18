@@ -111,6 +111,9 @@ class AppManagerUI extends Form
     private static final String INSTALLER =
         "com.sun.midp.installer.GraphicalInstaller";
 
+    private static final String WIFI_SELECTOR_APP =
+    	 "com.sun.midp.appmanager.WifiSelector";
+
     /**
      * The font used to paint midlet names in the AppSelector.
      * Inner class cannot have static variables thus it has to be here.
@@ -201,6 +204,10 @@ class AppManagerUI extends Form
         new Command(Resource.getString(ResourceConstants.LAUNCH),
                     Command.ITEM, 1);
 
+    private Command launchWifiSetupCmd =
+        new Command(Resource.getString(ResourceConstants.LAUNCH),
+                    Command.ITEM, 1);
+
     /** Command object for "Launch". */
     private Command launchCmd =
         new Command(Resource.getString(ResourceConstants.LAUNCH),
@@ -223,7 +230,6 @@ class AppManagerUI extends Form
                     getString(ResourceConstants.APPLICATION_SETTINGS),
                     Command.ITEM, 5);
 
-
     /** Command object for "Cancel" command for the remove form. */
     private Command cancelCmd =
         new Command(Resource.getString(ResourceConstants.CANCEL),
@@ -237,7 +243,6 @@ class AppManagerUI extends Form
     Command backCmd =
         new Command(Resource.getString(ResourceConstants.BACK),
                     Command.BACK, 1);
-
 
     /** Command object for "Bring to foreground". */
     private Command fgCmd = new Command(Resource.getString
@@ -399,7 +404,7 @@ class AppManagerUI extends Form
      * @param s the Displayable the command was on.
      */
     public void commandAction(Command c, Displayable s) {
-
+    
         if (c == exitCmd) {
             if (s == this) {
                 manager.shutDown();
@@ -480,6 +485,10 @@ class AppManagerUI extends Form
 
             manager.launchCaManager();
 
+        } else if (c == launchWifiSetupCmd) {
+        
+            manager.launchWifiManager();
+            
         } else if (c == launchCmd) {
 
             launchMidlet(msi);
@@ -561,6 +570,7 @@ class AppManagerUI extends Form
                 if (ci.msi.equals(midlet)) {
                     ci.removeCommand(launchCmd);
                     ci.removeCommand(launchInstallCmd);
+                    ci.removeCommand(launchWifiSetupCmd);
 
                     if (caManagerIncluded) {
                         ci.removeCommand(launchCaManagerCmd);
@@ -625,6 +635,9 @@ class AppManagerUI extends Form
                         ci.msi.midletToRun != null &&
                         ci.msi.midletToRun.equals(CA_MANAGER)) {
                         ci.setDefaultCommand(launchCaManagerCmd);
+                    } else if (ci.msi.midletToRun != null &&
+                        ci.msi.midletToRun.equals(WIFI_SELECTOR_APP)) {
+                        ci.setDefaultCommand(launchWifiSetupCmd);
                     } else {
                         if (ci.msi.enabled) {
                             ci.setDefaultCommand(launchCmd);
@@ -814,6 +827,23 @@ class AppManagerUI extends Form
             }
         }
 
+        /**
+         * Wifi selector
+         **/
+        if (size() > 2) {
+            msi = ((MidletCustomItem)get(2)).msi;
+        }
+ 
+        if (msi == null || msi.midletToRun == null ||
+            !msi.midletToRun.equals(WIFI_SELECTOR_APP)) {
+        
+            msi = new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
+                    WIFI_SELECTOR_APP,
+                    "Network Setup",
+                    true);
+            append(msi);
+        }
+        
         // Add the rest of the installed midlets
         for (int lowest, i = 0; i < suiteIds.length; i++) {
 
@@ -910,6 +940,9 @@ class AppManagerUI extends Form
             suiteInfo.midletToRun.equals(CA_MANAGER)) {
             // setDefaultCommand will add default command first
             ci.setDefaultCommand(launchCaManagerCmd);
+        } else if (suiteInfo.midletToRun != null &&
+            suiteInfo.midletToRun.equals(WIFI_SELECTOR_APP)) {
+            ci.setDefaultCommand(launchWifiSetupCmd);
         } else {
             ci.addCommand(infoCmd);
             ci.addCommand(removeCmd);
@@ -935,24 +968,34 @@ class AppManagerUI extends Form
     private void remove(RunningMIDletSuiteInfo suiteInfo) {
         RunningMIDletSuiteInfo msi;
 
+        System.out.println("AppManagerUI.remove");
         if (suiteInfo == null) {
+            System.out.println("suiteInfo == null?????");
             // Invalid parameter, should not happen.
             return;
         }
 
         // the last item in AppSelector is time
         for (int i = 0; i < size(); i++) {
+        	System.out.println("loop "+i);
             msi = (RunningMIDletSuiteInfo)((MidletCustomItem)get(i)).msi;
             if (msi == suiteInfo) {
+            	  System.out.println("removeMissedTransaction....");
                 PAPICleanUp.removeMissedTransaction(suiteInfo.suiteId);
-
+	          System.out.println("removeMissedTransaction ok");
                 if (msi.proxy != null) {
+                	System.out.println("destroyMidlet...");
                     msi.proxy.destroyMidlet();
+                    System.out.println("destroyMidlet ok");
                 }
 
                 try {
+                    System.out.println("midletSuiteStorage.remove...");
                     midletSuiteStorage.remove(suiteInfo.suiteId);
+                    System.out.println("midletSuiteStorage.remove ok");
                 } catch (Throwable t) {
+                    System.out.println("midletSuiteStorage.remove exception:");
+                    t.printStackTrace();
                     if (t instanceof MIDletSuiteLockedException) {
                         String[] val = new String[1];
                         val[0] = suiteInfo.displayName;

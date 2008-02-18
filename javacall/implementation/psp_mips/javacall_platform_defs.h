@@ -31,6 +31,8 @@
  * @brief Platform-dependent definitions for javacall
  */
 
+#include <sys/syslimits.h>
+
 /**
  * @defgroup Platform Platfrom specific Common Javacall API Definitions
  * @ingroup Common
@@ -94,7 +96,7 @@ typedef long long javacall_int64;
  * @def JAVACALL_MAX_FILE_NAME_LENGTH
  * Maximal length of filename supported 
  */
-#define JAVACALL_MAX_FILE_NAME_LENGTH         256
+#define JAVACALL_MAX_FILE_NAME_LENGTH         PATH_MAX
 
 /**
  * @def JAVACALL_MAX_ILLEGAL_FILE_NAME_CHARS

@@ -56,6 +56,11 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/MIDletSwitcher.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/SplashScreen.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/RunningMIDletSuiteInfo.java \
-    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/CaManager.java
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/CaManager.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/WifiSelector.java
 
+vpath % $(APPMANAGER_UI_DIR)/native
+
+SUBSYSTEM_AMS_NATIVE_FILES += \
+    wifiselector.c
 
