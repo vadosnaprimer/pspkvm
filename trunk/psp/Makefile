@@ -2,7 +2,7 @@ ifeq ($(ROOT),)
 ROOT = ..
 endif
 
-TARGET = pspME
+TARGET = pspkvm
 OBJS = pspkvm.o
 
 INCDIR = 
