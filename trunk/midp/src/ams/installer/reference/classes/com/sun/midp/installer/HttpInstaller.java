@@ -114,6 +114,8 @@ public class HttpInstaller extends Installer {
          * reject the resource at the client after check the media-type so
          * if the type is JAR a JAR only install can be performed.
          */
+
+        System.out.println("downloadJAD from:"+info.jadUrl);
         downloadResource(info.jadUrl, extraFieldKeys,
                          extraFieldValues,
                          acceptableTypes, false, false, bos, encoding,

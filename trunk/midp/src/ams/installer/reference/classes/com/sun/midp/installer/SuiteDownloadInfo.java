@@ -41,7 +41,11 @@ class SuiteDownloadInfo {
     /** label to display to the User for this suite */
     String label;
 
+    /** If it's a directory of local fs*/
     boolean dir;
+    
+    /** If it's an entry refer to http url */
+    boolean http;
 
     /**
      * Read a HTML page and pickout the links for MIDlet suites.
@@ -63,6 +67,7 @@ class SuiteDownloadInfo {
         while (info != null) {
             if (info.url.endsWith(".jad") ||
                     info.url.endsWith(".jar")) {
+                info.http = true;
                 suites.addElement(info);
             }
 
@@ -107,6 +112,7 @@ class SuiteDownloadInfo {
             if (info.url.endsWith(".jad") ||
                     info.url.endsWith(".jar") ||
                     (info.dir && !info.label.equals("."))) {
+                info.http = false;
                 suites.addElement(info);
             }
           }

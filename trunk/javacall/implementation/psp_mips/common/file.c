@@ -20,7 +20,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <pspiofilemgr.h>
-#define MAX_FILE_NAME_LEN 256
+#define MAX_FILE_NAME_LEN JAVACALL_MAX_FILE_NAME_LENGTH
 
 char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen) {
     static char result[MAX_FILE_NAME_LEN+1];
@@ -225,7 +225,7 @@ javacall_int64 javacall_file_sizeofopenfile(javacall_handle handle) {
  * @return size of file in bytes if successful, -1 otherwise 
  */
 javacall_int64 javacall_file_sizeof(const javacall_utf16 * fileName, int fileNameLen) {
-/*
+
     javacall_handle handle = 0;
     int flags = 0;
     
@@ -237,7 +237,7 @@ javacall_int64 javacall_file_sizeof(const javacall_utf16 * fileName, int fileNam
     javacall_file_close(handle);
 
     return size;
-*/
+/*
     int res;
     SceIoStat stat;  
     char* pszOsFilename = javacall_UNICODEsToUtf8(fileName, fileNameLen);
@@ -252,7 +252,7 @@ javacall_int64 javacall_file_sizeof(const javacall_utf16 * fileName, int fileNam
     } else {
        return stat.st_size;
     }
-
+*/
 }
 
 /**

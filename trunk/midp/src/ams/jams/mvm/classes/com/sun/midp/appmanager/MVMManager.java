@@ -67,6 +67,9 @@ public class MVMManager extends MIDlet
     /** Constant for the CA manager class name. */
     private static final String CA_MANAGER =
         "com.sun.midp.appmanager.CaManager";
+    
+    private static final String WIFI_SELECTOR_APP =
+    	 "com.sun.midp.appmanager.WifiSelector";
 
     /** True until constructed for the first time. */
     private static boolean first = true;
@@ -256,6 +259,17 @@ public class MVMManager extends MIDlet
             MIDletSuiteUtils.execute(MIDletSuite.INTERNAL_SUITE_ID,
                 CA_MANAGER,
                 Resource.getString(ResourceConstants.CA_MANAGER_APP));
+        } catch (Exception ex) {
+            displayError.showErrorAlert(Resource.getString(
+                ResourceConstants.CA_MANAGER_APP), ex, null, null);
+        }
+    }
+
+    public void launchWifiManager() {
+        try {
+            MIDletSuiteUtils.execute(MIDletSuite.INTERNAL_SUITE_ID,
+                WIFI_SELECTOR_APP,
+                "Wifi Manager");
         } catch (Exception ex) {
             displayError.showErrorAlert(Resource.getString(
                 ResourceConstants.CA_MANAGER_APP), ex, null, null);

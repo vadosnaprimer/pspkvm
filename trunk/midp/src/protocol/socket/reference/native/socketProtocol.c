@@ -138,7 +138,7 @@ Java_com_sun_midp_io_j2me_socket_Protocol_open0(void) {
         }
     } else {  /* Reinvocation after unblocking the thread */
         pcslHandle = (void *) info->descriptor;
-        context = (void *)info->status;
+        context = (void *)info->pResult;
 
         if (getMidpSocketProtocolPtr(thisObject)->handle != (jint)pcslHandle) {
             REPORT_CRIT2(LC_PROTOCOL, 

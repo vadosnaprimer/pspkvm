@@ -89,9 +89,10 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     /** settings database */
     public static final String SETTINGS_STORE = "settings";
     /** record id of selected midlet */
-    public static final int URL_RECORD_ID = 1;
+    public static final int HTTP_URL_RECORD_ID = 1;
     /** record is of the last installed midlet */
     public static final int SELECTED_MIDLET_RECORD_ID = 2;
+    public static final int LOCAL_URL_RECORD_ID = 3;
 
     /** The installer that is being used to install or update a suite. */
     private Installer installer;
@@ -119,6 +120,8 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     private String finishingMessage;
     /** ID of the storage where the new midlet suite will be installed. */
     private int storageId = Constants.INTERNAL_STORAGE_ID;
+
+    private boolean http_install;
 
     /** Content handler specific install functions. */
     CHManager chmanager;
@@ -407,9 +410,10 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
 
         isFileInstaller = getAppProperty("arg-3");
         if (isFileInstaller == null || !isFileInstaller.equals("true")) {
+            http_install = true;
             installer = new HttpInstaller();
-            return;
         } else {
+            http_install = false;
             installer = new FileInstaller();
         }
         
@@ -583,10 +587,13 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
 
             try {
                 if (settings.getNumRecords() == 0) {
-                    // space for a URL
+                    // space for a HTTP URL
                     settings.addRecord(null, 0, 0);
 
                     // space for current MIDlet Suite name
+                    settings.addRecord(null, 0, 0);
+
+                    // space for a local URL
                     settings.addRecord(null, 0, 0);
                 }
             } finally {
@@ -601,6 +608,10 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
         }
     }
 
+    public static Exception saveSettings(String url, int curMidlet) {
+        return saveSettings(false, url, curMidlet);
+    }
+    
     /**
      * Save the settings the user entered.
      * <p>
@@ -610,7 +621,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      * @param curMidlet suiteId of the currently selected midlet
      * @return the Exception that may have been thrown, or null
      */
-    public static Exception saveSettings(String url, int curMidlet) {
+    public static Exception saveSettings(boolean http_install, String url, int curMidlet) {
         Exception ret = null;
 
         AccessController.checkPermission(Permissions.AMS_PERMISSION_NAME);
@@ -629,7 +640,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
             if (url != null) {
                 dos.writeUTF(url);
                 data = bas.toByteArray();
-                settings.setRecord(URL_RECORD_ID, data, 0, data.length);
+                settings.setRecord(http_install?HTTP_URL_RECORD_ID:LOCAL_URL_RECORD_ID, data, 0, data.length);
             }
 
             // Save the current midlet even if its id is
@@ -1561,7 +1572,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
             successMessage = theSuccessMessage;
             update = updateFlag;
             noConfirmation = noConfirmationFlag;
-            jarOnly = true;
+            jarOnly = !theParent.http_install;
         }
 
         /**
@@ -1610,6 +1621,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
 
                         parent.exit(true);
                     } catch (InvalidJadException ije) {
+                        ije.printStackTrace();
                         int reason = ije.getReason();
                         if (reason == InvalidJadException.INVALID_JAD_TYPE) {
                             // media type of JAD was wrong, it could be a JAR
@@ -1665,6 +1677,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                         }
 
                         msg = ex.getClass().getName() + ": " + ex.getMessage();
+                        ex.printStackTrace();
                     }
 
                 } while (tryAgain);

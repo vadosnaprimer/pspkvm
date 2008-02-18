@@ -22,23 +22,49 @@
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
  */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @file
- *
- * Stub implementation of pcsl_network.h for platforms that support the winsock 
- * API.
- *
- * For all functions, the "handle" is the winsock handle (an int)
- * cast to void *.  Since winsock reads and writes to sockets are synchronous,
- * the context for reading and writing is always set to NULL.
- */
-   
-#include "javacall_network.h" 
-    
+#include "javacall_socket.h"
+#include "javacall_network.h"   
+#include "javacall_logging.h" 
+
+#include <pspkernel.h>
+#include <pspsdk.h>
+#include <netdb.h>
+#include <sys/socket.h> 
+#include <netinet/tcp.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <pspnet.h>
+#include <pspnet_inet.h>
+#include <pspnet_apctl.h>
+#include <pspnet_resolver.h>
+#include <psputility.h>
+#include <psputility_netparam.h>
+
+static int network_initialized = 0;
+
+
+typedef struct {
+	int ok;
+	int ip_len;
+	int max_ip_len;	
+	SceUID res_thread_id;
+	int resolver_id;
+	char ip[32];
+	char hostname[1024];
+} DNSHandle;
+extern void sockets_init();
 /**
  * Performs platform-specific initialization of the networking system.
  * Will be called ONCE during VM startup before opening a network connection.
@@ -49,9 +75,83 @@ extern "C" {
  * @retval JAVACALL_FAIL    fail
  */
 javacall_result javacall_network_init_start(void) {
-    return JAVACALL_OK;                                        
+    int err;
+    int start = 0;
+    
+    if (network_initialized) {
+    	return JAVACALL_OK;
+    }
+    
+    sockets_init();
+    if((err = pspSdkInetInit())) {
+    	printf(": Error, could not initialise the network %08X\n", err);		
+	return JAVACALL_FAIL;
+    }
+
+    /*
+    while (sceUtilityCheckNetParam(start) == 0) {
+    	sceUtilityGetNetParam(start, PSP_NETPARAM_NAME, (netData *)confname);
+    	printf("Networking initializing: Found wifi config (%s)\n", confname);
+    	start++;    
+    }
+   
+    if (!connect_to_apctl(5)) {
+    	return JAVACALL_FAIL;
+    } else {
+    	network_initialized = 1;
+    	return JAVACALL_OK; 
+    }
+    */
+
+    network_initialized = 1;
+    return JAVACALL_OK;
 }
 
+ static char confname[128];
+char* javacall_network_get_profile(int index) {
+    if (sceUtilityCheckNetParam(index) == 0) {
+    	sceUtilityGetNetParam(index, PSP_NETPARAM_NAME, (netData *)confname);
+    	printf("Networking initializing: Found wifi config (%s)\n", confname);
+    	return confname;
+    }
+
+    return NULL;
+}
+
+javacall_result javacall_network_connect_profile(int index) {
+    int i, err, n = 0;
+    for (i = 1; i < 128; i++) {
+    	if (sceUtilityCheckNetParam(i) == 0) {
+    	    n++;
+    	    if (n == index) {
+    	        printf("Connecting to %d ...\n", i);
+               if (err = sceNetApctlConnect(i) != 0) {		
+		     printf(": sceNetApctlConnect returns %08X\n", err);
+    	            return JAVACALL_FAIL;
+               } else {
+                   return JAVACALL_OK; 
+               }
+    	    }
+    	}
+    }
+    
+    return JAVACALL_FAIL;
+}
+
+javacall_result javacall_network_connect_state(int* state) {
+    int err = sceNetApctlGetState(state);
+    if (err != 0)		{		
+        printf(": sceNetApctlGetState returns $%x\n", err);
+        return JAVACALL_FAIL;		
+    } else {
+        printf(" sceNetApctlGetState state %d\n", *state);
+        return JAVACALL_OK;
+    }
+}
+
+void javacall_network_disconnect() {
+    sceNetApctlDisconnect();
+}
 
 /**
  * Finishes platform-specific initialization of the networking system.
@@ -63,10 +163,9 @@ javacall_result javacall_network_init_start(void) {
  * @retval JAVACALL_FAIL    fail
  */
 javacall_result javacall_network_init_finish(void) {
-    return JAVACALL_OK;                                        
+    return JAVACALL_OK;
 }  
-
-
+    
 /**
  * Performs platform-specific finalization of the networking system.
  * Will be called ONCE during VM shutdown.
@@ -77,7 +176,7 @@ javacall_result javacall_network_init_finish(void) {
  * @retval JAVACALL_FAIL    fail
  */
 javacall_result javacall_network_finalize_start(void){
-    return JAVACALL_OK;
+    return JAVACALL_FAIL;
 }
 
 /**
@@ -89,21 +188,139 @@ javacall_result javacall_network_finalize_start(void){
  */
 javacall_result javacall_network_finalize_finish(void)
 {
-    return JAVACALL_OK;
+    return JAVACALL_FAIL;
 }
 
-  
-/**
- * Performs platform-specific finalizaiton of the networking system.
- * Will be called ONCE during VM shutdown!
- * 
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    fail
- */
-javacall_result javacall_network_finalize(void) {
-    return JAVACALL_OK;                                        
-}  
-    
+int monitor_thread(SceSize args, void *argp) {
+	DNSHandle* hdns = *(DNSHandle**)argp;
+	if (hdns == NULL) {
+		javacall_print("FATAL: monitor_thread: passed DNSHandle* is NULL\n");
+       	return -2;
+	}
+
+	int rid = hdns->resolver_id;
+	//printf("monitor start rid=%d...\n", rid);	
+	sceKernelDelayThread(20000000L);	
+	//printf("monitor triggered %d\n", rid);	
+	sceNetResolverStop(rid);	 
+	//printf("Resolver stop %d\n", rid);
+
+	return 0;
+}
+
+int resolve_thread(SceSize args, void *argp) {
+	static char buf[1024];
+	struct in_addr addr;
+       SceUID rid;
+
+       DNSHandle* hdns = *(DNSHandle**)argp;
+
+       do {
+
+             if (hdns == NULL) {
+             		javacall_print("FATAL: resolve_thread: passed DNSHandle* is NULL\n");
+             		break;
+             }
+    	
+        	/* Create a resolver */		
+        	if(sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0)	{
+        		printf("Error creating resolver\n");			
+        		break;
+        	}
+        	
+        	printf("Created resolver %08x\n", rid);
+        	SceUInt thid = sceKernelCreateThread("monitor_thread", monitor_thread, 0x18, 0x10000, PSP_THREAD_ATTR_USER, NULL);	
+        	if(thid < 0) {			
+        		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
+        								hdns, JAVACALL_FAIL);
+        		printf("Error, could not create monitor thread\n");
+        		break;
+        	}
+        	
+        	hdns->resolver_id = rid;
+
+              int retry = 3;
+              int ret;
+        	do {
+        	sceKernelStartThread(thid, sizeof(&hdns), &hdns);	
+        	
+        	/* Resolve a name to an ip address */	
+        	ret = sceNetResolverStartNtoA(rid, hdns->hostname, &addr, 1, 1);		
+        	printf("sceNetResolverStartNtoA (%d) return %d\n", rid, ret);	
+        	
+        	sceKernelTerminateThread(thid);
+        	printf("sceKernelTerminateThread(%d)\n", thid);		
+        	sceKernelWaitThreadEndCB(thid, NULL);
+        	} while( --retry > 0 && ret < 0);
+        	sceKernelDeleteThread(thid);
+        	printf("sceKernelDeleteThread(%d) returns\n", thid);
+
+        	sceNetResolverStop(rid);		
+        	sceNetResolverDelete(rid);
+
+        	if (ret < 0) {
+        		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
+        								hdns, JAVACALL_FAIL);
+        		printf("Error resolving %s\n", hdns->hostname);
+        		break;
+        	}
+        	
+        	int len = sizeof(addr.s_addr);
+        	if (len <= hdns->max_ip_len) {
+        		printf("Resolved %s to %s\n", hdns->hostname, inet_ntoa(addr));
+        		hdns->ip_len = len;
+        		memcpy(hdns->ip, &addr.s_addr, len);
+        		hdns->ok = 1;
+        		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
+        								hdns, JAVACALL_OK);
+        		return 0;
+        	} else {
+        		javacall_print("FATAL:Not enough space to put ip string\n");
+        		break;
+        	}
+       } while(0);
+       
+	javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
+        								hdns, JAVACALL_FAIL);
+       return -1;
+}
+
+static void* start_lookup_ip(char* hostname, int maxIpLen) {
+	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x40, 0x10000, PSP_THREAD_ATTR_USER, NULL);	
+	if(thid < 0) {	
+		printf("Error, could not create thread\n");	
+		return NULL;	
+	}
+	DNSHandle* hdns = (DNSHandle*)malloc(sizeof(DNSHandle));
+	hdns->res_thread_id = thid;
+	strncpy(hdns->hostname, hostname, sizeof(hdns->hostname));
+	hdns->hostname[ sizeof(hdns->hostname) - 1 ] = '\0';
+	hdns->ok = 0;
+	hdns->max_ip_len = maxIpLen;
+	sceKernelStartThread(thid, sizeof(&hdns), &hdns);
+	return hdns;
+}
+
+static int end_lookup_ip(DNSHandle* handle, char* pAddress, int maxLen, int* pLen) {
+	SceUID thid = handle->res_thread_id;
+	
+	int ret = sceKernelTerminateThread(thid);		
+	printf("sceKernelTerminateThread(%d) returns %d\n", thid, ret);		
+	sceKernelWaitThreadEndCB(thid, NULL);					
+	ret = sceKernelDeleteThread(thid);	
+	printf("sceKernelDeleteThread(%d) returns %d\n", thid, ret);
+	
+	int ok = handle->ok;
+	if (ok) {
+        	*pLen = handle->ip_len;
+        	memcpy(pAddress, handle->ip, *pLen);
+	}
+
+	free(handle);	
+
+	return ok?0:-1;
+}
+
 /**
  * Initiates lookup of the given host name to find its IP address.
  *
@@ -121,11 +338,27 @@ javacall_result javacall_network_finalize(void) {
  *
  * @retval JAVACALL_OK                  success
  * @retval JAVACALL_FAIL                if there is a network error
- * @retval JAVACALL_INVALID_ARGUMENTS   if maxLen is too small to receive the address
+ * @retval JAVACALL_INVALID_ARGUMENT    if maxLen is too small to receive the address
  */
 javacall_result javacall_network_gethostbyname_start(char *hostname,
     unsigned char *pAddress, int maxLen, /*OUT*/ int *pLen, /*OUT*/ void **pHandle, /*OUT*/ void **pContext) {
-    return JAVACALL_FAIL;                                        
+
+    struct in_addr addr;
+    (void)pContext;
+    
+    if(sceNetInetInetAton(hostname, &addr) != 0) {
+    	char* ip = inet_ntoa(addr);
+    	if (ip && (strlen(ip) < maxLen)) {
+           strncpy(pAddress, ip, maxLen);
+    	    return JAVACALL_OK;
+    	}
+    }
+    *pHandle = start_lookup_ip(hostname, maxLen);
+    if (*pHandle) {
+        return JAVACALL_WOULD_BLOCK;
+    } else {
+        return JAVACALL_FAIL;
+    }
 }  
     
 /**
@@ -144,7 +377,11 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
  */
 javacall_result javacall_network_gethostbyname_finish(unsigned char *pAddress,
     int maxLen,int *pLen,void *handle,void *context) {
-    return JAVACALL_FAIL;                                        
+    if (end_lookup_ip(handle, pAddress, maxLen, pLen) == 0) {
+    	 return JAVACALL_OK;
+    } else {
+        return JAVACALL_FAIL;     
+    }
 }  
 
 /**
@@ -158,8 +395,49 @@ javacall_result javacall_network_gethostbyname_finish(unsigned char *pAddress,
  * @retval JAVACALL_OK      success
  * @retval JAVACALL_FAIL    if there is a network error
  */
-javacall_result /*OPTIONAL*/ javacall_network_getsockopt(javacall_handle handle,javacall_socket_option flag, /*OUT*/ int *pOptval) {
-    return JAVACALL_FAIL;
+//pcsl_network_getsockopt
+javacall_result /*OPTIONAL*/ javacall_network_getsockopt(javacall_handle handle, javacall_socket_option flag, /*OUT*/ int *pOptval) {
+
+    int level = SOL_SOCKET;
+    int optname;
+    socklen_t optsize = sizeof(optname);
+    struct linger lbuf ;
+    void * opttarget = (void *) pOptval ;
+
+    int fd = (int)handle;
+    switch (flag) { 
+    case JAVACALL_SOCK_DELAY: /* DELAY */
+        level = IPPROTO_TCP;
+        optname = TCP_NODELAY;
+        break;
+    case JAVACALL_SOCK_LINGER: /* LINGER */
+        opttarget = (void *) &lbuf ;
+        optsize = sizeof (struct linger);
+        optname = SO_LINGER;
+        break;
+    case JAVACALL_SOCK_KEEPALIVE: /* KEEPALIVE */
+        optname = SO_KEEPALIVE;
+        break;
+    case JAVACALL_SOCK_RCVBUF: /* RCVBUF */
+        optname = SO_RCVBUF;
+        break;
+    case JAVACALL_SOCK_SNDBUF: /* SNDBUF */
+        optname = SO_SNDBUF;
+        break;
+    default:
+        return JAVACALL_FAIL;
+    }
+
+    if (getsockopt(fd, level,  optname, opttarget, &optsize) == 0 ) {
+
+        if (optname == SO_LINGER) {
+            /* If linger is on return the number of seconds. */
+            *pOptval = (lbuf.l_onoff == 0 ? 0 : lbuf.l_linger) ;
+        }
+        return JAVACALL_OK;
+    } else {
+        return JAVACALL_FAIL;
+    }
 }
     
 /**
@@ -172,14 +450,142 @@ javacall_result /*OPTIONAL*/ javacall_network_getsockopt(javacall_handle handle,
  *
  * @retval JAVACALL_OK                  success
  * @retval JAVACALL_FAIL                if there is a network error
- * @retval JAVACALL_INVALID_ARGUMENTS   if the platform did not accept the value for the option changed
+ * @retval JAVACALL_INVALID_ARGUMENT    if the platform did not accept the value for the option changed
  */
+//pcsl_network_setsockopt
 javacall_result /*OPTIONAL*/ javacall_network_setsockopt(javacall_handle handle, javacall_socket_option flag, int optval) {
+
+    int    level = SOL_SOCKET;
+    int    optsize =  sizeof(optval);
+    int    optname;
+    struct linger lbuf ;
+    void * opttarget = (void *) & optval ;
+
+    //int fd = na_get_fd(handle);
+    int fd = (int)handle;
+
+    switch (flag) { 
+    case JAVACALL_SOCK_DELAY: /* DELAY */
+        level = IPPROTO_TCP;
+        optname = TCP_NODELAY;
+        break;
+    case JAVACALL_SOCK_LINGER: /* LINGER */
+        opttarget = (void *) &lbuf ;
+        optsize = sizeof (struct linger);
+        optname = SO_LINGER;
+        if (optval == 0) {
+            lbuf.l_onoff = 0;
+            lbuf.l_linger = 0;
+        } else {
+            lbuf.l_onoff = 1;
+            lbuf.l_linger = optval;
+        }
+        break;
+    case JAVACALL_SOCK_KEEPALIVE: /* KEEPALIVE */
+        optname = SO_KEEPALIVE;
+        break;
+    case JAVACALL_SOCK_RCVBUF: /* RCVBUF */
+        optname = SO_RCVBUF;
+        break;
+    case JAVACALL_SOCK_SNDBUF: /* SNDBUF */
+        optname = SO_SNDBUF;
+        break;
+    default:
+        return JAVACALL_INVALID_ARGUMENT;
+    }
+
+    if (setsockopt(fd, level,  optname, opttarget, optsize) != 0) {
+        return JAVACALL_FAIL;
+    }
+
+    return JAVACALL_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////
+
+/**
+ * Gets the IP address of the local socket endpoint.
+ *
+ * @param handle handle of an open connection
+ * @param pAddress base of byte array to receive the address
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there was an error
+ */
+javacall_result /*OPTIONAL*/ javacall_socket_getlocaladdr(
+    javacall_handle handle,
+    char *pAddress) {
+    javacall_print("javacall: not implemented : javacall_socket_getlocaladdr\n");
     return JAVACALL_FAIL;
 }
 
 /**
- * Translates the given IP address into a host name. 
+ * Gets the IP address of the remote socket endpoint.
+ *
+ * @param handle handle of an open connection
+ * @param pAddress base of byte array to receive the address
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there was an error
+ */
+javacall_result /*OPTIONAL*/ javacall_socket_getremoteaddr(
+    void *handle,
+    char *pAddress)
+{
+    javacall_print("javacall: not implemented! : javacall_socket_getremoteaddr\n");
+    return JAVACALL_FAIL;
+}
+
+/**
+ * Gets the port number of the local socket endpoint.
+ *
+ * @param handle handle of an open connection
+ * @param pPortNumber returns the local port number
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there was an error
+ */
+javacall_result /*OPTIONAL*/ javacall_socket_getlocalport(javacall_handle handle,int *pPortNumber) {
+    javacall_print("javacall: not implemented : javacall_socket_getlocalport\n");
+    return JAVACALL_FAIL;
+}
+
+/**
+ * Gets the port number of the remote socket endpoint.
+ *
+ * @param handle handle of an open connection
+ * @param pPortNumber returns the local port number
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there was an error
+ */
+javacall_result javacall_socket_getremoteport(
+    void *handle,
+    int *pPortNumber)
+{
+    javacall_print("javacall: not implemented : javacall_socket_getremoteport\n");
+    return JAVACALL_FAIL;
+}
+
+/**
+ * Gets the string representation of the local device's IP address.
+ * This function returns dotted quad IP address as a string in the
+ * output parameter and not the host name.
+ *
+ * @param pLocalIPAddress base of char array to receive the local
+ *        device's IP address
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there is a network error
+ */
+javacall_result /*OPTIONAL*/ javacall_network_get_local_ip_address_as_string(/*OUT*/ char *pLocalIPAddress) {
+    javacall_print("javacall: not implemented : javacall_network_get_local_ip_address_as_string\n");
+    return JAVACALL_FAIL;
+}
+
+/**
+ * Translates the given IP address into a host name.
  *
  * @param ipn Raw IP address to translate
  * @param hostname the host name. The value of <tt>host</tt> is set by
@@ -205,149 +611,7 @@ javacall_result /*OPTIONAL*/ javacall_network_gethostbyaddr_start(int ipn,
      * can take some time and really effect performance for receiving
      * datagrams.
      */
-
-    return JAVACALL_FAIL;
-}
-    
-/**
- * Finishes a pending host name lookup operation.
- * 
- * @param ipn Raw IP address to translate
- * @param hostname the host name. The value of <tt>host</tt> is set by
- *             this function.
- * @param pHandle address of variable to receive the handle to for
- *        unblocking the Java thread; this is set
- *        only when this function returns JAVACALL_WOULD_BLOCK.
- * @param context the context returned by the getHostByAddr_start function
- *
- * @retval JAVACALL_OK          success
- * @retval JAVACALL_FAIL        if there is a network error
- * @retval JAVACALL_WOULD_BLOCK if the caller must call the finish function again to complete the operation 
- */
-javacall_result /*OPTIONAL*/ javacall_network_gethostbyaddr_finish(int ipn,
-    char *hostname, /*OUT*/ javacall_handle* pHandle, void *context) {
-    return JAVACALL_FAIL;
-}
-
-/**
- * Gets the IP address of the local socket endpoint.
- *
- * @param handle handle of an open connection
- * @param pAddress base of byte array to receive the address
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there was an error
- */
-javacall_result /*OPTIONAL*/ javacall_socket_getlocaladdr(
-    javacall_handle handle,
-    char *pAddress) {
-    return JAVACALL_FAIL;
-}
-/**
- * Gets the IP address of the remote socket endpoint.
- *
- * @param handle handle of an open connection
- * @param pAddress base of byte array to receive the address
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there was an error
- */
-javacall_result /*OPTIONAL*/ javacall_socket_getremoteaddr(
-    void *handle,
-    char *pAddress)
-{
-    return JAVACALL_FAIL;
-}
-   
-/**
- * Gets the port number of the local socket endpoint.
- *
- * @param handle handle of an open connection
- * @param pPortNumber returns the local port number
- * 
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there was an error
- */
-javacall_result /*OPTIONAL*/ javacall_socket_getlocalport(javacall_handle handle,int *pPortNumber) {
-    return JAVACALL_FAIL;
-}
-/**
- * Gets the port number of the remote socket endpoint.
- *
- * @param handle handle of an open connection
- * @param pPortNumber returns the local port number
- * 
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there was an error
- */
-javacall_result javacall_socket_getremoteport(
-    void *handle,
-    int *pPortNumber)
-{
-    return JAVACALL_FAIL;
-}
-
-/**
- * Gets the string representation of the local device's IP address.
- * This function returns dotted quad IP address as a string in the 
- * output parameter and not the host name.
- *
- * @param pLocalIPAddress base of char array to receive the local
- *        device's IP address
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there is a network error
- */
-javacall_result /*OPTIONAL*/ javacall_network_get_local_ip_address_as_string(/*OUT*/ char *pLocalIPAddress) {
-    return JAVACALL_FAIL;
-}
-
-/**
- * Gets the http / https proxy address. This method is
- * called when the <tt>com.sun.midp.io.http.proxy</tt> or 
- <tt>com.sun.midp.io.https.proxy</tt> internal property
- * is retrieved.
- *
- * @param pHttpProxy base of char array to receive the hostname followed 
- *          by ':' and port. - ex) webcache.thecompany.com:8080.  
- *          Size of the pHttpProxy should be (MAX_HOST_LENGTH + 6).
- * @param pHttpsProxy base of char array to receive the hostname followed 
- *          by ':' and port. - ex) webcache.thecompany.com:8080.  
- *          Size of the pHttpsProxy should be (MAX_HOST_LENGTH + 6).
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there is a network error
- */
-javacall_result /*OPTIONAL*/ javacall_network_get_http_proxy(/*OUT*/ char *pHttpProxy, /*OUT*/ char *pHttpsProxy) {
-    return JAVACALL_FAIL;
-}
-
-/**
- * Gets a platform-specific error code for the previous operation on an open
- * connection.  This is mainly useful for adding detail information to
- * debugging and diagnostic messages.
- *
- * @param handle handle of an open connection
- *
- * @return 0 if there is no error;\n
- * a non-zero, platform-specific value if there was an error
- */
-int /*OPTIONAL*/ javacall_network_error(javacall_handle handle) {
-    return 0;
-}
-
-/**
- * Gets the name of the local device from the system. This method is
- * called when the <tt>microedition.hostname</tt> system property
- * is retrieved.
- *
- * @param pLocalHost base of char array to receive the host name, Size
- *        of the pLocalHost should be MAX_HOST_LENGTH
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    if there is a network error
- */
-javacall_result /*OPTIONAL*/ javacall_network_get_local_host_name(/*OUT*/ char *pLocalHost) {
+    javacall_print("javacall: not implemented : javacall_network_gethostbyaddr_start\n");
     return JAVACALL_FAIL;
 }
 
@@ -359,19 +623,67 @@ javacall_result javacall_server_socket_set_notifier(javacall_handle handle, java
 }
 
 /**
- * A javacall equivelent of BSD inet_ntoa () function.
- * The inet_ntoa() function converts the Internet host address to a string 
- * in standard numbers-and-dots notation. The string is returned in
- * a statically allocated buffer, which subsequent calls will overwrite.
- * 
- * @param address the IP address of the remote device in the form of byte array
- *
- * @return converted address
- */
-char* javacall_inet_ntoa(void *address) {
-    return NULL;
+* See javacall_network.h for definition.
+*/ 
+int javacall_network_error(void * handle) {
+    return 0;
 }
 
+/**
+ * Finishes a pending host name lookup operation.
+ *
+ * @param ipn Raw IP address to translate
+ * @param hostname the host name. The value of <tt>host</tt> is set by
+ *             this function.
+ * @param pHandle address of variable to receive the handle to for
+ *        unblocking the Java thread; this is set
+ *        only when this function returns JAVACALL_WOULD_BLOCK.
+ * @param context the context returned by the getHostByAddr_start function
+ *
+ * @retval JAVACALL_OK          success
+ * @retval JAVACALL_FAIL        if there is a network error
+ * @retval JAVACALL_WOULD_BLOCK if the caller must call the finish function again to complete the operation
+ */
+javacall_result /*OPTIONAL*/ javacall_network_gethostbyaddr_finish(int ipn,
+    char *hostname, /*OUT*/ javacall_handle* pHandle, void *context) {
+    javacall_print("javacall: not implemented : javacall_network_gethostbyaddr_finish\n");
+    return JAVACALL_FAIL;
+}
+
+/**
+ * Gets the http / https proxy address. This method is
+ * called when the <tt>com.sun.midp.io.http.proxy</tt> or
+ <tt>com.sun.midp.io.https.proxy</tt> internal property
+ * is retrieved.
+ *
+ * @param pHttpProxy base of char array to receive the hostname followed
+ *          by ':' and port. - ex) webcache.thecompany.com:8080.
+ *          Size of the pHttpProxy should be (MAX_HOST_LENGTH + 6).
+ * @param pHttpsProxy base of char array to receive the hostname followed
+ *          by ':' and port. - ex) webcache.thecompany.com:8080.
+ *          Size of the pHttpsProxy should be (MAX_HOST_LENGTH + 6).
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    if there is a network error
+ */
+javacall_result /*OPTIONAL*/ javacall_network_get_http_proxy(/*OUT*/ char *pHttpProxy, /*OUT*/ char *pHttpsProxy) {
+    javacall_print("javacall: not implemented : javacall_network_get_http_proxy \n");
+    return JAVACALL_FAIL;
+}
+
+javacall_result /*OPTIONAL*/ javacall_network_get_local_host_name(/*OUT*/ char *pLocalHost) {
+    javacall_print("javacall: not implemented : javacall_network_get_local_host_name \n");
+    return JAVACALL_FAIL;
+}
+
+/**
+    ??????????????????? undefined
+ */
+char* javacall_inet_ntoa(void *address) {
+    javacall_print("javacall: not implemented : javacall_inet_ntoa\n");
+    return NULL; //win32: return inet_ntoa(*((struct in_addr*)address));
+}
+ 
 /** @} */
 #ifdef __cplusplus
 }

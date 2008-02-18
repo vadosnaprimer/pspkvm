@@ -32,15 +32,16 @@ extern "C" {
 #include "pspiofilemgr.h"
 #include "stdlib.h"
 #include "string.h"
+#include "dirent.h"
 
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen);
 
 typedef struct {
     SceUID handle;
     javacall_utf16 name[256];
+    SceIoDirent* dirent;
 } slot;
 
-static SceIoDirent  dir;
 /**
  * returns a handle to a file list. This handle can be used in
  * subsequent calls to javacall_dir_get_next() to iterate through
@@ -55,6 +56,7 @@ static SceIoDirent  dir;
  *         input 'string' cannot be found.
  */
 javacall_handle javacall_dir_open(const javacall_utf16* path, int pathLen) {
+#if 0
     SceUID dfd;
     slot *handle = NULL;
     char* szPath = javacall_UNICODEsToUtf8(path, pathLen);
@@ -69,11 +71,24 @@ javacall_handle javacall_dir_open(const javacall_utf16* path, int pathLen) {
     if(dfd >= 0) {
     	handle = (slot*)malloc(sizeof(slot));
     	handle->handle = dfd;
+    	handle->dirent = (SceIoDirent*)malloc(sizeof(SceIoDirent));
+    	memset(handle->dirent, 0, sizeof(SceIoDirent));
     } else {
         handle = NULL;
     }
+#endif
+    javacall_print("javacall_dir_open:\n");
+    char* szPath = javacall_UNICODEsToUtf8(path, pathLen);
+    if (!szPath) {
+        return NULL;
+    }
 
-    memset(&dir, 0, sizeof(SceIoDirent));
+    
+   javacall_print(szPath);
+   javacall_print("\n");
+    
+    DIR* handle = opendir(szPath);
+    printf("return %x\n", handle);
     return (javacall_handle)handle;
 }
     
@@ -84,8 +99,12 @@ javacall_handle javacall_dir_open(const javacall_utf16* path, int pathLen) {
  *               javacall_dir_open 
  */
 void javacall_dir_close(javacall_handle handle) {
+#if 0
     sceIoDclose(((slot*)handle)->handle);
+    free(((slot*)handle)->dirent);
     free(handle);
+#endif
+    closedir((DIR*)handle);
 }
     
 /**
@@ -104,17 +123,18 @@ void javacall_dir_close(javacall_handle handle) {
  * platform MUST BE responsible for allocating and freeing it.
  */
 javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFilenameLength) {
+#if 0
     int result;
     slot* h = (slot*)handle;
  
-    result = sceIoDread(h->handle, &dir); 
+    result = sceIoDread(h->handle, h->dirent); 
     if (result > 0) {
     	
-    	int len = strlen(dir.d_name);
+    	int len = strlen(h->dirent->d_name);
     	if (len >= 256) {
     	    return NULL;
     	} else {
-    	    if(dir.d_stat.st_attr & FIO_SO_IFDIR) {
+    	    if(h->dirent->d_stat.st_attr & FIO_SO_IFDIR) {
     	    	  h->name[len] = (javacall_utf16)'/';
     	    	  *outFilenameLength = len+1;
     	    	  h->name[len+1] = 0;
@@ -123,13 +143,40 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFi
                 h->name[len] = 0;
     	    }
            while (len--) {
-               h->name[len] = dir.d_name[len];
+               h->name[len] = h->dirent->d_name[len];
            }
     	}
     	//printf("javacall_dir_get_next: %s, len=%d\n", dir.d_name, *outFilenameLength);
     	return h->name;
     } else {
         //javacall_print("failed\n");
+        return NULL;
+    }
+#endif
+    static javacall_utf16 name[JAVACALL_MAX_FILE_NAME_LENGTH];
+    printf("javacall_dir_get_next\n");
+    struct dirent* d = readdir((DIR*)handle);
+    if (d != NULL) {
+        int len = strlen(d->d_name);
+    	if (len >= 256) {
+    	    return NULL;
+    	} else {
+    	    if(d->d_stat.st_attr & FIO_SO_IFDIR) {
+    	         name[len] = (javacall_utf16)'/';
+    	    	  *outFilenameLength = len+1;
+    	    	  name[len+1] = 0;
+    	    } else {
+    	         *outFilenameLength = len;
+                name[len] = 0;
+    	    }
+           while (len--) {
+               name[len] = d->d_name[len];
+           }
+    	}
+    	printf("javacall_dir_get_next: %s, len=%d\n", d->d_name, *outFilenameLength);
+    	return name;
+    } else {
+        printf("javacall_dir_get_next fail\n");
         return NULL;
     }
 }

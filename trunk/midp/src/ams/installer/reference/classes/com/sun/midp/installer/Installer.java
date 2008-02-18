@@ -388,6 +388,7 @@ public abstract class Installer {
 
         try {
             state.startTime = System.currentTimeMillis();
+            System.out.println("performInstall step "+state.nextStep);
 
             while (state.nextStep < 9) {
                 /*

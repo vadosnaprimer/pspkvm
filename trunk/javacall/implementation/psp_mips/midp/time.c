@@ -28,7 +28,15 @@ extern "C" {
 #endif
 
 #include "javacall_time.h"
-#include "pspthreadman.h"
+#include <pspthreadman.h>
+#include <psputility_sysparam.h>
+
+#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define MAX_TIMERS 5
 
@@ -41,6 +49,8 @@ typedef struct _timer{
 
 static timer timers[MAX_TIMERS];
 static int timer_slots[MAX_TIMERS] = {0};
+
+static javacall_int64 time_offset = 0;
 
 static SceUInt alarm_handler(void *common)
 {
@@ -165,18 +175,43 @@ javacall_result javacall_time_finalize_timer(javacall_handle handle){
  *         format of GMT+/-??:??. For example, GMT-08:00 for PST.
  */
 char* javacall_time_get_local_timezone(void){
-    return (char*) NULL;
+    //return (char*) "GMT+08:00";
+    int tzOffset = 0;
+    sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_TIMEZONE, &tzOffset);
+    int tzOffsetAbs = tzOffset < 0 ? -tzOffset : tzOffset;
+    int hours = tzOffsetAbs / 60;
+    int minutes = tzOffsetAbs - hours * 60;
+    static char tz[11];
+    sprintf(tz, "GMT%s%02i:%02i", tzOffset < 0 ? "-" : "+", hours, minutes);
+    return tz;
 }
-    
+
+
+static void set_time_offset() {
+    javacall_int64 lt;
+    int ret = sceRtcGetCurrentTick(&lt);    
+    if (ret == 0) {
+    	 javacall_int64 base = sceKernelGetSystemTimeLow() / 1000L;
+        javacall_int64 pers = sceRtcGetTickResolution();
+        lt = lt / pers;
+        lt -= 62135596800LL;
+        time_offset = lt * 1000LL;
+        time_offset -= base;
+    }
+}
+
 /**
  * returns number of milliseconds elapsed since midnight(00:00:00), January 1, 1970,
  *
  * @return milliseconds elapsed since midnight (00:00:00), January 1, 1970
  */
 javacall_int64 /*OPTIONAL*/ javacall_time_get_milliseconds_since_1970(void){
-    unsigned int ret = sceKernelGetSystemTimeLow() / 1000L;
+    if (time_offset == 0) {
+    	 set_time_offset();
+    }
+    javacall_int64 ret = (javacall_int64)sceKernelGetSystemTimeLow() / 1000LL + time_offset;
     //printf("javacall_time_get_milliseconds_since_1970:%d\n",ret);
-    return (javacall_int64)ret;
+    return ret;
 }
  
 /**
@@ -185,7 +220,10 @@ javacall_int64 /*OPTIONAL*/ javacall_time_get_milliseconds_since_1970(void){
  * @return seconds elapsed since midnight (00:00:00), January 1, 1970
  */
 javacall_time_seconds /*OPTIONAL*/ javacall_time_get_seconds_since_1970(void){
-    return (javacall_time_seconds)sceKernelGetSystemTimeLow() / 1000000L;
+    if (time_offset == 0) {
+    	 set_time_offset();
+    }
+    return (javacall_time_seconds)((javacall_int64)sceKernelGetSystemTimeLow() / 1000000LL + time_offset / 1000LL);
 }
 
 /**

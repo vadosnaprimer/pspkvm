@@ -63,7 +63,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
     /** Display for this MIDlet. */
     private Display display;
     /** Contains the default URL for the install list. */
-    private String defaultInstallListUrl = "ms0:/";
+    private String defaultInstallListUrl = "";
     /** Contains the URL the user typed in. */
     private TextBox urlTextBox;
     /** Displays the progress of the install. */
@@ -78,6 +78,8 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
     private List installListBox;
     /** Contains a list of suites to install. */
     private Vector installList;
+
+    private boolean http_install;
 
     /** Command object for URL screen to go and discover available suites. */
     private Command discoverCmd =
@@ -100,6 +102,10 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                                          (ResourceConstants.BACK),
                                          Command.BACK, 1);
 
+    private List chooseMethod = new List("Please select install location", List.EXCLUSIVE);
+    private Command installLocCmd = new Command(
+        Resource.getString(ResourceConstants.INSTALL), Command.ITEM, 1);
+    
     /**
      * Create and initialize a new discovery application MIDlet.
      * The saved URL is retrieved and the list of MIDlets are retrieved.
@@ -110,10 +116,20 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
         display = Display.getDisplay(this);
 
         GraphicalInstaller.initSettings();
-        restoreSettings();
 
+
+        
+        chooseMethod.append("Install from local file system (ms0:/)", null);
+        chooseMethod.append("Install from http", null);
+        chooseMethod.addCommand(installLocCmd);
+        chooseMethod.addCommand(endCmd);
+        chooseMethod.setSelectedIndex(0, true);
+        chooseMethod.setCommandListener(this);
+
+
+        display.setCurrent(chooseMethod);
         // get the URL of a list of suites to install
-        getUrl();
+        //getUrl();
     }
 
     /**
@@ -144,7 +160,20 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
      * @param s the Displayable the command was on.
      */
     public void commandAction(Command c, Displayable s) {
-        if (c == discoverCmd) {
+        if (c == installLocCmd) {
+            
+            if (chooseMethod.getSelectedIndex() == 0) {
+            	  http_install = false;
+            	  defaultInstallListUrl = "ms0:/";
+            } else {
+                http_install = true;
+                defaultInstallListUrl = "http://";
+            }
+
+            restoreSettings();
+
+            getUrl();
+        } else if (c == discoverCmd) {
             // user wants to discover the suites that can be installed
             discoverSuitesToInstall(urlTextBox.getString());
         } else if (s == installListBox &&
@@ -187,6 +216,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
          *           OTA provisioning
          * ams.url = <some url> when running OTA from KToolbar */
         String amsUrl = System.getProperty("ams.url");
+        
         if (amsUrl != null && !amsUrl.equals("")) {
             defaultInstallListUrl = amsUrl.trim();
             return;
@@ -196,7 +226,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             settings = RecordStore.openRecordStore(
                        GraphicalInstaller.SETTINGS_STORE, false);
 
-            data = settings.getRecord(1);
+            data = settings.getRecord(http_install?1:3);
             if (data != null) {
                 bas = new ByteArrayInputStream(data);
                 dis = new DataInputStream(bas);
@@ -236,7 +266,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
         temp = urlTextBox.getString();
 
-        ex = GraphicalInstaller.saveSettings(temp, MIDletSuite.INTERNAL_SUITE_ID);
+        ex = GraphicalInstaller.saveSettings(http_install, temp, MIDletSuite.INTERNAL_SUITE_ID);
         if (ex != null) {
             displayException(Resource.getString
                              (ResourceConstants.EXCEPTION), ex.toString());
@@ -343,10 +373,17 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
         suite = (SuiteDownloadInfo)installList.elementAt(selectedSuite);
 
+        System.out.println("installSuite: "+ suite.url);
+
         midletSuite.setTempProperty(null, "arg-0", "I");
         midletSuite.setTempProperty(null, "arg-1", suite.url);
         midletSuite.setTempProperty(null, "arg-2", suite.label);
-        midletSuite.setTempProperty(null, "arg-3", "true");
+        if (http_install) {
+            //The 3rd arg is for indicating file installer is used or not
+            midletSuite.setTempProperty(null, "arg-3", "false");
+        } else {
+            midletSuite.setTempProperty(null, "arg-3", "true");
+        }
 
         displayName =
             Resource.getString(ResourceConstants.INSTALL_APPLICATION);
@@ -498,20 +535,22 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                         "", url, 0,
                         Resource.getString(
                         ResourceConstants.AMS_GRA_INTLR_CONN_GAUGE_LABEL));
-                //conn = (StreamConnection)Connector.open(url, Connector.READ);
-                //in = new InputStreamReader(conn.openInputStream());
-                RandomAccessStream jadInputStream = new RandomAccessStream();
-                //System.out.println("connect to...");
-                //jadInputStream.connect("ms0:/ppp", Connector.READ);
-                //System.out.println("connect ok");
-                //in = new InputStreamReader(jadInputStream.openInputStream());
+
+                if (http_install) {
+                    conn = (StreamConnection)Connector.open(url, Connector.READ);
+                    in = new InputStreamReader(conn.openInputStream());
+                }
+                
                 try {
                     parent.updateProgressForm("", 0,
                         Resource.getString(
                         ResourceConstants.AMS_DISC_APP_GAUGE_LABEL_DOWNLOAD));
 
-                    parent.installList = SuiteDownloadInfo.getDownloadInfoFromDir(url);
-                        //SuiteDownloadInfo.getDownloadInfoFromPage(in);
+                    if (http_install) {
+                        parent.installList = SuiteDownloadInfo.getDownloadInfoFromPage(in);
+                    } else {
+                        parent.installList = SuiteDownloadInfo.getDownloadInfoFromDir(url);
+                    }
 
                     if (parent.installList.size() > 0) {
                         parent.installListBox =
@@ -524,14 +563,24 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                         for (int i = 0; i < parent.installList.size(); i++) {
                             SuiteDownloadInfo suite =
                                 (SuiteDownloadInfo)installList.elementAt(i);
-                            String postfix;
-                            if (suite.dir) {
-                                postfix = new String("/");
+                            if (suite.http) {
+                                if (!suite.url.startsWith("http://") && !suite.url.startsWith("https://")) {
+                                	//relative path
+                                	int last_slash = url.lastIndexOf('/');
+                                	suite.url = url.substring(0, last_slash + 1) + suite.url;
+                                }                            
+                                parent.installListBox.append(suite.label,
+                                                             (Image)null);
                             } else {
-                                postfix = new String(""); 
+                                String postfix;
+                                if (suite.dir) {
+                                    postfix = new String("/");
+                                } else {
+                                    postfix = new String(""); 
+                                }
+                                parent.installListBox.append(suite.label+postfix,
+                                                             (Image)null);
                             }
-                            parent.installListBox.append(suite.label+postfix,
-                                                         (Image)null);
                         }
 
                         parent.installListBox.addCommand(parent.backCmd);
