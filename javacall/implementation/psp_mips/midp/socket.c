@@ -48,8 +48,11 @@ extern "C" {
 
 #define socksLength (127)
 
+#define RETRY_TIMES 30
+
 typedef struct blockedSocksBuffer {
     int buff[socksLength]; 
+    int retry[socksLength];
     int num;
 } blockedSocksBuffer;
 
@@ -65,19 +68,19 @@ int connect_to_apctl(int config){
 	/* Connect using the first profile */	
 	err = sceNetApctlConnect(config);	
 	if (err != 0)	{		
-		printf(": sceNetApctlConnect returns %08X\n", err);		
+		javacall_printf(": sceNetApctlConnect returns %08X\n", err);		
 		return 0;	
 	}	
-	printf("Connecting...\n");	
+	javacall_printf("Connecting...\n");	
 	while (1)	{		
 		int state;
 		err = sceNetApctlGetState(&state);
 		if (err != 0)		{		
-			printf(": sceNetApctlGetState returns $%x\n", err);
+			javacall_printf(": sceNetApctlGetState returns $%x\n", err);
 			break;		
 		}		
-		if (state > stateLast)		{
-			printf("  connection state %d of 4\n", state);
+		if (state > stateLast) {
+			javacall_printf("  connection state %d of 4\n", state);
 			stateLast = state;		
 		}		
 		if (state == 4)
@@ -85,7 +88,7 @@ int connect_to_apctl(int config){
 		// wait a little before polling again		
 		sceKernelDelayThread(50*1000); // 50ms	
 	}	
-	printf(": Connected!\n");	
+	javacall_printf(": Connected!\n");	
 	if(err != 0)	{
 		return 0;	
 	}	
@@ -104,6 +107,7 @@ inline int addBlockedSock(int sockfd, blockedSocksBuffer* sbuff) {
         return -1;
     } else {
         sbuff->buff[sbuff->num] = sockfd;
+        sbuff->retry[sbuff->num] = RETRY_TIMES;
         sbuff->num++;
         maxsockfd = (sockfd < maxsockfd) ? maxsockfd : sockfd;
         return 1;
@@ -167,7 +171,11 @@ javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
                                            void **pHandle, void **pContext) {
 
     int sockfd = socket(PF_INET, SOCK_STREAM, 0);
-javacall_print("javacall_socket_open_start\n");
+
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_print("javacall_socket_open_start\n");
+#endif
+
     if (sockfd == INVALID_SOCKET) {
         return JAVACALL_FAIL;
     }
@@ -194,15 +202,15 @@ javacall_print("javacall_socket_open_start\n");
     addr->sin_port        = htons((unsigned short)port);
     memcpy(&addr->sin_addr.s_addr, ipBytes, sizeof(addr->sin_addr.s_addr));
 
-    //status = bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)); 
-    //if (status != 0) {
-    //    close(sockfd);
-    //    return JAVACALL_FAIL;
-    //}
-
-    printf("connecting to...\n");
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("connecting ...\n");
+#endif
     status = connect(sockfd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
-    printf("connected return %d\n", status);
+
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("connected return %d\n", status);
+#endif
+
     if (status == 0) {
         *pHandle = (void*)sockfd;
         free(addr);
@@ -219,7 +227,9 @@ javacall_print("javacall_socket_open_start\n");
 
         addBlockedSock(sockfd, &writesocks);
         startTimerIfNeed();
+#ifdef DEBUG_JAVACALL_NETWORK
         javacall_print("javacall_socket_open_start: block\n");
+#endif
         return JAVACALL_WOULD_BLOCK;
     }
 
@@ -245,25 +255,31 @@ javacall_result javacall_socket_open_finish(void *handle, void *context) {
     int err = 0;
     socklen_t err_size = sizeof(err);
 
-    printf("javacall_socket_open_finish: handle=%d, context=%p\n", sockfd, addr);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_socket_open_finish: handle=%d, context=%p\n", sockfd, addr);
+#endif
     if (addr != NULL) {
-        printf("connecting to...\n");
         status = connect(sockfd, (struct sockaddr*)addr, sizeof(struct sockaddr_in));
-        printf("connected return %d\n", status);
         if ((status == 0) || (errno == EISCONN)) {
             delBlockedSock(sockfd, &writesocks);
             stopTimerIfNeed();
             free(context);
+#ifdef DEBUG_JAVACALL_NETWORK
             javacall_print("javacall_socket_open_finish: ok\n");
+#endif
             return JAVACALL_OK;
         }
     
         if ((status == SOCKET_ERROR) && (errno == EINPROGRESS || errno == EALREADY)) {
+#ifdef DEBUG_JAVACALL_NETWORK
     	     javacall_print("javacall_socket_open_finish: block\n");
+#endif
             return JAVACALL_WOULD_BLOCK;
         } else {
             //error
+#ifdef DEBUG_JAVACALL_NETWORK
             javacall_print("javacall_socket_open_finish: failed with error:%d\n", errno);
+#endif
             delBlockedSock(sockfd, &writesocks);
             stopTimerIfNeed();
             free(context);
@@ -288,9 +304,14 @@ javacall_result javacall_socket_open_finish(void *handle, void *context) {
 javacall_result socket_read_common(void *handle, unsigned char *pData, int len, int *pBytesRead) {
 
     int sockfd = (int) handle;
-    printf("socket_read_common read %d bytes\n", len);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("socket_read_common read %d bytes\n", len);
+#endif
+
     int status = recv(sockfd, pData, len, 0);
-    printf("read return %d, errono:%d\n", status, errno);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("read return %d, errono:%d\n", status, status==-1?errno:0);
+#endif
     if (SOCKET_ERROR == status) {
         if (EWOULDBLOCK == errno || EINPROGRESS == errno) {
             return JAVACALL_WOULD_BLOCK;
@@ -370,11 +391,13 @@ static int socket_write_common(
         int *pBytesWritten)
 {
     int sockfd = (int) handle;
-
-    printf("socket_write_common write %d bytes\n", len);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("socket_write_common write %d bytes\n", len);
+#endif
     int status = send(sockfd, pData, len, 0);
-    printf("write retrun %d, errno:%d\n", status, errno);
-
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("write retrun %d, errno:%d\n", status, status==-1?errno:0);
+#endif
     if (SOCKET_ERROR == status) {
         if (EWOULDBLOCK == errno || EINPROGRESS == errno) {
             return JAVACALL_WOULD_BLOCK;
@@ -461,9 +484,13 @@ javacall_result javacall_socket_write_finish(void *handle,char *pData,int len,in
 javacall_result javacall_socket_close_start(void *handle,void **pContext) {
 
     int sockfd = (int)handle;
-    printf("javacall_socket_close\n");
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_socket_close\n");
+#endif
     int status = close(sockfd);
-    printf("javacall_socket_close return %d\n", status);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_socket_close return %d\n", status);
+#endif
     if (status == 0) {
         return JAVACALL_OK;
     } 
@@ -554,11 +581,15 @@ void timer_socket_callback() {
     for (i = 0; i < readsocks.num; i++) {
         if (FD_ISSET(readsocks.buff[i], &readfds)) {
             javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_RECEIVE, (javacall_handle)readsocks.buff[i], JAVACALL_OK);
+        } else if (readsocks.retry[i]-- <= 0) {
+            javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_RECEIVE, (javacall_handle)readsocks.buff[i], JAVACALL_FAIL);
         }
     }
     for (i = 0; i < writesocks.num; i++) {
         if (FD_ISSET(writesocks.buff[i], &writefds)) {
             javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_SEND, (javacall_handle)writesocks.buff[i], JAVACALL_OK);
+        } else if (writesocks.retry[i]-- <= 0) {
+            javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_SEND, (javacall_handle)readsocks.buff[i], JAVACALL_FAIL);
         }
     }
  

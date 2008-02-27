@@ -121,7 +121,7 @@ javacall_result javacall_time_initialize_timer(
     timers[slot].cbFunc = func;
     timers[slot].uSecToWait = uSec;
     *handle = (javacall_handle)slot;
-    printf("javacall_time_initialize_timer:%d, %d\n", cyclic, uSec);
+//    printf("javacall_time_initialize_timer:%d, %d\n", cyclic, uSec);
     return JAVACALL_OK;
 }
 
@@ -139,7 +139,7 @@ javacall_result javacall_time_finalize_timer(javacall_handle handle){
     	javacall_print("javacall_time_finalize_timer try to finalize invalid timer\n");
     	return JAVACALL_FAIL;
     }
-    javacall_print("javacall_time_finalize_timer:ok\n");
+//    javacall_print("javacall_time_finalize_timer:ok\n");
     sceKernelCancelAlarm(timers[i].alarmID);
     timer_slots[i] = 0;
     return JAVACALL_OK;
