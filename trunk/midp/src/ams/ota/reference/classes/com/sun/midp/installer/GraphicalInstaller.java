@@ -1572,7 +1572,8 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
             successMessage = theSuccessMessage;
             update = updateFlag;
             noConfirmation = noConfirmationFlag;
-            jarOnly = !theParent.http_install;
+            jarOnly = !theParent.http_install && 
+            			theJadUrl.toLowerCase().endsWith(".jar");
         }
 
         /**
@@ -1611,7 +1612,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                         GraphicalInstaller.saveSettings(null,
                                                         lastInstalledMIDletId);
 
-                        parent.displaySuccessMessage(successMessage);
+                        //parent.displaySuccessMessage(successMessage);
 
                         /*
                          * We need to prevent "flashing" on fast development
@@ -1724,18 +1725,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
 
             int reason = e.getReason();
             if (noConfirmation) {
-                if (update) {
-                    /* no confirmation is needed */
-                    return true;
-                } else {
-                    /* confirmation is needed only for update */
-                    if((reason != InvalidJadException.OLD_VERSION) &&
-                       (reason != InvalidJadException.ALREADY_INSTALLED) &&
-                       (reason != InvalidJadException.NEW_VERSION)) {
-                        /* no confirmation is needed since it's not an update */
-                        return true;
-                    }
-                }
+                return true;
             }
 
             switch (e.getReason()) {
@@ -1803,7 +1793,11 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
          */
         public boolean keepRMS(InstallState state) {
             installState = state;
-
+            
+            if (noConfirmation) {
+                return true;
+            }
+            
             parent.displayKeepRMSForm(state);
             return waitForUser();
         }
@@ -1822,6 +1816,11 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
          */
         public boolean confirmAuthPath(InstallState state) {
             parent.displayAuthPathConfirmation(state);
+
+            if (noConfirmation) {
+                return true;
+            }
+            
             return waitForUser();
         }
 
@@ -1838,6 +1837,10 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                 return true;
             }
 
+            if (noConfirmation) {
+                return true;
+            }
+            
             parent.displayJarOnlyDownloadConfirmation();
             return waitForUser();
         }

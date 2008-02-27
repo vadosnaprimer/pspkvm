@@ -42,6 +42,9 @@ import com.sun.midp.i18n.ResourceConstants;
 import com.sun.midp.log.Logging;
 import com.sun.midp.log.LogChannels;
 
+import com.sun.j2me.security.AccessController;
+import com.sun.midp.security.*;
+
 import com.sun.midp.payment.PAPICleanUp;
 
 import java.io.*;
@@ -114,6 +117,9 @@ class AppManagerUI extends Form
     private static final String WIFI_SELECTOR_APP =
     	 "com.sun.midp.appmanager.WifiSelector";
 
+    private static final String SETTINGS_STORE = "amssettings";
+
+    private static final int LASTPLAY_MIDLET_RECORD_ID = 1;
     /**
      * The font used to paint midlet names in the AppSelector.
      * Inner class cannot have static variables thus it has to be here.
@@ -315,11 +321,16 @@ class AppManagerUI extends Form
                  MIDletSuiteInfo ms) {
         super(null);
 
+        /*
         try {
             caManagerIncluded = Class.forName(CA_MANAGER) != null;
         } catch (ClassNotFoundException e) {
             // keep caManagerIncluded false
         }
+        */
+        //M@x: We don't need caManager currently, leave it out for keeping AMS simple
+        caManagerIncluded = false;
+        
 
         this.manager = manager;
         this.display = display;
@@ -329,6 +340,8 @@ class AppManagerUI extends Form
 
         midletSuiteStorage = MIDletSuiteStorage.getMIDletSuiteStorage();
 
+        initSettings();
+
         setTitle(Resource.getString(
                 ResourceConstants.AMS_MGR_TITLE));
         updateContent();
@@ -337,7 +350,18 @@ class AppManagerUI extends Form
         setCommandListener(this);
 
         if (first) {
-            display.setCurrent(new SplashScreen(display, this));
+            //display.setCurrent(new SplashScreen(display, this));
+            display.setCurrent(this);
+            int suiteId = getLastPlayedMIDlet();
+            if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
+                for (int i = 0; i < size(); i++) {
+                    MidletCustomItem mi = (MidletCustomItem)get(i);
+                    if (mi.msi.suiteId == suiteId) {
+                        display.setCurrentItem(mi);
+                        break;
+                    }
+                }
+            }
         } else {
             // if a MIDlet was just installed
             // getLastInstalledMidletItem() will return MidletCustomItem
@@ -368,7 +392,18 @@ class AppManagerUI extends Form
                             }
                         }
                     }
-                } // ms != null
+                } else {
+                    int suiteId = getLastPlayedMIDlet();
+                    if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
+                        for (int i = 0; i < size(); i++) {
+                            MidletCustomItem mi = (MidletCustomItem)get(i);
+                            if (mi.msi.suiteId == suiteId) {
+                                display.setCurrentItem(mi);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -812,26 +847,11 @@ class AppManagerUI extends Form
             append(msi);
         }
 
-        if (caManagerIncluded) {
-            // Add the CA manager as the second installed midlet
-            if (size() > 1) {
-                msi = ((MidletCustomItem)get(1)).msi;
-            }
-
-            if (msi == null || msi.midletToRun == null ||
-                !msi.midletToRun.equals(CA_MANAGER)) {
-                msi = new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
-                  CA_MANAGER,
-                  Resource.getString(ResourceConstants.CA_MANAGER_APP), true);
-                append(msi);
-            }
-        }
-
         /**
          * Wifi selector
          **/
-        if (size() > 2) {
-            msi = ((MidletCustomItem)get(2)).msi;
+        if (size() > 1) {
+            msi = ((MidletCustomItem)get(1)).msi;
         }
  
         if (msi == null || msi.midletToRun == null ||
@@ -843,6 +863,22 @@ class AppManagerUI extends Form
                     true);
             append(msi);
         }
+
+        if (caManagerIncluded) {
+            // Add the CA manager as the second installed midlet
+            if (size() > 2) {
+                msi = ((MidletCustomItem)get(2)).msi;
+            }
+
+            if (msi == null || msi.midletToRun == null ||
+                !msi.midletToRun.equals(CA_MANAGER)) {
+                msi = new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
+                  CA_MANAGER,
+                  Resource.getString(ResourceConstants.CA_MANAGER_APP), true);
+                append(msi);
+            }
+        }
+
         
         // Add the rest of the installed midlets
         for (int lowest, i = 0; i < suiteIds.length; i++) {
@@ -1247,6 +1283,115 @@ class AppManagerUI extends Form
         return ret;
     }
 
+
+    /**
+     * Initialize the settings database if it doesn't exist. This may create
+     * two entries. The first will be for the download url, the second will
+     * be for storing the storagename of the currently selected midlet
+     * <p>
+     * Method requires com.sun.midp.ams permission.
+     */
+    public static void initSettings() {
+        AccessController.checkPermission(Permissions.AMS_PERMISSION_NAME);
+
+        try {
+            RecordStore settings = RecordStore.
+                                   openRecordStore(SETTINGS_STORE, true);
+
+            try {
+                if (settings.getNumRecords() == 0) {
+                    // space for last played MIDlet Suite name
+                    settings.addRecord(null, 0, 0);
+                }
+            } finally {
+                settings.closeRecordStore();
+            }
+
+        } catch (Exception e) {
+            if (Logging.REPORT_LEVEL <= Logging.WARNING) {
+                Logging.report(Logging.WARNING, LogChannels.LC_AMS,
+                               "initSettings  throw an Exception");
+            }
+        }
+    }
+
+    private static Exception saveLastPlayedMIDlet(int curMidlet) {
+        Exception ret = null;
+
+        AccessController.checkPermission(Permissions.AMS_PERMISSION_NAME);
+
+        try {
+            String temp;
+            ByteArrayOutputStream bas;
+            DataOutputStream dos;
+            byte[] data;
+            RecordStore settings;
+
+            bas = new ByteArrayOutputStream();
+            dos = new DataOutputStream(bas);
+            settings = RecordStore.openRecordStore(SETTINGS_STORE, false);
+
+            // Save the current midlet even if its id is
+            // MIDletSuite.UNUSED_SUITE_ID. Otherwise in SVM mode
+            // the last installed midlet will be always highlighted
+            // because its id is recorded in this RMS record.
+            bas.reset();
+
+            dos.writeInt(curMidlet);
+            data = bas.toByteArray();
+            settings.setRecord(LASTPLAY_MIDLET_RECORD_ID,
+                               data, 0, data.length);
+
+            settings.closeRecordStore();
+            dos.close();
+        } catch (Exception e) {
+            ret = e;
+        }
+
+        return ret;
+    }
+
+    private static int getLastPlayedMIDlet() {
+        ByteArrayInputStream bas;
+        DataInputStream dis;
+        byte[] data;
+        RecordStore settings = null;
+        int ret = MIDletSuite.UNUSED_SUITE_ID;
+
+        try {
+            settings = RecordStore.
+                       openRecordStore(SETTINGS_STORE,
+                                       false);
+
+            /** we should be guaranteed that this is always the case! */
+            if (settings.getNumRecords() > 0) {
+
+                data = settings.getRecord(LASTPLAY_MIDLET_RECORD_ID);
+
+                if (data != null) {
+                    bas = new ByteArrayInputStream(data);
+                    dis = new DataInputStream(bas);
+                    ret = dis.readInt();
+                }
+            }
+
+        } catch (RecordStoreException e) {
+            // ignore
+        } catch (IOException e) {
+            // ignore
+        } finally {
+            if (settings != null) {
+                try {
+                    settings.closeRecordStore();
+                } catch (RecordStoreException e) {
+                    // ignore
+                }
+            }
+        }
+
+        return ret;
+    }
+
     /**
      * Finds a MidletCustomItem corresponding to the last installed
      * midlet suite.
@@ -1290,6 +1435,8 @@ class AppManagerUI extends Form
      * that must be launched
      */
     private void launchMidlet(RunningMIDletSuiteInfo msi) {
+        saveLastPlayedMIDlet(msi.suiteId);
+        
         if (msi.hasSingleMidlet()) {
             manager.launchSuite(msi, msi.midletToRun);
             display.setCurrent(this);

@@ -43,7 +43,7 @@ public class WifiSelector extends MIDlet implements CommandListener {
    
             String prof;
             int i;
-            wifiprof = new List("WIFI setup", List.EXCLUSIVE);
+            wifiprof = new List("WIFI setup", Choice.IMPLICIT);
             wifiprof.addCommand(backCmd);
 
             display = Display.getDisplay(this);
@@ -87,7 +87,8 @@ public class WifiSelector extends MIDlet implements CommandListener {
     	} if (c == backCmd) {
             // goto back to the manager midlet
             notifyDestroyed();
-        } else if (c == selectWIFICmd) {
+        } else if (s == wifiprof &&
+                       (c == List.SELECT_COMMAND || c == selectWIFICmd)) {
 
     
                     

@@ -102,9 +102,11 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                                          (ResourceConstants.BACK),
                                          Command.BACK, 1);
 
-    private List chooseMethod = new List("Please select install location", List.EXCLUSIVE);
+    private List chooseMethod = new List("Please select install location", List.IMPLICIT);
     private Command installLocCmd = new Command(
         Resource.getString(ResourceConstants.INSTALL), Command.ITEM, 1);
+
+    private String last_dir = "/ms0:";
     
     /**
      * Create and initialize a new discovery application MIDlet.
@@ -119,7 +121,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
 
         
-        chooseMethod.append("Install from local file system (ms0:/)", null);
+        chooseMethod.append("Install from memory stick (ms0:/)", null);
         chooseMethod.append("Install from http", null);
         chooseMethod.addCommand(installLocCmd);
         chooseMethod.addCommand(endCmd);
@@ -160,7 +162,8 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
      * @param s the Displayable the command was on.
      */
     public void commandAction(Command c, Displayable s) {
-        if (c == installLocCmd) {
+        if (s == chooseMethod && 
+        	(c == List.SELECT_COMMAND || c == installLocCmd)) {
             
             if (chooseMethod.getSelectedIndex() == 0) {
             	  http_install = false;
@@ -172,7 +175,16 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
             restoreSettings();
 
-            getUrl();
+            if (http_install) {
+                getUrl();
+            } else {
+                if (!defaultInstallListUrl.startsWith("ms0:/")) {
+                    //The saved url is somehow corruptted, recover it by "ms0:/"
+                    defaultInstallListUrl = "ms0:/";
+                }
+                last_dir = defaultInstallListUrl;
+                discoverSuitesToInstall(defaultInstallListUrl);
+            }
         } else if (c == discoverCmd) {
             // user wants to discover the suites that can be installed
             discoverSuitesToInstall(urlTextBox.getString());
@@ -189,7 +201,11 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             	  }
             	  
             	  discoverSuitesToInstall(install_dir);
+            	  last_dir = install_dir;
             } else {
+                if (!http_install) {
+                    saveURLSetting();
+                }
                 installSuite(installListBox.getSelectedIndex());
             }
         } else if (c == backCmd) {
@@ -264,7 +280,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
         String temp;
         Exception ex;
 
-        temp = urlTextBox.getString();
+        temp = http_install?urlTextBox.getString():last_dir;
 
         ex = GraphicalInstaller.saveSettings(http_install, temp, MIDletSuite.INTERNAL_SUITE_ID);
         if (ex != null) {
@@ -375,13 +391,14 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
         System.out.println("installSuite: "+ suite.url);
 
-        midletSuite.setTempProperty(null, "arg-0", "I");
         midletSuite.setTempProperty(null, "arg-1", suite.url);
         midletSuite.setTempProperty(null, "arg-2", suite.label);
         if (http_install) {
+            midletSuite.setTempProperty(null, "arg-0", "I");
             //The 3rd arg is for indicating file installer is used or not
             midletSuite.setTempProperty(null, "arg-3", "false");
         } else {
+            midletSuite.setTempProperty(null, "arg-0", "FI");
             midletSuite.setTempProperty(null, "arg-3", "true");
         }
 
@@ -583,7 +600,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                             }
                         }
 
-                        parent.installListBox.addCommand(parent.backCmd);
+                        parent.installListBox.addCommand(http_install?parent.backCmd:parent.endCmd);
                         parent.installListBox.addCommand(parent.installCmd);
                         parent.installListBox.setCommandListener(parent);
 

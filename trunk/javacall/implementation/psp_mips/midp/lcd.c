@@ -69,12 +69,17 @@ javacall_result javacall_lcd_init(void) {
        
        sceDisplaySetMode (0, 480, 272);
 	sceDisplaySetFrameBuf(vram, 512, PSP_DISPLAY_PIXEL_FORMAT_565, PSP_DISPLAY_SETBUF_NEXTFRAME);
-	
+
+
+	/*
 	if (DukeTango[0] != 480 || DukeTango[1] != 272) {
 		p = NULL;
 	} else {
 		p = (unsigned short*)DukeTango + 2;
 	}
+	*/
+
+	p = NULL;
 	
 	for (y = 0; y < 272; y++) { 
 		for (x = 0; x < 480; x++) { 
