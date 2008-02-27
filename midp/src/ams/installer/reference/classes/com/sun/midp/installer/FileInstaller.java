@@ -89,7 +89,7 @@ public class FileInstaller extends Installer {
     protected int downloadJAR(String filename) throws IOException {
         int jarSize;
         RandomAccessStream jarInputStream, jarOutputStream;
-        String jarFilename = getUrlPath(info.jarUrl);
+        String jarFilename = getUrlPath(info.jadUrl, info.jarUrl);
 System.out.println("FileInstaller.downloadJAR:"+jarFilename);
         // Open source (jar) file
         jarInputStream = new RandomAccessStream();
@@ -158,6 +158,27 @@ System.out.println("FileInstaller.downloadJAR:"+jarFilename);
         /* some additional actions can be added here */
 
         return true;
+    }
+
+    protected void postInstallMsgBackToProvider(String message) {
+    	//Never post install message in fileInstaller
+    }
+
+    public String getUrlPath(String jadUrl, String jarUrl) {
+        if (jarUrl == null) {
+            return null;
+        }
+
+        if (jadUrl == null) {
+            return jarUrl;
+        }
+
+        if (jarUrl.startsWith("ms0:/") || jarUrl.startsWith("/")) {
+            //absolute path
+            return jarUrl;
+        }
+
+        return jadUrl.substring(0, jadUrl.lastIndexOf('/') + 1) + jarUrl;
     }
 
 }

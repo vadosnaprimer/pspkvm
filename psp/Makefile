@@ -24,7 +24,7 @@ LIBS := -Wl,--start-group -lmidp$(g) -lcldc_vm$(g) --end-group  -lpcsl_file -lpc
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = pspkvm v0.3.0
-PSP_EBOOT_ICON = java-duke-guitar.png
+#PSP_EBOOT_ICON = java-duke-guitar.png
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include build.mak
