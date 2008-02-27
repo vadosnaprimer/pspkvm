@@ -52,18 +52,23 @@ extern "C" {
 #include <psputility.h>
 #include <psputility_netparam.h>
 
-static int network_initialized = 0;
+struct _DNSHandle;
 
-
-typedef struct {
+typedef struct _DNSHandle{
+	struct _DNSHandle* next;
 	int ok;
 	int ip_len;
 	int max_ip_len;	
 	SceUID res_thread_id;
 	int resolver_id;
+	javacall_handle monitor_handle;
 	char ip[32];
 	char hostname[1024];
 } DNSHandle;
+
+static int network_initialized = 0;
+static DNSHandle* dnsqueue = NULL;
+
 extern void sockets_init();
 /**
  * Performs platform-specific initialization of the networking system.
@@ -84,24 +89,9 @@ javacall_result javacall_network_init_start(void) {
     
     sockets_init();
     if((err = pspSdkInetInit())) {
-    	printf(": Error, could not initialise the network %08X\n", err);		
+    	javacall_printf(": Error, could not initialise the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }
-
-    /*
-    while (sceUtilityCheckNetParam(start) == 0) {
-    	sceUtilityGetNetParam(start, PSP_NETPARAM_NAME, (netData *)confname);
-    	printf("Networking initializing: Found wifi config (%s)\n", confname);
-    	start++;    
-    }
-   
-    if (!connect_to_apctl(5)) {
-    	return JAVACALL_FAIL;
-    } else {
-    	network_initialized = 1;
-    	return JAVACALL_OK; 
-    }
-    */
 
     network_initialized = 1;
     return JAVACALL_OK;
@@ -111,7 +101,9 @@ javacall_result javacall_network_init_start(void) {
 char* javacall_network_get_profile(int index) {
     if (sceUtilityCheckNetParam(index) == 0) {
     	sceUtilityGetNetParam(index, PSP_NETPARAM_NAME, (netData *)confname);
-    	printf("Networking initializing: Found wifi config (%s)\n", confname);
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("Networking initializing: Found wifi config (%s)\n", confname);
+#endif
     	return confname;
     }
 
@@ -124,9 +116,13 @@ javacall_result javacall_network_connect_profile(int index) {
     	if (sceUtilityCheckNetParam(i) == 0) {
     	    n++;
     	    if (n == index) {
-    	        printf("Connecting to %d ...\n", i);
-               if (err = sceNetApctlConnect(i) != 0) {		
-		     printf(": sceNetApctlConnect returns %08X\n", err);
+#ifdef DEBUG_JAVACALL_NETWORK
+    	        javacall_printf("Connecting to %d ...\n", i);
+#endif
+               if (err = sceNetApctlConnect(i) != 0) {
+#ifdef DEBUG_JAVACALL_NETWORK
+		     javacall_printf(": sceNetApctlConnect returns %08X\n", err);
+#endif
     	            return JAVACALL_FAIL;
                } else {
                    return JAVACALL_OK; 
@@ -141,10 +137,14 @@ javacall_result javacall_network_connect_profile(int index) {
 javacall_result javacall_network_connect_state(int* state) {
     int err = sceNetApctlGetState(state);
     if (err != 0)		{		
-        printf(": sceNetApctlGetState returns $%x\n", err);
+#ifdef DEBUG_JAVACALL_NETWORK
+        javacall_printf(": sceNetApctlGetState returns $%x\n", err);
+#endif
         return JAVACALL_FAIL;		
     } else {
-        printf(" sceNetApctlGetState state %d\n", *state);
+#ifdef DEBUG_JAVACALL_NETWORK
+        javacall_printf(" sceNetApctlGetState state %d\n", *state);
+#endif
         return JAVACALL_OK;
     }
 }
@@ -191,21 +191,14 @@ javacall_result javacall_network_finalize_finish(void)
     return JAVACALL_FAIL;
 }
 
-int monitor_thread(SceSize args, void *argp) {
-	DNSHandle* hdns = *(DNSHandle**)argp;
-	if (hdns == NULL) {
-		javacall_print("FATAL: monitor_thread: passed DNSHandle* is NULL\n");
-       	return -2;
-	}
-
-	int rid = hdns->resolver_id;
-	//printf("monitor start rid=%d...\n", rid);	
-	sceKernelDelayThread(20000000L);	
-	//printf("monitor triggered %d\n", rid);	
-	sceNetResolverStop(rid);	 
-	//printf("Resolver stop %d\n", rid);
-
-	return 0;
+void monitor_timeout(javacall_handle handle) {
+	DNSHandle* p;	
+        for (p = dnsqueue; p != 0; p = p->next) {
+        	if (p->monitor_handle == handle) {
+        		sceNetResolverStop(p->resolver_id);
+        		return;
+        	}
+        }
 }
 
 int resolve_thread(SceSize args, void *argp) {
@@ -224,50 +217,52 @@ int resolve_thread(SceSize args, void *argp) {
     	
         	/* Create a resolver */		
         	if(sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0)	{
-        		printf("Error creating resolver\n");			
+        		javacall_printf("Error creating resolver\n");			
         		break;
         	}
-        	
-        	printf("Created resolver %08x\n", rid);
-        	SceUInt thid = sceKernelCreateThread("monitor_thread", monitor_thread, 0x18, 0x10000, PSP_THREAD_ATTR_USER, NULL);	
-        	if(thid < 0) {			
-        		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
-        								hdns, JAVACALL_FAIL);
-        		printf("Error, could not create monitor thread\n");
-        		break;
-        	}
-        	
+#ifdef DEBUG_JAVACALL_NETWORK        	
+        	javacall_printf("Created resolver %08x\n", rid);
+#endif	
         	hdns->resolver_id = rid;
 
               int retry = 3;
               int ret;
         	do {
-        	sceKernelStartThread(thid, sizeof(&hdns), &hdns);	
-        	
-        	/* Resolve a name to an ip address */	
-        	ret = sceNetResolverStartNtoA(rid, hdns->hostname, &addr, 1, 1);		
-        	printf("sceNetResolverStartNtoA (%d) return %d\n", rid, ret);	
-        	
-        	sceKernelTerminateThread(thid);
-        	printf("sceKernelTerminateThread(%d)\n", thid);		
-        	sceKernelWaitThreadEndCB(thid, NULL);
+        		javacall_handle monitor_handle;
+         		if (JAVACALL_FAIL ==
+         			javacall_time_initialize_timer(15000, JAVACALL_FALSE, 
+         										monitor_timeout, &monitor_handle)) {
+        
+        			javacall_print("Error, could not create monitor timer\n");
+        			ret = -1;
+        			break;
+         		}
+         		hdns->monitor_handle = monitor_handle;
+                	
+                	/* Resolve a name to an ip address */	
+                	ret = sceNetResolverStartNtoA(rid, hdns->hostname, &addr, 1, 1);
+#ifdef DEBUG_JAVACALL_NETWORK
+                	javacall_printf("sceNetResolverStartNtoA (%d) return %d\n", rid, ret);	
+#endif
+                	
+         		javacall_time_finalize_timer(monitor_handle);
         	} while( --retry > 0 && ret < 0);
-        	sceKernelDeleteThread(thid);
-        	printf("sceKernelDeleteThread(%d) returns\n", thid);
 
-        	sceNetResolverStop(rid);		
+        	sceNetResolverStop(rid);
         	sceNetResolverDelete(rid);
 
         	if (ret < 0) {
-        		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
-        								hdns, JAVACALL_FAIL);
-        		printf("Error resolving %s\n", hdns->hostname);
+#ifdef DEBUG_JAVACALL_NETWORK
+        		javacall_printf("Error resolving %s\n", hdns->hostname);
+#endif
         		break;
         	}
         	
         	int len = sizeof(addr.s_addr);
         	if (len <= hdns->max_ip_len) {
-        		printf("Resolved %s to %s\n", hdns->hostname, inet_ntoa(addr));
+#ifdef DEBUG_JAVACALL_NETWORK
+        		javacall_printf("Resolved %s to %s\n", hdns->hostname, inet_ntoa(addr));
+#endif
         		hdns->ip_len = len;
         		memcpy(hdns->ip, &addr.s_addr, len);
         		hdns->ok = 1;
@@ -288,7 +283,7 @@ int resolve_thread(SceSize args, void *argp) {
 static void* start_lookup_ip(char* hostname, int maxIpLen) {
 	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x40, 0x10000, PSP_THREAD_ATTR_USER, NULL);	
 	if(thid < 0) {	
-		printf("Error, could not create thread\n");	
+		javacall_printf("Error, could not create thread\n");	
 		return NULL;	
 	}
 	DNSHandle* hdns = (DNSHandle*)malloc(sizeof(DNSHandle));
@@ -297,6 +292,8 @@ static void* start_lookup_ip(char* hostname, int maxIpLen) {
 	hdns->hostname[ sizeof(hdns->hostname) - 1 ] = '\0';
 	hdns->ok = 0;
 	hdns->max_ip_len = maxIpLen;
+	hdns->next = dnsqueue;
+	dnsqueue = hdns;
 	sceKernelStartThread(thid, sizeof(&hdns), &hdns);
 	return hdns;
 }
@@ -304,16 +301,26 @@ static void* start_lookup_ip(char* hostname, int maxIpLen) {
 static int end_lookup_ip(DNSHandle* handle, char* pAddress, int maxLen, int* pLen) {
 	SceUID thid = handle->res_thread_id;
 	
-	int ret = sceKernelTerminateThread(thid);		
-	printf("sceKernelTerminateThread(%d) returns %d\n", thid, ret);		
+	sceKernelTerminateThread(thid);			
 	sceKernelWaitThreadEndCB(thid, NULL);					
-	ret = sceKernelDeleteThread(thid);	
-	printf("sceKernelDeleteThread(%d) returns %d\n", thid, ret);
+	sceKernelDeleteThread(thid);	
+	
 	
 	int ok = handle->ok;
 	if (ok) {
         	*pLen = handle->ip_len;
         	memcpy(pAddress, handle->ip, *pLen);
+	}
+
+	if (dnsqueue == handle) {
+		dnsqueue = handle->next;
+	} else {
+        	DNSHandle* p;	
+        	for (p = dnsqueue; p != 0; p = p->next) {
+        		if (p->next == handle) {
+        			p->next = handle->next;
+        		}
+        	}
 	}
 
 	free(handle);	
@@ -346,7 +353,9 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
     struct in_addr addr;
     (void)pContext;
 
-    printf("javacall_network_gethostbyname_start: %s\n", hostname);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_network_gethostbyname_start: %s\n", hostname);
+#endif
     if(sceNetInetInetAton(hostname, &addr) != 0) {
     	if (sizeof(addr) <= maxLen) {
            memcpy(pAddress, &addr.s_addr, sizeof(addr));

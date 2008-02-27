@@ -65,8 +65,8 @@ class SuiteDownloadInfo {
         
         info = getNextJadLink(page);
         while (info != null) {
-            if (info.url.endsWith(".jad") ||
-                    info.url.endsWith(".jar")) {
+            if (info.url.toLowerCase().endsWith(".jad") ||
+                    info.url.toLowerCase().endsWith(".jar")) {
                 info.http = true;
                 suites.addElement(info);
             }
@@ -109,8 +109,8 @@ class SuiteDownloadInfo {
           
           int handle = openDir(dir);
           while (handle != 0 && (info = getNextFileInDir(dir, handle)) != null) {
-            if (info.url.endsWith(".jad") ||
-                    info.url.endsWith(".jar") ||
+            if (info.url.toLowerCase().endsWith(".jad") ||
+                    info.url.toLowerCase().endsWith(".jar") ||
                     (info.dir && !info.label.equals("."))) {
                 info.http = false;
                 suites.addElement(info);
