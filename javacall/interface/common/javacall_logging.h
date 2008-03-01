@@ -51,8 +51,6 @@ extern "C" {
  */
 void javacall_print(const char *s);
 
-void javacall_printf(const char* format, ...);
-
 typedef enum {
     javacall_channel_default = 2608,
     javacall_channel_system_out,

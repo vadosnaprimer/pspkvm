@@ -190,3 +190,16 @@ KNIDECL(javax_microedition_lcdui_Display_directFlush) {
 
     KNI_ReturnBoolean(success);
 } 
+
+KNIEXPORT KNI_RETURNTYPE_VOID
+KNIDECL(com_sun_midp_lcdui_DisplayDeviceAccess_setDeviceScreenSize) {
+    int w = KNI_GetParameterAsInt(1);
+    int h = KNI_GetParameterAsInt(2);
+
+    /**
+     * TODO: Move it to md layer; new lcdlf func is required
+     */
+    javacall_set_new_screen_size(w, h);
+    
+    KNI_ReturnVoid();
+}

@@ -239,6 +239,11 @@ int javacall_lcd_get_screen_width();
 int javacall_lcd_get_screen_height();
 
 /**
+ * Set new screen size
+ */
+void javacall_set_new_screen_size(int w, int h);
+
+/**
  * The platform should invoke this function in platform context
  * to rotate the screen.
  */

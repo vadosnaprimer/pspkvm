@@ -25,7 +25,6 @@
 
 #include "javacall_logging.h"
 #include <stdio.h>
-#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,18 +40,6 @@ void javacall_print(const char *s) {
 printf(s);
 }
 
-void javacall_printf(const char* format, ...) {
-    va_list argptr;
-    
-    /*
-     * To prevent warning about unused variable when
-     * not checking for overflow
-     */
-
-    va_start(argptr, format);
-    printf(format, argptr);
-    va_end(argptr);
-}
 
 #ifdef __cplusplus
 }
