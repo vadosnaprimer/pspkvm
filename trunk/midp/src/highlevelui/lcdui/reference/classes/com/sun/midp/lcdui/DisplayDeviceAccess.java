@@ -178,4 +178,6 @@ public class DisplayDeviceAccess {
      */
     private native boolean isBacklightSupported0(int displayId);
 
+    public static native void setDeviceScreenSize(int w, int h);
+
 }

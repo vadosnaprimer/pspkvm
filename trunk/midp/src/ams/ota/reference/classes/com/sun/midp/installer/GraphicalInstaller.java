@@ -62,6 +62,9 @@ import com.sun.midp.io.j2me.storage.File;
 
 import com.sun.midp.util.ResourceHandler;
 
+import java.util.Hashtable;
+import com.sun.midp.lcdui.DisplayDeviceAccess;
+
 /**
  * The Graphical MIDlet suite installer.
  * <p>
@@ -88,6 +91,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     public static final int ALERT_TIMEOUT = 1250;
     /** settings database */
     public static final String SETTINGS_STORE = "settings";
+    public static final String DEV_SETTINGS_STORE = "devsettings";
     /** record id of selected midlet */
     public static final int HTTP_URL_RECORD_ID = 1;
     /** record is of the last installed midlet */
@@ -155,6 +159,15 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     private Command removeRMSCmd =
         new Command(Resource.getString(ResourceConstants.NO),
                     Command.CANCEL, 1);
+
+    private static Hashtable devices;
+
+    static {
+    	 devices = new Hashtable();
+        devices.put(/*Device ID*/new Integer(0), new String("Full Screen (480x272),480,272,0"));
+        devices.put(/*Device ID*/new Integer(1), new String("(180x272),180,272,0"));
+        devices.put(/*Device ID*/new Integer(2), new String("(172x220),172,220,0"));
+    }
 
     /**
      * Gets an image from the internal storage.
@@ -663,6 +676,164 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
         return ret;
     }
 
+    public static Exception saveDeviceSettings(int deviceID, int curMidlet) {
+        Exception ret = null;
+        RecordStore settings = null;
+        
+        AccessController.checkPermission(Permissions.AMS_PERMISSION_NAME);
+
+        try {
+            String temp;
+            ByteArrayOutputStream bas;
+            DataOutputStream dos;
+            byte[] data;            
+            int rec_id;
+
+            bas = new ByteArrayOutputStream();
+            dos = new DataOutputStream(bas);
+
+            bas.reset();
+
+            dos.writeInt(curMidlet);
+            dos.writeInt(deviceID);
+            data = bas.toByteArray();
+            
+            settings = RecordStore.openRecordStore(DEV_SETTINGS_STORE, true);
+            
+            if ((rec_id = findGameDevSetting(settings, curMidlet)) < 0) {             
+                settings.addRecord(data, 0, data.length);
+            } else {
+                //Already installed, reuse previous record
+                settings.setRecord(rec_id,  data, 0, data.length);
+            }
+
+            
+            dos.close();
+        } catch (Exception e) {
+            ret = e;
+        } finally {
+            try {
+            	  if (settings != null) {
+                    settings.closeRecordStore();
+            	  }
+            } catch (Exception e1) {
+            }
+        }
+
+        return ret;
+
+    }
+
+    private static int findGameDevSetting(RecordStore settings, int curMidlet) {
+    	 int ret = -1;
+    	 RecordEnumeration enum = null;
+    	 
+    	 
+        try {
+            enum = settings.enumerateRecords(null, null, false);
+            try {
+                while (enum.hasNextElement()) {
+                	  int rid = enum.nextRecordId();            	  
+                    ByteArrayInputStream bis = new ByteArrayInputStream(settings.getRecord(rid));
+                    DataInputStream dis = new DataInputStream(bis);
+                    
+                    try {
+                        int midletId = dis.readInt();
+                        if (midletId == curMidlet) {
+                           ret = rid;
+                           break;
+                        }
+                    } catch (Exception ne) {
+                        settings.deleteRecord(rid);
+                        if (Logging.REPORT_LEVEL <= Logging.WARNING) {
+                            Logging.report(Logging.WARNING, LogChannels.LC_AMS,
+                                   "findGameDevSetting: Removed corrupt record");
+                        }
+                    } 
+                }
+            } finally {
+                enum.destroy();
+            }
+
+        } catch (Exception e) {
+            
+        }
+        
+        System.out.println("findGameDevSetting return "+ret);
+        return ret;
+    }
+
+ public static int getGameDevSetting (int midlet) {
+     int ret = -1;
+     RecordStore settings = null;
+     
+     try {
+         settings = RecordStore.openRecordStore(DEV_SETTINGS_STORE, false, 0, true);
+         try {
+             int rid = findGameDevSetting(settings, midlet);
+             if (rid > 0) {
+                 ByteArrayInputStream bis = new ByteArrayInputStream(settings.getRecord(rid));
+                 DataInputStream dis = new DataInputStream(bis);
+                 dis.readInt(); //midlet id
+                 ret = dis.readInt(); //return device id
+             }
+         } finally {
+             settings.closeRecordStore();
+         }
+     } catch (Exception e) {
+         
+     }
+     
+     return ret;
+ }
+
+ public static void setDeviceToRun (int deviceId) {     
+     System.out.println("setDeviceToRun:"+deviceId);
+     DisplayDeviceAccess.setDeviceScreenSize(getDeviceWidth(deviceId), getDeviceHeight(deviceId));
+ }
+
+ private static int getDeviceWidth(int deviceId) {
+     String setting = (String)devices.get(new Integer(deviceId));
+     if (setting != null) {
+         int i = setting.indexOf(',');
+         int i1 = setting.indexOf(',', i + 1);
+         try {
+             int w = Integer.parseInt(setting.substring(i+1, i1));
+             return w>480?480:w;
+         } catch (Exception e) {
+         }
+     }
+
+     return 480;
+ }
+
+ private static int getDeviceHeight(int deviceId) {
+     String setting = (String)devices.get(new Integer(deviceId));
+     if (setting != null) {
+         int i = setting.indexOf(',');
+         i = setting.indexOf(',', i + 1);
+         int i1 = setting.indexOf(',', i + 1);
+         try {
+             int h = Integer.parseInt(setting.substring(i+1, i1));
+             return h>272?272:h;
+         } catch (Exception e) {
+         }
+     }
+
+     return 272;
+ }
+
+ private static String getDeviceName(int deviceId) {
+     String setting = (String)devices.get(new Integer(deviceId));
+     if (setting != null) {
+         int i = setting.indexOf(',');
+         
+         return setting.substring(0, i);
+     }
+
+     return null;
+ }
+ 
     /**
      * Update a suite.
      *
@@ -1524,6 +1695,32 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
         displayAlert(title, message, AlertType.ERROR);
     }
 
+    
+    private void displayDeviceSelector(int midletId) {
+        final List selector = new List("Select preferred device", Choice.IMPLICIT);
+        final int mid = midletId;
+        int dev = 0;
+        String name;
+
+        while ((name = getDeviceName(dev++)) != null) {        	
+            selector.append(name, null);
+        }
+        selector.setCommandListener(
+            new CommandListener() {
+                public void commandAction(Command c, Displayable d) { 
+                	if (c == List.SELECT_COMMAND) {
+                	    saveDeviceSettings(selector.getSelectedIndex(), mid);
+                	    synchronized (backgroundInstaller) {
+                             backgroundInstaller.notify();
+                         }
+                	}
+                }
+            }
+        );
+        display.setCurrent(selector);
+    }
+    
+
 
     /** A class to install a suite in a background thread. */
     private class BackgroundInstaller implements Runnable, InstallListener {
@@ -1613,6 +1810,8 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                                                         lastInstalledMIDletId);
 
                         //parent.displaySuccessMessage(successMessage);
+                        parent.displayDeviceSelector(lastInstalledMIDletId);
+                        waitForUser();
 
                         /*
                          * We need to prevent "flashing" on fast development

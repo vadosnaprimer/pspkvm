@@ -35,6 +35,12 @@ extern const unsigned short DukeTango[];
 
 static unsigned short* vram = (unsigned short*) (0x40000000 | 0x04000000);
 static javacall_pixel* scbuff = NULL;
+
+static int vscr_w = 480;
+static int vscr_h = 272;
+
+static int resized = 0;
+
 /**
  * The function javacall_lcd_init is called by during Java VM startup, allowing the
  * platform to perform device specific initializations. The function is required to
@@ -87,7 +93,7 @@ javacall_result javacall_lcd_init(void) {
  		} 
  	}
 	
-      	scbuff = (javacall_pixel*)malloc(480*272*sizeof(javacall_pixel));
+      	scbuff = (javacall_pixel*)malloc(vscr_w*vscr_h*sizeof(javacall_pixel));
 	if (scbuff == NULL) {
 		return JAVACALL_FAIL;
 	}
@@ -121,8 +127,13 @@ javacall_pixel* javacall_lcd_get_screen(javacall_lcd_screen_type screenType,
                                         int* screenWidth,
                                         int* screenHeight,
                                         javacall_lcd_color_encoding_type* colorEncoding){
-    *screenWidth   = 480;
-    *screenHeight  = 272;
+    if (resized) {
+        javacall_lcd_finalize();
+        javacall_lcd_init();
+        resized = 0;
+    }
+    *screenWidth   = vscr_w;
+    *screenHeight  = vscr_h;
     *colorEncoding = JAVACALL_LCD_COLOR_RGB565;
     return (javacall_pixel* )scbuff;
 }
@@ -139,9 +150,9 @@ javacall_pixel* javacall_lcd_get_screen(javacall_lcd_screen_type screenType,
 javacall_result javacall_lcd_flush(void) {
 #if 1
     int x,y;
-    for (y = 0; y < 272; y++) { 
-		for (x = 0; x < 480; x++) { 
-			unsigned short c = scbuff[x+y*480];
+    for (y = 0; y < vscr_h; y++) { 
+		for (x = 0; x < vscr_w; x++) { 
+			unsigned short c = scbuff[x+y*vscr_w];
  			vram[x + y * 512] = (c >> 11) | (c << 11) | (c & 0x07e0); 
  		} 
     }
@@ -187,17 +198,18 @@ javacall_result javacall_lcd_set_full_screen_mode(javacall_bool useFullScreen) {
 javacall_result javacall_lcd_flush_partial(int ystart, int yend){
 #if 1
     int x,y;
-    unsigned short *ps, *pd;
-    ps = scbuff + 480 * ystart;
-    pd = vram + ystart * 512;
+    int xstart = (480 - vscr_w) / 2;
+    unsigned short *ps, *pd; 
+    ps = scbuff + vscr_w * ystart;
+    pd = vram + ystart * 512 + xstart;
     for (y = ystart; y < yend; y++) {
-    		x = 480;
+    		x = vscr_w;
     		while(x--) {
 			unsigned short c = *ps++;
  			*pd++ = (c >> 11) | (c << 11) | (c & 0x07e0); 
  		} 
 		
-		pd += (512 - 480);
+		pd += (512 - vscr_w);
     }
 #endif
     return JAVACALL_OK;
@@ -212,11 +224,23 @@ javacall_bool javacall_lcd_get_reverse_orientation() {
 }
   
 int javacall_lcd_get_screen_width() {
-    return 480;
+    return vscr_w;
 }
  
 int javacall_lcd_get_screen_height() {
-    return 272;
+    return vscr_h;
+}
+
+void javacall_set_new_screen_size(int w, int h) {
+    if (w == vscr_w && h == vscr_h) {
+        return;
+    }
+
+    
+    vscr_w = w;
+    vscr_h = h;
+    resized = 1;
+    javanotify_rotation();
 }
     
 #ifdef __cplusplus

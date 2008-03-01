@@ -648,6 +648,9 @@ class AppManagerUI extends Form
     void notifyMidletExited(MIDletProxy midlet) {
         String midletClassName = midlet.getClassName();
 
+        //Return to app selector, then set device to default
+        GraphicalInstaller.setDeviceToRun(0);
+
         if (midlet.getSuiteId() == MIDletSuite.INTERNAL_SUITE_ID &&
                 !midletClassName.equals(DISCOVERY_APP) &&
                 !midletClassName.equals(INSTALLER) &&

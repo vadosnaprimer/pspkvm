@@ -1447,3 +1447,8 @@ int javacall_lcd_get_screen_height() {
         currentSkin->displayRect.height;
 }
 
+void javacall_set_new_screen_size(int w, int h) {
+    (void)w;
+    (void)h;
+}
+
