@@ -57,7 +57,8 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/SplashScreen.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/RunningMIDletSuiteInfo.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/CaManager.java \
-    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/WifiSelector.java
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/WifiSelector.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/DeviceSetting.java
 
 vpath % $(APPMANAGER_UI_DIR)/native
 

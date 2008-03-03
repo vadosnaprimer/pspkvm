@@ -200,6 +200,9 @@ midp_suite_get_class_path(SuiteIdType suiteId,
                           pcsl_string *classPath) {
     MIDPError status = ALL_OK;
     int suiteExistsOrNotChecked;
+    char* pszError;
+    MidletSuiteData* pData;
+    
 
     if (checkSuiteExists) {
         status = midp_suite_exists(suiteId);
@@ -214,8 +217,36 @@ midp_suite_get_class_path(SuiteIdType suiteId,
     }
 
     if (suiteExistsOrNotChecked) {
-        status = get_class_path_impl(suiteId, storageId, classPath,
+    	 
+        /* load _suites.dat */
+        status = read_suites_data(&pszError);
+        storageFreeError(pszError);
+        if (status != ALL_OK) {
+            return status;
+        }
+    
+        pData = get_suite_data(suiteId);
+    
+        if (pData != NULL) {
+            pcsl_string ret;
+            
+            if (PCSL_STRING_OK == pcsl_string_dup(&pData->varSuiteData.pathToJar, &ret)) {
+                *classPath = ret;
+                status = ALL_OK;
+            } else {
+                *classPath = PCSL_STRING_NULL;
+                status = OUT_OF_MEMORY;
+            }
+        } else {
+            status = NOT_FOUND;
+        }
+
+        if (status != ALL_OK) {
+            //not exist, then we regard it as newly adding suite, and noCopyJarFile is false
+            status = get_class_path_impl(suiteId, storageId, classPath,
                                      &JAR_EXTENSION);
+        }
+        
     } else {
         *classPath = PCSL_STRING_NULL;
     }

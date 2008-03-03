@@ -1254,6 +1254,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
     MidpSuiteSettings suiteSettings;
     MidletSuiteData suiteData;
     int exceptionThrown;
+    jboolean notCopyJarFile;
 
     /*
      * This is needed because KNI_SAVE_PCSL_STRING_FIELD() macro
@@ -1281,6 +1282,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
     KNI_GetParameterAsObject(1, javaInstallInfo);
     KNI_GetParameterAsObject(2, javaSuiteSettings);
     KNI_GetParameterAsObject(3, javaSuiteData);
+    notCopyJarFile = KNI_GetParameterAsBoolean(6);
 
     /* get fields from the java objects passed as parameters */
 
@@ -1432,7 +1434,7 @@ KNIDECL(com_sun_midp_midletsuite_MIDletSuiteStorage_nativeStoreSuite) {
 
     if (status == ALL_OK) {
         /* store the suite */
-        status = midp_store_suite(&installInfo, &suiteSettings, &suiteData);
+        status = midp_store_suite(&installInfo, &suiteSettings, &suiteData, notCopyJarFile);
     }
 
     /* cleanup */

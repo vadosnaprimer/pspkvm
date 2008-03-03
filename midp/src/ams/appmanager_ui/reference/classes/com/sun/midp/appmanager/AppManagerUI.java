@@ -235,6 +235,9 @@ class AppManagerUI extends Form
         new Command(Resource.
                     getString(ResourceConstants.APPLICATION_SETTINGS),
                     Command.ITEM, 5);
+    /** Command object for "Select device". */
+    private Command deviceSettingCmd =
+        new Command("Select device", Command.ITEM, 6);
 
     /** Command object for "Cancel" command for the remove form. */
     private Command cancelCmd =
@@ -577,6 +580,13 @@ class AppManagerUI extends Form
             manager.exitMidlet(msi);
             display.setCurrent(this);
 
+        } else if (c == deviceSettingCmd) {
+            try {
+                DeviceSetting devSetting = new DeviceSetting(msi.suiteId, display, this);
+                display.setCurrent(devSetting);
+            } catch (Throwable t) {
+                displayError.showErrorAlert(msi.displayName, t, null, null);
+            }
         }
     }
 
@@ -987,6 +997,7 @@ class AppManagerUI extends Form
             ci.addCommand(removeCmd);
             ci.addCommand(updateCmd);
             ci.addCommand(appSettingsCmd);
+            ci.addCommand(deviceSettingCmd);
 
             if (suiteInfo.enabled) {
                 // setDefaultCommand will add default command first

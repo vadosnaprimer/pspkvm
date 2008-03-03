@@ -194,7 +194,7 @@ void midp_free_install_info(MidpInstallInfo* pInstallInfo);
 MIDPError
 midp_store_suite(const MidpInstallInfo* pInstallInfo,
                  const MidpSuiteSettings* pSuiteSettings,
-                 const MidletSuiteData* pSuiteData);
+                 const MidletSuiteData* pSuiteData, jboolean notCopyJarFile);
 
 #ifdef __cplusplus
 }

@@ -410,7 +410,7 @@ midp_get_suite_install_info(SuiteIdType suiteId) {
 MIDPError
 midp_store_suite(const MidpInstallInfo* pInstallInfo,
                  const MidpSuiteSettings* pSuiteSettings,
-                 const MidletSuiteData* pSuiteData) {
+                 const MidletSuiteData* pSuiteData, jboolean notCopyJarFile) {
     MIDPError status;
     char* pszError;
     lockStorageList *node;
@@ -467,12 +467,20 @@ midp_store_suite(const MidpInstallInfo* pInstallInfo,
             break;
         }
 
+        if (notCopyJarFile) {
+            if (PCSL_STRING_OK == pcsl_string_dup(&pSuiteData->varSuiteData.pathToJar, &pMsd->varSuiteData.pathToJar)) {
+                status = ALL_OK;
+            } else {
+                status = OUT_OF_MEMORY;
+            }
+        } else {
         status = store_jar(&pszError, suiteId, pMsd->storageId,
             /* holds the temporary name of the file with the suite */
             &pSuiteData->varSuiteData.pathToJar,
             /* the new (permanent) name of the suite will be returned here */
             &pMsd->varSuiteData.pathToJar);
-
+        }
+        
         if (status != ALL_OK) {
             pcsl_mem_free(pMsd);        
             if (pszError != NULL) {

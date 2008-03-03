@@ -184,6 +184,7 @@ public abstract class Installer {
      */
     protected String additionalPermissions;
 
+    protected boolean notCopyJarFile = false;
     /**
      * Constructor of the Installer.
      */
@@ -448,6 +449,10 @@ public abstract class Installer {
                         throw state.exception;
                     }
 
+                    if (this instanceof FileInstaller && state.exception.getReason() == InvalidJadException.ALREADY_INSTALLED) {
+                        return info.id;
+                    }
+
                     if (!state.listener.warnUser(state)) {
                         state.stopInstallation = true;
                         postInstallMsgBackToProvider(
@@ -460,7 +465,10 @@ public abstract class Installer {
             if (state.previousSuite != null) {
                 state.previousSuite.close();
             }
-            if (info.jarFilename != null) {
+
+            System.out.println("info.jarFilename:"+info.jarFilename);
+
+            if (info.jarFilename != null && !notCopyJarFile) {
                 if (state.file.exists(info.jarFilename)) {
                     try {
                         state.file.delete(info.jarFilename);
@@ -740,6 +748,8 @@ public abstract class Installer {
         info.jarFilename = state.storageRoot + TMP_FILENAME;
 
         bytesDownloaded = downloadJAR(info.jarFilename);
+        System.out.println("After downloadJAR, info.jarFilename:"+info.jarFilename);
+        notCopyJarFile = !info.jarFilename.equals(state.storageRoot + TMP_FILENAME);
 
         if (state.exception != null) {
             return;
@@ -832,8 +842,9 @@ public abstract class Installer {
                  */
                 try {
                     midletInfo = new MIDletInfo(midlet);
-
-                    verifyMIDlet(midletInfo.classname);
+                    if (!notCopyJarFile) {
+                        verifyMIDlet(midletInfo.classname);
+                    }
                 } catch (InvalidJadException ije) {
                     if (ije.getReason() == InvalidJadException.INVALID_VALUE) {
                         postInstallMsgBackToProvider(
@@ -928,8 +939,10 @@ public abstract class Installer {
                 checkPreviousVersion();
             }
         } catch (Exception e) {
-            state.file.delete(info.jarFilename);
-
+            e.printStackTrace();
+            if (!notCopyJarFile) {
+                state.file.delete(info.jarFilename);
+            }
             if (e instanceof IOException) {
                 throw (IOException)e;
             }
@@ -1221,9 +1234,11 @@ public abstract class Installer {
             msi.storageId = state.storageId;
 
             state.midletSuiteStorage.storeSuite(info, settings, msi,
-                                                state.jadProps, state.jarProps);
+                                                state.jadProps, state.jarProps, notCopyJarFile);
         } catch (Throwable e) {
-            state.file.delete(info.jarFilename);
+            if (!notCopyJarFile) {
+                state.file.delete(info.jarFilename);
+            }
             if (e instanceof IOException) {
                 throw (IOException)e;
             }

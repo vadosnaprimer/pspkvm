@@ -34,7 +34,8 @@ LIB_JAVA_FILES= \
     com/sun/midp/appmanager/DisplayError.java \
     com/sun/midp/appmanager/MIDletSelector.java \
     com/sun/midp/appmanager/MIDletSwitcher.java \
-    com/sun/midp/appmanager/SplashScreen.java
+    com/sun/midp/appmanager/SplashScreen.java \
+    com/sun/midp/appmanager/DeviceSetting.java
 
 #
 # IMPL_NOTE: remove when decoupling is complete
