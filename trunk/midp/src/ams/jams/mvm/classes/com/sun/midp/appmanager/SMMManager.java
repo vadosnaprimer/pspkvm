@@ -278,6 +278,11 @@ public class SMMManager extends MIDlet
         }
     }
 
+    public void launchWifiManager() {
+    	 /** SMMManager is not used in PSP currently **/
+    }
+
+
     /**
      * Launches a suite.
      *
