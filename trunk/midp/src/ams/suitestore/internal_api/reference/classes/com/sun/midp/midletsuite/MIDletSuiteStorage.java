@@ -414,7 +414,7 @@ public class MIDletSuiteStorage {
      */
     public synchronized void storeSuite(InstallInfo installInfo,
         SuiteSettings suiteSettings, MIDletSuiteInfo msi,
-            Properties jadProps, Properties jarProps)
+            Properties jadProps, Properties jarProps, boolean notCopyJarFile)
                 throws IOException, MIDletSuiteLockedException {
         /*
          * Convert the property args to String arrays to save
@@ -422,9 +422,9 @@ public class MIDletSuiteStorage {
          */
         String[] strJadProperties = getPropertiesStrings(jadProps);
         String[] strJarProperties = getPropertiesStrings(jarProps);
-
+        
         nativeStoreSuite(installInfo, suiteSettings, msi,
-            strJadProperties, strJarProperties);
+            strJadProperties, strJarProperties, notCopyJarFile);
     }
 
     /**
@@ -543,7 +543,7 @@ public class MIDletSuiteStorage {
      */
     private native void nativeStoreSuite(InstallInfo installInfo,
         SuiteSettings suiteSettings, MIDletSuiteInfo msi,
-            String[] jadProps, String[] jarProps)
+            String[] jadProps, String[] jarProps, boolean notCopyJarfile)
                 throws IOException, MIDletSuiteLockedException;
 
     /**

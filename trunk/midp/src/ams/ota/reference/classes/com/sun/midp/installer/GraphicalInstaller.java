@@ -792,7 +792,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      DisplayDeviceAccess.setDeviceScreenSize(getDeviceWidth(deviceId), getDeviceHeight(deviceId));
  }
 
- private static int getDeviceWidth(int deviceId) {
+ public static int getDeviceWidth(int deviceId) {
      String setting = (String)devices.get(new Integer(deviceId));
      if (setting != null) {
          int i = setting.indexOf(',');
@@ -807,7 +807,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      return 480;
  }
 
- private static int getDeviceHeight(int deviceId) {
+ public static int getDeviceHeight(int deviceId) {
      String setting = (String)devices.get(new Integer(deviceId));
      if (setting != null) {
          int i = setting.indexOf(',');
@@ -823,7 +823,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      return 272;
  }
 
- private static String getDeviceName(int deviceId) {
+ public static String getDeviceName(int deviceId) {
      String setting = (String)devices.get(new Integer(deviceId));
      if (setting != null) {
          int i = setting.indexOf(',');

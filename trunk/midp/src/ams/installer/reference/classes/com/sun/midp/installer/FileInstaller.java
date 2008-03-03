@@ -91,6 +91,15 @@ public class FileInstaller extends Installer {
         RandomAccessStream jarInputStream, jarOutputStream;
         String jarFilename = getUrlPath(info.jadUrl, info.jarUrl);
 System.out.println("FileInstaller.downloadJAR:"+jarFilename);
+
+        /** We only create a reference to the jar file, not really copy it to appdb **/
+        info.jarFilename = jarFilename;
+        // Open source (jar) file
+        jarInputStream = new RandomAccessStream();
+        jarInputStream.connect(jarFilename, Connector.READ);
+        jarSize = jarInputStream.getSizeOf();
+        System.out.println("JAR file size:" + jarSize);
+/*
         // Open source (jar) file
         jarInputStream = new RandomAccessStream();
         jarInputStream.connect(jarFilename, Connector.READ);
@@ -109,7 +118,7 @@ System.out.println("FileInstaller.downloadJAR:"+jarFilename);
 
         jarInputStream.close();
         jarOutputStream.disconnect();
-
+*/
         return jarSize;
     }
 
