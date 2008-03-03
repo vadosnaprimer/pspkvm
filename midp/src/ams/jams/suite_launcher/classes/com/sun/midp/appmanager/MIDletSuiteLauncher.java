@@ -109,6 +109,9 @@ public class MIDletSuiteLauncher extends MIDlet implements ApplicationManager {
     public void launchCaManager() {
     }
 
+    public void launchWifiManager() {
+    }
+
     /**
      * Launches a suite.
      *
