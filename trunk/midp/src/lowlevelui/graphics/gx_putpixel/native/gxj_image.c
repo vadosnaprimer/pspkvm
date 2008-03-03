@@ -62,15 +62,16 @@ draw_image(gxj_screen_buffer *imageSBuf,
 	     gxj_screen_buffer *gSBuf,
 	     const jshort *clip,
 	     jint x_dest, jint y_dest) {
+  jshort tmp_clip[4];
   gxj_screen_buffer *destSBuf = getScreenBuffer(gSBuf);
-  const jshort clipX1 = clip[0];
-  const jshort clipY1 = clip[1];
-  const jshort clipX2 = clip[2];
-  const jshort clipY2 = clip[3];
+  const jshort clipX1 = tmp_clip[0] = clip[0];
+  const jshort clipY1 = tmp_clip[1] = clip[1];
+  const jshort clipX2 = tmp_clip[2] = clip[2]<=destSBuf->width?clip[2]:destSBuf->width;
+  const jshort clipY2 = tmp_clip[3] = clip[3]<=destSBuf->height?clip[3]:destSBuf->height;
 
   REPORT_CALL_TRACE(LC_LOWUI, "LF:STUB:MutableImage_render_Image()\n");
 
-  CHECK_SBUF_CLIP_BOUNDS(destSBuf, clip);
+  CHECK_SBUF_CLIP_BOUNDS(destSBuf, &tmp_clip);
 
   if (imageSBuf->alphaData == NULL) {
     if (x_dest >= clipX1 && y_dest >= clipY1 &&
@@ -81,11 +82,11 @@ draw_image(gxj_screen_buffer *imageSBuf,
 		    &imageSBuf->pixelData[0], imageSBuf->width<<1,
 		    imageSBuf->height, imageSBuf->width<<1,destSBuf);
     } else {
-      clipped_blit(destSBuf, x_dest, y_dest, imageSBuf, clip);
+      clipped_blit(destSBuf, x_dest, y_dest, imageSBuf, &tmp_clip);
     }
   } else {
     copy_imageregion(imageSBuf, destSBuf,
-		     clip, x_dest, y_dest,
+		     &tmp_clip, x_dest, y_dest,
 		     imageSBuf->width, imageSBuf->height,
 		     0, 0, 0);
   }
