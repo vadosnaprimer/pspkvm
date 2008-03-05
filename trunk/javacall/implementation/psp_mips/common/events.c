@@ -32,9 +32,12 @@
 extern "C" {
 #endif
 
-
-static int _psp_mailboxID = 0;
+#define NUM_MBX 5
+static int _psp_mailboxID[NUM_MBX];
 static SceUID _psp_semaID;
+
+#define NEXT(i) (i >= (NUM_MBX - 1) ? 0 : i+1)
+static int _mbxid_recv,  _mbxid_send;
 
 /**
  * Waits for an incoming event message and copies it to user supplied
@@ -67,19 +70,31 @@ javacall_result javacall_event_receive(
     void* msg;
     int ret;
     SceUInt to;
+    static int busy_count = 0;
+
+    if (busy_count > 40 && timeTowaitInMillisec == 0) {
+        timeTowaitInMillisec = 30;
+        busy_count = 0;
+    }
     
-    if (timeTowaitInMillisec < 0) {    	
-    	ret = sceKernelReceiveMbxCB(_psp_mailboxID, &msg, NULL);
+    if (timeTowaitInMillisec < 0) {
+    	busy_count = 0;
+    	ret = sceKernelReceiveMbxCB(_psp_mailboxID[_mbxid_recv], &msg, NULL);
     } else if (timeTowaitInMillisec == 0) {
+       busy_count++;
        to = 0;
-       ret = sceKernelReceiveMbx(_psp_mailboxID, &msg, &to);
+       ret = sceKernelPollMbx(_psp_mailboxID[_mbxid_recv], &msg);
     } else {
+       busy_count = 0;
        to = timeTowaitInMillisec * 1000;
-       ret = sceKernelReceiveMbxCB(_psp_mailboxID, &msg, &to);
+       ret = sceKernelReceiveMbxCB(_psp_mailboxID[_mbxid_recv], &msg, &to);
     }
 
+    
     if (ret ==0) {
     	int len = *((int*)msg+1);
+    	_mbxid_recv = NEXT(_mbxid_recv);
+
     	if (binaryBufferMaxLen < len) {
            free(msg);
     	    return JAVACALL_OUT_OF_MEMORY;
@@ -105,14 +120,24 @@ javacall_result javacall_event_receive(
 javacall_result javacall_event_send(unsigned char* binaryBuffer,
                                     int binaryBufferLen){
     char* p = NULL;
+    int id;
 
     p = (char*)malloc(binaryBufferLen+sizeof(int)+sizeof(int));
     if (p) {
     	 *(int*)(p+sizeof(int)) = binaryBufferLen;
     	 memcpy(p+sizeof(int)+sizeof(int), binaryBuffer, binaryBufferLen);
         
-        //sceKernelWaitSemaCB(_psp_semaID, 1, 0);
-        sceKernelSendMbx(_psp_mailboxID, (void*)p);
+        sceKernelWaitSemaCB(_psp_semaID, 1, NULL);
+        if (NEXT(_mbxid_send) == _mbxid_recv) {
+        	printf("javacall_event_send: discard event\n");
+        	sceKernelSignalSema(_psp_semaID, 1);
+        	return JAVACALL_FAIL;
+        }
+        id = _mbxid_send;
+        _mbxid_send = NEXT(_mbxid_send);
+        sceKernelSignalSema(_psp_semaID, 1);
+        
+	 sceKernelSendMbx(_psp_mailboxID[id], (void*)p);
         return JAVACALL_OK;
     } else {
         return JAVACALL_FAIL;
@@ -122,16 +147,24 @@ javacall_result javacall_event_send(unsigned char* binaryBuffer,
 
 //PSPGlobalINFO _psp_global_info;
 javacall_result javacall_events_init(void) {
-    _psp_mailboxID = sceKernelCreateMbx("JavaMessagebox", 0, NULL);
+    int i;
+    for (i = 0; i < NUM_MBX; i++) {
+        _psp_mailboxID[i] = sceKernelCreateMbx("JavaMessagebox", 0, NULL);
+    }
+    _mbxid_send = _mbxid_recv = 0;
     _psp_semaID = sceKernelCreateSema("JavaEventQMutex", 0, 1, 1, 0);
 
     return JAVACALL_OK;
 }
 
 javacall_result javacall_events_destroy(void) {
-    sceKernelDeleteMbx(_psp_mailboxID);
+    int i;
+    for (i = 0; i < NUM_MBX; i++) {
+        sceKernelDeleteMbx(_psp_mailboxID[i]);
+         _psp_mailboxID[i] = 0;
+    }
     sceKernelDeleteSema(_psp_semaID);
-    _psp_mailboxID = 0;
+    _mbxid_send = _mbxid_recv = 0;
     _psp_semaID = 0;
     return JAVACALL_OK;
 }

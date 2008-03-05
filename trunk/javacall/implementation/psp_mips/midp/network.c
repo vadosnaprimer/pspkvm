@@ -268,6 +268,7 @@ int resolve_thread(SceSize args, void *argp) {
         		hdns->ok = 1;
         		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
         								hdns, JAVACALL_OK);
+        		sceKernelExitDeleteThread(0);
         		return 0;
         	} else {
         		javacall_print("FATAL:Not enough space to put ip string\n");
@@ -277,11 +278,14 @@ int resolve_thread(SceSize args, void *argp) {
        
 	javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
         								hdns, JAVACALL_FAIL);
+
+       sceKernelExitDeleteThread(-1);
+       	
        return -1;
 }
 
 static void* start_lookup_ip(char* hostname, int maxIpLen) {
-	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x40, 0x10000, PSP_THREAD_ATTR_USER, NULL);	
+	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x40, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
 	if(thid < 0) {	
 		javacall_printf("Error, could not create thread\n");	
 		return NULL;	
@@ -301,10 +305,9 @@ static void* start_lookup_ip(char* hostname, int maxIpLen) {
 static int end_lookup_ip(DNSHandle* handle, char* pAddress, int maxLen, int* pLen) {
 	SceUID thid = handle->res_thread_id;
 	
-	sceKernelTerminateThread(thid);			
-	sceKernelWaitThreadEndCB(thid, NULL);					
-	sceKernelDeleteThread(thid);	
-	
+	//sceKernelTerminateThread(thid);			
+	//sceKernelWaitThreadEndCB(thid, NULL);					
+	//sceKernelDeleteThread(thid);
 	
 	int ok = handle->ok;
 	if (ok) {
