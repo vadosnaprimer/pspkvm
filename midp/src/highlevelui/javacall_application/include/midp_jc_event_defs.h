@@ -136,6 +136,10 @@ typedef enum {
     JSR256_JC_EVENT_SENSOR_OPEN_CLOSE  ,
     JSR256_JC_EVENT_SENSOR_DATA_READY
 #endif /*ENABLE_JSR_256*/
+
+    /** PSP specific from here**/
+						,
+    MIDP_JC_EVENT_SHUTDOWN_MIDLET
 } midp_jc_event_type;
 
 

@@ -659,7 +659,7 @@ class AppManagerUI extends Form
         String midletClassName = midlet.getClassName();
 
         //Return to app selector, then set device to default
-        GraphicalInstaller.setDeviceToRun(0);
+        GraphicalInstaller.setDeviceToRun(-1);
 
         if (midlet.getSuiteId() == MIDletSuite.INTERNAL_SUITE_ID &&
                 !midletClassName.equals(DISCOVERY_APP) &&

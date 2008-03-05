@@ -28,6 +28,8 @@ package javax.microedition.lcdui;
 import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.ScreenSkin;
 
+import com.sun.midp.installer.DeviceDesc;
+
 // **************************************************************************
 //  Package Private - These are all methods which delegate calls to
 //                    CustomItem application code, locking on the calloutLock
@@ -503,6 +505,7 @@ class CustomItemLFImpl extends ItemLFImpl implements CustomItemLF {
                     && (keyCode == Constants.KEYCODE_SELECT)) {
                     cl.commandAction(defaultCmd, customItem);
                 } else {
+                    keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
                     customItem.keyPressed(keyCode);
                 }
             }
@@ -520,6 +523,7 @@ class CustomItemLFImpl extends ItemLFImpl implements CustomItemLF {
      */
     void uCallKeyReleased(int keyCode) {
         try {
+            keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
             synchronized (Display.calloutLock) {
                 customItem.keyReleased(keyCode);
             }
@@ -536,6 +540,7 @@ class CustomItemLFImpl extends ItemLFImpl implements CustomItemLF {
      */
     void uCallKeyRepeated(int keyCode) {
         try {
+            keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
             synchronized (Display.calloutLock) {
                 customItem.keyRepeated(keyCode);
             }

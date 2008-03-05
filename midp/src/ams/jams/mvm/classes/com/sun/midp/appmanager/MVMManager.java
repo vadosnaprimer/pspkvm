@@ -187,7 +187,7 @@ public class MVMManager extends MIDlet
      *        if false then possibility to launch midlet is needed.
      */
     public void selectForeground(boolean onlyFromLaunchedList) {
-        GraphicalInstaller.setDeviceToRun(0);
+        GraphicalInstaller.setDeviceToRun(-1);
         appManagerUI.showMidletSwitcher(onlyFromLaunchedList);
     }
 

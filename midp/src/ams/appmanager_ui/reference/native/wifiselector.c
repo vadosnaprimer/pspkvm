@@ -34,26 +34,32 @@ KNIEXPORT KNI_RETURNTYPE_INT
 KNIDECL(com_sun_midp_appmanager_WifiSelector_connect) {
     int index;
     int ret = -1;
+#ifdef PSP
     
     index = KNI_GetParameterAsInt(1);
     if (JAVACALL_OK == javacall_network_connect_profile(index)) {
     	 ret = 0;
     }
-    
+#endif    
     KNI_ReturnInt(ret);
 }
 
 KNIEXPORT KNI_RETURNTYPE_INT
 KNIDECL(com_sun_midp_appmanager_WifiSelector_getConnectState) {
-    int state;
+    int state = -1;
+#ifdef PSP
+
     if (JAVACALL_OK != javacall_network_connect_state(&state)) {
         state = -1;
     }
+#endif
     KNI_ReturnInt(state);
 }
 
 KNIEXPORT KNI_RETURNTYPE_VOID
 KNIDECL(com_sun_midp_appmanager_WifiSelector_disconnect) {
+#ifdef PSP
     javacall_network_disconnect();
+#endif
 }
 

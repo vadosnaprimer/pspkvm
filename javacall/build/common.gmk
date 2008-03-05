@@ -66,6 +66,9 @@ PROPERTY_FILES = javacall_properties \
 		 javacall_db \
 		 javacall_static_properties
 		 
+vpath %.c $(JAVACALL_DIR)/implementation/share/device_emu
+VPATH+=$(JAVACALL_DIR)/implementation/share/device_emu
+DEVICE_EMU_FILES = devemu
 
 # In case using of the javacall functions wrappers, set the USE_JAVACALL_WRAPPERS variable
 ifeq ($(USE_JAVACALL_WRAPPERS),true)
