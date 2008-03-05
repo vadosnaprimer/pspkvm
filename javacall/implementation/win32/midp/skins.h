@@ -125,7 +125,7 @@ const static WKey VKeys[] = {
 };
 
 static ESkin VSkin = {
-    {56, 94, 240, 320}, //displayRect
+    {209, 88, 480, 272}, //displayRect
     VKeys,
     NUMBEROF(VKeys),
     IDB_BITMAP_PHONE_V, //resource ID
@@ -180,7 +180,7 @@ const static WKey HKeys[] = {
 };
 
 static ESkin HSkin = {
-    {56, 94, 320, 240}, //displayRect
+    {88, 209, 272, 480}, //displayRect
     HKeys,
     NUMBEROF(HKeys),
     IDB_BITMAP_PHONE_H, //resource ID
