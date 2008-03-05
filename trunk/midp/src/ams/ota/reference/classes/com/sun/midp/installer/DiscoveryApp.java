@@ -649,7 +649,11 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             Alert a = new Alert(Resource.getString(ResourceConstants.ERROR),
                                 errorMessage, null, AlertType.ERROR);
             a.setTimeout(Alert.FOREVER);
-            parent.display.setCurrent(a, parent.urlTextBox);
+            if (parent.urlTextBox != null) {
+                parent.display.setCurrent(a, parent.urlTextBox);
+            } else {
+                notifyDestroyed();
+            }
         }
     }
 }
