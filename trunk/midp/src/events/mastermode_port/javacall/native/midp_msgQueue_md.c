@@ -29,6 +29,7 @@
 
 #include <javacall_events.h>
 #include <midp_jc_event_defs.h>
+#include <midp_foreground_id.h>
 
 #ifdef ENABLE_JSR_75
 extern void notifyDisksChanged();
@@ -74,7 +75,7 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewMidpEvent->type    = MIDP_KEY_EVENT;
         pNewMidpEvent->CHR     = event->data.keyEvent.key;
         pNewMidpEvent->ACTION  = event->data.keyEvent.keyEventType;
-        if (event->data.keyEvent.key == -22 && event->data.keyEvent.keyEventType == 1) {
+        if (event->data.keyEvent.key == -21 && event->data.keyEvent.keyEventType == 1) {
         	//pss();
         }
         break;
@@ -244,6 +245,12 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewSignal->waitingFor = AMS_SIGNAL;
         pNewMidpEvent->type    = SELECT_FOREGROUND_EVENT;
         pNewMidpEvent->intParam1 = 0;
+        break;
+    case MIDP_JC_EVENT_SHUTDOWN_MIDLET:
+    	 pNewSignal->waitingFor = AMS_SIGNAL;
+    	 pNewMidpEvent->type = MIDLET_DESTROY_REQUEST_EVENT;
+        pNewMidpEvent->intParam4 = gForegroundDisplayId;
+        pNewMidpEvent->intParam1 = gForegroundIsolateId;
         break;
 #endif /* ENABLE_MULTIPLE_ISOLATES */
 #if ENABLE_JSR_256

@@ -692,6 +692,19 @@ void javanotify_switch_to_ams(void) {
 #endif /* ENABLE_MULTIPLE_ISOLATES */
 }
 
+void javanotify_shutdown_current(void) {
+#if ENABLE_MULTIPLE_ISOLATES
+    midp_jc_event_union e;
+
+    REPORT_INFO(LC_CORE, "javanotify_shutdown() >>\n");
+
+    e.eventType = MIDP_JC_EVENT_SHUTDOWN_MIDLET;
+
+    midp_jc_event_send(&e);
+#endif /* ENABLE_MULTIPLE_ISOLATES */
+}
+
+
 /**
  * The platform should invoke this function in platform context to pause
  * Java bytecode execution (without invoking pauseApp)

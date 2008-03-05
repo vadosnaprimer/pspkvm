@@ -53,7 +53,8 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(INSTALLER_DIR)/classes/com/sun/midp/installer/InvalidJadException.java \
     $(INSTALLER_DIR)/classes/com/sun/midp/installer/JadProperties.java \
     $(INSTALLER_DIR)/classes/com/sun/midp/installer/ManifestProperties.java \
-    $(INSTALLER_DIR)/classes/com/sun/midp/installer/SuiteDownloadInfo.java
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/SuiteDownloadInfo.java \
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/DeviceDesc.java
 
 
 vpath % $(INSTALLER_DIR)/native/share
@@ -62,6 +63,7 @@ vpath % $(INSTALLER_DIR)/native/share
 #
 ifeq ($(TARGET_VM), cldc_vm)
 SUBSYSTEM_AMS_NATIVE_FILES += \
-    SuiteDownloadInfo.c
+    SuiteDownloadInfo.c \
+    DeviceDesc.c
 endif
 

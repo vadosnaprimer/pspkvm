@@ -30,6 +30,8 @@ package javax.microedition.lcdui;
 import java.util.Vector;
 import java.util.Enumeration;
 
+import com.sun.midp.installer.DeviceDesc;
+	
 /**
 * This is the look amps; feel implementation for Canvas.
 */
@@ -272,7 +274,9 @@ class CanvasLFImpl extends DisplayableLFImpl implements CanvasLF {
      * @param keyCode The key that was pressed
      */
     void uCallKeyPressed(int keyCode) {
+        System.out.println("uCallKeyPressed:"+keyCode);
         if (allowKey(keyCode)) {
+            keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
             synchronized (Display.calloutLock) {
                 try {
                     canvas.keyPressed(keyCode);
@@ -290,6 +294,7 @@ class CanvasLFImpl extends DisplayableLFImpl implements CanvasLF {
      */
     void uCallKeyReleased(int keyCode) {
         if (allowKey(keyCode)) {
+            keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
             synchronized (Display.calloutLock) {
                 try {
                     canvas.keyReleased(keyCode);
@@ -307,6 +312,7 @@ class CanvasLFImpl extends DisplayableLFImpl implements CanvasLF {
      */
     void uCallKeyRepeated(int keyCode) {
         if (allowKey(keyCode)) {
+            keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
             synchronized (Display.calloutLock) {
                 try {
                     canvas.keyRepeated(keyCode);

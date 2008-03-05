@@ -160,14 +160,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
         new Command(Resource.getString(ResourceConstants.NO),
                     Command.CANCEL, 1);
 
-    private static Hashtable devices;
-
-    static {
-    	 devices = new Hashtable();
-        devices.put(/*Device ID*/new Integer(0), new String("Full Screen (480x272),480,272,0"));
-        devices.put(/*Device ID*/new Integer(1), new String("(180x272),180,272,0"));
-        devices.put(/*Device ID*/new Integer(2), new String("(172x220),172,220,0"));
-    }
+    private static DeviceDesc devices;
 
     /**
      * Gets an image from the internal storage.
@@ -789,49 +782,56 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
 
  public static void setDeviceToRun (int deviceId) {     
      System.out.println("setDeviceToRun:"+deviceId);
+     DeviceDesc.setCurrentDevice(deviceId);
      DisplayDeviceAccess.setDeviceScreenSize(getDeviceWidth(deviceId), getDeviceHeight(deviceId));
  }
 
  public static int getDeviceWidth(int deviceId) {
-     String setting = (String)devices.get(new Integer(deviceId));
-     if (setting != null) {
-         int i = setting.indexOf(',');
-         int i1 = setting.indexOf(',', i + 1);
-         try {
-             int w = Integer.parseInt(setting.substring(i+1, i1));
-             return w>480?480:w;
-         } catch (Exception e) {
-         }
+     if (devices == null) {
+         devices = DeviceDesc.initDevicesDesc();
      }
-
+     
+     if (devices != null) {
+     	  return devices.getDeviceWidth(deviceId);
+     }
+     
      return 480;
  }
 
  public static int getDeviceHeight(int deviceId) {
-     String setting = (String)devices.get(new Integer(deviceId));
-     if (setting != null) {
-         int i = setting.indexOf(',');
-         i = setting.indexOf(',', i + 1);
-         int i1 = setting.indexOf(',', i + 1);
-         try {
-             int h = Integer.parseInt(setting.substring(i+1, i1));
-             return h>272?272:h;
-         } catch (Exception e) {
-         }
+     if (devices == null) {
+         devices = DeviceDesc.initDevicesDesc();
+     }
+     
+     if (devices != null) {
+     	  return devices.getDeviceHeight(deviceId);
      }
 
      return 272;
  }
 
  public static String getDeviceName(int deviceId) {
-     String setting = (String)devices.get(new Integer(deviceId));
-     if (setting != null) {
-         int i = setting.indexOf(',');
-         
-         return setting.substring(0, i);
+     if (devices == null) {
+         devices = DeviceDesc.initDevicesDesc();
+     }
+     
+     if (devices != null) {
+     	  return devices.getDeviceName(deviceId);
+     }
+     
+     return null;
+ }
+
+ public static int getDeviceId(String name) {
+     if (devices == null) {
+         devices = DeviceDesc.initDevicesDesc();
+     }
+     
+     if (devices != null) {
+     	  return devices.getDeviceId(name);
      }
 
-     return null;
+     return -1;
  }
  
     /**

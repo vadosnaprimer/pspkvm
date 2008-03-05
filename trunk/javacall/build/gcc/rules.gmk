@@ -64,6 +64,7 @@ EXTRA_LDFLAGS+=-lnotifiers$(BUILD_EXT) -L$(JAVACALL_OUTPUT_LIB_DIR)
 NOTIFIERS_LIB=$(JAVACALL_OUTPUT_LIB_DIR)/libnotifiers$(BUILD_EXT).$(LIB_EXTENSION)
 endif
 PROPERTY_OBJECTS=$(addsuffix .o,$(PROPERTY_FILES))
+DEVICE_EMU_OBJECTS=$(addsuffix .o,$(DEVICE_EMU_FILES))
 
 javacall_lib: $(NOTIFIERS_LIB) $(JAVACALL_OUTPUT_LIB_DIR)/libjavacall$(BUILD_EXT).$(LIB_EXTENSION)
 
@@ -75,6 +76,7 @@ $(JAVACALL_OUTPUT_LIB_DIR)/libjavacall$(BUILD_EXT).so: \
 	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(PORTING_OBJECTS)) \
 	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(UTILITY_OBJECTS)) \
 	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(PROPERTY_OBJECTS)) \
+	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(DEVICE_EMU_OBJECTS)) \
 	$(SPECIFIC_OBJECTS)
 	@echo "...Generating Library: $@"
 	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) -shared -o $@ $^
@@ -83,6 +85,7 @@ $(JAVACALL_OUTPUT_LIB_DIR)/libjavacall$(BUILD_EXT).a: \
 	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(PORTING_OBJECTS)) \
 	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(UTILITY_OBJECTS)) \
 	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(PROPERTY_OBJECTS)) \
+	$(patsubst %,$(JAVACALL_OUTPUT_OBJ_DIR)/%,$(DEVICE_EMU_OBJECTS)) \
 	$(SPECIFIC_OBJECTS)
 	@echo "...Generating Library: $@"
 	$(AR) $(ARFLAGS) $@ $^

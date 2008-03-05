@@ -80,6 +80,7 @@ typedef enum {
  * @brief Key code value
  */
 typedef enum {
+    JAVACALL_KEY_INVALID = 0,
     /** Backspace */
     JAVACALL_KEY_BACKSPACE = 8,
 
@@ -108,6 +109,7 @@ typedef enum {
     JAVACALL_KEY_8          = '8',
     /** Key 9 */
     JAVACALL_KEY_9          = '9',
+    JAVACALL_KEY_SPACE  = ' ',
 
     /** Up key */
     JAVACALL_KEY_UP         = -1,
@@ -129,6 +131,10 @@ typedef enum {
 
     /** Send key */
     JAVACALL_KEY_SEND       = -10,
+    /** End key */
+    JAVACALL_KEY_END          = -11,
+    /** Power key */
+    JAVACALL_KEY_POWER        = -12,
 
     /** Game A key */
     JAVACALL_KEY_GAMEA      = -13,
@@ -148,7 +154,7 @@ typedef enum {
     /** Game Right key */
     JAVACALL_KEY_GAME_RIGHT = -20,
     /** DEBUG TRACE key*/
-    JAVACALL_KEY_DEBUG_TRACE = -22,
+    JAVACALL_KEY_DEBUG_TRACE = -21,
     /** MULTI TASKING key*/
     JAVACALL_KEY_MULTI_TASK = -23
 } javacall_key;

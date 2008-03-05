@@ -236,7 +236,7 @@ void javacall_set_new_screen_size(int w, int h) {
         return;
     }
 
-    
+    printf("javacall_set_new_screen_size: %d, %d\n",w,h);
     vscr_w = w;
     vscr_h = h;
     resized = 1;
