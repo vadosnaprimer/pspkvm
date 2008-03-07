@@ -71,6 +71,7 @@ void JavaTask(void) {
     //javacall_global_init();
     javacall_events_init();
     javacall_initialize_configurations();
+    javacall_keymap_init();
 
     /* Outer Event Loop */
     while (JavaTaskIsGoOn) {

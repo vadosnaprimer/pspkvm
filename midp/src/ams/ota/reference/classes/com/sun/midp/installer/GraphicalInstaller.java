@@ -92,6 +92,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     /** settings database */
     public static final String SETTINGS_STORE = "settings";
     public static final String DEV_SETTINGS_STORE = "devsettings";
+    public static final String KEYMAP_SETTINGS_STORE = "keymapsettings";
     /** record id of selected midlet */
     public static final int HTTP_URL_RECORD_ID = 1;
     /** record is of the last installed midlet */
@@ -780,9 +781,100 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      return ret;
  }
 
- public static void setDeviceToRun (int deviceId) {     
+     public static Exception saveKeymap(int[] keymap, int curMidlet) {
+        Exception ret = null;
+        RecordStore settings = null;
+        
+        AccessController.checkPermission(Permissions.AMS_PERMISSION_NAME);
+
+        if (keymap == null) {
+        	return new NullPointerException("Attempt to save null keymap");
+        }
+        
+        try {
+            String temp;
+            ByteArrayOutputStream bas;
+            DataOutputStream dos;
+            byte[] data;            
+            int rec_id;
+            int i;
+
+            bas = new ByteArrayOutputStream();
+            dos = new DataOutputStream(bas);
+
+            bas.reset();
+
+            dos.writeInt(curMidlet);
+            for (i = 0; i < keymap.length; i++) {
+                dos.writeInt(keymap[i]);
+            }
+            data = bas.toByteArray();
+            
+            settings = RecordStore.openRecordStore(KEYMAP_SETTINGS_STORE, true);
+            
+            if ((rec_id = findGameDevSetting(settings, curMidlet)) < 0) {             
+                settings.addRecord(data, 0, data.length);
+            } else {
+                //Already installed, reuse previous record
+                settings.setRecord(rec_id,  data, 0, data.length);
+            }
+
+            
+            dos.close();
+        } catch (Exception e) {
+            ret = e;
+        } finally {
+            try {
+            	  if (settings != null) {
+                    settings.closeRecordStore();
+            	  }
+            } catch (Exception e1) {
+            }
+        }
+
+        return ret;
+
+    }
+
+ public static int[] getKeymap (int midlet) {
+     int[] ret = new int[22];
+     RecordStore settings = null;
+     int i;
+
+     for (i = 0; i < 22; i++) {
+     	  ret[i] = 0;
+     }
+     
+     try {
+         settings = RecordStore.openRecordStore(KEYMAP_SETTINGS_STORE, false, 0, true);
+         try {
+             int rid = findGameDevSetting(settings, midlet);
+             if (rid > 0) {
+                 ByteArrayInputStream bis = new ByteArrayInputStream(settings.getRecord(rid));
+                 DataInputStream dis = new DataInputStream(bis);
+                 dis.readInt(); //midlet id
+                 for (i = 0; i < 22; i++) {
+                     ret[i] = dis.readInt();
+                 }
+                 System.out.println("Keymap setting found");
+             } else {
+                 System.out.println("Keymap setting not found");
+                 ret = null;
+             }
+         } finally {
+             settings.closeRecordStore();
+         }
+     } catch (Exception e) {
+         ret = null;
+     }
+     
+     return ret;
+ }
+ 
+ public static void setDeviceToRun (int deviceId, int[] keymap) {     
      System.out.println("setDeviceToRun:"+deviceId);
      DeviceDesc.setCurrentDevice(deviceId);
+     DeviceDesc.setCurrentKeymap(keymap);
      DisplayDeviceAccess.setDeviceScreenSize(getDeviceWidth(deviceId), getDeviceHeight(deviceId));
  }
 

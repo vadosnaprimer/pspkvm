@@ -7,6 +7,7 @@
 #include <commonKNIMacros.h>
 
 #include "javacall_devemu.h"
+#include "javacall_keymap.h"
 
 KNIEXPORT KNI_RETURNTYPE_INT
 KNIDECL(com_sun_midp_installer_DeviceDesc_getDevicesNumber0) {
@@ -53,6 +54,7 @@ KNIDECL(com_sun_midp_installer_DeviceDesc_setCurrentDevice0) {
     
     index = KNI_GetParameterAsInt(1);
     javacall_devemu_set_current_device(index);
+    KNI_ReturnVoid();
 }
 
 KNIEXPORT KNI_RETURNTYPE_INT
@@ -67,5 +69,41 @@ KNIDECL(com_sun_midp_installer_DeviceDesc_getDeviceKeyCode0) {
 KNIEXPORT KNI_RETURNTYPE_INT
 KNIDECL(com_sun_midp_installer_DeviceDesc_getCurrentDevice0) {
     KNI_ReturnInt(javacall_devemu_get_current_device());
+}
+
+KNIEXPORT KNI_RETURNTYPE_VOID
+KNIDECL(com_sun_midp_installer_DeviceDesc_setDefaultKeymap0) {
+    javacall_keymap_setDefaultKeymap();
+    KNI_ReturnVoid();
+}
+
+KNIEXPORT KNI_RETURNTYPE_VOID
+KNIDECL(com_sun_midp_installer_DeviceDesc_resetKeymap0) {
+    javacall_keymap_resetKeymap();
+    KNI_ReturnVoid();
+}
+
+KNIEXPORT KNI_RETURNTYPE_VOID
+KNIDECL(com_sun_midp_installer_DeviceDesc_setKeymap0) {
+    int iJavakey, iNativekey;
+    
+    iJavakey = KNI_GetParameterAsInt(1);
+    iNativekey = KNI_GetParameterAsInt(2);   
+    
+    javacall_keymap_set(iJavakey, iNativekey);
+    KNI_ReturnVoid();
+}
+
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(com_sun_midp_installer_DeviceDesc_getDefaultKeymap0) {
+    int iJavakey;
+    
+    iJavakey = KNI_GetParameterAsInt(1);
+    KNI_ReturnInt(javacall_keymap_getDefaultKey(iJavakey));
+}
+
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(com_sun_midp_installer_DeviceDesc_getJavaKeyNumber0) {
+    KNI_ReturnInt(javacall_keymap_javakey_number());
 }
 

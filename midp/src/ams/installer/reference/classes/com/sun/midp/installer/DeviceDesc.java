@@ -16,6 +16,12 @@ package com.sun.midp.installer;
         private static native void setCurrentDevice0(int id);
         private static native int getDeviceKeyCode0(int id, int javacallkey);
         private static native int getCurrentDevice0();
+        private static native void setDefaultKeymap0();
+        private static native int getDefaultKeymap0(int iJavakey);
+        private static native void resetKeymap0();
+        private static native void setKeymap0(int iJavakey, int iNativekey);
+        private static native int getJavaKeyNumber0();
+        
         
         public static DeviceDesc initDevicesDesc() {
             if (devices != null) {
@@ -77,7 +83,6 @@ package com.sun.midp.installer;
         }
 
         public static int getDeviceKeyCode(int id, int javacallkey) {
-            System.out.println("getDeviceKeyCode:"+id+" key:"+javacallkey);
             if (id == -1) {
                 return javacallkey;
             }
@@ -86,5 +91,34 @@ package com.sun.midp.installer;
 
         public static int getCurrentDevice() {
             return getCurrentDevice0();
+        }
+
+        public static void setCurrentKeymap(int[] keymap) {
+            int i;
+            if (keymap == null) {
+                setDefaultKeymap0();
+            } else {
+                resetKeymap0();
+                for (i = 0; i < keymap.length; i++) {
+                    if (keymap[i] != 0) {
+                        setKeymap0(i, keymap[i]);
+                    }
+                }
+            }
+        }
+        
+        public static int[] getDefaultKeymap() {
+        	int i;
+        	int size = getJavaKeyNumber0();
+
+        	if (size <= 0) {
+        	    return null;
+        	}
+        	
+        	int[] keymap = new int[size];
+        	for (i = 0; i < keymap.length; i++) {
+                  keymap[i] = getDefaultKeymap0(i);
+              }
+        	return keymap;
         }
     }

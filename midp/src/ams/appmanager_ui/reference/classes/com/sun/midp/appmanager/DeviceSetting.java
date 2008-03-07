@@ -45,7 +45,7 @@ import com.sun.midp.log.LogChannels;
  * The Graphical MIDlet suite settings form.
  */
 public class DeviceSetting extends Form
-    implements CommandListener {
+    implements CommandListener, ItemStateListener {
 
     /** Command object for "Select device". */
     private Command okCmd =
@@ -61,21 +61,94 @@ public class DeviceSetting extends Form
     private int suiteId;
     private Display display;
     private Displayable nextScreen;
+    private int selectedDevice;
+    
+    private final static String[] keys = {
+    		"---", "UP", "DOWN", "LEFT", "RIGHT", "SQUARE", "TRIANGLE", "CROSS", "CIRCLE", "SELECT", "START",
+    		"SHIFT+UP", "SHIFT+DOWN", "SHIFT+LEFT", "SHIFT+RIGHT", "SHIFT+SQUARE", "SHIFT+TRIANGLE",
+    		"SHIFT+CROSS", "SHIFT+CIRCLE", "SHIFT+SELECT", "SHIFT+START",
+    		"ANALOG UP", "ANALOG DOWN", "ANALOG LEFT", "ANALOG RIGHT"
+    };
+    private final static String[] keyname = {
+    		"UP", "DOWN", "LEFT", "RIGHT", 
+    		"NUM1", "NUM2", "NUM3", "NUM4",
+    		"NUM5", "NUM6", "NUM7", "NUM8",
+    		"NUM9", "NUM0", "*", "#",
+    		"SELECT", "CLEAR", "SOFT1", "SOFT2",
+    		"SPACE", "BACKSPACE"
+    };
+    	
 
     public DeviceSetting(int suiteId, Display display, Displayable nextScreen) {
     	 super("Device Setting");
         this.suiteId = suiteId;
         this.display = display;
         this.nextScreen = nextScreen;
-        append(createDeviceSelector(suiteId));
+        
+        selectedDevice = GraphicalInstaller.getGameDevSetting(suiteId);
+        if (selectedDevice < 0) {
+            selectedDevice = 0;
+        }
+        
+        append(createDeviceSelector());        
+        
+        int[] keymap = GraphicalInstaller.getKeymap(suiteId);
+        if (keymap == null) {
+            keymap = DeviceDesc.getDefaultKeymap();
+        }
+
+        if (keymap != null) {
+            int i;
+
+            append(new StringItem("Set keys assignment:", "\n"));
+            
+            for (i = 0; i < keymap.length; i++) {
+            	if (keymap[i] < 0 || keymap[i] >= keys.length) {
+            	    keymap[i] = 0; // Invalid key mapping
+            	}
+            	    append(new KeySettingItem(keyname[i], keymap[i]));
+            }
+        }
+       
+        setItemStateListener(this);
+        
+        addCommand(okCmd);
+        addCommand(cancelCmd);
+        
+        setCommandListener(this);
+
+
     }
     
     public void commandAction(Command c, Displayable s) {
+        if (c == okCmd) {
+            GraphicalInstaller.saveDeviceSettings(selectedDevice, suiteId);
+            GraphicalInstaller.saveKeymap(getKeymap(), suiteId);
+            display.setCurrent(nextScreen);
+        } else if ( c == cancelCmd) {
+            display.setCurrent(nextScreen);
+        }                	
+          
     }
 
-    private ChoiceGroup createDeviceSelector(int midletId) {
-        final ChoiceGroup selector = new ChoiceGroup("Select preferred device", Choice.POPUP);
-        final int mid = midletId;
+    public void itemStateChanged(Item item) {
+       int i;
+    	if (item instanceof KeySettingItem) {
+    	    ((KeySettingItem)item).setKeyValue();
+    	    for (i = 2; i < 22; i++) {
+    	        KeySettingItem tmpitem = (KeySettingItem)get(i);
+    	        if ((tmpitem != item) && 
+    	             (tmpitem.getKeyValue() == ((KeySettingItem)item).getKeyValue())) {
+    	            tmpitem.setKeyValue(0);
+    	        }
+    	    }
+    	} else if (item instanceof ChoiceGroup) {
+    	    selectedDevice = ((ChoiceGroup)item).getSelectedIndex();
+    	}
+    }
+
+    private ChoiceGroup createDeviceSelector() {
+        ChoiceGroup selector = new ChoiceGroup("Select preferred device", Choice.POPUP);
         int dev = 0;
         String name;
 
@@ -83,24 +156,68 @@ public class DeviceSetting extends Form
             selector.append(name, null);
         }
 
-        addCommand(okCmd);
-        addCommand(cancelCmd);
-        
-        setCommandListener(
-            new CommandListener() {
-                public void commandAction(Command c, Displayable d) { 
-                	if (c == okCmd) {
-                	    GraphicalInstaller.saveDeviceSettings(selector.getSelectedIndex(), mid);       
-                	    display.setCurrent(nextScreen);
-                	} else if ( c == cancelCmd) {
-                	    display.setCurrent(nextScreen);
-                	}                	
-                }
-            }
-        );
+        selector.setSelectedIndex(selectedDevice, true);
+
+        selector.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 
         return selector;
     }
 
+    int[] getKeymap() {
+    	 int i;
+    	 int[] ret = new int[22];
+    	 try {
+            for (i = 2; i < 24; i++) {
+        	  KeySettingItem tmpitem = (KeySettingItem)get(i);
+        	  ret[i-2] = tmpitem.getKeyValue();
+            }
+    	 } catch (IndexOutOfBoundsException e) {
+    	     ret = null;
+    	 }
+        return ret;
+    }
+
+    class KeySettingItem extends ChoiceGroup {
+    	
+	String name;
+	int value;
+	
+	public KeySettingItem(String keyName, int keyValue) {
+		super(keyName, Choice.POPUP, keys, null);
+		name = keyName;
+		value = keyValue;
+		setLayout(Item.LAYOUT_2);
+		setSelectedIndex(keyValue, true);
+	}
+
+	protected int getMinContentHeight() {
+		return 10;
+	}
+	
+	protected int getMinContentWidth() {
+		return 10;
+	}
+	
+	protected int getPrefContentHeight(int width) {
+		return 30;
+	}
+	
+	protected int getPrefContentWidth(int height) {
+		return 100;
+	}
+
+	public int getKeyValue() {
+		return value;
+	}
+
+	public void setKeyValue(int val) {
+		value = val;
+		setSelectedIndex(0, true);
+	}
+
+	public void setKeyValue() {
+		value = getSelectedIndex();
+	}
+    }
 }
 
