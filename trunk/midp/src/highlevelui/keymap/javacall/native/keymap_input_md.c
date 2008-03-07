@@ -129,16 +129,16 @@ keymap_get_key_code(int gameAction)
         return javacall_devemu_get_keycode(id, JAVACALL_KEY_SELECT);
 
     case  9: /* Canvas.GAME_A */
-        return javacall_devemu_get_keycode(id, JAVACALL_KEY_GAMEA);
+        return javacall_devemu_get_keycode(id, JAVACALL_KEY_5);
 
     case 10: /* Canvas.GAME_B */
-        return javacall_devemu_get_keycode(id, JAVACALL_KEY_GAMEB);
+        return javacall_devemu_get_keycode(id, JAVACALL_KEY_0);
 
     case 11: /* Canvas.GAME_C */
-        return javacall_devemu_get_keycode(id, JAVACALL_KEY_GAMEC);
+        return javacall_devemu_get_keycode(id, JAVACALL_KEY_ASTERISK);
 
     case 12: /* Canvas.GAME_D */
-        return javacall_devemu_get_keycode(id, JAVACALL_KEY_GAMED);
+        return javacall_devemu_get_keycode(id, JAVACALL_KEY_POUND);
 
     default: return 0;
     }
@@ -159,17 +159,13 @@ keymap_get_game_action(int keyCode)
 
     id = javacall_devemu_get_current_device();
     
-     if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_UP) ||
-     	   keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_GAME_UP)) {
+     if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_UP)) {
         return 1; /* Canvas.UP */
-     } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_DOWN) ||
-     	   keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_GAME_DOWN)) {
+     } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_DOWN)) {
         return 6; /* Canvas.DOWN */
-     } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_LEFT) ||
-     	   keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_GAME_LEFT)) {
+     } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_LEFT)) {
         return 2; /* Canvas.LEFT */
-     } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_RIGHT) ||
-     	   keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_GAME_RIGHT)) {
+     } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_RIGHT)) {
         return 5; /* Canvas.RIGHT */
      } else if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_SELECT)) {
         return 8; /* Canvas.FIRE */

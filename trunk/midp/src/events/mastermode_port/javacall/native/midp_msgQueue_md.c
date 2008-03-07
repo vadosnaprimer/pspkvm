@@ -75,8 +75,8 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewMidpEvent->type    = MIDP_KEY_EVENT;
         pNewMidpEvent->CHR     = event->data.keyEvent.key;
         pNewMidpEvent->ACTION  = event->data.keyEvent.keyEventType;
-        if (event->data.keyEvent.key == -21 && event->data.keyEvent.keyEventType == 1) {
-        	//pss();
+        if (event->data.keyEvent.key == JAVACALL_KEY_DEBUG_TRACE && event->data.keyEvent.keyEventType == 1) {
+        	pss();
         }
         break;
     case MIDP_JC_EVENT_PEN:

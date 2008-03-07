@@ -1,5 +1,5 @@
-#ifndef __JAVACALL_NAMS_H
-#define __JAVACALL_NAMS_H
+#ifndef __JAVACALL_DEVEMU_H
+#define __JAVACALL_DEVEMU_H
 
 
 
@@ -24,4 +24,4 @@ int javacall_devemu_get_rotation(int id);
 }
 #endif
 
-#endif  /* JAVACALL_NAMS_H */
+#endif  /* JAVACALL_DEVEMU_H */

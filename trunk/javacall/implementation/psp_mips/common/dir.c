@@ -154,7 +154,7 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFi
     }
 #endif
     static javacall_utf16 name[JAVACALL_MAX_FILE_NAME_LENGTH];
-    printf("javacall_dir_get_next\n");
+    
     struct dirent* d = readdir((DIR*)handle);
     if (d != NULL) {
         int len = strlen(d->d_name);
@@ -173,11 +173,9 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFi
                name[len] = d->d_name[len];
            }
     	}
-    	printf("javacall_dir_get_next: %s, len=%d\n", d->d_name, *outFilenameLength);
     	return name;
     } else {
-        printf("javacall_dir_get_next fail\n");
-        return NULL;
+       return NULL;
     }
 }
     

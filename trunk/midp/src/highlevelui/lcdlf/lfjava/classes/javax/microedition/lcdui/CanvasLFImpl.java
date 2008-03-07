@@ -274,7 +274,6 @@ class CanvasLFImpl extends DisplayableLFImpl implements CanvasLF {
      * @param keyCode The key that was pressed
      */
     void uCallKeyPressed(int keyCode) {
-        System.out.println("uCallKeyPressed:"+keyCode);
         if (allowKey(keyCode)) {
             keyCode = DeviceDesc.getDeviceKeyCode(DeviceDesc.getCurrentDevice(), keyCode);
             synchronized (Display.calloutLock) {

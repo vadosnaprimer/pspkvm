@@ -187,7 +187,7 @@ public class MVMManager extends MIDlet
      *        if false then possibility to launch midlet is needed.
      */
     public void selectForeground(boolean onlyFromLaunchedList) {
-        GraphicalInstaller.setDeviceToRun(-1);
+        GraphicalInstaller.setDeviceToRun(-1, null);
         appManagerUI.showMidletSwitcher(onlyFromLaunchedList);
     }
 
@@ -293,7 +293,8 @@ public class MVMManager extends MIDlet
 
         try {
             int dev = GraphicalInstaller.getGameDevSetting(suiteInfo.suiteId);
-            GraphicalInstaller.setDeviceToRun(dev);
+            int[] keymap = GraphicalInstaller.getKeymap(suiteInfo.suiteId);
+            GraphicalInstaller.setDeviceToRun(dev, keymap);
             // Create an instance of the MIDlet class
             // All other initialization happens in MIDlet constructor
             MIDletSuiteUtils.execute(suiteInfo.suiteId, midletToRun, null);
@@ -345,7 +346,8 @@ public class MVMManager extends MIDlet
 
             if (suiteInfo != null) {
             	  int dev = GraphicalInstaller.getGameDevSetting(suiteInfo.suiteId);
-                GraphicalInstaller.setDeviceToRun(dev);
+            	  int[] keymap = GraphicalInstaller.getKeymap(suiteInfo.suiteId);
+                GraphicalInstaller.setDeviceToRun(dev, keymap);
             	  midletProxyList.setForegroundMIDlet(suiteInfo.proxy);
             }
 

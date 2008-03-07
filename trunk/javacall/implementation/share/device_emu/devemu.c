@@ -230,7 +230,7 @@ void javacall_devemu_set_current_device(int id) {
 }
 
 int javacall_devemu_get_keycode(int id, javacall_key javacallkey) {
-    printf("javacall_devemu_get_keycode: %d, %d\n", id, javacallkey);
+    //printf("javacall_devemu_get_keycode: %d, %d\n", id, javacallkey);
     if (id < 0 || id >= DEVICE_COUNT) {
         return javacallkey;
     }
@@ -262,6 +262,8 @@ int javacall_devemu_get_keycode(int id, javacall_key javacallkey) {
     		return _devices[id].KEY_SOFT2;
     	case JAVACALL_KEY_CLEAR:
     		return _devices[id].KEY_CLEAR;
+    	case JAVACALL_KEY_SELECT:
+    		return _devices[id].KEY_SELECT;
     	default:
     		return javacallkey;
     }

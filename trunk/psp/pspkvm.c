@@ -17,6 +17,7 @@
 #include <javacall_keypress.h>
 #include <javacall_lifecycle.h>
 #include <javacall_file.h>
+#include <javacall_keymap.h>
 
 /* Define the module info section */
 PSP_MODULE_INFO("pspME", 0x1000, 1, 1);
@@ -74,10 +75,14 @@ SceUInt alarm_handler(void *common)
 	return 0;
 }
 
+
 #define PSP_CTRL_ANALOG_LEFT 	0x10000000
 #define PSP_CTRL_ANALOG_RIGHT 	0x20000000
 #define PSP_CTRL_ANALOG_UP 		0x40000000
 #define PSP_CTRL_ANALOG_DOWN 	0x80000000
+
+#if 0
+
 u32 oldAnalogKeys = 0;
 u32 oldDigitalKeys = 0;
 void processKey(javacall_keypress_type type, int pspkey) {
@@ -250,37 +255,26 @@ int KeyThread(SceSize args, void *argp)
 	}
 }
 
-#if 0
+#else
 
-#define MULTITASK_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER)
+#define MULTITASK_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_TRIANGLE)
+#define EXIT_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_CROSS)
+#define DEBUG_TRACE_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_START)
+#define SHIFT_KEY1 PSP_CTRL_LTRIGGER
+#define SHIFT_KEY2 PSP_CTRL_RTRIGGER
 
-typedef struct {
-	unsigned int pspKey;
-	int javaKey;
-} tKeymap;
-tKeymap keymap[] = {
-	{MULTITASK_KEY,  -999 /*dummy*/},
-	{PSP_CTRL_SELECT, JAVACALL_KEY_ASTERISK},
-	{PSP_CTRL_START, JAVACALL_KEY_POUND},
-	{PSP_CTRL_UP , JAVACALL_KEY_UP},
-	{PSP_CTRL_RIGHT , JAVACALL_KEY_RIGHT},
-	{PSP_CTRL_DOWN , JAVACALL_KEY_DOWN},
-	{PSP_CTRL_LEFT , JAVACALL_KEY_LEFT},
-	{PSP_CTRL_LTRIGGER, JAVACALL_KEY_SOFT1},
-	{PSP_CTRL_RTRIGGER , JAVACALL_KEY_SOFT2},
-	{PSP_CTRL_TRIANGLE, JAVACALL_KEY_CLEAR},
-	{PSP_CTRL_CIRCLE , JAVACALL_KEY_SELECT},
-	{PSP_CTRL_CROSS, JAVACALL_KEY_5},
-	{PSP_CTRL_SQUARE, JAVACALL_KEY_0}
-};
+#define REPEAT_THRESHOLD 20
+#define REPEAT_THRESHOLD1 5
 
 int KeyThread(SceSize args, void *argp)
 {
 	SceCtrlData pad;
-	unsigned int lastButtons = 0;
-	javacall_key numKey = 0, lastNumKey = 0;
+	unsigned int pspKey = 0, lastPspKey = 0;
 	int lx, ly;
-	int keys = sizeof(keymap)/sizeof(tKeymap);
+	static int hold = 0;
+	static int repeat_threshold = REPEAT_THRESHOLD;
+	static javacall_key lastPressedJavakey = 0;
+	
 	sceCtrlSetSamplingCycle(25);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 	while(!done){
@@ -288,76 +282,126 @@ int KeyThread(SceSize args, void *argp)
 		//pspDebugScreenSetXY(0, 2);
 
     		sceCtrlReadBufferPositive(&pad, 3);
-		numKey = 0;
+		pspKey = 0;
 		lx = pad.Lx;
 		ly = pad.Ly;
-		if (lx < 85) {
-			if (ly < 85) {
-				numKey = JAVACALL_KEY_1;
-			} else if (ly > 170) {
-				numKey = JAVACALL_KEY_7;
+		if (lx < 5) {
+			if (ly < 55) {
+				pspKey = PSP_CTRL_ANALOG_LEFT | PSP_CTRL_ANALOG_UP;
+			} else if (ly > 200) {
+				pspKey = PSP_CTRL_ANALOG_LEFT | PSP_CTRL_ANALOG_DOWN;
 			} else if (lx < 5) {
-				numKey = JAVACALL_KEY_4;
+				pspKey = PSP_CTRL_ANALOG_LEFT;
 			}
-		} else if (lx > 170) {
-			if (ly < 85) {
-				numKey = JAVACALL_KEY_3;
-			} else if (ly > 170) {
-				numKey = JAVACALL_KEY_9;
+		} else if (lx > 251) {
+			if (ly < 55) {
+				pspKey = PSP_CTRL_ANALOG_RIGHT | PSP_CTRL_ANALOG_UP;
+			} else if (ly > 200) {
+				pspKey = PSP_CTRL_ANALOG_RIGHT | PSP_CTRL_ANALOG_DOWN;
 			} else if (lx > 251) {
-				numKey = JAVACALL_KEY_6;
+				pspKey = PSP_CTRL_ANALOG_RIGHT;
 			}
 		} else {
 			if (ly < 5) {
-				numKey = JAVACALL_KEY_2;
+				pspKey = PSP_CTRL_ANALOG_UP;
 			} else if (ly > 251) {
-				numKey = JAVACALL_KEY_8;
+				pspKey = PSP_CTRL_ANALOG_DOWN;
 			} else {
 				//Staying in center, nothing happen
 			}
 		}
 		
-		if (numKey != lastNumKey) {
-			//printf("numKey:%d\n", numKey);
-			if (lastNumKey != 0) {
-				javanotify_key_event(lastNumKey, JAVACALL_KEYRELEASED);
-			} else {
-				javanotify_key_event(numKey, JAVACALL_KEYPRESSED);
-			}
-			lastNumKey = numKey;
-		}
 
-		if (pad.Buttons != lastButtons){
+              pspKey |= pad.Buttons;
+              
+		if (pspKey != lastPspKey || hold == repeat_threshold){
 		    int i;
-		    if (lastButtons == MULTITASK_KEY) {
-		    	if (pad.Buttons == 0) {
-		    		lastButtons = 0;
+		    int id;
+		    int keys;
+		    int shift, lastShift; // non-zero if "shift" key is pressed
+		    javacall_keymap* keymap;
+
+                  if ((pspKey == lastPspKey) && lastPressedJavakey != 0) {
+                  	//repeat
+                  	javanotify_key_event(lastPressedJavakey, JAVACALL_KEYREPEATED);
+                  	hold = 0;
+                  	repeat_threshold = REPEAT_THRESHOLD1;
+                  	continue;
+                  } else {
+                     lastPressedJavakey = 0;
+		       hold = 0;
+		       repeat_threshold = REPEAT_THRESHOLD;
+                  }
+
+                  if (lastPspKey == DEBUG_TRACE_KEY) {
+                  	if (pspKey == 0) {
+		    		lastPspKey = 0;
+		    	}
+		    	continue;
+                  }
+
+		    if (lastPspKey == EXIT_KEY) {
+		    	if (pspKey == 0) {
+		    		lastPspKey = 0;
 		    	}
 		    	continue;	    	
 		    }
 		    
+		    if (lastPspKey == MULTITASK_KEY) {
+		    	if (pspKey == 0) {
+		    		lastPspKey = 0;
+		    	}
+		    	continue;	    	
+		    }
+
+		    if (pspKey == DEBUG_TRACE_KEY) {
+		    	javanotify_key_event(JAVACALL_KEY_DEBUG_TRACE, JAVACALL_KEYPRESSED);
+		    	lastPspKey = pspKey;
+		    	continue;
+		    }
+
+		    if (pspKey == EXIT_KEY) {
+		    	javanotify_shutdown_current();
+		    	lastPspKey = pspKey;
+		    	continue;
+		    }		    
+
+		    if (pspKey == MULTITASK_KEY) {
+		    	javanotify_switch_to_ams();
+		    	lastPspKey = pspKey;
+		    	continue;
+		    }
+
+		    keymap = javacall_keymap_current();
+		    keys = javacall_keymap_size();
+		    shift = pspKey & (SHIFT_KEY1 | SHIFT_KEY2);
+		    lastShift = lastPspKey & (SHIFT_KEY1 | SHIFT_KEY2);
+
 		    for (i = 0 ; i < keys; i++) {
-			if ((pad.Buttons & keymap[i].pspKey)!=
-			    (lastButtons & keymap[i].pspKey)){
-			    	if ((pad.Buttons & keymap[i].pspKey) == keymap[i].pspKey) {
-			    		if (keymap[i].pspKey == MULTITASK_KEY){
-			    			javanotify_switch_to_ams();			    			
-			    			pad.Buttons = MULTITASK_KEY;
-			    			break;			    			
-			    		} else {
-			    			javanotify_key_event(keymap[i].javaKey, JAVACALL_KEYPRESSED);
-			    		}
+		    	//printf("keymap[i].nativekey:%08x, javakey:%d\n", keymap[i].nativeKey, keymap[i].javaKey);
+		    	if (keymap[i].javaKey == JAVACALL_KEY_INVALID) {
+		    		continue;
+		    	}
+		    	int pressed = ((keymap[i].nativeKey & pspKey) && (keymap[i].shift?shift:!shift));
+		    	int lastPressed = ((keymap[i].nativeKey& lastPspKey) && (keymap[i].shift?lastShift:!lastShift));
+		    	if (pressed!= lastPressed) {
+			    	if (pressed) {			    		
+			    		javanotify_key_event(keymap[i].javaKey, JAVACALL_KEYPRESSED);
+			    		lastPressedJavakey = keymap[i].javaKey;
 				    //printf("key %d pressed\n", keymap[i].javaKey);
 				} else {
-					if (keymap[i].pspKey != MULTITASK_KEY) {
-				    		javanotify_key_event(keymap[i].javaKey, JAVACALL_KEYRELEASED);
-				    		// printf("key %d released\n", keymap[i].javaKey);
-				    	}
+				    	javanotify_key_event(keymap[i].javaKey, JAVACALL_KEYRELEASED);
+				    	lastPressedJavakey = 0;
+				   	 //printf("key %d released\n", keymap[i].javaKey); 	
 				}
 			}
 		    }
-		    lastButtons = pad.Buttons;
+		    
+		} else {
+		    hold++;
 		}
+		
+		lastPspKey = pspKey;
 	}
 	return 0;
 }
