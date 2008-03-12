@@ -444,6 +444,15 @@ endif
 endif
 endif
 
+ifeq ($(USE_NOKIA_UI), true)
+# Nokia UI
+#
+$(MIDP_CLASSES_ZIP):: $(SUBSYSTEM_NOKIA_UI_JAVA_FILES)
+	$(appendjavafiles)
+JTWI_NATIVE_FILES	+= $(SUBSYSTEM_NOKIA_UI_NATIVE_FILES)
+endif
+
+
 #####################################################################
 # Include subsystem makefiles with "lazy" rules to be parsed after
 # other subsystem makefile have been included and global variables
