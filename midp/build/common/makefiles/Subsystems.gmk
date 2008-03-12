@@ -229,7 +229,7 @@ endif
 
 ifeq ($(USE_JSR_75), true)
 JPP_DEFS += -DENABLE_JSR_75
-include $(JSR_75_DIR)/build/cldc_application/$(SUBSYSTEM_MAKE_FILE)
+include $(JSR_75_DIR)/src/config/$(SUBSYSTEM_MAKE_FILE)
 endif
 
 #####################################################################
@@ -427,6 +427,15 @@ ifeq ($(USE_JSR_239), true)
 JPP_DEFS += -DENABLE_JSR_239
 include $(JSR_239_DIR)/src/cldc-oi/config/$(SUBSYSTEM_MAKE_FILE)
 endif
+
+#####################################################################
+# Nokia UI
+# Description: Nokia UI implementation
+#####################################################################
+ifeq ($(USE_NOKIA_UI), true)
+include $(NOKIA_UI_DIR)/src/config/$(SUBSYSTEM_MAKE_FILE)
+endif
+
 
 #####################################################################
 # (Extra) Abstractions Subsystem
