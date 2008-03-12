@@ -61,7 +61,8 @@ SUBSYSTEM_GRAPHICS_NATIVE_FILES += \
     gxj_graphics.c \
     gxj_image.c \
     gxj_putpixel.c \
-    gxj_text.c
+    gxj_text.c \
+    uni2cjk.c
 
 ifeq ($(TARGET_PLATFORM), wince)
 ifeq ($(TARGET_CPU), arm)
