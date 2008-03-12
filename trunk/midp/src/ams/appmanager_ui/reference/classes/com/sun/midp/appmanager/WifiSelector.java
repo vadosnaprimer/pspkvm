@@ -43,27 +43,35 @@ public class WifiSelector extends MIDlet implements CommandListener {
    
             String prof;
             int i;
+            boolean found = false;
+            Alert notFoundAlert = new Alert("Can't find Wifi connections",
+            	                                             " Please setup Wifi connections in PSP Network Setup",
+            	                                             null, AlertType.WARNING);
+            	                                             
+            
             wifiprof = new List("WIFI setup", Choice.IMPLICIT);
             wifiprof.addCommand(backCmd);
 
             display = Display.getDisplay(this);
 
-            for (i = 1; i < 128; i++) {
+            for (i = 1; i < 32; i++) {
                prof = lookupWifiProfile(i);
                if (prof == null) {
                	continue;
                }
                wifiprof.append(prof, null);
+               found = true;
             }
 
-            if (i > 1) {
-               wifiprof.addCommand(selectWIFICmd);
-               wifiprof.setSelectedIndex(0, true);
-            }           
-
             wifiprof.setCommandListener(this);
-            
-            display.setCurrent(wifiprof);
+
+            if (found) {
+               wifiprof.addCommand(selectWIFICmd);
+               wifiprof.setSelectedIndex(0, true);               
+               display.setCurrent(wifiprof);
+            } else {
+               display.setCurrent(notFoundAlert, wifiprof);
+            }
     }
 
     /**
