@@ -1469,6 +1469,13 @@ class AppManagerUI extends Form
      * the midlet suite that was just installed.
      */
     private void askUserIfLaunchMidlet() {
+        // user decided run the midlet suite after installation
+        MidletCustomItem mciToRun = getLastInstalledMidletItem();
+        if (mciToRun != null) {
+            display.setCurrentItem(mciToRun);
+            launchMidlet(mciToRun.msi);
+        }
+/*
         // Ask the user if he wants to run a midlet from
         // the newly installed midlet suite
         String title = Resource.getString(
@@ -1483,6 +1490,7 @@ class AppManagerUI extends Form
         alert.setTimeout(Alert.FOREVER);
 
         display.setCurrent(alert);
+ */    
     }
 
     /**
