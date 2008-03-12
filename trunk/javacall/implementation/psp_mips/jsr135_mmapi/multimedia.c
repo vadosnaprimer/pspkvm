@@ -83,12 +83,23 @@ typedef struct {
 	javacall_utf16 tmpfilename[64];
 	int tmpfilenamelen;
 	javacall_handle fp;
+	javacall_int64 playerId;
 } mmplayer_handle;
 
+#define INVALID_PLAYER_ID (0LL)
 static int is_midi_support = 0;
 static int music_handle_occupied = 0;
+static javacall_int64 current_playing = INVALID_PLAYER_ID;
 
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* str, int strlen);
+
+static void musicFinished() {
+    printf("musicFinished.\n");
+    if (current_playing) {
+        javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, current_playing, 0);
+        current_playing = INVALID_PLAYER_ID;
+    }
+}
 
 /**
  * Get multimedia capabilities of the device.
@@ -139,6 +150,7 @@ if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024)==-1) {
 }
 
     music_handle_occupied = 0;
+    Mix_HookMusicFinished(musicFinished);
     
     _javacall_media_initilized = JAVACALL_TRUE;
     return JAVACALL_OK;
@@ -238,6 +250,7 @@ javacall_handle javacall_media_create(javacall_int64 playerId,
     handle->tmpfilenamelen = 0;
     handle->occupied = 1;
     handle->fp = NULL;
+    handle->playerId = playerId;
     
     return handle;
 }
@@ -272,21 +285,24 @@ javacall_result javacall_media_close(javacall_handle handle) {
             Mix_FreeMusic(mp->music);
     	 }
         
-    mp->needBuffer = 0;
-    mp->contentLength = 0;
-    mp->music = NULL;
-    mp->occupied = 0;
-    mp->filename[0] = '\0';
-    if (mp->fp) {
-    	javacall_file_close(mp->fp);
-    	mp->fp = NULL;
-    }
-    if (mp->tmpfilenamelen > 0) {
-    	javacall_file_delete(mp->tmpfilename, mp->tmpfilenamelen);
-    }
-    mp->tmpfilename[0] = (javacall_utf16)0;
-    mp->tmpfilenamelen = 0;
-    free(mp);
+        mp->needBuffer = 0;
+        mp->contentLength = 0;
+        mp->music = NULL;
+        mp->occupied = 0;
+        mp->filename[0] = '\0';
+        if (mp->fp) {
+        	javacall_file_close(mp->fp);
+        	mp->fp = NULL;
+        }
+        if (mp->tmpfilenamelen > 0) {
+        	javacall_file_delete(mp->tmpfilename, mp->tmpfilenamelen);
+        }
+        mp->tmpfilename[0] = (javacall_utf16)0;
+        mp->tmpfilenamelen = 0;
+        mp->playerId = INVALID_PLAYER_ID;
+        free(mp);
+        
+        current_playing = INVALID_PLAYER_ID;
     }
 
     return JAVACALL_OK;
@@ -317,7 +333,7 @@ javacall_result javacall_media_destroy(javacall_handle handle){
  * @retval JAVACALL_FAIL    There is no valid device resource
  */
 javacall_result javacall_media_acquire_device(javacall_handle handle) {
-    
+    /*
     if (music_handle_occupied) {
     	javacall_print("javacall_media_acquire_device: can't create the 2nd music player.\n");
     	return JAVACALL_FAIL;
@@ -325,6 +341,8 @@ javacall_result javacall_media_acquire_device(javacall_handle handle) {
         music_handle_occupied = 1;
         return JAVACALL_OK;
     }
+    */
+    return JAVACALL_OK;
 }
 
 /**
@@ -450,15 +468,23 @@ javacall_result javacall_media_clear_buffer(javacall_handle handle) {
  * @retval JAVACALL_FAIL    Fail
  */
 javacall_result javacall_media_start(javacall_handle handle) {
-    Mix_Music *music = ((mmplayer_handle*)handle)->music;
-
-    if(music && Mix_PlayMusic(music, -1)==-1) {
-        printf("Mix_PlayMusic: %s\n", Mix_GetError());
-        // well, there's no music, but most games don't break without music...
+    if ( !handle) {
         return JAVACALL_FAIL;
     }
 
-    return JAVACALL_OK;
+    if (current_playing != INVALID_PLAYER_ID &&
+    	  current_playing != ((mmplayer_handle*)handle)->playerId) {
+    	javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, current_playing, 0);
+    }
+    
+    Mix_Music *music = ((mmplayer_handle*)handle)->music;
+    if (music) {
+    	Mix_PlayMusic(music, 1);
+    	current_playing = ((mmplayer_handle*)handle)->playerId;
+    	return JAVACALL_OK;
+    } else {
+       return JAVACALL_FAIL;
+    }
 }
 
 /**
@@ -469,12 +495,7 @@ javacall_result javacall_media_start(javacall_handle handle) {
  * @retval JAVACALL_FAIL    Fail
  */
 javacall_result javacall_media_stop(javacall_handle handle) {
-    if (handle && ((mmplayer_handle*)handle)->music) {
-    	Mix_PauseMusic();
-    	return JAVACALL_OK;
-    } else {
-       return JAVACALL_FAIL;
-    }
+    return javacall_media_pause(handle);
 }
 
 /**
@@ -485,13 +506,15 @@ javacall_result javacall_media_stop(javacall_handle handle) {
  * @retval JAVACALL_FAIL    Fail
  */
 javacall_result javacall_media_pause(javacall_handle handle) {
-    if (handle && ((mmplayer_handle*)handle)->music) {
-    	Mix_PauseMusic();
+     if (handle && ((mmplayer_handle*)handle)->music &&
+    	 (current_playing == ((mmplayer_handle*)handle)->playerId)) {
+
+    	current_playing = INVALID_PLAYER_ID;
+    	Mix_PauseMusic();    	
     	return JAVACALL_OK;
     } else {
        return JAVACALL_FAIL;
     }
-
 }
 
 /**
@@ -502,13 +525,7 @@ javacall_result javacall_media_pause(javacall_handle handle) {
  * @retval JAVACALL_FAIL    Fail
  */
 javacall_result javacall_media_resume(javacall_handle handle) {
-    if (handle && ((mmplayer_handle*)handle)->music) {
-    	Mix_ResumeMusic();
-    	return JAVACALL_OK;
-    } else {
-       return JAVACALL_FAIL;
-    }
-
+    return javacall_media_start(handle);
 }
 
 /**
