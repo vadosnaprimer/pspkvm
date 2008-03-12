@@ -63,6 +63,7 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts) {
  *
  * putpixel primitive character drawing. 
  */
+extern const unsigned char UNI_CJK[];
 unsigned char BitMask[8] = {0x80,0x40,0x20,0x10,0x8,0x4,0x2,0x1};
 static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 		     gxj_pixel_type pixelColor, int x, int y,
@@ -78,9 +79,12 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndex;
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
+    unsigned short CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
+		                     ((short*)UNI_CJK)[c0]:
+	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8);
     unsigned char const * fontbitmap =
-        selectFontBitmap(c0,pfonts) + FONT_DATA;
-    jchar const c = (c0 & 0xff) -
+        selectFontBitmap(CJK,pfonts) + FONT_DATA;
+    jchar const c = (CJK & 0xff) -
         fontbitmap[FONT_CODE_FIRST_LOW-FONT_DATA];
     unsigned long mapLen =
         ((fontbitmap[FONT_CODE_LAST_LOW-FONT_DATA]
@@ -129,6 +133,9 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     }
 }
 
+
+#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<256?1:2][FONT_WIDTH])
+	
 /*
  * Draws the first n characters specified using the current font,
  * color, and anchor point.
@@ -159,6 +166,7 @@ gx_draw_chars(jint pixel, const jshort *clip,
 	      const java_imagedata *dst, int dotted, 
 	      int face, int style, int size,
 	      int x, int y, int anchor, const jchar *charArray, int n) {
+
     int i;
     int xStart;
     int xDest;
@@ -170,8 +178,8 @@ gx_draw_chars(jint pixel, const jshort *clip,
     int yCharSource;
     int charsWidth;
     int charsHeight;
-    int fontWidth;
-    int fontHeight;
+    //int fontWidth;
+    //int fontHeight;
     int fontAscent;
     int fontDescent;
     int fontLeading;
@@ -221,12 +229,12 @@ gx_draw_chars(jint pixel, const jshort *clip,
         return;
     }
 
-    fontWidth = FontBitmaps[1][FONT_WIDTH];
-    fontHeight = FontBitmaps[1][FONT_HEIGHT];
-    fontDescent = FontBitmaps[1][FONT_DESCENT];
+    //fontWidth = FontBitmaps[isASCII?1:2][FONT_WIDTH];
+    //fontHeight = FontBitmaps[isASCII?1:2][FONT_HEIGHT];
+    //fontDescent = FontBitmaps[isASCII?1:2][FONT_DESCENT];
 
-    width = fontWidth * n;
-    yLimit = fontHeight;
+    width = charsWidth;
+    yLimit = charsHeight;
 
     xStart = 0;
     yCharSource = 0;
@@ -263,19 +271,37 @@ gx_draw_chars(jint pixel, const jshort *clip,
     /* Apply the clip region to the destination region */
     diff = clipX1 - xDest;
     if (diff > 0) {
-        xStart += diff % fontWidth;
+        //xStart += diff % fontWidth;
         width -= diff;
         xDest += diff;
-        nCharsToSkip = diff / fontWidth;
+        //nCharsToSkip = diff / fontWidth;
+        while (diff > CHAR_WIDTH(charArray, nCharsToSkip)) {
+            diff -= CHAR_WIDTH(charArray, nCharsToSkip);
+            
+            nCharsToSkip++;
+            
+            if (nCharsToSkip >= n) {
+            	 return ; //nothing to do
+            }
+        }
+        xStart += diff % CHAR_WIDTH(charArray, nCharsToSkip);
     }
 
     diff = (xDest + width) - clipX2;
     if (diff > 0) {
         width -= diff;
-        n -= diff/fontWidth;
+        while (diff > CHAR_WIDTH(charArray, n-1)) {
+            diff -= CHAR_WIDTH(charArray, n-1);
+            
+            if (nCharsToSkip >= n) {
+            	 return ; //nothing to do
+            }
+            
+            n--;
+        }
     }
 
-    diff = (yDest + fontHeight) - clipY2;
+    diff = (yDest + charsHeight) - clipY2;
     if (diff > 0) {
         yLimit -= diff;
     }
@@ -296,9 +322,9 @@ gx_draw_chars(jint pixel, const jshort *clip,
     if (xStart != 0) {
         int xLimit;
         int startWidth;
-        if (width > fontWidth) {
-            startWidth = fontWidth - xStart;
-            xLimit = fontWidth;
+        if (width > CHAR_WIDTH(charArray, nCharsToSkip)) {
+            startWidth = CHAR_WIDTH(charArray, nCharsToSkip) - xStart;
+            xLimit = CHAR_WIDTH(charArray, nCharsToSkip);
         } else {
             startWidth = width;
             xLimit = xStart + width;
@@ -307,26 +333,26 @@ gx_draw_chars(jint pixel, const jshort *clip,
         /* Clipped, draw the right part of the first char. */
         drawChar(dest, charArray[nCharsToSkip], GXJ_RGB24TORGB16(pixel), xDest, yDest,
                  xStart, yCharSource, xLimit, yLimit,
-                 FontBitmaps, fontWidth, fontHeight);
+                 FontBitmaps, CHAR_WIDTH(charArray, nCharsToSkip), charsHeight);
         nCharsToSkip++;
         xDest += startWidth;
         widthRemaining -= startWidth;
     }
 
     /* Draw all the fully wide chars. */
-    for (i = nCharsToSkip; i < n && widthRemaining >= fontWidth;
-         i++, xDest += fontWidth, widthRemaining -= fontWidth) {
+    for (i = nCharsToSkip; i < n && widthRemaining >= CHAR_WIDTH(charArray, i);
+         xDest += CHAR_WIDTH(charArray, i), widthRemaining -= CHAR_WIDTH(charArray, i), i++) {
 
         drawChar(dest, charArray[i], GXJ_RGB24TORGB16(pixel), xDest, yDest,
-                 0, yCharSource, fontWidth, yLimit,
-                 FontBitmaps, fontWidth, fontHeight);
+                 0, yCharSource, CHAR_WIDTH(charArray, i), yLimit,
+                 FontBitmaps, CHAR_WIDTH(charArray, i), charsHeight);
     }
 
     if (i < n && widthRemaining > 0) {
         /* Clipped, draw the left part of the last char. */
         drawChar(dest, charArray[i], GXJ_RGB24TORGB16(pixel), xDest, yDest,
                  0, yCharSource, widthRemaining, yLimit,
-                 FontBitmaps, fontWidth, fontHeight);
+                 FontBitmaps, CHAR_WIDTH(charArray, i), charsHeight);
     }
 }
 
@@ -383,11 +409,19 @@ gx_get_charswidth(int face, int style, int size,
     int width;
 
     //REPORT_CALL_TRACE(LC_LOWUI, "LCDUIcharsWidth()\n");
+    if (n < 1) {
+        return 0;
+    }
 
     width = gxjport_get_chars_width(face, style, size, charArray, n); 
     if (width > 0) {
         return width;
     }
 
-    return n * FontBitmaps[1][FONT_WIDTH];
+    width = 0;
+    while (n--) {
+        width += CHAR_WIDTH(charArray, n);
+    }
+
+    return width;
 }
