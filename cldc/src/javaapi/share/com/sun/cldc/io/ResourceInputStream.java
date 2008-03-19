@@ -113,6 +113,7 @@ public class ResourceInputStream extends InputStream {
      */
     public ResourceInputStream(String name) throws IOException {
         String fixedName = fixResourceName(name);
+        System.out.println("ResourceInputStream("+name+")");
         fileDecoder = open(fixedName);
         if (fileDecoder == null) {
             throw new IOException();
@@ -211,6 +212,30 @@ public class ResourceInputStream extends InputStream {
      */
     public boolean markSupported() {
         return true;
+    }
+
+        /**
+     * Skips over and discards <code>n</code> bytes of data from file stream.
+     *
+     * @param      n   the number of bytes to be skipped.
+     * @return      the actual number of bytes skipped.
+     * @exception  IOException  if an I/O error occurs.
+     */
+     private byte[] dummy_buffer = new byte[1024];
+    public long skip(long n) throws IOException
+    {
+        int readBytesTotal = 0;        
+        int readBytes = 0;
+        while (n > 0){     
+            readBytes = read( dummy_buffer, 0, (int)((n > 1024) ? 1024 : n) );
+            if ( readBytes <= 0 ) {
+                break;
+            } else {
+                readBytesTotal += readBytes;
+                n -= readBytes;
+            }
+        }
+        return (long)readBytesTotal;
     }
 
     // OS-specific interface to underlying file system.
