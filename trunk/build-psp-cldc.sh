@@ -75,6 +75,7 @@ MIDP_DIR=${WS_ROOT}/midp
 TOOLS_DIR=${WS_ROOT}/tools
 JSR_135_DIR=${WS_ROOT}/jsr135
 JPEG_DIR=${WS_ROOT}/jpeg
+JSR_120_DIR=${WS_ROOT}/jsr120
 NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
 PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 #PSPDEV_GNU_TOOLS_DIR=
@@ -174,6 +175,7 @@ then
 			skip_ams_executables=true \
 			JPEG_DIR=${JPEG_DIR} \
 			JSR_135_DIR=${JSR_135_DIR} \
+			JSR_120_DIR=${JSR_120_DIR} \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			${DEBUG_OPTION}

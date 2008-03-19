@@ -54,10 +54,10 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(AMS_JSR_INTERFACE_DIR)/classes/com/sun/midp/content/CHManager.java
 
 ifneq ($(USE_JSR_205), true)
-ifneq ($(USE_JSR_120), true)
+#ifneq ($(USE_JSR_120), true)
     SUBSYSTEM_AMS_JAVA_FILES += \
         $(AMS_JSR_INTERFACE_DIR)/classes/com/sun/midp/wma/WMACleanupMonitor.java
-endif
+#endif
 endif
 ifneq ($(USE_JSR_229), true)
 # Include stub implementation of JSR229 clean class
