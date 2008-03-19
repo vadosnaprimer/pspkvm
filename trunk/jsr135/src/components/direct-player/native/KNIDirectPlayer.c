@@ -28,6 +28,8 @@
 #include "KNICommon.h"
 #include "commonKNIMacros.h"
 
+#define MMP_DEBUG_STR printf
+
 /* Global Variables ************************************************************************/
 
 javacall_int64 g_currentPlayer = -1;
@@ -61,14 +63,14 @@ static javacall_bool jmmpCheckCondition(KNIPlayerInfo* pKniInfo, int conditions)
         }
     }
 
-#if 0
+
     if ((conditions & CHECK_CURRENT_PLAYER) == CHECK_CURRENT_PLAYER) {
-        if (pKniInfo->uniqueId != g_currentPlayer) {
+        //if (pKniInfo->uniqueId != g_currentPlayer) {
+        if (!pKniInfo->isPlaying) {
             MMP_DEBUG_STR("[KNIDirectPlayer] CHECK_CURRENT_PLAYER fail\n");
             return JAVACALL_FALSE;
         }
     }
-#endif
 
     if ((conditions & CHECK_ACQUIRE_RESOURCE) == CHECK_ACQUIRE_RESOURCE) {
         if (!pKniInfo->isAcquire) {
@@ -150,6 +152,7 @@ Java_com_sun_mmedia_DirectPlayer_nInit() {
         pKniInfo->isDirectFile = JAVACALL_FALSE;
         pKniInfo->isForeground = -1;
         pKniInfo->recordState = RECORD_CLOSE;
+        pKniInfo->isPlaying = 0;
         pKniInfo->pNativeHandle = 
             javacall_media_create(uniqueId, pszMimeType, mimeLength, pszURI, URILength, (long)contentLength); 
         if (NULL == pKniInfo->pNativeHandle) {
@@ -301,6 +304,7 @@ Java_com_sun_mmedia_DirectPlayer_nStart() {
     
     if (pKniInfo && pKniInfo->pNativeHandle && JAVACALL_OK == javacall_media_start(pKniInfo->pNativeHandle)) {
         g_currentPlayer = pKniInfo->uniqueId;    /* set the current player */
+        pKniInfo->isPlaying = 1;
         returnValue = KNI_TRUE;
     }
 
@@ -319,6 +323,7 @@ Java_com_sun_mmedia_DirectPlayer_nStop() {
 
     if (pKniInfo && JAVACALL_TRUE == jmmpCheckCondition(pKniInfo, CHECK_ISPLAYING)) {
         if (JAVACALL_OK == javacall_media_stop(pKniInfo->pNativeHandle)) {
+            pKniInfo->isPlaying = 0;
             returnValue = KNI_TRUE;
         }
     } else {
