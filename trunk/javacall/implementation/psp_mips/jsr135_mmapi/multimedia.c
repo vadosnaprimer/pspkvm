@@ -57,6 +57,7 @@ typedef struct {
 	javacall_utf16 tmpfilename[64];
 	int tmpfilenamelen;
 	javacall_handle fp;
+	int paused;
 	javacall_int64 playerId;
 } midi_player_handle;
 
@@ -74,6 +75,7 @@ typedef struct _wav_player_handle {
 	javacall_int64 playerId;
 	char* buffer;
 	int buffered_len;
+	int paused;
 	struct _wav_player_handle* prev;
 	struct _wav_player_handle* next;
 } wav_player_handle;
@@ -516,6 +518,16 @@ javacall_result javacall_media_pause(javacall_handle handle) {
  * @retval JAVACALL_FAIL    Fail
  */
 javacall_result javacall_media_resume(javacall_handle handle) {
+    if (((mmplayer_handle*)handle)->type == MEDIA_TYPE_WAVE && 
+    	  !((wav_player_handle*)handle)->paused) {
+    	  return JAVACALL_OK;
+    }
+
+    if (((mmplayer_handle*)handle)->type == MEDIA_TYPE_MIDI && 
+    	  !((midi_player_handle*)handle)->paused) {
+    	  return JAVACALL_OK;
+    }
+    
     return javacall_media_start(handle);
 }
 
@@ -1223,6 +1235,7 @@ javacall_result javacall_media_close_recording(javacall_handle handle) {
 javacall_result javacall_media_to_foreground(javacall_handle handle,
                                              javacall_media_mvm_option option) {
     if (option != JAVACALL_MEDIA_PLAYABLE_FROM_BACKGROUND) {
+    	printf("javacall_media_to_foreground\n");
         javacall_media_resume(handle);
     }
     return JAVACALL_OK;
@@ -1394,11 +1407,14 @@ static mmplayer_handle* create_midi(javacall_int64 playerId, const javacall_utf1
     	needBuffer = 1;
     } else {
        pszUri = javacall_UNICODEsToUtf8(uri, uriLength);
-       if (strlen(pszUri) >= 256 || (strncmp(pszUri, "http://", 7) && strncmp(pszUri, "file://", 7))) {
-              printf("Not supported URI:%s\n", pszUri);
-       	return 0;
+       if (!strncmp(pszUri, "http://", 7) && strlen(pszUri) < 256) {
+           needBuffer = 1;
+       } else if (strlen(pszUri) >= 256 || strncmp(pszUri, "file://", 7)) {
+           printf("Not supported URI:%s\n", pszUri);
+           return 0;
+       } else {
+           needBuffer = 0;
        }
-       needBuffer = 0;
     }
 
     handle = malloc(sizeof(midi_player_handle));
@@ -1417,6 +1433,7 @@ static mmplayer_handle* create_midi(javacall_int64 playerId, const javacall_utf1
     handle->fp = NULL;
     handle->playerId = playerId;
     handle->type = MEDIA_TYPE_MIDI;
+    handle->paused = 0;
     
     return (mmplayer_handle*)handle;
 }
@@ -1442,6 +1459,7 @@ static void close_midi(midi_player_handle* mp) {
         mp->tmpfilename[0] = (javacall_utf16)0;
         mp->tmpfilenamelen = 0;
         mp->playerId = INVALID_PLAYER_ID;
+        mp->paused = 0;
         free(mp);
         
         current_playing = INVALID_PLAYER_ID;
@@ -1541,7 +1559,8 @@ static javacall_result pause_midi(midi_player_handle* mp) {
     	 (current_playing == mp->playerId)) {
 
     	current_playing = INVALID_PLAYER_ID;
-    	Mix_PauseMusic();    	
+    	Mix_PauseMusic();
+    	mp->paused = 1;
     	return JAVACALL_OK;
     } else {
        return JAVACALL_FAIL;
@@ -1562,13 +1581,15 @@ static mmplayer_handle* create_wav(javacall_int64 playerId, const javacall_utf16
     	//Read from stream, need buffer
     	needBuffer = 1;
     } else {
-       //Read from URI. We support file:// only
        pszUri = javacall_UNICODEsToUtf8(uri, uriLength);
-       if (strlen(pszUri) >= 256 ||(strncmp(pszUri, "http://", 7) && strncmp(pszUri, "file://", 7))) {
-              printf("Not supported URI:%s\n", pszUri);
-       	return 0;
+       if (!strncmp(pszUri, "http://", 7) && strlen(pszUri) < 256) {
+           needBuffer = 1;
+       } else if (strlen(pszUri) >= 256 || strncmp(pszUri, "file://", 7)) {
+           printf("Not supported URI:%s\n", pszUri);
+           return 0;
+       } else {
+           needBuffer = 0;
        }
-       needBuffer = 0;
     }
 
     handle = malloc(sizeof(wav_player_handle));
@@ -1602,9 +1623,15 @@ static mmplayer_handle* create_wav(javacall_int64 playerId, const javacall_utf16
     } else {
         strcpy(handle->filename, pszUri);
     }
+    
+    handle->tmpfilename[0] = (javacall_utf16)0;
+    handle->tmpfilenamelen = 0;
+    handle->fp = NULL;
+    
     handle->playerId = playerId;
     handle->type = MEDIA_TYPE_WAVE;
     handle->channel = -1;
+    handle->paused = 0;
 
     /* add player to the list*/
     handle->prev = NULL;
@@ -1634,7 +1661,19 @@ static void close_wav(wav_player_handle* mp) {
         mp->chunk = NULL;
         mp->buffer = NULL;
         mp->filename[0] = '\0';
+        
+        if (mp->fp) {
+        	javacall_file_close(mp->fp);
+        	mp->fp = NULL;
+        }
+        if (mp->tmpfilenamelen > 0) {
+        	javacall_file_delete(mp->tmpfilename, mp->tmpfilenamelen);
+        }
+        mp->tmpfilename[0] = (javacall_utf16)0;
+        mp->tmpfilenamelen = 0;
+        
         mp->playerId = INVALID_PLAYER_ID;
+        mp->paused = 0;
 
         /* dequeue mp from the list*/
         if (mp->prev) {
@@ -1718,14 +1757,17 @@ static void clear_buffer_wav(wav_player_handle* mp) {
 
 static javacall_result start_wav(wav_player_handle* mp) {
     Mix_Chunk * chunk;
+    printf("start_wav\n");
     if (!mp->chunk && !mp->needBuffer) {
+    	printf("Mix_LoadWAV...\n");
         chunk = Mix_LoadWAV(mp->filename);
     } else { 
         chunk = mp->chunk;
     }
     
     if (chunk) {
-    	if ((mp->channel = Mix_PlayChannel(-1, chunk, 0)) == -1) {
+    	printf("Mix_PlayChannel %d...\n", mp->channel);
+    	if ((mp->channel = Mix_PlayChannel(mp->channel, chunk, 0)) == -1) {
     	    printf("Mix_PlayChannel: %s\n",Mix_GetError());
     	    return JAVACALL_FAIL;
     	} else {
@@ -1739,7 +1781,8 @@ static javacall_result start_wav(wav_player_handle* mp) {
 static javacall_result pause_wav(wav_player_handle* mp) {
      if (mp->chunk && mp->channel >= 0) {
     	Mix_Pause(mp->channel);
-    	mp->channel = -1;
+    	//mp->channel = -1;
+    	mp->paused = 1;
     	return JAVACALL_OK;
     } else {
        return JAVACALL_FAIL;
