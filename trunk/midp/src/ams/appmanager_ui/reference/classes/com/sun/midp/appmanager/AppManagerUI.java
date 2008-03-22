@@ -347,8 +347,9 @@ class AppManagerUI extends Form
 
         setTitle(Resource.getString(
                 ResourceConstants.AMS_MGR_TITLE));
-        updateContent();
 
+        updateContent(false);
+        
         addCommand(exitCmd);
         setCommandListener(this);
 
@@ -365,6 +366,12 @@ class AppManagerUI extends Form
                     }
                 }
             }
+            new Thread(new Runnable() {
+        	public void run() {
+        		updateContent(true);
+        	}
+            }).start();
+
         } else {
             // if a MIDlet was just installed
             // getLastInstalledMidletItem() will return MidletCustomItem
@@ -707,7 +714,7 @@ class AppManagerUI extends Form
                      * Also the CA manager could have disabled a MIDlet.
                      */
                     if (INSTALLER.equals(midletClassName)) {
-                        updateContent();
+                        updateContent(true);
                         /*
                         * After a MIDlet suite is successfully installed on the
                         * device, ask the user whether or not to launch
@@ -720,7 +727,7 @@ class AppManagerUI extends Form
                         }
                     } else {
                         if (CA_MANAGER.equals(midletClassName)) {
-                            updateContent();
+                            updateContent(true);
                         }
                         ci.update();
                     }
@@ -818,7 +825,7 @@ class AppManagerUI extends Form
      * Read in and create a MIDletInfo for newly added MIDlet suite and
      * check enabled state of currently added MIDlet suites.
      */
-    private void updateContent() {
+    private void updateContent(boolean loadIcon) {
         int[] suiteIds;
         RunningMIDletSuiteInfo msi = null;
         boolean newlyAdded;
@@ -909,7 +916,7 @@ class AppManagerUI extends Form
                     midletSuiteStorage.getMIDletSuiteInfo(suiteIds[lowest]);
 
                 RunningMIDletSuiteInfo suiteInfo =
-                    new RunningMIDletSuiteInfo(temp, midletSuiteStorage);
+                    new RunningMIDletSuiteInfo(temp, midletSuiteStorage, loadIcon);
 
                 newlyAdded = true;
                 for (int k = 0; k < size(); k++) {

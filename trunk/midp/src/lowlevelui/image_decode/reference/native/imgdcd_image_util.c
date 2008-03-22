@@ -41,7 +41,11 @@
 #define CT_ALPHA    0x04
 
 /** Convert pre-masked triplet r, g, b to 16 bit pixel. */
+#ifdef BIG_ENDIAN_FRAMEBUFFER
+#define IMGDCD_RGB2PIXEL(r, g, b) ( r +(g << 5)+ (b << 11) )
+#else
 #define IMGDCD_RGB2PIXEL(r, g, b) ( b +(g << 5)+ (r << 11) )
+#endif
 
 typedef struct _imgDst {
   imageDstData   super;

@@ -23,9 +23,16 @@
  * information or have any questions.
  */
 
+#define USE_PSP_GU 1
+#define ALWAYS_USE_PSP_GU 1
+
 #include "javacall_lcd.h" 
-#include "pspdisplay.h"
+#include <pspdisplay.h>
 #include <stdlib.h>
+#if USE_PSP_GU
+#include <pspge.h>
+#include <pspgu.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,12 +41,112 @@ extern "C" {
 extern const unsigned short DukeTango[];
 
 static unsigned short* vram = (unsigned short*) (0x40000000 | 0x04000000);
-static javacall_pixel* scbuff = NULL;
 
 static int vscr_w = 480;
 static int vscr_h = 272;
 
 static int resized = 0;
+
+static unsigned short int __attribute__((aligned(16))) _offscreen[512*512];
+static javacall_pixel* scbuff = _offscreen;
+
+#if USE_PSP_GU
+
+struct Vertex
+{
+	float u, v;
+	float color;
+	float x, y, z;
+};
+
+extern unsigned int * _gu_list;
+
+static unsigned short int __attribute__((aligned(16))) swizzled_pixels [512*512];
+
+
+void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height)
+{
+   unsigned int blockx, blocky;
+   unsigned int j;
+ 
+   unsigned int width_blocks = (width / 16);
+   unsigned int height_blocks = (height / 8);
+ 
+   unsigned int src_pitch = (width-16)/4;
+   unsigned int src_row = width * 8;
+ 
+   const u8* ysrc = in;
+   u32* dst = (u32*)out;
+ 
+   for (blocky = 0; blocky < height_blocks; ++blocky)
+   {
+      const u8* xsrc = ysrc;
+      for (blockx = 0; blockx < width_blocks; ++blockx)
+      {
+         const u32* src = (u32*)xsrc;
+         for (j = 0; j < 8; ++j)
+         {
+            *(dst++) = *(src++);
+            *(dst++) = *(src++);
+            *(dst++) = *(src++);
+            *(dst++) = *(src++);
+            src += src_pitch;
+         }
+         xsrc += 16;
+     }
+     ysrc += src_row;
+     dst = (u32*)out + 4*512*(blocky+1);
+   }
+}
+
+static void pspFrameStart(int use_psp_gu) {
+	if (use_psp_gu) {
+		sceGuStart(GU_DIRECT, _gu_list);
+		//sceGuStart(GU_SEND, _gu_list);
+		//sceGuClear(GU_COLOR_BUFFER_BIT|GU_STENCIL_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+	}	
+}
+
+static void pspFrameEnd(int use_psp_gu) {
+	if (use_psp_gu) {   	    
+		//sceGuTexSync();
+		sceGuFinish();
+		//sceGuSendList(GU_TAIL, _gu_list,&tempGeContext);
+		//sceGuSync(0, GU_SYNC_DONE);	 
+		sceGuSync(0, 0);
+		//sceDisplayWaitVblankStart();
+		//fbp = sceGuSwapBuffers();
+		//screen.image = (unsigned char*)(0x04000000+(u32)fbp);
+		sceGuSwapBuffers();
+	}
+}
+
+static void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int slice)
+{
+	int start, end;
+	float xScale = ((float)dw)/((float)sw);
+	float dxSlice = xScale * slice;
+	float dx_f = dx;
+	// blit maximizing the use of the texture-cache
+
+	for (start = sx, end = sx+sw; start < end; start += slice, dx_f += dxSlice)
+	{
+		struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
+		int width = (start + slice) < end ? slice : end-start;
+
+		vertices[0].u = start; vertices[0].v = sy;
+		vertices[0].color = 0;
+		vertices[0].x = dx_f; vertices[0].y = dy; vertices[0].z = 0;
+
+		vertices[1].u = start + width; vertices[1].v = sy + sh;
+		vertices[1].color = 0;
+		vertices[1].x = dx_f + xScale*width; vertices[1].y = dy + dh; vertices[1].z = 0;
+
+		sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_5650|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+	}
+}
+
+#endif //USE_PSP_GU
 
 /**
  * The function javacall_lcd_init is called by during Java VM startup, allowing the
@@ -72,33 +179,41 @@ static int resized = 0;
 javacall_result javacall_lcd_init(void) {
        int x,y;
        unsigned short *p;
-       
-       sceDisplaySetMode (0, 480, 272);
-	sceDisplaySetFrameBuf(vram, 512, PSP_DISPLAY_PIXEL_FORMAT_565, PSP_DISPLAY_SETBUF_NEXTFRAME);
 
-
-	/*
-	if (DukeTango[0] != 480 || DukeTango[1] != 272) {
-		p = NULL;
-	} else {
-		p = (unsigned short*)DukeTango + 2;
-	}
-	*/
-
-	p = NULL;
-	
-	for (y = 0; y < 272; y++) { 
-		for (x = 0; x < 480; x++) { 
- 			vram[x + y * 512] = p?p[x+y*480]:0x0000; 
- 		} 
- 	}
-	
-      	scbuff = (javacall_pixel*)malloc(vscr_w*vscr_h*sizeof(javacall_pixel));
-	if (scbuff == NULL) {
-		return JAVACALL_FAIL;
-	}
-	
-    return JAVACALL_OK;
+       if (!ALWAYS_USE_PSP_GU && vscr_h <= 272) {
+           sceGuDisplay(0);
+           sceDisplaySetMode (0, 480, 272);
+    	    sceDisplaySetFrameBuf(vram, 512, PSP_DISPLAY_PIXEL_FORMAT_565, PSP_DISPLAY_SETBUF_NEXTFRAME);
+    
+    
+           /*
+           if (DukeTango[0] != 480 || DukeTango[1] != 272) {
+        	p = NULL;
+           } else {
+        	p = (unsigned short*)DukeTango + 2;
+           }
+           */
+        
+           p = NULL;
+        	
+           for (y = 0; y < 272; y++) { 
+        	for (x = 0; x < 480; x++) { 
+     			vram[x + y * 512] = p?p[x+y*480]:0x0000; 
+     		} 
+           }
+    
+    
+          //scbuff = (javacall_pixel*)malloc(vscr_w*vscr_h*sizeof(javacall_pixel));
+    	   //if (scbuff == NULL) {
+          //    return JAVACALL_FAIL;
+          //}
+       } else {
+           //printf("Setup GU\n");
+	    //setup_gu();
+	    memset(scbuff, 0, sizeof(_offscreen));
+          sceGuDisplay(1);
+       }
+       return JAVACALL_OK;
 }
 
 
@@ -113,7 +228,7 @@ javacall_result javacall_lcd_init(void) {
  * @retval JAVACALL_FAIL    fail
  */
 javacall_result javacall_lcd_finalize(void){
-    if (scbuff) free(scbuff);
+    //if (scbuff) free(scbuff);
     return JAVACALL_OK;
 } 
     
@@ -148,16 +263,7 @@ javacall_pixel* javacall_lcd_get_screen(javacall_lcd_screen_type screenType,
  * @retval JAVACALL_FAIL    fail
  */
 javacall_result javacall_lcd_flush(void) {
-#if 1
-    int x,y;
-    for (y = 0; y < vscr_h; y++) { 
-		for (x = 0; x < vscr_w; x++) { 
-			unsigned short c = scbuff[x+y*vscr_w];
- 			vram[x + y * 512] = (c >> 11) | (c << 11) | (c & 0x07e0); 
- 		} 
-    }
-#endif
-    return JAVACALL_OK;
+    return javacall_lcd_flush_partial(0, vscr_h);
 }
     
 /**
@@ -196,22 +302,60 @@ javacall_result javacall_lcd_set_full_screen_mode(javacall_bool useFullScreen) {
  * @retval JAVACALL_FAIL    fail 
  */
 javacall_result javacall_lcd_flush_partial(int ystart, int yend){
-#if 1
-    int x,y;
-    int xstart = (480 - vscr_w) / 2;
-    unsigned short *ps, *pd; 
-    ps = scbuff + vscr_w * ystart;
-    pd = vram + ystart * 512 + xstart;
-    for (y = ystart; y < yend; y++) {
-    		x = vscr_w;
-    		while(x--) {
-			unsigned short c = *ps++;
- 			*pd++ = (c >> 11) | (c << 11) | (c & 0x07e0); 
- 		} 
-		
-		pd += (512 - vscr_w);
+    if (ALWAYS_USE_PSP_GU || vscr_h > 272) {
+        //Need scale
+        swizzle_fast((u8*)swizzled_pixels,scbuff,vscr_w*2,vscr_h); // 512*2 because swizzle operates in bytes, and each pixel in a 16-bit texture is 2 bytes
+        pspFrameStart(1);
+        sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+        sceGuTexMode(GU_PSM_5650 ,0,0,1); // 16-bit RGBA
+        sceGuTexImage(0,512,512,512,swizzled_pixels); // setup texture by framebuff
+        sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB); // don't get influenced by any vertex colors
+        sceGuTexFilter(GU_LINEAR,GU_LINEAR); // point-filtered sampling
+    
+    	 {
+    		int scr_x = 0;
+    		int scr_y = 0;
+    		int scr_w = vscr_w;
+    		int scr_h = vscr_h;
+    		//if (PHONE->ROTATE_ANGLE == 90) {
+    		//	CopyImageCW90(screen.image, screen.width,
+    		//			(480-scr_h)/2,(272-scr_w)/2,
+    		//			screenImage.image, screenImage.width,
+    		//			0, 0, scr_w, scr_h);
+    		//}
+    		//else {
+    			if (scr_w <= 480 && scr_h <= 272){
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-scr_w)/2,(272-scr_h)/2,scr_w,scr_h,16);
+    			}
+    			else if (scr_h/272.0f >= scr_h/480.0f){
+    				const int des_w = scr_w*272/scr_h;
+    				const int des_h = 272;
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16);
+    			}
+    			else {
+    				const int des_w = 480;
+    				const int des_h = scr_h*480/scr_w;
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16);
+    			}
+    		//}
+    		pspFrameEnd(1);
+    	}
+    } else {
+        int x,y;
+        int xstart = (480 - vscr_w) / 2;
+        unsigned short *ps, *pd; 
+        ps = scbuff + vscr_w * ystart;
+        pd = vram + ystart * 512 + xstart;
+        for (y = ystart; y < yend; y++) {
+        		x = vscr_w;
+        	while(x--) {
+    			unsigned short c = *ps++;
+     			*pd++ = c;//(c >> 11) | (c << 11) | (c & 0x07e0); 
+     		} 
+    		
+    		pd += (512 - vscr_w);
+        }
     }
-#endif
     return JAVACALL_OK;
 }
     

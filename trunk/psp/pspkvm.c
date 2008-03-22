@@ -14,6 +14,8 @@
 #include <pspiofilemgr_fcntl.h>
 #include <psputility_sysparam.h>
 
+#include <pspgu.h>
+
 #include <javacall_keypress.h>
 #include <javacall_lifecycle.h>
 #include <javacall_file.h>
@@ -437,9 +439,50 @@ int java_main(void)
 	return 0;
 }
 
+static unsigned int __attribute__((aligned(16))) _list[262144];
+unsigned int * _gu_list;
+void* _gu_fb;
+
+#define BUF_WIDTH (512)
+#define SCR_WIDTH (480)
+#define SCR_HEIGHT (272)
+
+static void setup_gu() {
+
+	void* fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_4444);
+
+	sceGuInit();
+	_gu_list = _list;
+	sceGuStart(GU_DIRECT,_gu_list);
+	sceGuDrawBuffer(GU_PSM_8888,fbp0,BUF_WIDTH);
+	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,fbp1,BUF_WIDTH);
+	sceGuDepthBuffer(zbp,BUF_WIDTH);
+	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2));
+	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT);
+	sceGuDepthRange(65535,0);
+	sceGuScissor(0,0,SCR_WIDTH,SCR_HEIGHT);
+	sceGuEnable(GU_SCISSOR_TEST);
+	sceGuFrontFace(GU_CW);
+	sceGuEnable(GU_TEXTURE_2D);
+	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+	sceGuFinish();
+	sceGuSync(0,0);
+	_gu_fb = fbp0;
+
+	sceDisplayWaitVblankStart();
+	
+	sceKernelDcacheWritebackAll();
+}
+
 int main(void)
 {
 	SceUID thid;
+
+       printf("Setup GU\n");
+	setup_gu();       
+
 	printf("Loading network modules\n");
     	if(pspSdkLoadInetModules() < 0)	{	
     		printf("Error, could not load inet modules\n");	
@@ -459,6 +502,7 @@ int main(void)
 	sceKernelStartThread(thid, 0, 0);
 	sceKernelWaitThreadEnd(thid, NULL);
 
+       sceGuTerm();
 	/* quick clean exit */
 	sceKernelExitGame();
 

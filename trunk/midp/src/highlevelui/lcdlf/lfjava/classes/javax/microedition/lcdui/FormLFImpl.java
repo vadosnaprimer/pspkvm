@@ -625,13 +625,27 @@ class FormLFImpl extends ScreenLFImpl implements FormLF {
      * @param keyCode the key code of the key which was pressed
      */
     void uCallKeyPressed(int keyCode) {
-        if (keyCode == Constants.KEYCODE_UP
-            || keyCode == Constants.KEYCODE_DOWN
-            || keyCode == Constants.KEYCODE_LEFT
-            || keyCode == Constants.KEYCODE_RIGHT) 
-        {
-            int dir = KeyConverter.getGameAction(keyCode);
+        ItemLFImpl v = null;
+        synchronized (Display.LCDUILock) {
+            if (numOfLFs != 0 && traverseIndex >= 0) {
+                v = itemLFs[traverseIndex];
+            }
+        } // synchronized
             
+        int dir = KeyConverter.getGameAction(keyCode);
+        if ((v !=null && !(v.item instanceof TextField) && 
+                 (dir == Canvas.DOWN ||
+                  dir == Canvas.UP    ||
+                  dir == Canvas.LEFT ||
+                  dir == Canvas.RIGHT)) 
+            ||
+             (((v == null) || (v !=null && (v.item instanceof TextField))) &&
+                  (keyCode == Constants.KEYCODE_DOWN ||
+                   keyCode == Constants.KEYCODE_UP    ||
+                   keyCode == Constants.KEYCODE_LEFT ||
+                   keyCode == Constants.KEYCODE_RIGHT))
+            )
+        {  
             // If 2D traversal is not enabled, we "direction-bend"
             // and traverse in a typewriter-like fashion, line-by-line
             // from left to right
@@ -645,15 +659,6 @@ class FormLFImpl extends ScreenLFImpl implements FormLF {
             uTraverse(dir);
             return;
         } else {
-            ItemLFImpl v = null;
-            synchronized (Display.LCDUILock) {
-                if (numOfLFs == 0 || traverseIndex < 0) {
-                    return;
-                }
-                
-                v = itemLFs[traverseIndex];
-                
-            } // synchronized
     
             // SYNC NOTE: uCallKeyPressed may result in a call to the
             // application, so we make sure we do this outside of the
@@ -671,23 +676,30 @@ class FormLFImpl extends ScreenLFImpl implements FormLF {
      * @param keyCode the key which was released
      */
     void uCallKeyReleased(int keyCode) {
-        if (keyCode == Constants.KEYCODE_UP
-            || keyCode == Constants.KEYCODE_DOWN
-            || keyCode == Constants.KEYCODE_LEFT
-            || keyCode == Constants.KEYCODE_RIGHT) 
+        ItemLFImpl v = null;
+        synchronized (Display.LCDUILock) {
+            if (numOfLFs != 0 && traverseIndex >= 0) {
+                v = itemLFs[traverseIndex];
+            }
+        } // synchronized
+        
+        int dir = KeyConverter.getGameAction(keyCode);
+        if ((v !=null && !(v.item instanceof TextField) && 
+                 (dir == Canvas.DOWN ||
+                  dir == Canvas.UP    ||
+                  dir == Canvas.LEFT ||
+                  dir == Canvas.RIGHT)) 
+            ||
+             (((v == null) || (v !=null && (v.item instanceof TextField))) &&
+                  (keyCode == Constants.KEYCODE_DOWN ||
+                   keyCode == Constants.KEYCODE_UP    ||
+                   keyCode == Constants.KEYCODE_LEFT ||
+                   keyCode == Constants.KEYCODE_RIGHT))
+            )
         {
             return;
         } else {
-            ItemLFImpl v = null;
-            synchronized (Display.LCDUILock) {
-                if (numOfLFs == 0 || traverseIndex < 0) {
-                    return;
-                }
-                
-                v = itemLFs[traverseIndex];
-                
-            } // synchronized
-    
+        
             // SYNC NOTE: uCallKeyPressed may result in a call to the
             // application, so we make sure we do this outside of the
             // LCDUILock
@@ -704,12 +716,27 @@ class FormLFImpl extends ScreenLFImpl implements FormLF {
      * @param keyCode the key code of the key which was repeated
      */
     void uCallKeyRepeated(int keyCode) {
-        if (keyCode == Constants.KEYCODE_UP
-            || keyCode == Constants.KEYCODE_DOWN
-            || keyCode == Constants.KEYCODE_LEFT
-            || keyCode == Constants.KEYCODE_RIGHT) 
-        {
-            int dir = KeyConverter.getGameAction(keyCode);
+        ItemLFImpl v = null;
+        synchronized (Display.LCDUILock) {
+            if (numOfLFs != 0 && traverseIndex >= 0) {
+                v = itemLFs[traverseIndex];
+            }
+        } // synchronized
+        
+        int dir = KeyConverter.getGameAction(keyCode);
+        if ((v !=null && !(v.item instanceof TextField) && 
+                 (dir == Canvas.DOWN ||
+                  dir == Canvas.UP    ||
+                  dir == Canvas.LEFT ||
+                  dir == Canvas.RIGHT)) 
+            ||
+             (((v == null) || (v !=null && (v.item instanceof TextField))) &&
+                  (keyCode == Constants.KEYCODE_DOWN ||
+                   keyCode == Constants.KEYCODE_UP    ||
+                   keyCode == Constants.KEYCODE_LEFT ||
+                   keyCode == Constants.KEYCODE_RIGHT))
+            )
+         {
             
             // If 2D traversal is not enabled, we "direction-bend"
             // and traverse in a typewriter-like fashion, line-by-line
@@ -724,16 +751,7 @@ class FormLFImpl extends ScreenLFImpl implements FormLF {
             uTraverse(dir);
             return;
         } else {
-            ItemLFImpl v = null;
-            synchronized (Display.LCDUILock) {
-                if (numOfLFs == 0 || traverseIndex < 0) {
-                    return;
-                }
-                
-                v = itemLFs[traverseIndex];
-                
-            } // synchronized
-    
+        
             // SYNC NOTE: uCallKeyPressed may result in a call to the
             // application, so we make sure we do this outside of the
             // LCDUILock

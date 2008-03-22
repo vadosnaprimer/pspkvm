@@ -200,7 +200,7 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
             return true;
         }
         
-        if (keyCode == Constants.KEYCODE_UP) {
+        if (keyCode == Constants.KEYCODE_UP || keyCode == Canvas.KEY_NUM2) {
             if (selI > 0) {
                 selI--;
                 if (selI < scrollIndex && scrollIndex > 0) {
@@ -209,7 +209,7 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
                 updateScrollIndicator();
                 requestRepaint();
             }
-        } else if (keyCode == Constants.KEYCODE_DOWN) {
+        } else if (keyCode == Constants.KEYCODE_DOWN || keyCode == Canvas.KEY_NUM8) {
             if (selI < (menuCmds.length - 1)) {
                 selI++;
                 if (selI >= MenuSkin.MAX_ITEMS &&
@@ -220,11 +220,12 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
                 updateScrollIndicator();
                 requestRepaint();
             }
-        } else if (keyCode == Constants.KEYCODE_RIGHT) {
+        } else if (keyCode == Constants.KEYCODE_RIGHT || keyCode == Canvas.KEY_NUM6) {
             menuLayer.dismissCascadeMenu();
         } else if (keyCode == Constants.KEYCODE_SELECT) {
             menuLayer.subCommandSelected(menuCmds[selI]);
         } else if (menuCmds.length < 10) {
+            /*
             int max = 0;
             switch (keyCode) {
                 case Canvas.KEY_NUM1:
@@ -258,6 +259,7 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
             if (max > 0 && menuCmds.length >= max) {
                 menuLayer.subCommandSelected(menuCmds[max - 1]);
             }
+            */
         }
         return true;
     }
@@ -358,7 +360,7 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
                         3, 3);
                 }
             }
-            
+            /*
             if (cmdIndex < 9) {
                 g.setFont((selI == cmdIndex) ?
                            MenuSkin.FONT_ITEM_SEL :
@@ -370,7 +372,7 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
                              MenuSkin.ITEM_INDEX_ANCHOR_X,
                              y, Graphics.TOP | Graphics.LEFT);
             }
-            
+            */
             g.setFont(MenuSkin.FONT_ITEM);                
             g.setColor((selI == cmdIndex) ? MenuSkin.COLOR_ITEM_SEL :
                        MenuSkin.COLOR_ITEM);

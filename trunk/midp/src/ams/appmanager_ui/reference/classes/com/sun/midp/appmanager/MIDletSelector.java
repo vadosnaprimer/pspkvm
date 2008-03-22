@@ -183,10 +183,10 @@ final class MIDletSelector implements CommandListener {
             // Add each midlet
             for (int i = 0; i < mcount; i++) {
                 Image icon = null;
-                if (minfo[i].icon != null) {
-                    icon = RunningMIDletSuiteInfo.getIcon(suiteInfo.suiteId,
-                        minfo[i].icon, mss);
-                }
+                //if (minfo[i].icon != null) {
+                //    icon = RunningMIDletSuiteInfo.getIcon(suiteInfo.suiteId,
+                //        minfo[i].icon, mss);
+                //}
 
                 mlist.append(minfo[i].name, icon);
             }

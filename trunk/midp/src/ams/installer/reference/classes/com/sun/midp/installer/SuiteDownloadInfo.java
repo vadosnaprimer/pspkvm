@@ -80,6 +80,7 @@ class SuiteDownloadInfo {
     private static native int openDir(String dir);
     private static native String nextFileInDir0(String dir, int handle);
     private static native void closeDir(int handle);
+    private static native String convert2lable0(String str);
 
     private static SuiteDownloadInfo getNextFileInDir(String dir, int handle) {
     	 String fullpath, lable;
@@ -94,7 +95,8 @@ class SuiteDownloadInfo {
         	fullpath = fullpath.substring(0, fullpath.length()- 1);
         }
         lable = fullpath.substring(fullpath.lastIndexOf('/') + 1);
-        //System.out.println("getNextFileInDir:"+fullpath+" "+lable+(isDir?"[DIR]":""));
+        System.out.println("getNextFileInDir:"+fullpath+" "+lable+(isDir?"[DIR]":""));
+        lable = convert2lable0(lable);
         return new SuiteDownloadInfo(fullpath, lable, isDir);
     }
 

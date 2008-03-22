@@ -325,9 +325,11 @@ class ChoiceGroupPopupLFImpl extends ChoiceGroupLFImpl {
 
                 // popup is closed when SELECT, LEFT or RIGHT is pressed;
                 // popup selection is changed only when SELECT is pressed
-                if (keyCode != Constants.KEYCODE_SELECT &&
-                    keyCode != Constants.KEYCODE_LEFT && 
-                    keyCode != Constants.KEYCODE_RIGHT) {
+                int dir = KeyConverter.getGameAction(keyCode);
+                if (dir != Canvas.LEFT &&
+                     dir != Canvas.RIGHT &&
+                     dir != Canvas.FIRE)
+                {
                     return;
                 }
 
@@ -537,12 +539,14 @@ class ChoiceGroupPopupLFImpl extends ChoiceGroupLFImpl {
          * @return true if the key event was handled and false - otherwise
          */
         public boolean keyInput(int type, int code) {
-            if (type == EventConstants.PRESSED && lf != null) {
+            if ((type == EventConstants.PRESSED || type == EventConstants.REPEATED)
+            	     && lf != null) {
+            	  int dir = KeyConverter.getGameAction(code);
 
-                if (code == Constants.KEYCODE_UP
-                    || code == Constants.KEYCODE_DOWN) 
+                if (dir == Canvas.UP ||
+                    dir == Canvas.DOWN) 
                 {
-                    if (lf.traverseInPopup(KeyConverter.getGameAction(code),
+                    if (lf.traverseInPopup(dir,
                                            viewport[WIDTH], 
                                            viewport[HEIGHT])) {
                         // the viewable[Y] is correct after traverseInPopup() calls,

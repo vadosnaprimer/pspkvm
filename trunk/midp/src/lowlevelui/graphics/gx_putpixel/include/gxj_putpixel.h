@@ -87,6 +87,27 @@ extern gxj_screen_buffer gxj_system_screen_buffer;
  * The returned separate colors are 8 bits as in Java RGB.
  * @{
  */
+#ifdef BIG_ENDIAN_FRAMEBUFFER
+#define GXJ_GET_RED_FROM_PIXEL(P)   (((P) << 3) & 0xF8)
+#define GXJ_GET_GREEN_FROM_PIXEL(P) (((P) >> 3) & 0xFC)
+#define GXJ_GET_BLUE_FROM_PIXEL(P)  (((P) >> 8) & 0xF8)
+/** @} */
+
+/** Convert pre-masked triplet r, g, b to 16 bit pixel. */
+#define GXJ_RGB2PIXEL(r, g, b) ( r +(g << 5)+ (b << 11) )
+
+/** Convert 24-bit RGB color to 16bit (565) color */
+#define GXJ_RGB24TORGB16(x) (((( x ) & 0x00F80000) >> 19) + \
+                             ((( x ) & 0x0000FC00) >> 5) + \
+                             ((( x ) & 0x000000F8) << 8) )
+
+
+/** Convert 16-bit (565) color to 24-bit RGB color */
+#define GXJ_RGB16TORGB24(x) ( ((x & 0x001F) << 19) | ((x & 0x001C) << 14) |\
+                              ((x & 0x07E0) << 5) | ((x & 0x0600) >> 1) |\
+                              ((x & 0xF800) >> 8) | ((x & 0xE000) >> 13) )
+
+#else
 #define GXJ_GET_RED_FROM_PIXEL(P)   (((P) >> 8) & 0xF8)
 #define GXJ_GET_GREEN_FROM_PIXEL(P) (((P) >> 3) & 0xFC)
 #define GXJ_GET_BLUE_FROM_PIXEL(P)  (((P) << 3) & 0xF8)
@@ -104,6 +125,8 @@ extern gxj_screen_buffer gxj_system_screen_buffer;
 #define GXJ_RGB16TORGB24(x) ( ((x & 0x001F) << 3) | ((x & 0x001C) >> 2) |\
                               ((x & 0x07E0) << 5) | ((x & 0x0600) >> 1) |\
                               ((x & 0xF800) << 8) | ((x & 0xE000) << 3) )
+
+#endif
 
 /**
  * Extend the 8-bit Alpha value of an ARGB8888 pixel

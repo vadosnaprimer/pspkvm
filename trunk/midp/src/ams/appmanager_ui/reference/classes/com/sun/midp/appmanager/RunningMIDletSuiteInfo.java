@@ -106,10 +106,22 @@ public class RunningMIDletSuiteInfo extends MIDletSuiteInfo {
         storageId = info.storageId;
         numberOfMidlets = info.numberOfMidlets;
         trusted = info.trusted;
-        preinstalled = info.preinstalled;
-        iconName = info.iconName;
+        preinstalled = info.preinstalled;                                  
+    }
+    
+    public RunningMIDletSuiteInfo(MIDletSuiteInfo info,
+                                  MIDletSuiteStorage mss, boolean loadIcon) {
+        super(info.suiteId, info.midletToRun, info.displayName,
+              info.enabled);
 
-        loadIcon(mss);
+        storageId = info.storageId;
+        numberOfMidlets = info.numberOfMidlets;
+        trusted = info.trusted;
+        preinstalled = info.preinstalled;
+        if (loadIcon) {
+            iconName = info.iconName;
+            loadIcon(mss);
+        }
     }
 
     /**

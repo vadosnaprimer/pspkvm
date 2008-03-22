@@ -73,6 +73,7 @@ PCSL_DIR=${WS_ROOT}/pcsl
 CLDC_DIR=${WS_ROOT}/cldc
 MIDP_DIR=${WS_ROOT}/midp
 TOOLS_DIR=${WS_ROOT}/tools
+RESTRICTED_CRYPTO_DIR=${WS_ROOT}/restricted_crypto
 JSR_135_DIR=${WS_ROOT}/jsr135
 JPEG_DIR=${WS_ROOT}/jpeg
 JSR_120_DIR=${WS_ROOT}/jsr120
@@ -171,6 +172,7 @@ then
 			PCSL_OUTPUT_DIR=${PCSL_OUTPUT_DIR} \
 			CLDC_DIST_DIR=${CLDC_DIR}/build/javacall_psp_gcc/dist \
 			TOOLS_DIR=${TOOLS_DIR} \
+			RESTRICTED_CRYPTO_DIR=${RESTRICTED_CRYPTO_DIR} \
 			USE_MULTIPLE_ISOLATES=true \
 			skip_ams_executables=true \
 			JPEG_DIR=${JPEG_DIR} \
