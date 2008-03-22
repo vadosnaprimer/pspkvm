@@ -1495,7 +1495,7 @@ static long buffer_midi(midi_player_handle* mp, const void* buffer, long length,
     
     if (mp->fp) {
     	 javacall_print("Continue buffering to tmp file\n");
-    	 ret = javacall_file_write(mp->fp, buffer, length + offset);
+    	 ret = javacall_file_write(mp->fp, buffer, length);
     } else {
         int i;
         sprintf(tmpfilename, "%08x_tmp_mus.mid", mp);
@@ -1514,7 +1514,7 @@ static long buffer_midi(midi_player_handle* mp, const void* buffer, long length,
         } else {
             javacall_print("Buffering to tmp file\n");
             mp->fp = hFile;
-            ret = javacall_file_write(mp->fp, buffer, length + offset);
+            ret = javacall_file_write(mp->fp, buffer, length);
         }
     }
 
@@ -1718,7 +1718,7 @@ static long buffer_wav(wav_player_handle* mp, const void* buffer, long length, l
     
     if (mp->fp) {
     	 javacall_print("Continue buffering to tmp file\n");
-    	 ret = javacall_file_write(mp->fp, buffer, length + offset);
+    	 ret = javacall_file_write(mp->fp, buffer, length);
     } else {
         int i;
         sprintf(tmpfilename, "%08x_tmp_wav.wav", mp);
@@ -1737,7 +1737,7 @@ static long buffer_wav(wav_player_handle* mp, const void* buffer, long length, l
         } else {
             javacall_print("Buffering to tmp file\n");
             mp->fp = hFile;
-            ret = javacall_file_write(mp->fp, buffer, length + offset);
+            ret = javacall_file_write(mp->fp, buffer, length);
         }
     }
 
