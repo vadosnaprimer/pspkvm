@@ -88,7 +88,7 @@
 <localized_string Key="APPLICATIONS"
                 Value="Applications"/>
 <localized_string Key="INSTALL_APPLICATION"
-                Value="Install Application"/>
+                Value="Find Applications"/>
 <localized_string Key="CLASS_VERIFIER_APPLICATION"
                 Value="Class Verifier Application"/>
 <localized_string Key="CA_MANAGER_APP"

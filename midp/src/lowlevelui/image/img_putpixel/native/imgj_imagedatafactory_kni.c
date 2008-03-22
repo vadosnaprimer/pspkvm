@@ -50,6 +50,17 @@
         get_imagedata(IMGAPI_GET_IMAGEDATA_PTR(jimgData),   \
                       width, height, pixelData, alphaData)
 
+#ifdef BIG_ENDIAN_FRAMEBUFFER
+/** Convert 24-bit RGB color to 16bit (565) color */
+#define RGB24TORGB16(x) (((( x ) & 0x00F80000) >> 19) + \
+                             ((( x ) & 0x0000FC00) >> 5) + \
+                             ((( x ) & 0x000000F8) << 8) )
+
+/** Convert 16-bit (565) color to 24-bit RGB color */
+#define RGB16TORGB24(x) ( ((x & 0x001F) << 19) | ((x & 0x001C) << 14) |\
+                              ((x & 0x07E0) << 5) | ((x & 0x0600) >> 1) |\
+                              ((x & 0xF800) >> 8) | ((x & 0xE000) >> 13) )
+#else
 /** Convert 24-bit RGB color to 16bit (565) color */
 #define RGB24TORGB16(x) (((( x ) & 0x00F80000) >> 8) + \
                              ((( x ) & 0x0000FC00) >> 5) + \
@@ -59,6 +70,7 @@
 #define RGB16TORGB24(x) ( ((x & 0x001F) << 3) | ((x & 0x001C) >> 2) |\
                               ((x & 0x07E0) << 5) | ((x & 0x0600) >> 1) |\
                               ((x & 0xF800) << 8) | ((x & 0xE000) << 3) )
+#endif
 
 /**
  * Create native representation for a image.

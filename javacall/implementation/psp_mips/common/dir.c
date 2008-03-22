@@ -170,7 +170,7 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFi
                 name[len] = 0;
     	    }
            while (len--) {
-               name[len] = d->d_name[len];
+               name[len] = (javacall_utf16)d->d_name[len] & 0xff;
            }
     	}
     	return name;

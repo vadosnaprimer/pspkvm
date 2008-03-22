@@ -3,7 +3,7 @@ ROOT = ..
 endif
 
 TARGET = pspkvm
-OBJS = pspkvm.o
+OBJS = pspkvm.o vram.o
 
 INCDIR = 
 CFLAGS = -G0 -Wall -I$(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/inc
