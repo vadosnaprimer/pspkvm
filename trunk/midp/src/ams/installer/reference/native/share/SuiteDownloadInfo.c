@@ -58,7 +58,7 @@ KNIDECL(com_sun_midp_installer_SuiteDownloadInfo_convert2lable0) {
     KNI_DeclareHandle(ret);
 
     GET_PARAMETER_AS_PCSL_STRING(1, from)
-
+#ifdef PSP
     len = pcsl_string_length(&from);
     to.data = midpMalloc((len + 1)*sizeof(jchar));
     if (to.data) {
@@ -84,6 +84,11 @@ KNIDECL(com_sun_midp_installer_SuiteDownloadInfo_convert2lable0) {
         
         pcsl_string_free(&to);
     }
+#else
+    midp_jstring_from_pcsl_string(KNIPASSARGS &from, ret);
+        
+    RELEASE_PCSL_STRING_PARAMETER    
+#endif
     KNI_EndHandlesAndReturnObject(ret);
 }
 
