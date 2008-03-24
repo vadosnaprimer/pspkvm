@@ -57,6 +57,8 @@ typedef struct {
 	javacall_utf16 tmpfilename[64];
 	int tmpfilenamelen;
 	javacall_handle fp;
+	char* buffer;
+	int buffered_len;
 	int paused;
 	javacall_int64 playerId;
 } midi_player_handle;
@@ -1420,7 +1422,35 @@ static mmplayer_handle* create_midi(javacall_int64 playerId, const javacall_utf1
     handle = malloc(sizeof(midi_player_handle));
 
     handle->needBuffer = needBuffer;
-    handle->contentLength = contentLength;
+
+#if 0
+    /***
+      * Currently, Mix_LoadMUS_RW is not supported MIDI, we have to comment this code out,
+      * to forcely use file-buffer midi playing.
+      ***/
+    if (contentLength > 0 && contentLength < DEFAULT_WAVE_BUFFER_LENGTH) {
+    	 handle->buffer = malloc(contentLength);
+    	 if (!handle->buffer) {
+    	    free(handle);
+    	    return 0;
+        }
+    	 handle->contentLength = contentLength;
+    } else if (contentLength < 0) {
+        handle->buffer = malloc(DEFAULT_WAVE_BUFFER_LENGTH);
+        if (!handle->buffer) {
+    	    free(handle);
+    	    return 0;
+        }
+        handle->contentLength = DEFAULT_WAVE_BUFFER_LENGTH;
+    } else
+#endif
+    {
+        handle->buffer = NULL;
+        handle->contentLength = contentLength;
+    }    
+
+    handle->buffered_len = 0;
+    
     handle->music = NULL;
     if (pszUri == NULL) {
         handle->filename[0] = '\0';
@@ -1440,12 +1470,19 @@ static mmplayer_handle* create_midi(javacall_int64 playerId, const javacall_utf1
 
 
 static void close_midi(midi_player_handle* mp) {
+	printf("close_midi\n");
 	if (mp->music) {
             Mix_FreeMusic(mp->music);
     	 }
+
+	 if (mp->buffer) {
+	     free(mp->buffer);
+	 }
         
         mp->needBuffer = 0;
         mp->contentLength = 0;
+        mp->buffer = 0;
+        mp->buffered_len = 0;
         mp->music = NULL;
         mp->occupied = 0;
         mp->filename[0] = '\0';
@@ -1470,11 +1507,19 @@ static long buffer_midi(midi_player_handle* mp, const void* buffer, long length,
     int ret;
     static char tmpfilename[64];
 
+    if (mp->music) {
+        return length>0?length:0;
+    }
+
     if (buffer == NULL || length <= 0) {
+    	Mix_Music *music = NULL;
+    	
     	//end of buffering
     	javacall_print("endof buffering\n");
-    	if (mp->fp) {
-    		Mix_Music *music;
+    	if (mp->buffer) {
+    		SDL_RWops * rw = SDL_RWFromMem(mp->buffer, mp->buffered_len);
+    		music = Mix_LoadMUS_RW(rw);
+    	} else if (mp->fp) {
     		
     		javacall_print("close tmp buffer file\n");
     		javacall_file_close(mp->fp);
@@ -1482,23 +1527,38 @@ static long buffer_midi(midi_player_handle* mp, const void* buffer, long length,
     		strcpy(mp->filename, javacall_UNICODEsToUtf8(mp->tmpfilename, mp->tmpfilenamelen));
     		    		
     		music=Mix_LoadMUS(mp->filename);
-   		if(!music) {
-        		printf("Mix_LoadMUS(): %s\n", Mix_GetError());
-        		// this might be a critical error...
-        		return -1;
-    		}
-    
-    		mp->music = music;
+   		
     	}
+
+    	if(!music) {
+        	printf("Mix_LoadMUS(): %s\n", Mix_GetError());
+        	// this might be a critical error...
+      		return -1;
+    	}
+
+    	mp->music = music;
+    	
     	return 0;
     }
     
     if (mp->fp) {
     	 javacall_print("Continue buffering to tmp file\n");
     	 ret = javacall_file_write(mp->fp, buffer, length);
-    } else {
+    } else if (mp->buffer && ((length + offset) <= mp->contentLength)) {
+        javacall_print("Buffer midi %d bytes from %d\n", length, offset);
+        memcpy(mp->buffer+offset, buffer, length);
+        mp->buffered_len += length;
+        ret = length;
+    }  else {
         int i;
         sprintf(tmpfilename, "%08x_tmp_mus.mid", mp);
+
+        if (mp->buffer) {
+            free(mp->buffer);
+            mp->buffer = NULL;
+            mp->buffered_len = 0;
+            mp->contentLength = 0;
+        }
         
         for (i = 0; i < TMP_MUSIC_FILENAME_LEN_MAX; i++) {
         	mp->tmpfilename[i] = (javacall_utf16)tmpfilename[i];
@@ -1523,12 +1583,14 @@ static long buffer_midi(midi_player_handle* mp, const void* buffer, long length,
 }
 
 static void clear_buffer_midi(midi_player_handle* mp) {
+    /*
     javacall_print("Clear buffer\n");
     if (mp && mp->fp) {    	
     	javacall_file_close(mp->fp);
     	mp->fp = NULL;
     }
     mp->filename[0] = '\0';
+    */
 }
 
 static javacall_result start_midi(midi_player_handle* mp) {
@@ -1605,16 +1667,19 @@ static mmplayer_handle* create_wav(javacall_int64 playerId, const javacall_utf16
     	    free(handle);
     	    return 0;
         }
+    	 handle->contentLength = contentLength;
     } else if (contentLength < 0) {
         handle->buffer = malloc(DEFAULT_WAVE_BUFFER_LENGTH);
         if (!handle->buffer) {
     	    free(handle);
     	    return 0;
         }
+        handle->contentLength = DEFAULT_WAVE_BUFFER_LENGTH;
     } else {
         handle->buffer = NULL;
+        handle->contentLength = contentLength;
     }    
-    handle->contentLength = contentLength;
+    
     handle->buffered_len = 0;
     
     handle->chunk = NULL;
@@ -1645,6 +1710,7 @@ static mmplayer_handle* create_wav(javacall_int64 playerId, const javacall_utf16
 }
 
 static void close_wav(wav_player_handle* mp) {
+	 printf("close_wav\n");
 	 if (mp->channel >= 0) {
 	     Mix_HaltChannel(mp->channel);
 	 }
@@ -1658,6 +1724,7 @@ static void close_wav(wav_player_handle* mp) {
         mp->channel = -1;
         mp->needBuffer = 0;
         mp->contentLength = 0;
+        mp->buffered_len = 0;
         mp->chunk = NULL;
         mp->buffer = NULL;
         mp->filename[0] = '\0';
@@ -1693,11 +1760,19 @@ static long buffer_wav(wav_player_handle* mp, const void* buffer, long length, l
     int ret;
     static char tmpfilename[64];
 
+    if (mp->chunk) {
+        return length>0?length:0;
+    }
+
     if (buffer == NULL || length <= 0) {
+    	Mix_Chunk *chunk = NULL;
+    		
     	//end of buffering
     	javacall_print("endof buffering\n");
-    	if (mp->fp) {
-    		Mix_Chunk *chunk;
+    	if (mp->buffer) {
+    		SDL_RWops * rw = SDL_RWFromMem(mp->buffer, mp->buffered_len);
+    		chunk = Mix_LoadWAV_RW(rw, 1);
+    	} else if (mp->fp) {
     		
     		javacall_print("close tmp buffer file\n");
     		javacall_file_close(mp->fp);
@@ -1705,23 +1780,37 @@ static long buffer_wav(wav_player_handle* mp, const void* buffer, long length, l
     		strcpy(mp->filename, javacall_UNICODEsToUtf8(mp->tmpfilename, mp->tmpfilenamelen));
     		    		
     		chunk=Mix_LoadWAV(mp->filename);
-   		if(!chunk) {
-        		printf("Mix_LoadWAV(): %s\n", Mix_GetError());
-        		// this might be a critical error...
-        		return -1;
-    		}
-    
-    		mp->chunk = chunk;
     	}
+    	
+   	if(!chunk) {
+       	printf("Mix_LoadWAV(): %s\n", Mix_GetError());
+       	// this might be a critical error...
+       	return -1;
+    	}
+    
+    	mp->chunk = chunk;
+    	
     	return 0;
     }
     
     if (mp->fp) {
     	 javacall_print("Continue buffering to tmp file\n");
     	 ret = javacall_file_write(mp->fp, buffer, length);
+    } else if (mp->buffer && ((length + offset) <= mp->contentLength)) {
+        javacall_print("Buffer wav %d bytes from %d\n", length, offset);
+        memcpy(mp->buffer+offset, buffer, length);
+        mp->buffered_len += length;
+        ret = length;
     } else {
         int i;
         sprintf(tmpfilename, "%08x_tmp_wav.wav", mp);
+
+        if (mp->buffer) {
+            free(mp->buffer);
+            mp->buffer = NULL;
+            mp->buffered_len = 0;
+            mp->contentLength = 0;
+        }
         
         for (i = 0; i < TMP_MUSIC_FILENAME_LEN_MAX; i++) {
         	mp->tmpfilename[i] = (javacall_utf16)tmpfilename[i];
@@ -1747,12 +1836,14 @@ static long buffer_wav(wav_player_handle* mp, const void* buffer, long length, l
 }
 
 static void clear_buffer_wav(wav_player_handle* mp) {
+/*
     javacall_print("Clear buffer\n");
     if (mp && mp->fp) {    	
     	javacall_file_close(mp->fp);
     	mp->fp = NULL;
     }
     mp->filename[0] = '\0';
+*/
 }
 
 static javacall_result start_wav(wav_player_handle* mp) {
