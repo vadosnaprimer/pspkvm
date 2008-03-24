@@ -711,7 +711,7 @@ WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
         KillTimer(hwnd, wParam);
 
         return 0;
-
+#if 0
     case WM_MOUSEMOVE:
     case WM_LBUTTONDOWN:
     case WM_LBUTTONUP:
@@ -831,7 +831,7 @@ WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
         } /* for */
 
         return 0;
-
+#endif
     case WM_NETWORK:
 
 #ifdef ENABLE_NETWORK_TRACING
