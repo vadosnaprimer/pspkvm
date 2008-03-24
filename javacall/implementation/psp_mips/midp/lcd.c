@@ -97,6 +97,7 @@ void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height
      ysrc += src_row;
      dst = (u32*)out + 4*512*(blocky+1);
    }
+   sceKernelDcacheWritebackAll();
 }
 
 static void pspFrameStart(int use_psp_gu) {
