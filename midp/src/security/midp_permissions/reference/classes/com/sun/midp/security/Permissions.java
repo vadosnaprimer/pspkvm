@@ -243,14 +243,14 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_NET_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_NET_ACCESS_DIALOG_TITLE,
         ResourceConstants.PERMISSION_NET_ACCESS_QUE, 0,
-        BLANKET, SESSION, SESSION, ONESHOT);
+        BLANKET, BLANKET, BLANKET, BLANKET); //PSP: Change to BLANKET since no network charge
 
     /** Read Message permission group. */
     static final PermissionGroup READ_MESSAGE_GROUP = new PermissionGroup(
         0, 0, 0,
         ResourceConstants.PERMISSION_RECEIVE_MESSAGE_DIALOG_TITLE,
         ResourceConstants.PERMISSION_RECEIVE_MESSAGE_QUE, 0,
-        BLANKET, BLANKET, BLANKET, BLANKET);
+        ALLOW, ALLOW, ALLOW, ALLOW);
 
     /**
      * Send Message permission group. Send was broken out because send
@@ -262,7 +262,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_MSG_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_SEND_MESSAGE_DIALOG_TITLE,
         ResourceConstants.PERMISSION_SEND_MESSAGE_QUE, 0,
-        ONESHOT, ONESHOT, ONESHOT, ONESHOT);
+        ALLOW, ALLOW, ALLOW, ALLOW); //PSP: Change to ALLOW
 
     /** Application Auto Invocation permission group. */
     static final PermissionGroup AUTO_INVOCATION_GROUP = new PermissionGroup(
@@ -271,7 +271,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_AUTO_START_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_AUTO_START_DIALOG_TITLE,
         ResourceConstants.PERMISSION_AUTO_START_QUE, 0,
-        BLANKET, ONESHOT, SESSION, ONESHOT);
+        BLANKET, ONESHOT, SESSION, ONESHOT); //PSP:Change to ALLOW
 
     /** Local Connectivity permission group. */
     static final PermissionGroup LOCAL_CONN_GROUP = new PermissionGroup(
@@ -280,7 +280,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_LOCAL_CONN_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_LOCAL_CONN_DIALOG_TITLE,
         ResourceConstants.PERMISSION_LOCAL_CONN_QUE, 0,
-        BLANKET, SESSION, BLANKET, ONESHOT);
+        BLANKET, SESSION, BLANKET, SESSION); //PSP: Change Untrusted to Session
 
     /** Multimedia Recording permission group. */
     static final PermissionGroup MULTIMEDIA_GROUP = new PermissionGroup(
@@ -289,7 +289,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_REC_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_MULTIMEDIA_DIALOG_TITLE,
         ResourceConstants.PERMISSION_MULTIMEDIA_QUE, 0,
-        BLANKET, SESSION, SESSION, ONESHOT);
+        BLANKET, SESSION, SESSION, SESSION); //PSP: Change Untrusted to Session
 
     /** Read User Data permission group. */
     static final PermissionGroup READ_USER_DATA_GROUP = new PermissionGroup(
