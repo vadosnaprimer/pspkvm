@@ -150,6 +150,14 @@ $(CA_KEYSTORE): $(KEYTOOL_JAR_FILE) $(KEYTOOL_KEYSTORE_FILE)
 		$(KEYTOOL_KEYSTORE_FILE) -alias dummyca \
 		-storepass keystorepwd -MEkeystore $(CA_KEYSTORE) \
 		-domain operator) $(LOG)
+	@echo +++ $(JAVA_CMD) -jar $(KEYTOOL_JAR_FILE) -import -keystore \
+		$(KEYTOOL_KEYSTORE_FILE) -alias mykey \
+		-storepass keystorepwd -MEkeystore $(CA_KEYSTORE) \
+		-domain operator $(LOG_ONLY)
+	@($(JAVA_CMD) -jar $(KEYTOOL_JAR_FILE) -import -keystore \
+		$(KEYTOOL_KEYSTORE_FILE) -alias mykey \
+		-storepass keystorepwd -MEkeystore $(CA_KEYSTORE) \
+		-domain operator) $(LOG)
 
 $(BINDIR)/j2se_test_keystore.bin: $(KEYTOOL_KEYSTORE_FILE)
 	@echo " ... $@ " $(LOG)
