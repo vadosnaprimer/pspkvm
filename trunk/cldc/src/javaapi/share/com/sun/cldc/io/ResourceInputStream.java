@@ -221,7 +221,7 @@ public class ResourceInputStream extends InputStream {
      * @return      the actual number of bytes skipped.
      * @exception  IOException  if an I/O error occurs.
      */
-     private byte[] dummy_buffer = new byte[64*1024];
+    static private byte[] dummy_buffer = new byte[64*1024];
     public long skip(long n) throws IOException
     {
         int readBytesTotal = 0;        
