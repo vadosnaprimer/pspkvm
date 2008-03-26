@@ -26,7 +26,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define DEBUG_JAVACALL_NETWORK 1
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
@@ -37,6 +37,10 @@ extern "C" {
 #include <sys/fd_set.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pspsdk.h>
 
 #include "javacall_socket.h" 
 #include "javacall_time.h" 
@@ -59,6 +63,8 @@ typedef struct blockedSocksBuffer {
 static blockedSocksBuffer readsocks;
 static blockedSocksBuffer writesocks;
 static int maxsockfd;
+static SceUID timer_thid = -1;
+static int stop_socket_timer = 1;
 
 
 /* Connect to an access point */
@@ -101,6 +107,13 @@ void sockets_init() {
     maxsockfd = 0;
 }
 
+void sockets_final() {
+	if (timer_thid) {
+	 stop_socket_timer = 1;
+       timer_thid = -1;
+	}       
+}
+
 inline int addBlockedSock(int sockfd, blockedSocksBuffer* sbuff) {
 
     if (sbuff->num == socksLength) {
@@ -109,7 +122,7 @@ inline int addBlockedSock(int sockfd, blockedSocksBuffer* sbuff) {
         sbuff->buff[sbuff->num] = sockfd;
         sbuff->retry[sbuff->num] = RETRY_TIMES;
         sbuff->num++;
-        maxsockfd = (sockfd < maxsockfd) ? maxsockfd : sockfd;
+        //maxsockfd = (sockfd < maxsockfd) ? maxsockfd : sockfd;
         return 1;
     }
 }
@@ -133,6 +146,7 @@ inline void makefdset(fd_set* set, blockedSocksBuffer* sbuff) {
     int i;
     for (i = 0; i < sbuff->num; i++){
         FD_SET(sbuff->buff[i], set);
+        maxsockfd = (sbuff->buff[i] < maxsockfd) ? maxsockfd : sbuff->buff[i];
     }
 }
 
@@ -152,6 +166,53 @@ inline int trySock(int sockfd) {
 void startTimerIfNeed();
 void stopTimerIfNeed();
 
+typedef struct {
+    struct sockaddr_in addr;
+    int fd;
+    int result;
+}open_param;
+
+typedef struct {
+    int fd;
+    unsigned char *pData;
+    int len;
+    int bytesRead;
+}read_param;
+
+static javacall_result socket_open_impl(open_param* arg) {
+    struct sockaddr_in* addr = &arg->addr;
+    int sockfd = arg->fd;
+
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("connecting ...\n");
+#endif
+    int status = connect(sockfd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
+
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("connected return %d\n", status);
+#endif
+
+    arg->result = status;
+
+    if (status == 0) {
+        return JAVACALL_OK;
+    }
+
+    close(sockfd);
+    return JAVACALL_FAIL;
+}
+
+static int socket_open_thread(SceSize args, void *argp) {
+	javacall_result ret;
+	open_param* arg = *(open_param**)argp;
+	javacall_handle fd = (javacall_handle)arg->fd;
+	ret = socket_open_impl(arg);
+	javanotify_socket_event(JAVACALL_EVENT_SOCKET_SEND, fd, ret);
+	sceKernelExitDeleteThread(ret);
+
+	return 0;
+}
+
 /**
  * Initiates the connection of a client socket.
  *
@@ -169,72 +230,51 @@ void stopTimerIfNeed();
  */
 javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
                                            void **pHandle, void **pContext) {
-
-    int sockfd = socket(PF_INET, SOCK_STREAM, 0);
-
-#ifdef DEBUG_JAVACALL_NETWORK
-    javacall_print("javacall_socket_open_start\n");
-#endif
-
-    if (sockfd == INVALID_SOCKET) {
-        return JAVACALL_FAIL;
-    }
-
-    int truebuf = 1;
-    int status = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &truebuf, sizeof(truebuf));
-
-    if (status == -1) {
-        close(sockfd);
-        return JAVACALL_FAIL;
-    }
-
-    //add O_NONBLOCK flag
-    int descriptorFlags = fcntl(sockfd, F_GETFL, 0);
-    fcntl(sockfd, F_SETFL, descriptorFlags | O_NONBLOCK);
-
-    struct sockaddr_in* addr;
-    addr = malloc(sizeof(struct sockaddr_in));
-    if (!addr) {
-    	close(sockfd);
-    	return JAVACALL_OUT_OF_MEMORY;
-    }
-    addr->sin_family      = AF_INET;
-    addr->sin_port        = htons((unsigned short)port);
-    memcpy(&addr->sin_addr.s_addr, ipBytes, sizeof(addr->sin_addr.s_addr));
+       (void)pContext;
+       int truebuf = 1;
+       int sockfd = socket(PF_INET, SOCK_STREAM, 0);
 
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("connecting ...\n");
+       javacall_print("javacall_socket_open_start\n");
 #endif
-    status = connect(sockfd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
+   
+       if (sockfd == INVALID_SOCKET) {
+           return JAVACALL_FAIL;
+       }
+   
+       int status = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &truebuf, sizeof(truebuf));
+   
+       if (status == -1) {
+           close(sockfd);
+           return JAVACALL_FAIL;
+       }
+   
+       open_param* param;
+       param = malloc(sizeof(open_param));
+       if (!param) {
+       	close(sockfd);
+       	return JAVACALL_OUT_OF_MEMORY;
+       }
+       struct sockaddr_in* addr;
+       addr = &param->addr;
+       addr->sin_family      = AF_INET;
+       addr->sin_port        = htons((unsigned short)port);
+       memcpy(&addr->sin_addr.s_addr, ipBytes, sizeof(addr->sin_addr.s_addr));
+       param->fd = sockfd;
+       
 
-#ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("connected return %d\n", status);
-#endif
-
-    if (status == 0) {
-        *pHandle = (void*)sockfd;
-        free(addr);
-        return JAVACALL_OK;
-    }
-
-    if ((status == SOCKET_ERROR) && (errno == EINPROGRESS || errno == EALREADY)) {
-        *pContext = addr;
-        *pHandle = (void*)sockfd;
-
-        if (trySock(sockfd)) { //still try just now
-            return javacall_socket_open_finish((void*)sockfd, NULL);
-        }
-
-        addBlockedSock(sockfd, &writesocks);
-        startTimerIfNeed();
-#ifdef DEBUG_JAVACALL_NETWORK
-        javacall_print("javacall_socket_open_start: block\n");
-#endif
-        return JAVACALL_WOULD_BLOCK;
-    }
-
-    close(sockfd);
-    return JAVACALL_FAIL;
+	SceUID thid = sceKernelCreateThread("socket_open_thread", socket_open_thread, 0x11, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
+	if(thid < 0) {	
+		javacall_printf("Error, could not create thread\n");	
+		close(sockfd);
+		free(param);
+		return JAVACALL_FAIL;	
+	}	
+	
+	sceKernelStartThread(thid, sizeof(&param), &param);
+	*pHandle = (void*)sockfd;
+	*pContext = param;
+	return JAVACALL_WOULD_BLOCK;
 }
 
 /**
@@ -248,82 +288,35 @@ javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
  * @retval JAVACALL_WOULD_BLOCK  if the caller must call the finish function again to complete the operation
  */
 javacall_result javacall_socket_open_finish(void *handle, void *context) {
-
-    int sockfd = (int)handle;
-    struct sockaddr_in* addr = (struct sockaddr_in*)context;
-    int status;
-    int err = 0;
-    socklen_t err_size = sizeof(err);
-
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("javacall_socket_open_finish: handle=%d, context=%p\n", sockfd, addr);
+    javacall_printf("javacall_socket_open_finish: result is %d\n", ((open_param*)context)->result);
 #endif
-    if (addr != NULL) {
-        status = connect(sockfd, (struct sockaddr*)addr, sizeof(struct sockaddr_in));
-        if ((status == 0) || (errno == EISCONN)) {
-            delBlockedSock(sockfd, &writesocks);
-            stopTimerIfNeed();
-            free(context);
-#ifdef DEBUG_JAVACALL_NETWORK
-            javacall_print("javacall_socket_open_finish: ok\n");
-#endif
-            return JAVACALL_OK;
-        }
-    
-        if ((status == SOCKET_ERROR) && (errno == EINPROGRESS || errno == EALREADY)) {
-#ifdef DEBUG_JAVACALL_NETWORK
-    	     javacall_print("javacall_socket_open_finish: block\n");
-#endif
-            return JAVACALL_WOULD_BLOCK;
-        } else {
-            //error
-#ifdef DEBUG_JAVACALL_NETWORK
-            javacall_print("javacall_socket_open_finish: failed with error:%d\n", errno);
-#endif
-            delBlockedSock(sockfd, &writesocks);
-            stopTimerIfNeed();
-            free(context);
-            close(sockfd);    
-            return JAVACALL_FAIL;
-        }
+    if (((open_param*)context)->result) {
+    	 return JAVACALL_FAIL;
     } else {
-        //Call from open_start, before being blocked and timer started
-        status = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &err_size);
-    
-        if (err == 0 && status == 0) {
-            return JAVACALL_OK;
-        } else {
-            close(sockfd);    
-            return JAVACALL_FAIL;
-        }
+        return JAVACALL_OK;
     }
-
 }
 
 //originally from pcsl_network_bsd (pcsl_socket.c)
-javacall_result socket_read_common(void *handle, unsigned char *pData, int len, int *pBytesRead) {
 
-    int sockfd = (int) handle;
+static int socket_read_thread(SceSize args, void *argp) {
+    read_param* param = *(read_param**)argp;
+    javacall_handle sockfd = (javacall_handle)param->fd;
+    
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("socket_read_common read %d bytes\n", len);
+    javacall_printf("socket  read %d bytes\n", param->len);
 #endif
 
-    int status = recv(sockfd, pData, len, 0);
+    int status = recv(param->fd ,param->pData , param->len, 0);
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("read return %d, errono:%d\n", status, status==-1?errno:0);
 #endif
-    if (SOCKET_ERROR == status) {
-        if (EWOULDBLOCK == errno || EINPROGRESS == errno) {
-            return JAVACALL_WOULD_BLOCK;
-        } else if (EINTR == errno) {
-            return JAVACALL_INTERRUPTED;
-         } else {
-            return JAVACALL_FAIL;
-        }
-    }
+    param->bytesRead = status;
+    javanotify_socket_event(JAVACALL_EVENT_SOCKET_RECEIVE, sockfd, status>=0?JAVACALL_OK:JAVACALL_FAIL);
+    sceKernelExitDeleteThread(0);
 
-    *pBytesRead = status;
-    return JAVACALL_OK;
+    return 0;
 }
 
 /**
@@ -344,16 +337,61 @@ javacall_result socket_read_common(void *handle, unsigned char *pData, int len, 
  */
 javacall_result javacall_socket_read_start(void *handle,unsigned char *pData,int len, 
                                            int *pBytesRead, void **pContext) {
-    javacall_result status;
-    status = socket_read_common(handle, pData, len, pBytesRead);
 
-    if (status == JAVACALL_WOULD_BLOCK) {
-        addBlockedSock((int)handle, &readsocks);
-        startTimerIfNeed();
-        *pContext = NULL;
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_socket_read_start\n");
+#endif
+
+    int descriptorFlags = fcntl(handle, F_GETFL, 0);
+fcntl(handle, F_SETFL, descriptorFlags | O_NONBLOCK);
+    int status = recv(handle ,pData , len, 0);
+
+    descriptorFlags = fcntl(handle, F_GETFL, 0);
+fcntl(handle, F_SETFL, descriptorFlags & ~O_NONBLOCK);
+
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("read return %d, errono:%d\n", status, status==-1?errno:0);
+#endif
+
+    if (status >= 0) {
+        *pBytesRead = status;
+        return JAVACALL_OK;
+    } else {
+        if (errno != EWOULDBLOCK && errno != EINPROGRESS) {
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("reading error\n");
+#endif
+
+             return JAVACALL_FAIL;
+        }
     }
 
-    return status;
+    read_param* param;
+    param = malloc(sizeof(read_param));
+    if (!param) {
+     	return JAVACALL_OUT_OF_MEMORY;
+    }
+    param->fd = (int)handle;
+    param->len = len;
+    param->pData = malloc(len);
+    if (!param->pData) {
+    	free(param);
+     	return JAVACALL_OUT_OF_MEMORY;
+    }
+    param->bytesRead = 0;
+
+    SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x11, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
+    if(thid < 0) {	
+	javacall_printf("Error, could not create thread\n");	
+	free(param->pData);
+	free(param);
+	return JAVACALL_FAIL;	
+    }	
+	
+    sceKernelStartThread(thid, sizeof(&param), &param);
+    *pContext = param;
+	
+    return JAVACALL_WOULD_BLOCK;
 }
 
 /**
@@ -372,15 +410,18 @@ javacall_result javacall_socket_read_start(void *handle,unsigned char *pData,int
  * @retval JAVACALL_INTERRUPTED for an Interrupted IO Exception
  */
 javacall_result javacall_socket_read_finish(void *handle,unsigned char *pData,int len,int *pBytesRead,void *context) {
-
-    javacall_result status = socket_read_common(handle, pData, len, pBytesRead);
-    
-    if (status != JAVACALL_WOULD_BLOCK) {
-        delBlockedSock((int)handle, &readsocks);
-        stopTimerIfNeed();
+    (void)handle;
+    read_param* param = context;
+    if (param->bytesRead> 0) {
+        memcpy(pData, param->pData, param->bytesRead);
     }
-
-    return status;
+    *pBytesRead = param->bytesRead;
+    free(param->pData);
+    free(param);
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_socket_read_finish: %d bytes read\n", *pBytesRead);
+#endif
+    return *pBytesRead>=0?JAVACALL_OK:JAVACALL_FAIL;
 }
 
 //from pcsl_socket.c
@@ -561,38 +602,52 @@ void javanotify_on_nonblocking_socket(
                                     javacall_result operation_result){
     javanotify_socket_event(type, socket_handle, operation_result);
 }
-
-void timer_socket_callback() {
-
+//void timer_socket_callback() {
+int timer_socket_callback(SceSize args, void *argp) {
+while (!stop_socket_timer) {
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 0; 
 
     fd_set readfds;
     fd_set writefds;
+    maxsockfd = 0;
     makefdset(&readfds,  &readsocks);
     makefdset(&writefds, &writesocks);
-
+printf("timer_socket_callback: %d read %d write, max %d\n", readsocks.num, writesocks.num, maxsockfd);
     int status = select(maxsockfd+1, &readfds, &writefds, NULL, &tv);
-    if (status == 0) {
-        return;
+    if (stop_socket_timer) {
+    	printf("socket timer should NOT stop until java exit!\n");
+    	break;
     }
+    if (status == 0) {
+    	printf("nothing to read or send\n");
+    	sceKernelDelayThread(1000000);
+        continue;
+    }
+    sceKernelDelayThread(10000);
+    printf("something read or write\n");
     int i;    
     for (i = 0; i < readsocks.num; i++) {
         if (FD_ISSET(readsocks.buff[i], &readfds)) {
+        	printf("read\n");
             javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_RECEIVE, (javacall_handle)readsocks.buff[i], JAVACALL_OK);
         } else if (readsocks.retry[i]-- <= 0) {
+        printf("read failed\n");
             javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_RECEIVE, (javacall_handle)readsocks.buff[i], JAVACALL_FAIL);
         }
     }
     for (i = 0; i < writesocks.num; i++) {
         if (FD_ISSET(writesocks.buff[i], &writefds)) {
+        	printf("write\n");
             javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_SEND, (javacall_handle)writesocks.buff[i], JAVACALL_OK);
         } else if (writesocks.retry[i]-- <= 0) {
+        printf("write failed\n");
             javanotify_on_nonblocking_socket(JAVACALL_EVENT_SOCKET_SEND, (javacall_handle)readsocks.buff[i], JAVACALL_FAIL);
         }
     }
- 
+}
+sceKernelExitDeleteThread(0);
     /*
         JAVACALL_EVENT_SOCKET_OPEN_COMPLETED            =1000,
         JAVACALL_EVENT_SOCKET_CLOSE_COMPLETED           =1001,
@@ -605,16 +660,27 @@ void timer_socket_callback() {
 }
 
 static javacall_handle timer;
-
 void startTimerIfNeed() {
-    if (timer == 0) {
-        javacall_time_initialize_timer(1000 /*msec*/, JAVACALL_TRUE /*cyclic*/, timer_socket_callback, &timer);
+    if (timer_thid < 0) {
+    	 printf("startTimerIfNeed\n");
+        //javacall_time_initialize_timer(1000 /*msec*/, JAVACALL_TRUE /*cyclic*/, timer_socket_callback, &timer);
+        SceUID thid = sceKernelCreateThread("socket_thread", timer_socket_callback, 0x40, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
+	if(thid < 0) {	
+		javacall_printf("Error, could not create thread\n");	
+		return;	
+	}
+	stop_socket_timer = 0;
+	sceKernelStartThread(thid, 0, NULL);
+	timer_thid = thid;
     }
 } 
 
 void stopTimerIfNeed() {
     if (readsocks.num == 0 &&  writesocks.num == 0) {
-        javacall_time_finalize_timer(timer);
+    	 printf("stopTimerIfNeed\n");
+        //javacall_time_finalize_timer(timer);
+       // stop_socket_timer = 1;
+        //timer_thid = -1;
         timer = 0;
     }
 }
