@@ -263,7 +263,7 @@ javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
        param->fd = sockfd;
        
 
-	SceUID thid = sceKernelCreateThread("socket_open_thread", socket_open_thread, 0x11, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
+	SceUID thid = sceKernelCreateThread("socket_open_thread", socket_open_thread, 0x11,  8*1024, PSP_THREAD_ATTR_USER, NULL);	
 	if(thid < 0) {	
 		javacall_printf("Error, could not create thread\n");	
 		close(sockfd);
@@ -380,7 +380,7 @@ fcntl(handle, F_SETFL, descriptorFlags & ~O_NONBLOCK);
     }
     param->bytesRead = 0;
 
-    SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x11, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
+    SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x11, 64 *1024, PSP_THREAD_ATTR_USER, NULL);	
     if(thid < 0) {	
 	javacall_printf("Error, could not create thread\n");	
 	free(param->pData);
