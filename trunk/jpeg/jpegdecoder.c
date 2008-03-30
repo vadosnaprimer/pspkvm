@@ -536,10 +536,10 @@ int JPEG_To_RGB_decodeData2(void *info, char *outData, int outPixelSize,
                     unsigned int b = row_pointer[0][i * 3 + 2] & 0xFF;
                     if (2 == outPixelSize) {
                         ((unsigned short*)outDataPtr)[i-(unsigned)left] =
-                            ((b & 0xF8) >> 3) + ((g & 0xFC) << 3) + ((r & 0xF8) << 8);
+                            ((r & 0xF8) >> 3) + ((g & 0xFC) << 3) + ((b & 0xF8) << 8);
                     } else /* if (4 == outPixelSize) */ {
                         ((unsigned long*)outDataPtr)[i-(unsigned)left] =
-                            (b & 0xFF) + ((g & 0xFF) << 8) + ((r & 0xFF) << 16);
+                            (r & 0xFF) + ((g & 0xFF) << 8) + ((b & 0xFF) << 16);
                     }
                 }
             }
