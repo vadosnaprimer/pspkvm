@@ -308,6 +308,8 @@ class AppManagerUI extends Form
 
     private MIDletSwitcher midletSwitcher;
 
+    private boolean first;
+
     /**
      * Creates and populates the Application Selector Screen.
      * @param manager - The application manager that invoked it
@@ -323,6 +325,8 @@ class AppManagerUI extends Form
                  DisplayError displayError, boolean first,
                  MIDletSuiteInfo ms) {
         super(null);
+
+        this.first = first;
 
         /*
         try {
@@ -356,6 +360,7 @@ class AppManagerUI extends Form
         if (first) {
             //display.setCurrent(new SplashScreen(display, this));
             display.setCurrent(this);
+            /*
             int suiteId = getLastPlayedMIDlet();
             if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
                 for (int i = 0; i < size(); i++) {
@@ -366,6 +371,7 @@ class AppManagerUI extends Form
                     }
                 }
             }
+            */
             new Thread(new Runnable() {
         	public void run() {
         		updateContent(true);
@@ -415,6 +421,22 @@ class AppManagerUI extends Form
                     }
                 }
             }
+        }
+    }
+
+    protected void sizeChanged(int w, int h) {
+    	 if (first) {
+            int suiteId = getLastPlayedMIDlet();
+            if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
+                for (int i = 0; i < size(); i++) {
+                    MidletCustomItem mi = (MidletCustomItem)get(i);
+                    if (mi.msi.suiteId == suiteId) {
+                        display.setCurrentItem(mi);
+                        break;
+                    }
+                }
+            }
+            first = false;
         }
     }
 
@@ -732,6 +754,17 @@ class AppManagerUI extends Form
                         ci.update();
                     }
 
+                    Displayable cur = display.getCurrent();
+                    if (cur != null && cur instanceof Alert) {
+                    	   //Please don't disappear too fast...
+                    	   try {
+                            Thread.sleep(3000);
+                    	   } catch (InterruptedException e) {
+                    	   }
+                    }
+                    
+                    display.setCurrent(this);
+                    
                     return;
                 }
             }
@@ -961,6 +994,10 @@ class AppManagerUI extends Form
                             mci.msi.icon = null;
                             mci.msi.loadIcon(midletSuiteStorage);
                             mci.icon = mci.msi.icon;
+                            try {
+                               Thread.sleep(50);
+                            } catch (InterruptedException e) {
+                            }
                         }
 
                         break;
@@ -1459,8 +1496,17 @@ class AppManagerUI extends Form
         saveLastPlayedMIDlet(msi.suiteId);
         
         if (msi.hasSingleMidlet()) {
+            String title = new String("Laungching MIDlet...");
+            StringItem msg = new StringItem(msi.displayName, "");
+
+            Form f = new Form(title);
+            msg.setLayout(Item.LAYOUT_CENTER);
+            f.append(msg);
+        
+            display.setCurrent(f);
+            
             manager.launchSuite(msi, msi.midletToRun);
-            display.setCurrent(this);
+            //display.setCurrent(this);
         } else {
             try {
                 new MIDletSelector(msi, display, this, manager);
@@ -1480,24 +1526,24 @@ class AppManagerUI extends Form
         MidletCustomItem mciToRun = getLastInstalledMidletItem();
         if (mciToRun != null) {
             display.setCurrentItem(mciToRun);
-            launchMidlet(mciToRun.msi);
+            launchMidlet(mciToRun.msi);            
         }
-/*
+
         // Ask the user if he wants to run a midlet from
         // the newly installed midlet suite
-        String title = Resource.getString(
-            ResourceConstants.AMS_MGR_RUN_THE_NEW_SUITE_TITLE, null);
-        String msg = Resource.getString(
-            ResourceConstants.AMS_MGR_RUN_THE_NEW_SUITE, null);
+        //String title = Resource.getString(
+        //    ResourceConstants.AMS_MGR_RUN_THE_NEW_SUITE_TITLE, null);
+        //String msg = Resource.getString(
+        //    ResourceConstants.AMS_MGR_RUN_THE_NEW_SUITE, null);
 
-        Alert alert = new Alert(title, msg, null, AlertType.CONFIRMATION);
-        alert.addCommand(runNoCmd);
-        alert.addCommand(runYesCmd);
-        alert.setCommandListener(this);
-        alert.setTimeout(Alert.FOREVER);
+        //Alert alert = new Alert(title, msg, null, AlertType.CONFIRMATION);
+        //alert.addCommand(runNoCmd);
+        //alert.addCommand(runYesCmd);
+        //alert.setCommandListener(this);
+        //alert.setTimeout(Alert.FOREVER);
 
-        display.setCurrent(alert);
- */    
+        //display.setCurrent(alert);
+     
     }
 
     /**
