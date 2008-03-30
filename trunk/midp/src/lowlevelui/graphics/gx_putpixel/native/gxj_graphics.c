@@ -313,7 +313,8 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 	const int pix_size_dest = 2;
 	const int pix_size_src = 2;
     unsigned char *destBitsPtr   = NULL,
-                  *srcBitsPtr    = NULL;
+                  *srcBitsPtr    = NULL,
+                  *destBitsLimit = NULL;
     int x_dest = nXOriginDest, y_dest = nYOriginDest;
     int x_dest_incr = 1, y_dest_incr = 1;
 	int x_src = nXOriginSrc, y_src = nYOriginSrc; 
@@ -369,8 +370,15 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 
 	destBitsPtr = ((unsigned char *)sbuf->pixelData) + ((y_dest * sbufWidth + x_dest) * pix_size_dest);
 	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
+
+	destBitsLimit = ((unsigned char *)sbuf->pixelData) + (sbuf->width * sbuf->height * pix_size_dest);
 	for (j = 0; j < t_height; j++) {
 		for (i = 0; i < t_width; i++) {
+			//M@x: never draw out of screen buffer
+			if (destBitsPtr >= destBitsLimit) {
+				return;
+			}
+			
 			alpha = srcBitsPtr[1]&0xF0;
 			if (alpha == 0xf0 || (processAlpha == KNI_FALSE)) {
 				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB444TORGB565(*(jshort*)srcBitsPtr);
@@ -392,7 +400,8 @@ gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 	const int pix_size_dest = 2;
 	const int pix_size_src = 4;
     unsigned char *destBitsPtr   = NULL,
-                  *srcBitsPtr    = NULL;
+                  *srcBitsPtr    = NULL,
+                  *destBitsLimit = NULL;
     int x_dest = nXOriginDest, y_dest = nYOriginDest;
     int x_dest_incr = 1, y_dest_incr = 1;
 	int x_src = nXOriginSrc, y_src = nYOriginSrc; 
@@ -448,8 +457,16 @@ gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 
 	destBitsPtr = ((unsigned char *)sbuf->pixelData) + ((y_dest * sbufWidth + x_dest) * pix_size_dest);
 	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
+
+	destBitsLimit = ((unsigned char *)sbuf->pixelData) + (sbuf->width * sbuf->height * pix_size_dest);
 	for (j = 0; j < t_height; j++) {
 		for (i = 0; i < t_width; i++) {
+			
+			//M@x: never draw out of screen buffer
+			if (destBitsPtr >= destBitsLimit) {
+				return;
+			}
+			
 			alpha = srcBitsPtr[3];
 			if (alpha == 0xff || (processAlpha == KNI_FALSE)) {
 				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(*(jint*)srcBitsPtr);
