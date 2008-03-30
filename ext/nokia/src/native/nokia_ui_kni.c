@@ -503,7 +503,7 @@ KNIDECL(com_nokia_mid_ui_DirectGraphicsImpl_drawPixels___3SZIIIIIIII) {
 				&width, &height, clip, 0, transform);
 			
 			if (ret != NO_IMAGE) {
-				gx_draw_pixels_4444_to_565(GET_IMAGEDATA_PTR_FROM_GRAPHICS(thisObject), x, y, 
+				gx_draw_pixels_4444_to_565(GET_IMAGEDATA_PTR_FROM_GRAPHICS(graphics), x, y, 
 	            		pixBuffer, scanlength, x_src, y_src,  
 	            		width, height, transform, transparency);
 			} 
@@ -581,7 +581,7 @@ KNIDECL(com_nokia_mid_ui_DirectGraphicsImpl_drawPixels___3IZIIIIIIII) {
 				&width, &height, clip, 0, transform);
 			
 			if (ret != NO_IMAGE) {
-	            gx_draw_pixels_8888_to_565(GET_IMAGEDATA_PTR_FROM_GRAPHICS(thisObject), x, y, 
+	            gx_draw_pixels_8888_to_565(GET_IMAGEDATA_PTR_FROM_GRAPHICS(graphics), x, y, 
 	            		pixBuffer, scanlength, x_src, y_src,  
 	            		width, height, transform, transparency);
 			}        
