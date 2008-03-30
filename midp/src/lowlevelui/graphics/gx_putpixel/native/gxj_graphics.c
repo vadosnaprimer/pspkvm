@@ -198,7 +198,6 @@ static jint alphaComposition(jint src, jint dst) {
     return (((jint)Rr) << 16) | (((jint)Gr) << 8) | Br;
 }
 
-
 #if (UNDER_CE)
 extern void asm_draw_rgb(jint* src, int srcSpan, unsigned short* dst,
     int dstSpan, int width, int height);
@@ -284,6 +283,188 @@ gx_draw_rgb(const jshort *clip,
     } /* loop by rgb data rows */
 }
 
+#define GXJ_RGB444TORGB565(x) (((( x ) & 0x0F00) << 4) | \
+                             ((( x ) & 0x00F0) << 3) | \
+                             ((( x ) & 0x000F) << 1) )
+
+static jshort alphaComposition_4444to565(jshort src, jshort dst) {
+    unsigned char As = (unsigned char)(src >> 24);
+
+    unsigned char Rr =  (((src&0x0F00)>>4)*As + (((dst&0xF800)>>8) * (0xff - As))) / 0xff;
+	//if (c > 0xff) c = 0xff;
+	//*d0 = (unsigned char)c;
+
+	unsigned char Gr =  (((src&0x00F0))*As + (((dst&0x07E0)>>3) * (0xff - As))) / 0xff;
+	//if (c > 0xff) c = 0xff;
+	//*d1 = (unsigned char)c;
+
+	unsigned char Br =  (((src&0x000F)<<4)*As + (((dst&0x001F)<<3) * (0xff - As))) / 0xff;
+	//if (c > 0xff) c = 0xff;
+	//*d2 = (unsigned char)c;
+	
+    /* compose RGB from separate color components */
+    return (((jshort)Rr&0xF8) << 8) | (((jshort)Gr&0xFC) << 3) | (((jshort)Br&0xF8) >> 3);
+}
+
+void
+gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int nYOriginDest, 
+		 jshort * dataSrc,  int nScanLen, int nXOriginSrc,  int nYOriginSrc,  
+		 int nWidth,  int nHeight, int transform, jboolean processAlpha) {
+	const int pix_size_dest = 2;
+	const int pix_size_src = 2;
+    unsigned char *destBitsPtr   = NULL,
+                  *srcBitsPtr    = NULL;
+    int x_dest = nXOriginDest, y_dest = nYOriginDest;
+    int x_dest_incr = 1, y_dest_incr = 1;
+	int x_src = nXOriginSrc, y_src = nYOriginSrc; 
+	//int x1_src = nXOriginSrc + nWidth, y1_src = nYOriginSrc + nHeight;
+	int x_src_incr = 1, y_src_incr = 1;
+	int i, j;
+    int alpha;
+
+    int t_width, width_src_incr, width_dest_incr;
+    int t_height;
+
+    gxj_screen_buffer screen_buffer;
+    gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
+      gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
+    int sbufWidth = sbuf->width;
+
+    REPORT_CALL_TRACE(LC_LOWUI, "gx_draw_pixels_8888_to_565()\n");	    
+
+    if(transform & TRANSFORM_INVERTED_AXES) {
+        t_width  = nHeight;
+        t_height = nWidth;
+		y_dest = y_dest + (t_height - 1)*y_dest_incr;
+		y_dest_incr = -y_dest_incr;
+		x_dest = x_dest + (t_width - 1)*x_dest_incr;
+		x_dest_incr = -x_dest_incr;		
+		x_src_incr = nScanLen;
+		y_src_incr = 1;
+    } else {
+        t_width  = nWidth;
+        t_height = nHeight;
+    }
+
+    if (transform & TRANSFORM_Y_FLIP) {
+        y_dest = y_dest + (t_height - 1)*y_dest_incr;
+        y_dest_incr = -y_dest_incr;
+    } 
+
+    if (transform & TRANSFORM_X_FLIP) {
+        x_dest = x_dest + (t_width - 1)*x_dest_incr;
+        x_dest_incr = -x_dest_incr;
+    } 
+
+	y_dest_incr = y_dest_incr * sbufWidth;
+	if(!(transform & TRANSFORM_INVERTED_AXES)){
+		y_src_incr = y_src_incr * nScanLen;
+	}
+	x_dest_incr *= pix_size_dest;
+	y_dest_incr *= pix_size_dest;
+	x_src_incr *= pix_size_src;
+	y_src_incr *= pix_size_src;
+	width_dest_incr = t_width*x_dest_incr;
+	width_src_incr = t_width*x_src_incr;
+
+	destBitsPtr = ((unsigned char *)sbuf->pixelData) + ((y_dest * sbufWidth + x_dest) * pix_size_dest);
+	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
+	for (j = 0; j < t_height; j++) {
+		for (i = 0; i < t_width; i++) {
+			alpha = srcBitsPtr[1]&0xF0;
+			if (alpha == 0xf0 || (processAlpha == KNI_FALSE)) {
+				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB444TORGB565(*(jshort*)srcBitsPtr);
+			} else if (alpha != 0x00) {  /* needs blending */
+                *(gxj_pixel_type*)destBitsPtr = alphaComposition_4444to565(*(jshort*)srcBitsPtr, *(gxj_pixel_type*)destBitsPtr);
+			}		
+			destBitsPtr += x_dest_incr;//*pix_size_dest;
+			srcBitsPtr += x_src_incr;//*pix_size_src;
+		}
+		destBitsPtr += y_dest_incr - (width_dest_incr);
+		srcBitsPtr += y_src_incr - (width_src_incr);
+	}
+}
+
+void
+gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int nYOriginDest, 
+		 jint * dataSrc,  int nScanLen, int nXOriginSrc,  int nYOriginSrc,  
+		 int nWidth,  int nHeight, int transform, jboolean processAlpha) {
+	const int pix_size_dest = 2;
+	const int pix_size_src = 4;
+    unsigned char *destBitsPtr   = NULL,
+                  *srcBitsPtr    = NULL;
+    int x_dest = nXOriginDest, y_dest = nYOriginDest;
+    int x_dest_incr = 1, y_dest_incr = 1;
+	int x_src = nXOriginSrc, y_src = nYOriginSrc; 
+	//int x1_src = nXOriginSrc + nWidth, y1_src = nYOriginSrc + nHeight;
+	int x_src_incr = 1, y_src_incr = 1;
+	int i, j;
+    int alpha;
+
+    int t_width, width_src_incr, width_dest_incr;
+    int t_height;
+
+    gxj_screen_buffer screen_buffer;
+    gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
+      gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
+    int sbufWidth = sbuf->width;
+
+    REPORT_CALL_TRACE(LC_LOWUI, "gx_draw_pixels_8888_to_565()\n");	    
+
+    if(transform & TRANSFORM_INVERTED_AXES) {
+        t_width  = nHeight;
+        t_height = nWidth;
+		y_dest = y_dest + (t_height - 1)*y_dest_incr;
+		y_dest_incr = -y_dest_incr;
+		x_dest = x_dest + (t_width - 1)*x_dest_incr;
+		x_dest_incr = -x_dest_incr;		
+		x_src_incr = nScanLen;
+		y_src_incr = 1;
+    } else {
+        t_width  = nWidth;
+        t_height = nHeight;
+    }
+
+    if (transform & TRANSFORM_Y_FLIP) {
+        y_dest = y_dest + (t_height - 1)*y_dest_incr;
+        y_dest_incr = -y_dest_incr;
+    } 
+
+    if (transform & TRANSFORM_X_FLIP) {
+        x_dest = x_dest + (t_width - 1)*x_dest_incr;
+        x_dest_incr = -x_dest_incr;
+    } 
+
+	y_dest_incr = y_dest_incr * sbufWidth;
+	if(!(transform & TRANSFORM_INVERTED_AXES)){
+		y_src_incr = y_src_incr * nScanLen;
+	}
+	x_dest_incr *= pix_size_dest;
+	y_dest_incr *= pix_size_dest;
+	x_src_incr *= pix_size_src;
+	y_src_incr *= pix_size_src;
+	width_dest_incr = t_width*x_dest_incr;
+	width_src_incr = t_width*x_src_incr;
+
+	destBitsPtr = ((unsigned char *)sbuf->pixelData) + ((y_dest * sbufWidth + x_dest) * pix_size_dest);
+	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
+	for (j = 0; j < t_height; j++) {
+		for (i = 0; i < t_width; i++) {
+			alpha = srcBitsPtr[3];
+			if (alpha == 0xff || (processAlpha == KNI_FALSE)) {
+				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(*(jint*)srcBitsPtr);
+			} else if (alpha != 0x00) {  /* needs blending */
+                jint background = GXJ_RGB16TORGB24(*(gxj_pixel_type*)destBitsPtr);
+                jint composition = alphaComposition(*(jint*)srcBitsPtr, background);
+                *(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(composition);
+			}		
+			destBitsPtr += x_dest_incr;//*pix_size_dest;
+			srcBitsPtr += x_src_incr;//*pix_size_src;
+		}
+		destBitsPtr += y_dest_incr - (width_dest_incr);
+		srcBitsPtr += y_src_incr - (width_src_incr);
+	}
+}
 /**
  * Obtain the color that will be final shown 
  * on the screen after the system processed it.

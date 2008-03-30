@@ -25,7 +25,7 @@ unset ERASE_BUILD_OUTPUT
 unset BUILD_MIDP
 USE_NAMS=false
 ENABLE_THUMB=false
-USE_NOKIA_UI=false
+USE_NOKIA_UI=true
 
 while getopts \?J:Ccdehjmnpr: c
 do
