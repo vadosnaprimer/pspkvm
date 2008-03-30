@@ -117,7 +117,7 @@ static wav_player_handle* wav_players = NULL;
  * <mime string>, <protocol count>, <protocol strings>
  */
 
-static javacall_bool _javacall_media_initilized = JAVACALL_FALSE;
+static int _javacall_media_initilized = 0;
 
 // IMPL_NOTE: the only usage for this data now is
 // to determine if we have support for JTS and AMR.
@@ -203,9 +203,14 @@ javacall_bool javacall_media_supports_mixing() {
  */
 javacall_result javacall_media_initialize(void) {
     javacall_print("javacall_media_initialize\n");
-    if (_javacall_media_initilized) {
+    if (_javacall_media_initilized == 1) {
     	return JAVACALL_OK;
     }
+
+    if (_javacall_media_initilized == -1) {
+    	return JAVACALL_FAIL;
+    }
+    
 
     if (JAVACALL_FAIL == javacall_file_exist(midi_cfg_fn, sizeof(midi_cfg_fn)/sizeof(javacall_utf16))) {
     	javacall_print("Can't find midi config file\n");
@@ -214,13 +219,17 @@ javacall_result javacall_media_initialize(void) {
        is_midi_support = 1;
     }
     
+    max_patch_memory = 4*1024*1024;
+    
     if(SDL_Init(SDL_INIT_AUDIO)==-1) {
-        printf("SDL_Init: %s\n", SDL_GetError());
+        javacall_print("SDL_Init: %s\n", SDL_GetError());
+        _javacall_media_initilized = -1;
         return JAVACALL_FAIL;
     }
 
     if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024)==-1) {
-        printf("Mix_OpenAudio: %s\n", Mix_GetError());
+        javacall_print("Mix_OpenAudio error: %s\n", SDL_GetError());
+        _javacall_media_initilized = -1;
         return JAVACALL_FAIL;
     }
 
@@ -231,8 +240,7 @@ javacall_result javacall_media_initialize(void) {
     Mix_ChannelFinished(channelDone);
     
     
-    _javacall_media_initilized = JAVACALL_TRUE;
-    max_patch_memory = 4*1024*1024;
+    _javacall_media_initilized = 1;
     return JAVACALL_OK;
 }
 
@@ -246,8 +254,8 @@ javacall_result javacall_media_initialize(void) {
  */
 javacall_result javacall_media_finalize(void) {
     javacall_print("javacall_media_finalize\n");
-    if (_javacall_media_initilized) {
-    	 _javacall_media_initilized = JAVACALL_FALSE;
+    if (_javacall_media_initilized == 1) {
+    	 _javacall_media_initilized = 0;
         Mix_CloseAudio();
         SDL_Quit();
     music_handle_occupied = 0;
@@ -283,7 +291,7 @@ javacall_handle javacall_media_create(javacall_int64 playerId,
     
     char *pszMime = NULL;
     
-    if (!_javacall_media_initilized) {
+    if (_javacall_media_initilized != 1) {
     	if (javacall_media_initialize() != JAVACALL_OK) {
     		return NULL;
     	}
