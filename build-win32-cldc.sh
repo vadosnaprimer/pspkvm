@@ -25,6 +25,7 @@ unset ERASE_BUILD_OUTPUT
 unset BUILD_MIDP
 USE_NAMS=false
 ENABLE_THUMB=false
+USE_NOKIA_UI=true
 
 while getopts \?J:CTcdehjmnpr: c
 do
@@ -75,6 +76,7 @@ MIDP_DIR=${WS_ROOT}/midp
 RESTRICTED_CRYPTO_DIR=${WS_ROOT}/restricted_crypto
 TOOLS_DIR=${WS_ROOT}/tools
 JSR_120_DIR=${WS_ROOT}/jsr120
+NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
 #PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 PSPDEV_GNU_TOOLS_DIR=
 
@@ -176,6 +178,8 @@ then
 			USE_JSR_75=true \
 			JSR_75_DIR=${WS_ROOT}/jsr75 \
 			JSR_120_DIR=${JSR_120_DIR} \
+			USE_NOKIA_UI=${USE_NOKIA_UI} \
+			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			USE_MULTIPLE_ISOLATES=true \
 			skip_ams_executables=false \
 			${DEBUG_OPTION}
