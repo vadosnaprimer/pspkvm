@@ -51,7 +51,7 @@ extern "C" {
 #include <pspnet_resolver.h>
 #include <psputility.h>
 #include <psputility_netparam.h>
-
+#define DEBUG_JAVACALL_NETWORK 1
 struct _DNSHandle;
 
 typedef struct _DNSHandle{
@@ -69,7 +69,18 @@ typedef struct _DNSHandle{
 static int network_initialized = 0;
 static DNSHandle* dnsqueue = NULL;
 
-extern void sockets_init();
+extern int netDialog(int);
+
+static int isNetConnected() {
+	int state;
+	sceNetApctlGetState(&state);
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("isNetConnected: return %d\n", state);
+#endif
+	
+	return state==4?1:0;
+}
+
 /**
  * Performs platform-specific initialization of the networking system.
  * Will be called ONCE during VM startup before opening a network connection.
@@ -86,13 +97,31 @@ javacall_result javacall_network_init_start(void) {
     if (network_initialized) {
     	return JAVACALL_OK;
     }
+
     
-    sockets_init();
+/*
     if((err = pspSdkInetInit())) {
     	javacall_printf(": Error, could not initialise the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }
-
+*/
+	if((err = sceNetInit(128*1024, 42, 4*1024, 42, 4*1024))) {
+    	printf(": Error, could not sceNetInit the network %08X\n", err);		
+	return JAVACALL_FAIL;
+    }
+	if((err = sceNetInetInit())) {
+    	printf(": Error, could not sceNetInetInit the network %08X\n", err);		
+	return JAVACALL_FAIL;
+    }
+	if((err = sceNetResolverInit())) {
+    	printf(": Error, could not sceNetInetInit the network %08X\n", err);		
+	return JAVACALL_FAIL;
+    }	
+	if((err = sceNetApctlInit(0x8000, 48))) {
+    	printf(": Error, could not sceNetInetInit the network %08X\n", err);		
+	return JAVACALL_FAIL;
+    }
+    
     network_initialized = 1;
     return JAVACALL_OK;
 }
@@ -176,7 +205,7 @@ javacall_result javacall_network_init_finish(void) {
  * @retval JAVACALL_FAIL    fail
  */
 javacall_result javacall_network_finalize_start(void){
-    return JAVACALL_FAIL;
+    return JAVACALL_OK;
 }
 
 /**
@@ -207,6 +236,8 @@ int resolve_thread(SceSize args, void *argp) {
        SceUID rid;
 
        DNSHandle* hdns = *(DNSHandle**)argp;
+       u32 err;
+
 
        do {
 
@@ -214,7 +245,7 @@ int resolve_thread(SceSize args, void *argp) {
              		javacall_print("FATAL: resolve_thread: passed DNSHandle* is NULL\n");
              		break;
              }
-    	
+#if 1
         	/* Create a resolver */		
         	if(sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0)	{
         		javacall_printf("Error creating resolver\n");			
@@ -224,7 +255,7 @@ int resolve_thread(SceSize args, void *argp) {
         	javacall_printf("Created resolver %08x\n", rid);
 #endif	
         	hdns->resolver_id = rid;
-
+#endif
               int retry = 3;
               int ret;
         	do {
@@ -240,9 +271,9 @@ int resolve_thread(SceSize args, void *argp) {
          		hdns->monitor_handle = monitor_handle;
                 	
                 	/* Resolve a name to an ip address */	
-                	ret = sceNetResolverStartNtoA(rid, hdns->hostname, &addr, 1, 1);
+                	ret = sceNetResolverStartNtoA(hdns->resolver_id, hdns->hostname, &addr, 2, 3);
 #ifdef DEBUG_JAVACALL_NETWORK
-                	javacall_printf("sceNetResolverStartNtoA (%d) return %d\n", rid, ret);	
+                	javacall_printf("sceNetResolverStartNtoA (%d) return %d\n", hdns->resolver_id, ret);	
 #endif
                 	
          		javacall_time_finalize_timer(monitor_handle);
@@ -285,13 +316,31 @@ int resolve_thread(SceSize args, void *argp) {
 }
 
 static void* start_lookup_ip(char* hostname, int maxIpLen) {
-	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x40, 0x1000, PSP_THREAD_ATTR_USER, NULL);	
+	//SceUID rid;
+	//static char buf[1024];
+	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x18, 64 * 1024, PSP_THREAD_ATTR_USER, NULL);	
 	if(thid < 0) {	
 		javacall_printf("Error, could not create thread\n");	
 		return NULL;	
 	}
+	
 	DNSHandle* hdns = (DNSHandle*)malloc(sizeof(DNSHandle));
+	if (hdns == NULL) {
+		javacall_printf("Error, could not allocate memory for DNSHandle\n");	
+		return NULL;	
+	}
 	hdns->res_thread_id = thid;
+#if 0
+	/* Create a resolver */		
+       if(sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0)	{
+       	javacall_printf("Error creating resolver\n");
+       	return NULL;
+       }
+#ifdef DEBUG_JAVACALL_NETWORK        	
+        javacall_printf("Created resolver %08x\n", rid);
+#endif	
+       hdns->resolver_id = rid;
+#endif
 	strncpy(hdns->hostname, hostname, sizeof(hdns->hostname));
 	hdns->hostname[ sizeof(hdns->hostname) - 1 ] = '\0';
 	hdns->ok = 0;
@@ -308,7 +357,10 @@ static int end_lookup_ip(DNSHandle* handle, char* pAddress, int maxLen, int* pLe
 	//sceKernelTerminateThread(thid);			
 	//sceKernelWaitThreadEndCB(thid, NULL);					
 	//sceKernelDeleteThread(thid);
-	
+#if 0
+	sceNetResolverStop(handle->resolver_id);
+       sceNetResolverDelete(handle->resolver_id);
+#endif
 	int ok = handle->ok;
 	if (ok) {
         	*pLen = handle->ip_len;
@@ -355,6 +407,23 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
 
     struct in_addr addr;
     (void)pContext;
+    static int selected = 0;
+    int connected = isNetConnected();
+
+    if (!connected) {
+    	if (!selected) {
+        	connected = netDialog(0);
+        	selected = 1;
+        	if (!connected) {
+        		return JAVACALL_FAIL;
+        	}
+    	} else {
+    		return JAVACALL_FAIL;
+    	}
+    } else {
+       //netDialog(1);
+    }
+	
 
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("javacall_network_gethostbyname_start: %s\n", hostname);
@@ -390,9 +459,12 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
  */
 javacall_result javacall_network_gethostbyname_finish(unsigned char *pAddress,
     int maxLen,int *pLen,void *handle,void *context) {
+    
     if (end_lookup_ip(handle, pAddress, maxLen, pLen) == 0) {
+    printf("javacall_network_gethostbyname_finish ok\n");	
     	 return JAVACALL_OK;
     } else {
+    printf("javacall_network_gethostbyname_finish fail\n");
         return JAVACALL_FAIL;     
     }
 }  

@@ -3,6 +3,8 @@
 #include <pspctrl.h>
 #include <pspthreadman.h>
 #include <psprtc.h>
+#include <psputility.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +16,12 @@
 #include <pspiofilemgr_fcntl.h>
 #include <psputility_sysparam.h>
 
+#include <pspnet.h>
+#include <pspnet_inet.h>
+#include <pspnet_apctl.h>
+#include <pspnet_resolver.h>
+#include <psputility.h>
+#include <psputility_netparam.h>
 #include <pspgu.h>
 
 #include <javacall_keypress.h>
@@ -22,11 +30,19 @@
 #include <javacall_keymap.h>
 
 /* Define the module info section */
+#if _PSP_FW_VERSION >= 200
+PSP_MODULE_INFO("pspME", 0, 1, 1);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
+#else
 PSP_MODULE_INFO("pspME", 0x1000, 1, 1);
+PSP_MAIN_THREAD_ATTR(0);
+#endif
+
+PSP_HEAP_SIZE_KB(10000);
 
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
-PSP_MAIN_THREAD_ATTR(0);
+
 
 /* Define printf, just to make typing easier */
 //#define printf	pspDebugScreenPrintf
@@ -77,6 +93,29 @@ SceUInt alarm_handler(void *common)
 	return 0;
 }
 
+#define log_buf_size 65536
+static char logs[log_buf_size]={0};
+static int log_cur = 0;
+void print_log(const char* str) {
+	char* p= &logs[log_cur];
+	strncpy(p, str, log_buf_size - log_cur);
+	log_cur += strlen(p);
+	if (log_cur >= log_buf_size) log_cur = 0;
+	pspDebugScreenPrintf(str);
+}
+
+static void display_log(int show) {
+	if (show) {
+		int i;
+		//sceGuDisplay(0);
+		pspDebugScreenPrintf(logs);
+		
+	} else {
+		//sceGuDisplay(1);
+	}
+}
+
+static int suspend_key_input = 0;
 
 #define PSP_CTRL_ANALOG_LEFT 	0x10000000
 #define PSP_CTRL_ANALOG_RIGHT 	0x20000000
@@ -284,6 +323,10 @@ int KeyThread(SceSize args, void *argp)
 		//pspDebugScreenSetXY(0, 2);
 
     		sceCtrlReadBufferPositive(&pad, 3);
+		if (suspend_key_input) {
+			continue;
+		}
+		
 		pspKey = 0;
 		lx = pad.Lx;
 		ly = pad.Ly;
@@ -358,6 +401,8 @@ int KeyThread(SceSize args, void *argp)
 
 		    if (pspKey == DEBUG_TRACE_KEY) {
 		    	javanotify_key_event(JAVACALL_KEY_DEBUG_TRACE, JAVACALL_KEYPRESSED);
+		    	//display_log(1);
+		    	
 		    	lastPspKey = pspKey;
 		    	continue;
 		    }
@@ -409,6 +454,78 @@ int KeyThread(SceSize args, void *argp)
 }
 #endif
 
+int netDialog(int status)
+{
+	int state;
+
+#if _PSP_FW_VERSION >= 200
+
+	int running = 1;
+	
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("netDialog: enter %d\n", status);
+#endif
+	
+   	pspUtilityNetconfData data;
+
+	memset(&data, 0, sizeof(data));
+	data.base.size = sizeof(data);
+	data.base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
+	data.base.buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
+	data.base.graphicsThread = 17;
+	data.base.accessThread = 19;
+	data.base.fontThread = 18;
+	data.base.soundThread = 16;
+	data.action = status?PSP_NETCONF_ACTION_DISPLAYSTATUS:PSP_NETCONF_ACTION_CONNECTAP;
+
+	suspend_key_input = 1;
+
+	sceUtilityNetconfInitStart(&data);
+
+	while(running)
+	{
+	      //sceGuDisplay(0);
+		switch(sceUtilityNetconfGetStatus())
+		{
+			case PSP_UTILITY_DIALOG_NONE:
+				running = 0;
+				break;
+
+			case PSP_UTILITY_DIALOG_VISIBLE:
+				javacall_lcd_enable_flush(0);
+	      			javacall_lcd_flush();
+				sceUtilityNetconfUpdate(1);				
+				sceDisplayWaitVblankStart();
+				sceGuSwapBuffers();
+				break;
+			case PSP_UTILITY_DIALOG_FINISHED:
+				javacall_lcd_enable_flush(1);				
+				break;
+
+			case PSP_UTILITY_DIALOG_QUIT:
+				sceUtilityNetconfShutdownStart();				
+				break;
+
+			default:
+				break;
+		}
+	}
+	javacall_lcd_enable_flush(1);
+#endif /*_PSP_FW_VERSION >= 200*/
+
+       sceKernelDelayThread(500000); 
+
+	sceNetApctlGetState(&state);
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("netDialog: return %d\n", state);
+#endif
+	sceKernelDelayThread(500000); 
+
+	suspend_key_input = 0;
+	
+	return state==4?1:0;
+}
+
 int java_main(void)
 {
 	SceUID id;
@@ -424,15 +541,18 @@ int java_main(void)
 	}
 
 	printf("timezone:%s\n", javacall_time_get_local_timezone());
-	printf("Wait..\n");
 	int thid = sceKernelCreateThread("key_thread", KeyThread,
-				     0x11, 0xFA0, 0, 0);
+				     0x11, 0xFA0, PSP_THREAD_ATTR_USER, 0);
 	if(thid >= 0)
-	{		
+	{
+	       printf("Wait..\n");
+	
 		sceKernelStartThread(thid, 0, 0);
 		JavaTask();
 		done = 1;
 		sceKernelWaitThreadEndCB(thid, NULL);
+	} else {
+		printf("KeyThread create error. exit.\n");
 	}
 	
 	javacall_media_finalize();
@@ -461,11 +581,20 @@ static void setup_gu() {
 	sceGuDepthBuffer(zbp,BUF_WIDTH);
 	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2));
 	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT);
-	sceGuDepthRange(65535,0);
+	//sceGuDepthRange(65535,0);
+	sceGuDepthRange(0xc350,0x2710);    	
 	sceGuScissor(0,0,SCR_WIDTH,SCR_HEIGHT);
 	sceGuEnable(GU_SCISSOR_TEST);
 	sceGuFrontFace(GU_CW);
 	sceGuEnable(GU_TEXTURE_2D);
+
+	sceGuDepthFunc(GU_GEQUAL);
+    	sceGuEnable(GU_DEPTH_TEST);
+    	
+       sceGuEnable(GU_CULL_FACE);
+    	sceGuEnable(GU_CLIP_PLANES);
+    	
+	
 	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
 	sceGuFinish();
 	sceGuSync(0,0);
@@ -479,23 +608,38 @@ static void setup_gu() {
 int main(void)
 {
 	SceUID thid;
+	pspDebugScreenInit();
 
        printf("Setup GU\n");
 	setup_gu();       
 
 	printf("Loading network modules\n");
+#if _PSP_FW_VERSION >= 200
+       if (sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON) < 0) {
+    		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_COMMON);
+    		return JAVACALL_FAIL;
+    	}
+
+	if (sceUtilityLoadNetModule(PSP_NET_MODULE_INET) < 0) {
+		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_INET);
+		return JAVACALL_FAIL;
+	}
+
+#else	
     	if(pspSdkLoadInetModules() < 0)	{	
     		printf("Error, could not load inet modules\n");	
     		sceKernelExitGame();	
     		return -1;
     	}
+#endif
+	
 
     	printf("Network module loaded\n");
     	
 	/* create user thread */
 	thid = sceKernelCreateThread("Java Thread", java_main,
 											0x2f, // default priority
-											256 * 1024, // stack size (256KB is regular default)
+											512 * 1024, // stack size
 											PSP_THREAD_ATTR_USER, NULL); //# user mode
 
 	// start user thread, then wait for it to do everything else

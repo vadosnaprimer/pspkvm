@@ -50,6 +50,8 @@ static int resized = 0;
 static unsigned short int __attribute__((aligned(16))) _offscreen[512*512];
 static javacall_pixel* scbuff = _offscreen;
 
+static int _enable_lcd_flush = 1;
+
 #if USE_PSP_GU
 
 struct Vertex
@@ -68,6 +70,7 @@ void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height
 {
    unsigned int blockx, blocky;
    unsigned int j;
+   unsigned int cur_row;
  
    unsigned int width_blocks = (width / 16);
    unsigned int height_blocks = (height / 8);
@@ -78,13 +81,15 @@ void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height
    const u8* ysrc = in;
    u32* dst = (u32*)out;
  
-   for (blocky = 0; blocky < height_blocks; ++blocky)
+   for (blocky = 0, cur_row = 0; blocky <= height_blocks; ++blocky)
    {
+      int block_height = height - cur_row;
+      block_height = block_height>8?8:block_height;
       const u8* xsrc = ysrc;
       for (blockx = 0; blockx < width_blocks; ++blockx)
       {
          const u32* src = (u32*)xsrc;
-         for (j = 0; j < 8; ++j)
+         for (j = 0; j < block_height; ++j)
          {
             *(dst++) = *(src++);
             *(dst++) = *(src++);
@@ -95,7 +100,8 @@ void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height
          xsrc += 16;
      }
      ysrc += src_row;
-     dst = (u32*)out + 4*512*(blocky+1);
+     dst = (u32*)out + 4*512*(blocky+1);     
+     cur_row += 8;
    }
    sceKernelDcacheWritebackAll();
 }
@@ -107,7 +113,7 @@ static void pspFrameStart(int use_psp_gu) {
 		//sceGuClear(GU_COLOR_BUFFER_BIT|GU_STENCIL_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
 	}	
 }
-
+extern int _stop_lcd_flush;
 static void pspFrameEnd(int use_psp_gu) {
 	if (use_psp_gu) {   	    
 		//sceGuTexSync();
@@ -118,6 +124,7 @@ static void pspFrameEnd(int use_psp_gu) {
 		//sceDisplayWaitVblankStart();
 		//fbp = sceGuSwapBuffers();
 		//screen.image = (unsigned char*)(0x04000000+(u32)fbp);
+		if(_enable_lcd_flush)
 		sceGuSwapBuffers();
 	}
 }
@@ -142,7 +149,7 @@ static void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int dw,
 		vertices[1].u = start + width; vertices[1].v = sy + sh;
 		vertices[1].color = 0;
 		vertices[1].x = dx_f + xScale*width; vertices[1].y = dy + dh; vertices[1].z = 0;
-
+		
 		sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_5650|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
 	}
 }
@@ -307,6 +314,9 @@ javacall_result javacall_lcd_flush_partial(int ystart, int yend){
         //Need scale
         swizzle_fast((u8*)swizzled_pixels,scbuff,vscr_w*2,vscr_h); // 512*2 because swizzle operates in bytes, and each pixel in a 16-bit texture is 2 bytes
         pspFrameStart(1);
+        sceGuClearColor(0);
+	 sceGuClearDepth(0);
+	
         sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
         sceGuTexMode(GU_PSM_5650 ,0,0,1); // 16-bit RGBA
         sceGuTexImage(0,512,512,512,swizzled_pixels); // setup texture by framebuff
@@ -387,7 +397,11 @@ void javacall_set_new_screen_size(int w, int h) {
     resized = 1;
     javanotify_rotation();
 }
-    
+
+void javacall_lcd_enable_flush(int enable) {
+    _enable_lcd_flush = enable;
+}
+
 #ifdef __cplusplus
 } //extern "C"
 #endif

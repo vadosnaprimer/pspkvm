@@ -244,6 +244,11 @@ int javacall_lcd_get_screen_height();
 void javacall_set_new_screen_size(int w, int h);
 
 /**
+ * Enable/Disable lcd refresh
+ **/
+void javacall_lcd_enable_flush(int enable);
+
+/**
  * The platform should invoke this function in platform context
  * to rotate the screen.
  */
