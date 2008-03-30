@@ -26,6 +26,7 @@ unset BUILD_MIDP
 USE_NAMS=false
 ENABLE_THUMB=false
 USE_NOKIA_UI=true
+USE_JSR_75=false
 
 while getopts \?J:CTcdehjmnpr: c
 do
@@ -98,7 +99,7 @@ then
 			JAVACALL_DIR=${JAVACALL_DIR}  \
 			JAVACALL_OUTPUT_DIR=${JAVACALL_OUTPUT_DIR} \
 			ENABLE_THUMB=${ENABLE_THUMB} \
-			USE_JSR_75=true \
+			USE_JSR_75=${USE_JSR_75} \
 			USE_PROPERTIES_FROM_FS=false \
 			${DEBUG_OPTION}
 	fi
@@ -175,7 +176,7 @@ then
 			CLDC_DIST_DIR=${CLDC_DIR}/build/javacall_i386_vc/dist \
 			TOOLS_DIR=${TOOLS_DIR} \
 			RESTRICTED_CRYPTO_DIR=${RESTRICTED_CRYPTO_DIR} \
-			USE_JSR_75=true \
+			USE_JSR_75=${USE_JSR_75} \
 			JSR_75_DIR=${WS_ROOT}/jsr75 \
 			JSR_120_DIR=${JSR_120_DIR} \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
