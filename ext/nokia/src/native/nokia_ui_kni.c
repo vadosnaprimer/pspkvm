@@ -494,9 +494,9 @@ KNIDECL(com_nokia_mid_ui_DirectGraphicsImpl_drawPixels___3SZIIIIIIII) {
 			
             jbyte ret;
             
-            TRANSLATE(thisObject, x, y);
+            TRANSLATE(graphics, x, y);
 
-            GET_CLIP(thisObject, clip);
+            GET_CLIP(graphics, clip);
 
 			transform = nokiaManip2MIDP2Manip(manipulation);
 			ret = adjustToViewableRegion(&x, &y, &x_src, &y_src,
@@ -572,9 +572,9 @@ KNIDECL(com_nokia_mid_ui_DirectGraphicsImpl_drawPixels___3IZIIIIIIII) {
 			
             jbyte ret;
             
-            TRANSLATE(thisObject, x, y);
+            TRANSLATE(graphics, x, y);
 
-            GET_CLIP(thisObject, clip);
+            GET_CLIP(graphics, clip);
 
 			transform = nokiaManip2MIDP2Manip(manipulation);
 			ret = adjustToViewableRegion(&x, &y, &x_src, &y_src,
