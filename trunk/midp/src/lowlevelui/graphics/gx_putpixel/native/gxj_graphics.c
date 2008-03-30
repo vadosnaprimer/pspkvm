@@ -283,6 +283,31 @@ gx_draw_rgb(const jshort *clip,
     } /* loop by rgb data rows */
 }
 
+#ifdef BIG_ENDIAN_FRAMEBUFFER
+#define GXJ_RGB444TORGB565(x) (((( x ) & 0x000F) << 12) | \
+                             ((( x ) & 0x00F0) << 3) | \
+                             ((( x ) & 0x0F00) >> 7) )
+
+static jshort alphaComposition_4444to565(jshort src, jshort dst) {
+    unsigned char As = (unsigned char)(src >> 24);
+
+    unsigned char Rr =  (((src&0x0F00)>>4)*As + (((dst&0xF800)>>8) * (0xff - As))) / 0xff;
+	//if (c > 0xff) c = 0xff;
+	//*d0 = (unsigned char)c;
+
+	unsigned char Gr =  (((src&0x00F0))*As + (((dst&0x07E0)>>3) * (0xff - As))) / 0xff;
+	//if (c > 0xff) c = 0xff;
+	//*d1 = (unsigned char)c;
+
+	unsigned char Br =  (((src&0x000F)<<4)*As + (((dst&0x001F)<<3) * (0xff - As))) / 0xff;
+	//if (c > 0xff) c = 0xff;
+	//*d2 = (unsigned char)c;
+	
+    /* compose RGB from separate color components */
+    return (((jshort)Br&0xF8) << 8) | (((jshort)Gr&0xFC) << 3) | (((jshort)Rr&0xF8) >> 3);
+}
+
+#else
 #define GXJ_RGB444TORGB565(x) (((( x ) & 0x0F00) << 4) | \
                              ((( x ) & 0x00F0) << 3) | \
                              ((( x ) & 0x000F) << 1) )
@@ -305,6 +330,7 @@ static jshort alphaComposition_4444to565(jshort src, jshort dst) {
     /* compose RGB from separate color components */
     return (((jshort)Rr&0xF8) << 8) | (((jshort)Gr&0xFC) << 3) | (((jshort)Br&0xF8) >> 3);
 }
+#endif
 
 void
 gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int nYOriginDest, 
