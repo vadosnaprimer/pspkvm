@@ -35,5 +35,7 @@ PSP_FW_VERSION = 150
 BUILD_PRX=0
 endif
 
+PSP_EBOOT_ICON=icon_kk_2.png
+
 PSPSDK=$(shell psp-config --pspsdk-path)
 include build.mak
