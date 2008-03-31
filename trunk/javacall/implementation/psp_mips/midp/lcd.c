@@ -97,6 +97,13 @@ void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height
             *(dst++) = *(src++);
             src += src_pitch;
          }
+         for (; j < 8; ++j)
+         {
+            *(dst++) = 0;
+            *(dst++) = 0;
+            *(dst++) = 0;
+            *(dst++) = 0;
+         }         
          xsrc += 16;
      }
      ysrc += src_row;
