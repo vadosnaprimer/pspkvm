@@ -1,6 +1,6 @@
 pspkvm v0.3.0
 31 Mar. 2008
-Author: Sleeper, M@x
+Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
 	http://www.pspkvm.com 
