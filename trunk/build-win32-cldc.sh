@@ -26,7 +26,7 @@ unset BUILD_MIDP
 USE_NAMS=false
 ENABLE_THUMB=false
 USE_NOKIA_UI=true
-USE_JSR_75=false
+USE_JSR_75=true
 
 while getopts \?J:CTcdehjmnpr: c
 do

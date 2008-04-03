@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration SYSTEM "../common/configuration.dtd">
+<!--
+   
+
+  Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+  
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License version
+  2 only, as published by the Free Software Foundation.
+  
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License version 2 for more details (a copy is
+  included at /legal/license.txt).
+  
+  You should have received a copy of the GNU General Public License
+  version 2 along with this work; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  02110-1301 USA
+  
+  Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+  Clara, CA 95054 or visit www.sun.com if you need additional
+  information or have any questions.
+
+-->
+<!-- System-specific JSR 75 properties required by the specification -->
+<configuration>
+<properties>
+<!-- System  properties (visible via System.getProperty() -->
+  <property Key="fileconn.dir.private"
+      Value="file:///Private/"
+      Scope="system"
+      Comment="The private work directory for MIDlet suite."/>
+
+  <property Key="file.separator"
+      Value="/"
+      Scope="system"
+      Comment="The file separator character(s) for the underlying platform."/>
+
+<!-- Internal properties (visible via Configuration.getProperty() -->
+  <property Key="PIMRootDir"
+      Value="file:///PIMdb/"
+      Scope="internal"
+      Comment="The root directory that contains PIM data."/>
+
+  <property Key="DefaultContactList"
+      Value="Default_contact"
+      Scope="internal"
+      Comment="The directory name of the default contact list."/>
+
+  <property Key="DefaultEventList"
+      Value="Default_event"
+      Scope="internal"
+      Comment="The directory name of the default event list."/>
+
+  <property Key="DefaultTodoList"
+      Value="Default_todo"
+      Scope="internal"
+      Comment="The directory name of the default todo list."/>
+
+  <property Key="file.linebreak"
+      Value="\n"
+      Scope="internal"
+      Comment="The which terminates a line in text files."/>
+</properties>
+</configuration>

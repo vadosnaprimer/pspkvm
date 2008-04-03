@@ -291,7 +291,7 @@ javacall_result javacall_file_flush(javacall_handle handle) {
  */
 javacall_result javacall_file_rename(const javacall_utf16 * unicodeOldFilename, int oldNameLen, 
         const javacall_utf16 * unicodeNewFilename, int newNameLen) {
-    //TODO: It looks not work properly, need to investigate. Currently it won't be called
+    //According to psp newlib, rename doesn't support "move", only support rename in same directory
     
     static char oldfn[MAX_FILE_NAME_LEN+1];
     char* pszOldFilename = javacall_UNICODEsToUtf8(unicodeOldFilename, oldNameLen);

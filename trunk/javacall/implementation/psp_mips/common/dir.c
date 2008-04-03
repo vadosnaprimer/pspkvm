@@ -153,12 +153,13 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFi
         return NULL;
     }
 #endif
-    static javacall_utf16 name[JAVACALL_MAX_FILE_NAME_LENGTH];
+    static javacall_utf16 name[JAVACALL_MAX_FILE_NAME_LENGTH+1];
     
     struct dirent* d = readdir((DIR*)handle);
     if (d != NULL) {
         int len = strlen(d->d_name);
-    	if (len >= 256) {
+        javacall_printf("javacall_dir_get_next: %s, len=%d, dir=%d\n", d->d_name, len, (d->d_stat.st_attr & FIO_SO_IFDIR)?1:0);
+    	if (len >= JAVACALL_MAX_FILE_NAME_LENGTH - 1) {
     	    return NULL;
     	} else {
     	    if(d->d_stat.st_attr & FIO_SO_IFDIR) {
@@ -200,7 +201,8 @@ javacall_int64 javacall_dir_get_free_space_for_java(void){
  */
 javacall_result javacall_dir_get_root_path(javacall_utf16* /* OUT */ rootPath,
                                            int* /* IN | OUT */ rootPathLen) {
-    static char* root = ".";
+    //static char* root = ".";
+    static char* root = "ms0:/PSP/GAME/pspkvm";
     int i;
     int len = strlen(root);
     if (*rootPathLen < len) {

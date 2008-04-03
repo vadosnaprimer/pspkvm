@@ -158,8 +158,11 @@ void javacall_dir_close(javacall_handle handle)
 javacall_utf16* javacall_dir_get_next(javacall_handle handle,
                                       int* /*OUT*/ outFileNameLength)
 {
+    static javacall_utf16 name[JAVACALL_MAX_FILE_NAME_LENGTH+1];
     JAVACALL_FIND_DATA* pFindData = (JAVACALL_FIND_DATA*)handle;
-javacall_print("javacall_dir_get_next\n");
+
+    javacall_print("javacall_dir_get_next\n");
+
     if (outFileNameLength != NULL ) { 
         /* Default value */
         *outFileNameLength = 0; 
@@ -179,7 +182,14 @@ javacall_print("javacall_dir_get_next\n");
     if (outFileNameLength != NULL) { 
         *outFileNameLength = wcslen(pFindData->find_data.cFileName); 
     }
-    return (pFindData->find_data.cFileName);
+
+    wcsncpy(name, pFindData->find_data.cFileName, JAVACALL_MAX_FILE_NAME_LENGTH);
+    if (pFindData->find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+    	name[*outFileNameLength] = '\\';
+    	*outFileNameLength++;
+    	name[*outFileNameLength] = 0;
+    }
+    return (name);
 }
 
 /**
