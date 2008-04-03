@@ -298,7 +298,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_READ_USER_DATA_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_READ_USER_DATA_TITLE,
         ResourceConstants.PERMISSION_READ_USER_DATA_QUE, 0,
-        BLANKET, ONESHOT, ONESHOT, ONESHOT);
+        BLANKET, BLANKET, BLANKET, BLANKET); //PSP: Change Untrusted to Blanket
 
     /** Write User Data permission group. */
     static final PermissionGroup WRITE_USER_DATA_GROUP = new PermissionGroup(
@@ -308,7 +308,7 @@ public final class Permissions {
         ResourceConstants.PERMISSION_WRITE_USER_DATA_TITLE,
         ResourceConstants.PERMISSION_WRITE_USER_DATA_QUE,
         ResourceConstants.PERMISSION_WRITE_USER_DATA_ONESHOT_QUE,
-        BLANKET, ONESHOT, ONESHOT, ONESHOT);
+        BLANKET, BLANKET, BLANKET, BLANKET); //PSP: Change Untrusted to Blanket
 
     /** Location permission group. */
     static final PermissionGroup LOCATION_GROUP = new PermissionGroup(

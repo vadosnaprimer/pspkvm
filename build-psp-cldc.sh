@@ -26,6 +26,7 @@ unset BUILD_MIDP
 USE_NAMS=false
 ENABLE_THUMB=false
 USE_NOKIA_UI=true
+USE_JSR_75=true
 
 while getopts \?J:Ccdehjmnpr: c
 do
@@ -77,6 +78,7 @@ RESTRICTED_CRYPTO_DIR=${WS_ROOT}/restricted_crypto
 JSR_135_DIR=${WS_ROOT}/jsr135
 JPEG_DIR=${WS_ROOT}/jpeg
 JSR_120_DIR=${WS_ROOT}/jsr120
+JSR_75_DIR=${WS_ROOT}/jsr75
 NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
 PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 #PSPDEV_GNU_TOOLS_DIR=
@@ -99,6 +101,7 @@ then
 			JAVACALL_DIR=${JAVACALL_DIR}  \
 			JAVACALL_OUTPUT_DIR=${JAVACALL_OUTPUT_DIR} \
 			USE_JSR_135=true \
+			USE_JSR_75=${USE_JSR_75} \
 			USE_PROPERTIES_FROM_FS=false \
 			${DEBUG_OPTION}
 	fi
@@ -176,6 +179,8 @@ then
 			USE_MULTIPLE_ISOLATES=true \
 			skip_ams_executables=true \
 			JPEG_DIR=${JPEG_DIR} \
+			USE_JSR_75=${USE_JSR_75} \
+			JSR_75_DIR=${JSR_75_DIR} \
 			JSR_135_DIR=${JSR_135_DIR} \
 			JSR_120_DIR=${JSR_120_DIR} \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
