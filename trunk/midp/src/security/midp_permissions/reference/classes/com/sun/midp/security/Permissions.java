@@ -243,7 +243,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_NET_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_NET_ACCESS_DIALOG_TITLE,
         ResourceConstants.PERMISSION_NET_ACCESS_QUE, 0,
-        BLANKET, BLANKET, BLANKET, BLANKET); //PSP: Change to BLANKET since no network charge
+        BLANKET, BLANKET, BLANKET, SESSION); //PSP: Change to SESSION since no network charge, and Read/Write user data is ALLOW
 
     /** Read Message permission group. */
     static final PermissionGroup READ_MESSAGE_GROUP = new PermissionGroup(
@@ -271,8 +271,8 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_AUTO_START_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_AUTO_START_DIALOG_TITLE,
         ResourceConstants.PERMISSION_AUTO_START_QUE, 0,
-        BLANKET, ONESHOT, SESSION, ONESHOT); //PSP:Change to ALLOW
-
+        BLANKET, ONESHOT, SESSION, ONESHOT);
+    
     /** Local Connectivity permission group. */
     static final PermissionGroup LOCAL_CONN_GROUP = new PermissionGroup(
         ResourceConstants.AMS_MGR_LOCAL_CONN_SETTINGS,
@@ -298,7 +298,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_READ_USER_DATA_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_READ_USER_DATA_TITLE,
         ResourceConstants.PERMISSION_READ_USER_DATA_QUE, 0,
-        BLANKET, BLANKET, BLANKET, BLANKET); //PSP: Change Untrusted to Blanket
+        ALLOW, ALLOW, ALLOW, ALLOW); //PSP: Change Untrusted to Allow
 
     /** Write User Data permission group. */
     static final PermissionGroup WRITE_USER_DATA_GROUP = new PermissionGroup(
@@ -308,7 +308,7 @@ public final class Permissions {
         ResourceConstants.PERMISSION_WRITE_USER_DATA_TITLE,
         ResourceConstants.PERMISSION_WRITE_USER_DATA_QUE,
         ResourceConstants.PERMISSION_WRITE_USER_DATA_ONESHOT_QUE,
-        BLANKET, BLANKET, BLANKET, BLANKET); //PSP: Change Untrusted to Blanket
+        ALLOW, ALLOW, ALLOW, ALLOW); //PSP: Change Untrusted to Allow
 
     /** Location permission group. */
     static final PermissionGroup LOCATION_GROUP = new PermissionGroup(
