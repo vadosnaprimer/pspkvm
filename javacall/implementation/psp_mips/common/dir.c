@@ -201,8 +201,8 @@ javacall_int64 javacall_dir_get_free_space_for_java(void){
  */
 javacall_result javacall_dir_get_root_path(javacall_utf16* /* OUT */ rootPath,
                                            int* /* IN | OUT */ rootPathLen) {
-    //static char* root = ".";
-    static char* root = "ms0:/PSP/GAME/pspkvm";
+    static char* root = ".";
+    //static char* root = "ms0:/PSP/GAME/pspkvm";
     int i;
     int len = strlen(root);
     if (*rootPathLen < len) {
