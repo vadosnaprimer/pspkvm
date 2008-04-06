@@ -15,7 +15,7 @@ g = _g
 CFLAGS += -g
 else
 g =
-CFLAGS += -O2
+CFLAGS += -O3
 endif
 LIBDIR =
 LDFLAGS =  -L$(ROOT)/midp/build/javacall_psp/output/bin/mips -L$(ROOT)/cldc/build/javacall_psp_gcc/target/bin -L$(ROOT)/pcsl/output/javacall_mips/lib -L$(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/lib

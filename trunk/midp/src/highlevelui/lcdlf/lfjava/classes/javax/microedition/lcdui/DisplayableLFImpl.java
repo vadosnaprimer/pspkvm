@@ -878,6 +878,7 @@ class DisplayableLFImpl implements DisplayableLF {
      * SYNC NOTE: Caller should hold LCDUILock.
      */
     void lRequestInvalidate() {
+    /*
         long timePassed = System.currentTimeMillis() - lastTimeInvalidate;
         if (timePassed >= INVALIDATE_REQUESTS_PERIOD) {
             invalidateTimer.cancel();
@@ -889,6 +890,8 @@ class DisplayableLFImpl implements DisplayableLF {
             invalidateTimer.schedule(
                 INVALIDATE_REQUESTS_GRACE - timePassed);
         }
+    */
+        lRequestInvalidateImpl();
     }
 
     /**

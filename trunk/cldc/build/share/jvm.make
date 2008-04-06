@@ -1508,7 +1508,7 @@ endif
 
 ifeq ($(NO_DEBUG_SYMBOLS), true)
     DEBUG_SYMBOLS_FLAGS     =
-    CPP_OPT_FLAGS_debug     = -O2 -Wuninitialized -fexpensive-optimizations
+    CPP_OPT_FLAGS_debug     = -O3 -Wuninitialized -fexpensive-optimizations
     ifneq ($(PROFILING), true)
     CPP_OPT_FLAGS_debug    += -fomit-frame-pointer
     endif
