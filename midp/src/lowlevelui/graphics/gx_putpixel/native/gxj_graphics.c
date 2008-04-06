@@ -211,6 +211,7 @@ gx_draw_rgb(const jshort *clip,
              jint width, jint height, jboolean processAlpha) {
     int a, b, diff;
     int dataRowIndex, sbufRowIndex;
+    int blocks, remains;
 
     gxj_screen_buffer screen_buffer;
     gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
@@ -259,27 +260,161 @@ gx_draw_rgb(const jshort *clip,
     dataRowIndex = 0;
     sbufRowIndex = y * sbufWidth;
 
+    blocks = width / 8;
+    remains = width % 8;
+            
     for (b = y; b < y + height;
         b++, dataRowIndex += scanlen,
         sbufRowIndex += sbufWidth) {
 
-        for (a = x; a < x + width; a++) {
-            jint value = rgbData[offset + (a - x) + dataRowIndex];
-            int idx = sbufRowIndex + a;
-
-            CHECK_PTR_CLIP(sbuf, &(sbuf->pixelData[idx]));
-
-            if (!processAlpha || (value & 0xff000000) == 0xff000000) {
-                // Pixel has no alpha or no transparency
-                sbuf->pixelData[idx] = GXJ_RGB24TORGB16(value);
-            } else {
-                if ((value & 0xff000000) != 0) {
-                    jint background = GXJ_RGB16TORGB24(sbuf->pixelData[idx]);
-                    jint composition = alphaComposition(value, background);
-                    sbuf->pixelData[idx] = GXJ_RGB24TORGB16(composition);
-                }
+        if (!processAlpha) {
+            int i;
+            jint* pFrom = &rgbData[offset + dataRowIndex];
+            gxj_pixel_type* pTo = &sbuf->pixelData[sbufRowIndex + x];
+            for (i = 0; i< blocks; i++) {
+#if 1
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+#else
+            	  __asm__ __volatile__ (
+            	  " .set noreorder\n"
+            	  
+            	  " move $8, %0\n"
+            	  " lw $10, 0($8)\n"
+            	  " lw $11, 4($8)\n"
+            	  " lw $12, 8($8)\n"
+            	  " lw $13, 12($8)\n"
+            	  " lw $14, 16($8)\n"
+            	  " lw $15, 20($8)\n"
+            	  " lw $24, 24($8)\n"
+            	  " lw $25, 28($8)\n"
+            	  
+            	  " srl $8, $10, 19\n"
+            	  " srl $9, $10, 5\n"
+             	  " andi $8, $8, 0x001F\n"
+             	  " andi $9, $9, 0x07E0\n"
+            	  " sll $10, $10, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $10, $10, 0xF800\n"
+            	  " or  $10, $10, $8\n"
+            	  
+            	  " srl $8, $11, 19\n"
+            	  " srl $9, $11, 5\n"
+            	  " andi $8, $8, 0x001F\n"            	  
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $11, $11, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $11, $11, 0xF800\n"            	  
+            	  " or  $11, $11, $8\n"
+            	  
+            	  " srl $8, $12, 19\n"
+            	  " srl $9, $12, 5\n"
+            	  " andi $8, $8, 0x001F\n"            	  
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $12, $12, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $12, $12, 0xF800\n"            	  
+            	  " or  $12, $12, $8\n"
+            	  
+            	  " srl $8, $13, 19\n"
+            	  " srl $9, $13, 5\n"
+            	  " andi $8, $8, 0x001F\n"            	  
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $13, $13, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $13, $13, 0xF800\n"            	  
+            	  " or  $13, $13, $8\n"
+            	  
+            	  " srl $8, $14, 19\n"
+            	  " srl $9, $14, 5\n"
+            	  " andi $8, $8, 0x001F\n"
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $14, $14, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $14, $14, 0xF800\n"
+            	  " or  $14, $14, $8\n"
+            	  
+            	  " srl $8, $15, 19\n"
+            	  " srl $9, $15, 5\n"
+            	  " andi $8, $8, 0x001F\n"
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $15, $15, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $15, $15, 0xF800\n"
+            	  " or  $15, $15, $8\n"
+            	  
+            	  " srl $8, $24, 19\n"
+            	  " srl $9, $24, 5\n"
+            	  " andi $8, $8, 0x001F\n"
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $24, $24, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $24, $24, 0xF800\n"
+            	  " or  $24, $24, $8\n"
+            	  
+            	  " srl $8, $25, 19\n"
+            	  " srl $9, $25, 5\n"
+            	  " andi $8, $8, 0x001F\n"
+            	  " andi $9, $9, 0x07E0\n"
+            	  " sll $25, $25, 8\n"
+            	  " or  $8, $8, $9\n"
+            	  " andi $25, $25, 0xF800\n"
+            	  " or  $25, $25, $8\n"
+            	  
+            	  " move $8, %1\n"
+            	  " sh $10, 0($8)\n"
+            	  " sh $11, 2($8)\n"
+            	  " sh $12, 4($8)\n"
+            	  " sh $13, 6($8)\n"
+            	  " sh $14, 8($8)\n"
+            	  " sh $15, 10($8)\n"
+            	  " sh $24, 12($8)\n"
+            	  " sh $25, 14($8)\n"
+            	  
+            	  " .set reorder\n"
+            	  
+            	  ::"r" (pFrom), "r" (pTo)
+            	  :"$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$24", "$25", "memory"
+            	  );
+            	  pTo += 8;
+            	  pFrom += 8;
+#endif 
             }
-        } /* loop by rgb data columns */
+            switch (remains) {
+            	case 7:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 6:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 5:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 4:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 3:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 2:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 1:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            }
+        } else {
+
+            for (a = x; a < x + width; a++) {
+                jint value = rgbData[offset + (a - x) + dataRowIndex];
+                int idx = sbufRowIndex + a;
+    
+                CHECK_PTR_CLIP(sbuf, &(sbuf->pixelData[idx]));
+    
+                if ((value & 0xff000000) == 0xff000000) {
+                    // Pixel has no alpha or no transparency
+                    sbuf->pixelData[idx] = GXJ_RGB24TORGB16(value);
+                } else {
+                    if ((value & 0xff000000) != 0) {
+                        jint background = GXJ_RGB16TORGB24(sbuf->pixelData[idx]);
+                        jint composition = alphaComposition(value, background);
+                        sbuf->pixelData[idx] = GXJ_RGB24TORGB16(composition);
+                    }
+                }
+            } /* loop by rgb data columns */
+        }
     } /* loop by rgb data rows */
 }
 
@@ -351,13 +486,14 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 
     int t_width, width_src_incr, width_dest_incr;
     int t_height;
+    int blocks, remains;
 
     gxj_screen_buffer screen_buffer;
     gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
       gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
     int sbufWidth = sbuf->width;
 
-    REPORT_CALL_TRACE(LC_LOWUI, "gx_draw_pixels_8888_to_565()\n");	    
+    REPORT_CALL_TRACE(LC_LOWUI, "gx_draw_pixels_4444_to_565()\n");	    
 
     if(transform & TRANSFORM_INVERTED_AXES) {
         t_width  = nHeight;
@@ -398,25 +534,81 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
 
 	destBitsLimit = ((unsigned char *)sbuf->pixelData) + (sbuf->width * sbuf->height * pix_size_dest);
+
+       blocks = t_width / 8;
+       remains = t_width % 8;
+	
 	for (j = 0; j < t_height; j++) {
-		for (i = 0; i < t_width; i++) {
-			//M@x: never draw out of screen buffer
-			if (destBitsPtr >= destBitsLimit) {
-				return;
-			}
-			
-			alpha = srcBitsPtr[1]&0xF0;
-			if (alpha == 0xf0 || (processAlpha == KNI_FALSE)) {
-				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB444TORGB565(*(jshort*)srcBitsPtr);
-			} else if (alpha != 0x00) {  /* needs blending */
-                *(gxj_pixel_type*)destBitsPtr = alphaComposition_4444to565(*(jshort*)srcBitsPtr, *(gxj_pixel_type*)destBitsPtr);
-			}		
-			destBitsPtr += x_dest_incr;//*pix_size_dest;
-			srcBitsPtr += x_src_incr;//*pix_size_src;
-		}
-		destBitsPtr += y_dest_incr - (width_dest_incr);
-		srcBitsPtr += y_src_incr - (width_src_incr);
-	}
+           if (!processAlpha) {
+               if ((destBitsPtr < destBitsLimit)&& (destBitsPtr + width_dest_incr) < destBitsLimit) {
+                   int i;
+                   jshort* pFrom = (jshort*)srcBitsPtr;
+                   gxj_pixel_type* pTo = (gxj_pixel_type*)destBitsPtr;
+                 if (x_dest_incr > 0) {
+                   for (i = 0; i< blocks; i++) {
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   }
+                   switch (remains) {
+                   	case 7:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 6:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 5:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 4:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 3:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 2:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 1:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   }
+                 } else {
+                   for (i = 0; i< blocks; i++) {
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   }
+                   switch (remains) {
+                   	case 7:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 6:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 5:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 4:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 3:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 2:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   	case 1:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   }
+                 }
+           	 }
+               destBitsPtr += y_dest_incr;
+   		 srcBitsPtr += y_src_incr;
+           } else {
+   
+   		
+   		for (i = 0; i < t_width; i++) {
+   			//M@x: never draw out of screen buffer
+   			if (destBitsPtr < destBitsLimit) {
+   			
+       			alpha = srcBitsPtr[1]&0xF0;
+       			if (alpha == 0xf0) {
+       			    *(gxj_pixel_type*)destBitsPtr = GXJ_RGB444TORGB565(*(jshort*)srcBitsPtr);
+       			} else if (alpha != 0x00) {  /* needs blending */
+                                *(gxj_pixel_type*)destBitsPtr = alphaComposition_4444to565(*(jshort*)srcBitsPtr, *(gxj_pixel_type*)destBitsPtr);
+       			}		
+   			}
+   			destBitsPtr += x_dest_incr;//*pix_size_dest;
+   			srcBitsPtr += x_src_incr;//*pix_size_src;
+   		}
+   		destBitsPtr += y_dest_incr - (width_dest_incr);
+   		srcBitsPtr += y_src_incr - (width_src_incr);
+   	}
+    }
 }
 
 void
@@ -439,6 +631,8 @@ gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int
     int t_width, width_src_incr, width_dest_incr;
     int t_height;
 
+    int blocks, remains;
+
     gxj_screen_buffer screen_buffer;
     gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
       gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
@@ -485,28 +679,83 @@ gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
 
 	destBitsLimit = ((unsigned char *)sbuf->pixelData) + (sbuf->width * sbuf->height * pix_size_dest);
+
+	blocks = t_width / 8;
+       remains = t_width % 8;
+	
 	for (j = 0; j < t_height; j++) {
+           if (!processAlpha) {
+               if ((destBitsPtr < destBitsLimit)&& (destBitsPtr + width_dest_incr) < destBitsLimit) {
+                   int i;
+                   jint* pFrom = (jint*)srcBitsPtr;
+                   gxj_pixel_type* pTo = (gxj_pixel_type*)destBitsPtr;
+                 if (x_dest_incr > 0) {
+                   for (i = 0; i< blocks; i++) {
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   }
+                   switch (remains) {
+                   	case 7:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 6:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 5:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 4:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 3:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 2:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 1:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   }
+                 } else {
+                   for (i = 0; i< blocks; i++) {
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   }
+                   switch (remains) {
+                   	case 7:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 6:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 5:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 4:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 3:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 2:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   	case 1:  *pTo-- = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+                   }
+                 }
+           	 }
+               destBitsPtr += y_dest_incr;
+   		 srcBitsPtr += y_src_incr;
+        } else {
+
 		for (i = 0; i < t_width; i++) {
 			
 			//M@x: never draw out of screen buffer
-			if (destBitsPtr >= destBitsLimit) {
-				return;
+			if (destBitsPtr < destBitsLimit) {
+				
+        			alpha = srcBitsPtr[3];
+        			if (alpha == 0xff || (processAlpha == KNI_FALSE)) {
+        				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(*(jint*)srcBitsPtr);
+        			} else if (alpha != 0x00) {  /* needs blending */
+                        		jint background = GXJ_RGB16TORGB24(*(gxj_pixel_type*)destBitsPtr);
+                        		jint composition = alphaComposition(*(jint*)srcBitsPtr, background);
+                        		*(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(composition);
+        			}		
 			}
-			
-			alpha = srcBitsPtr[3];
-			if (alpha == 0xff || (processAlpha == KNI_FALSE)) {
-				*(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(*(jint*)srcBitsPtr);
-			} else if (alpha != 0x00) {  /* needs blending */
-                jint background = GXJ_RGB16TORGB24(*(gxj_pixel_type*)destBitsPtr);
-                jint composition = alphaComposition(*(jint*)srcBitsPtr, background);
-                *(gxj_pixel_type*)destBitsPtr = GXJ_RGB24TORGB16(composition);
-			}		
 			destBitsPtr += x_dest_incr;//*pix_size_dest;
 			srcBitsPtr += x_src_incr;//*pix_size_src;
 		}
 		destBitsPtr += y_dest_incr - (width_dest_incr);
 		srcBitsPtr += y_src_incr - (width_src_incr);
 	}
+    }
 }
 /**
  * Obtain the color that will be final shown 
