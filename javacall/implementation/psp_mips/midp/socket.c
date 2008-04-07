@@ -26,7 +26,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define DEBUG_JAVACALL_NETWORK 1
+//#define DEBUG_JAVACALL_NETWORK 1
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>

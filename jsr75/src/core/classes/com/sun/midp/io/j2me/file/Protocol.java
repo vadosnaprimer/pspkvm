@@ -924,20 +924,13 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
      * @throws IOException if the connection is closed
      */
     protected void ensureConnected() throws IOException {
-        System.out.println("ensureConnected>>"+fileRoot);
         if (!isRoot(fileRoot)) {
             throw new IOException("Root is not accessible");
         }
-        System.out.println("ensureConnected 2");
         if (fileHandler == null) {
-        	System.out.println("getFileHandler...");
-        
             fileHandler = getFileHandler();
-		System.out.println("fileHandler.connect...");
-            fileHandler.connect(fileRoot, filePath + fileName);
-		System.out.println("fileHandler.createPrivateDir...");
-            fileHandler.createPrivateDir(fileRoot);
-            System.out.println("ensureConnected<<");
+	     fileHandler.connect(fileRoot, filePath + fileName);
+	     fileHandler.createPrivateDir(fileRoot);
         }
     }
 
@@ -952,8 +945,6 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
      */
     private Connection openPrimImpl(String name, int mode, boolean timeouts, boolean unescape)
             throws IOException {
-
-            System.out.println("openPrimImpl:"+name);
 
         if (!name.startsWith("//")) {
             throw new IllegalArgumentException("Missing protocol separator");
@@ -1032,7 +1023,6 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
         }
 
         connectionOpen = true;
-        System.out.println("openPrimImpl <<");
         return this;
     }
 
@@ -1047,7 +1037,6 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
         for (int i = 0; i < r.size(); i++) {
         	
             String name = (String)r.elementAt(i);
-		System.out.println("isRoot: "+name);
             if (name.equals(root)) {
                 return true;
             }

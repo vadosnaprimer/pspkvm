@@ -51,7 +51,7 @@ extern "C" {
 #include <pspnet_resolver.h>
 #include <psputility.h>
 #include <psputility_netparam.h>
-#define DEBUG_JAVACALL_NETWORK 1
+//#define DEBUG_JAVACALL_NETWORK 1
 struct _DNSHandle;
 
 typedef struct _DNSHandle{
