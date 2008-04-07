@@ -31,10 +31,10 @@
 
 /* Define the module info section */
 #if _PSP_FW_VERSION >= 200
-PSP_MODULE_INFO("pspME", 0, 1, 1);
+PSP_MODULE_INFO("pspkvm", 0, 1, 1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER);
 #else
-PSP_MODULE_INFO("pspME", 0x1000, 1, 1);
+PSP_MODULE_INFO("pspkvm", 0x1000, 1, 1);
 PSP_MAIN_THREAD_ATTR(0);
 #endif
 
@@ -605,6 +605,16 @@ static void setup_gu() {
 	sceKernelDcacheWritebackAll();
 }
 
+int mk_dir(const char* dir, SceMode mode)
+{
+    	return sceIoMkdir(dir, mode);
+}
+
+int rm_dir(const char* dir)
+{
+    	return sceIoRmdir(dir);
+}
+
 int main(void)
 {
 	SceUID thid;
@@ -612,6 +622,8 @@ int main(void)
 
        printf("Setup GU\n");
 	setup_gu();       
+
+
 
 	printf("Loading network modules\n");
 #if _PSP_FW_VERSION >= 200

@@ -437,10 +437,10 @@ javacall_result javacall_fileconnection_create_dir(const javacall_utf16* dirName
         return JAVACALL_FAIL;
     }
 
-    //if(0 != mkdir(szOsFilename, 0777)) {
-    //    javacall_print("Error: javacall_fileconnection_create_dir(), cannot create directory\n");
-    //    return JAVACALL_FAIL;
-    //}
+    if(0 != mk_dir(szOsFilename, 0777)) {
+        javacall_print("Error: javacall_fileconnection_create_dir(), cannot create directory\n");
+        return JAVACALL_FAIL;
+    }
     return JAVACALL_OK;
 }
 
@@ -462,10 +462,10 @@ javacall_result javacall_fileconnection_delete_dir(const javacall_utf16* dirName
         return JAVACALL_FAIL;
     }
 
-    //if(0 != rmdir(szOsFilename)) {
-    //    javacall_print("Error: javacall_fileconnection_delete_dir(), cannot delete directory\n");
-    //    return JAVACALL_FAIL;
-    //}
+    if(0 != rm_dir(szOsFilename)) {
+        javacall_print("Error: javacall_fileconnection_delete_dir(), cannot delete directory\n");
+        return JAVACALL_FAIL;
+    }
     return JAVACALL_OK;
 }
 
@@ -561,7 +561,7 @@ javacall_result javacall_fileconnection_get_total_size(const javacall_utf16* pat
  */
 javacall_result javacall_fileconnection_get_mounted_roots(javacall_utf16* /* OUT */ roots,
                                                           int rootsLen) {
-    static char* root = "root/";
+    static char* root = "root/\nmusic/\nphoto/\nvideo/\nrecordings/\ntones/";
     int i;
     int len = strlen(root);
    
@@ -779,7 +779,7 @@ javacall_fileconnection_get_private_dir(javacall_utf16* /* OUT */ dir,
  */
 javacall_result javacall_fileconnection_get_localized_mounted_roots(javacall_utf16* /* OUT */ roots,
                                                                     int rootsLen) {
-    static char* root = "root/";
+    static char* root = "";
     int i;
     int len = strlen(root);
    
@@ -995,10 +995,11 @@ javacall_result javacall_fileconnection_get_path_for_root(const javacall_utf16* 
                                                           javacall_utf16* /* OUT */ pathName,
                                                           int pathNameLen) {
 
-    static char* realroot[] = {"ms0:/pspkvm/", "ms0:/pspkvm_pri/"};
-    static char* root[] = {"root/", "private/"};
+    static char* realroot[] = {"ms0:/pspkvm/", "ms0:/pspkvm_pri/", "ms0:/PSP/MUSIC/", "ms0:/PSP/PHOTO/", "ms0:/PSP/VIDEO/", "ms0:/pspkvm/", "ms0:/pspkvm/"};
+    static char* root[] = {"root/", "private/", "music/", "photo/", "video/", "recordings/", "tones/", };
     int i, r;
     int len;
+    int ne;
 
     for (r = 0; r < sizeof(root)/sizeof(char*); r++) {
     	 len = strlen(root[r]);
@@ -1006,10 +1007,15 @@ javacall_result javacall_fileconnection_get_path_for_root(const javacall_utf16* 
         	continue;
         }
     
-        for (i = 0; i <= len; i++) {
+        for (i = 0, ne = 0; i <= len; i++) {
         	if ((javacall_utf16)root[r][i] != rootName[i]) {
-        		continue;
+        		ne = 1;
+        		break;
         	}
+        }
+
+        if (ne) {
+            continue;
         }
         
         len = strlen(realroot[r]);
