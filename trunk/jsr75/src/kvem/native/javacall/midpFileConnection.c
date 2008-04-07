@@ -58,8 +58,7 @@ static jfieldID rootDirID     = NULL;
 #define FILE_IO_ERROR   -1
 #define FILE_OPEN_ERROR -2
 
-//#if ENABLE_DEBUG
-#if 1
+#if ENABLE_DEBUG
 #define DEBUG_PRINT(s)          javacall_print(s);
 #define DEBUG_PRINT1(s, a1)     javacall_printf(s, a1);
 #define DEBUG_PRINT2(s, a1, a2) javacall_printf(s, a1, a2);
