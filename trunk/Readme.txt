@@ -1,5 +1,5 @@
-pspkvm v0.3.0
-31 Mar. 2008
+pspkvm v0.3.1
+8 Apr. 2008
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
@@ -12,7 +12,9 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- Merge the source codes from 2 original project: pspkvm 0.1.0a and pspME 0.2.1 . Please see Features below for details.
+- Add JSR75(File Connection) support
+- Minor optimization of draw_rgb
+- Enlarge Java Heap to avoid OutOfMemoryError for some games
 
 --------------------------------
 General information
@@ -38,6 +40,7 @@ Fetures
 - MIDI & Wave audio playback support
 - Device emulation. You can choose device type to emulate for different screen sizes and key codes, either at installation time or from "Select device" menu
 - Change default key assignment for specific application.
+- JSR75(File Connection)
 
 --------------------------------
 TODO
@@ -45,6 +48,7 @@ TODO
 - Graphic optimization (High)
 - Game loading time optimization (High)
 - Resolve game compatibility regression (High)
+- Virtual keyboard (High)
 - JSR179 implementation (Medium)
 - JSR184 (Low)
 - MIPS JIT compiler and Interpreter generator (Low)
@@ -55,6 +59,7 @@ Bugs and known issues
 Known issues:
 - javacall_file_truncate doesn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
 - Multimedia temporary files may leave on your memory stick sometimes, especially after VM crash. They're usually not big, but if you wanna delete the by hands, just goto your PSP's /PSP/GAME/pspkvm/ directory, find the file whose name likes xxxxxxxx_tmp_mus.mid, delete them.
+- Fileconnection rmdir operation may fail for unknown reasons
 
 Regrssions (comparing with pspkvm 0.1.0a):
 - Game compatibility: Since we changed our code base to phoneME, some games MAY NOT run correctly on pspkvm 0.3.0, which ran well on pspkvm 0.1.0a. Although we tested many contents before this release, we still belive that there must be some app/games have regression. Any bug report of compatibility regressions is welcome, and important!
