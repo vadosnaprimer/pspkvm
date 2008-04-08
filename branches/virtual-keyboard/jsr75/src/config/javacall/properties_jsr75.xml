@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="html.xsl"?>
+<!DOCTYPE configuration SYSTEM "../common/configuration.dtd">
+<!--
+  
+  Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+  
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License version
+  2 only, as published by the Free Software Foundation.
+  
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License version 2 for more details (a copy is
+  included at /legal/license.txt).
+  
+  You should have received a copy of the GNU General Public License
+  version 2 along with this work; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  02110-1301 USA
+  
+  Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+  Clara, CA 95054 or visit www.sun.com if you need additional
+  information or have any questions.
+  
+-->
+<!-- System-independent JSR 75 properties required by the specification -->
+<configuration>
+<properties>
+<!-- System  properties (visible via System.getProperty() -->
+  <property Key="file.separator"
+      Value=""
+      Scope="system"
+      Callout="getFileSeparator"
+      Comment="The file separator character(s) for the underlying platform."/>
+
+  <property Key="fileconn.dir.photos"
+      Value=""
+      Scope="system"
+      Callout="getPhotosDir"
+      Comment="The directory for photos and other images."/>
+
+  <property Key="fileconn.dir.videos"
+      Value=""
+      Scope="system"
+      Callout="getVideosDir"
+      Comment="The directory for video clips."/>
+
+  <property Key="fileconn.dir.graphics"
+      Value=""
+      Scope="system"
+      Callout="getGraphicsDir"
+      Comment="The directory for clip art graphics."/>
+
+  <property Key="fileconn.dir.tones"
+      Value=""
+      Scope="system"
+      Callout="getTonesDir"
+      Comment="The directory for ring tones and other audio files."/>
+
+  <property Key="fileconn.dir.music"
+      Value=""
+      Scope="system"
+      Callout="getMusicDir"
+      Comment="The directory for music."/>
+
+  <property Key="fileconn.dir.recordings"
+      Value=""
+      Scope="system"
+      Callout="getRecordingsDir"
+      Comment="The directory for voice recordings."/>
+
+  <property Key="fileconn.dir.private"
+      Value=""
+      Scope="system"
+      Callout="getPrivateDir"
+      Comment="The private work directory for MIDlet suite."/>
+
+  <property Key="fileconn.dir.photos.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedPhotosDir"
+      Comment="The localized name of photos and other images directory."/>
+
+  <property Key="fileconn.dir.videos.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedVideosDir"
+      Comment="The localized name of video clips directory."/>
+
+  <property Key="fileconn.dir.graphics.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedGraphicsDir"
+      Comment="The localized name of clip art graphics directory."/>
+
+  <property Key="fileconn.dir.tones.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedTonesDir"
+      Comment="The localized name of ring tones and other audio files directory."/>
+
+  <property Key="fileconn.dir.music.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedMusicDir"
+      Comment="The localized name of music directory."/>
+
+  <property Key="fileconn.dir.recordings.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedRecordingsDir"
+      Comment="The localized name of voice recordings directory."/>
+
+  <property Key="fileconn.dir.private.name"
+      Value=""
+      Scope="system"
+      Callout="getLocalizedPrivateDir"
+      Comment="The localized name of private directory for MIDlet suite."/>
+
+<!-- Internal properties (visible via Configuration.getProperty() -->
+  <property Key="PIMRootDir"
+      Value="file:///C:/"
+      Scope="internal"
+      Comment="The root directory that contains PIM data."/>
+      
+  <property Key="DefaultContactList"
+      Value=""
+      Scope="internal"
+      Callout="getDefaultContactList"
+      Comment="The directory name of the default contact list."/> 
+
+  <property Key="DefaultEventList"
+      Value=""
+      Scope="internal"
+      Callout="getDefaultEventList"
+      Comment="The directory name of the default event list."/> 
+
+  <property Key="DefaultTodoList"
+      Value=""
+      Scope="internal"
+      Callout="getDefaultTodoList"
+      Comment="The directory name of the default todo list."/> 
+
+  <property Key="file.linebreak"
+      Value="\r\n"
+      Scope="internal"
+      Comment="The which terminates a line in text files."/>
+</properties>
+</configuration>
