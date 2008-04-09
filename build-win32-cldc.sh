@@ -183,6 +183,7 @@ then
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			USE_MULTIPLE_ISOLATES=true \
 			skip_ams_executables=false \
+			SOFT_KEYBOARD_ENABLED=true \
 			${DEBUG_OPTION}
 		if [ $? != 0 ];then
 			echo make failed for ${BUILD_TARGET} module ${BUILDMODULE}
