@@ -211,3 +211,7 @@ char* strdup(const char* str) {
     return p;                            /* null if p could not be allocated */
 }
 #endif /* NO_STRDUP */
+
+char* midpMicroeditionPlatform() {
+    return "NokiaN73";
+}
