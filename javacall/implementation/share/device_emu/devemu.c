@@ -177,6 +177,10 @@ static DEVICE_INFO _devices[] = {
 	240, 320, -1, -2, -3, -4, -5, -6, -7, -8, 90},
 	{"Nokia(480*272, CW90)",
 	272, 480, -1, -2, -3, -4, -5, -6, -7, -8, 90},
+	{"Motorola(320*240), CW90",
+	240, 320, -1, -6, -2, -5, -20, -21, -22, -9, 90},
+	{"Motorola(480*272), CW90",
+	272, 480, -1, -6, -2, -5, -20, -21, -22, -9, 90},	
 };
 
 static int DEVICE_COUNT = sizeof(_devices)/sizeof(_devices[0]);
@@ -237,25 +241,13 @@ int javacall_devemu_get_keycode(int id, javacall_key javacallkey) {
     
     switch (javacallkey) {
     	case JAVACALL_KEY_UP:
-    		if (_devices[id].ROTATE_ANGLE == 90)
-    			return _devices[id].KEY_LEFT;
-    		else
-    			return _devices[id].KEY_UP;
+    		return _devices[id].KEY_UP;
     	case JAVACALL_KEY_DOWN:
-    		if (_devices[id].ROTATE_ANGLE == 90)
-    			return _devices[id].KEY_RIGHT;
-    		else
-    			return _devices[id].KEY_DOWN;
+    		return _devices[id].KEY_DOWN;
     	case JAVACALL_KEY_LEFT:
-    		if (_devices[id].ROTATE_ANGLE == 90)
-    			return _devices[id].KEY_DOWN;
-    		else
-    			return _devices[id].KEY_LEFT;
+    		return _devices[id].KEY_LEFT;
     	case JAVACALL_KEY_RIGHT:
-    		if (_devices[id].ROTATE_ANGLE == 90)
-    			return _devices[id].KEY_UP;
-    		else
-    			return _devices[id].KEY_RIGHT;
+    		return _devices[id].KEY_RIGHT;
     	case JAVACALL_KEY_SOFT1:
     		return _devices[id].KEY_SOFT1;
     	case JAVACALL_KEY_SOFT2:
