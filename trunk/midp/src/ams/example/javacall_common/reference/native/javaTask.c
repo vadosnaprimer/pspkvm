@@ -68,20 +68,22 @@ void JavaTask(void) {
 
     REPORT_CRIT(LC_CORE,"JavaTask() >>\n");
 
+    if (midpInitializeMemory(-1) != 0) {
+        REPORT_CRIT(LC_CORE,"JavaTask() >> midpInitializeMemory()  Not enough memory.\n");
+        return;
+    }
+    REPORT_INFO(LC_CORE,"JavaTask() >> memory initialized.\n");
+
+    if (JAVACALL_OK != javacall_initialize_configurations()) {
+        REPORT_WARN(LC_CORE,"JavaTask() >> configuration initialize failed.\n");
+    }
+
     //javacall_global_init();
     javacall_events_init();
-    javacall_initialize_configurations();
     javacall_keymap_init();
 
     /* Outer Event Loop */
-    while (JavaTaskIsGoOn) {
-
-        if (midpInitializeMemory(-1) != 0) {
-            REPORT_CRIT(LC_CORE,"JavaTask() >> midpInitializeMemory()  Not enough memory.\n");
-            break;
-        }
-        REPORT_INFO(LC_CORE,"JavaTask() >> memory initialized.\n");
-
+    while (JavaTaskIsGoOn) {        
         res = javacall_event_receive(timeTowaitInMillisec,
             (unsigned char *)binaryBuffer, binaryBufferMaxLen, &outEventLen);
 
@@ -147,6 +149,8 @@ void JavaTask(void) {
         midpFinalizeMemory();
 
     }   /* end of while 'JavaTaskIsGoOn' */
+
+    javacall_finalize_configurations();
 
     REPORT_CRIT(LC_CORE,"JavaTask() <<\n");
 } /* end of JavaTask */

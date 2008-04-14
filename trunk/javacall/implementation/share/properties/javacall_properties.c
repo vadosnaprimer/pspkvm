@@ -33,13 +33,15 @@ extern "C" {
 #include "javacall_properties.h"
 #include "javacall_config_db.h"
 
-static unsigned short property_file_name[] = {'j','w','c','_','p','r','o','p','e','r','t','i','e','s','.','i','n','i',0};
+static unsigned short property_file_name[] = {'.','/','p','s','p','k','v','m','.','i','n','i',0};
 
 static javacall_handle handle = NULL;
 static int property_was_updated = 0;
 
 static const char application_prefix[] = "application:";
 static const char internal_prefix[] = "internal:";
+static const char jsr75_prefix[] = "jsr75:";
+static const char ams_prefix[] = "ams:";
 
 /**
  * Initializes the configuration sub-system.
@@ -50,10 +52,14 @@ javacall_result javacall_initialize_configurations(void) {
     int file_name_len = sizeof(property_file_name)/sizeof(unsigned short);
     property_was_updated = 0;
 
+    printf("javacall_configdb_load...\n");
+
     handle = javacall_configdb_load(property_file_name, file_name_len);
     if (handle == NULL) {
+    	printf("load fail\n");
         return JAVACALL_FAIL;
     }
+    printf("load ok\n");
     return JAVACALL_OK;
 }
 
@@ -92,6 +98,10 @@ javacall_result javacall_get_property(const char* key,
         joined_key = javautil_string_strcat(application_prefix, key);
     } else if (JAVACALL_INTERNAL_PROPERTY == type) {
         joined_key = javautil_string_strcat(internal_prefix, key);
+    } else if (JAVACALL_JSR75_PROPERTY == type) {
+        joined_key = javautil_string_strcat(jsr75_prefix, key);
+    } else if (JAVACALL_AMS_PROPERTY == type) {
+        joined_key = javautil_string_strcat(ams_prefix, key);
     }
 
     if (joined_key == NULL) {
@@ -134,6 +144,10 @@ javacall_result javacall_set_property(const char* key,
         joined_key = javautil_string_strcat(application_prefix, key);
     } else if (JAVACALL_INTERNAL_PROPERTY == type) {
         joined_key = javautil_string_strcat(internal_prefix, key);
+    } else if (JAVACALL_JSR75_PROPERTY == type) {
+        joined_key = javautil_string_strcat(jsr75_prefix, key);
+    } else if (JAVACALL_AMS_PROPERTY == type) {
+        joined_key = javautil_string_strcat(ams_prefix, key);
     }
 
     if (joined_key == NULL) {
