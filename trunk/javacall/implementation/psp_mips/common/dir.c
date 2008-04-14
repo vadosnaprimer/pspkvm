@@ -34,7 +34,7 @@ extern "C" {
 #include "string.h"
 #include "dirent.h"
 
-#define DEBUG_JAVACALL_DIR 1
+//#define DEBUG_JAVACALL_DIR 1
 
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen);
 
