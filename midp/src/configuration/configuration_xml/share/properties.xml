@@ -172,8 +172,9 @@
 		Scope="system"
 		Comment="System locale."/>
   <property Key="microedition.platform" 
-		Value="j2me" 
+		Value="" 
 		Scope="system"
+		Callout="midpMicroeditionPlatform"
 		Comment="Platform name."/>
   <!-- property Key="microedition.encoding" 
 		Value="ISO8859_1" 
