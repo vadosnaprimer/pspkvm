@@ -38,7 +38,7 @@ PSP_MODULE_INFO("pspkvm", 0x1000, 1, 1);
 PSP_MAIN_THREAD_ATTR(0);
 #endif
 
-PSP_HEAP_SIZE_KB(8000);
+PSP_HEAP_SIZE_KB(7000);
 
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
@@ -364,6 +364,7 @@ int KeyThread(SceSize args, void *argp)
 		    int id;
 		    int keys;
 		    int shift, lastShift; // non-zero if "shift" key is pressed
+		    int rotate;
 		    javacall_keymap* keymap;
 
                   if ((pspKey == lastPspKey) && lastPressedJavakey != 0) {
@@ -423,21 +424,51 @@ int KeyThread(SceSize args, void *argp)
 		    keys = javacall_keymap_size();
 		    shift = pspKey & (SHIFT_KEY1 | SHIFT_KEY2);
 		    lastShift = lastPspKey & (SHIFT_KEY1 | SHIFT_KEY2);
+		    rotate = javacall_devemu_get_rotation(javacall_devemu_get_current_device());
 
 		    for (i = 0 ; i < keys; i++) {
 		    	//printf("keymap[i].nativekey:%08x, javakey:%d\n", keymap[i].nativeKey, keymap[i].javaKey);
 		    	if (keymap[i].javaKey == JAVACALL_KEY_INVALID) {
 		    		continue;
 		    	}
+
+		    	int javaKey = keymap[i].javaKey;
+		    	if (rotate == 90) {
+		    		switch (javaKey) {
+		    			case JAVACALL_KEY_UP:
+		    				javaKey = JAVACALL_KEY_LEFT;
+		    				break;
+		    			case JAVACALL_KEY_DOWN:
+		    				javaKey = JAVACALL_KEY_RIGHT;
+		    				break;
+		    			case JAVACALL_KEY_LEFT:
+		    				javaKey = JAVACALL_KEY_DOWN;
+		    				break;
+		    			case JAVACALL_KEY_RIGHT:
+		    				javaKey = JAVACALL_KEY_UP;
+		    				break;
+		    			case JAVACALL_KEY_2:
+		    				javaKey = JAVACALL_KEY_4;
+		    				break;
+		    			case JAVACALL_KEY_8:
+		    				javaKey = JAVACALL_KEY_6;
+		    				break;
+		    			case JAVACALL_KEY_4:
+		    				javaKey = JAVACALL_KEY_8;
+		    				break;
+		    			case JAVACALL_KEY_6:
+		    				javaKey = JAVACALL_KEY_2;		    				
+		    		}
+		    	}
 		    	int pressed = ((keymap[i].nativeKey & pspKey) && (keymap[i].shift?shift:!shift));
 		    	int lastPressed = ((keymap[i].nativeKey& lastPspKey) && (keymap[i].shift?lastShift:!lastShift));
 		    	if (pressed!= lastPressed) {
 			    	if (pressed) {			    		
-			    		javanotify_key_event(keymap[i].javaKey, JAVACALL_KEYPRESSED);
-			    		lastPressedJavakey = keymap[i].javaKey;
+			    		javanotify_key_event(javaKey, JAVACALL_KEYPRESSED);
+			    		lastPressedJavakey = javaKey;
 				    //printf("key %d pressed\n", keymap[i].javaKey);
 				} else {
-				    	javanotify_key_event(keymap[i].javaKey, JAVACALL_KEYRELEASED);
+				    	javanotify_key_event(javaKey, JAVACALL_KEYRELEASED);
 				    	lastPressedJavakey = 0;
 				   	 //printf("key %d released\n", keymap[i].javaKey); 	
 				}

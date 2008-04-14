@@ -136,14 +136,14 @@ static void pspFrameEnd(int use_psp_gu) {
 	}
 }
 
-static void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int slice)
+static void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int slice, int rot)
 {
 	int start, end;
 	float xScale = ((float)dw)/((float)sw);
 	float dxSlice = xScale * slice;
 	float dx_f = dx;
 	// blit maximizing the use of the texture-cache
-
+	if (rot == 0) {
 	for (start = sx, end = sx+sw; start < end; start += slice, dx_f += dxSlice)
 	{
 		struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
@@ -158,6 +158,24 @@ static void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int dw,
 		vertices[1].x = dx_f + xScale*width; vertices[1].y = dy + dh; vertices[1].z = 0;
 		
 		sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_5650|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+	}
+	} else {
+	
+	for (start = sx, end = sx+sw; start < end; start += slice, dx_f += dxSlice)
+	{
+		struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
+		int width = (start + slice) < end ? slice : end-start;
+
+		vertices[0].u = start; vertices[0].v = sy;
+		vertices[0].color = 0;
+		vertices[0].x = 480 - dy; vertices[0].y = dx_f; vertices[0].z = 0;
+
+		vertices[1].u = start + width; vertices[1].v = sy + sh;
+		vertices[1].color = 0;
+		vertices[1].x = 480 - dy- dh; vertices[1].y = dx_f + xScale*width; vertices[1].z = 0;
+		
+		sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_COLOR_5650|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+	}
 	}
 }
 
@@ -335,27 +353,42 @@ javacall_result javacall_lcd_flush_partial(int ystart, int yend){
     		int scr_y = 0;
     		int scr_w = vscr_w;
     		int scr_h = vscr_h;
-    		//if (PHONE->ROTATE_ANGLE == 90) {
-    		//	CopyImageCW90(screen.image, screen.width,
-    		//			(480-scr_h)/2,(272-scr_w)/2,
-    		//			screenImage.image, screenImage.width,
-    		//			0, 0, scr_w, scr_h);
-    		//}
-    		//else {
-    			if (scr_w <= 480 && scr_h <= 272){
-    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-scr_w)/2,(272-scr_h)/2,scr_w,scr_h,16);
+    		if (javacall_devemu_get_rotation(javacall_devemu_get_current_device()) == 90) {
+    			/*
+    			CopyImageCW90(screen.image, screen.width,
+    					(480-scr_h)/2,(272-scr_w)/2,
+    					screenImage.image, screenImage.width,
+    					0, 0, scr_w, scr_h);
+    			*/
+    			if (scr_w <= 272 && scr_h <= 480){
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(272-scr_w)/2,(480-scr_h)/2,scr_w,scr_h,16, 90);
     			}
-    			else if (scr_h/272.0f >= scr_h/480.0f){
+    			else if (scr_w/272.0f >= scr_h/480.0f){
+    				const int des_h = scr_h*272/scr_w;
+    				const int des_w = 272;
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,0,(480-des_h)/2,des_w,des_h,16, 90);
+    			}
+    			else {
+    				const int des_h = 480;
+    				const int des_w = scr_w*480/scr_h;
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(272-des_w)/2,0,des_w,des_h,16, 90);
+    			}
+    		}
+    		else {
+    			/*if (scr_w <= 480 && scr_h <= 272){
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-scr_w)/2,(272-scr_h)/2,scr_w,scr_h,16, 0);
+    			}
+    			else */if (scr_h/272.0f >= scr_w/480.0f){
     				const int des_w = scr_w*272/scr_h;
     				const int des_h = 272;
-    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16);
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16, 0);
     			}
     			else {
     				const int des_w = 480;
     				const int des_h = scr_h*480/scr_w;
-    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16);
+    				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16, 0);
     			}
-    		//}
+    		}
     		pspFrameEnd(1);
     	}
     } else {
