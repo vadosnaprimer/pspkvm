@@ -392,12 +392,7 @@ static void StoreMIDPEventInVmThreadImp(MidpEvent event, int isolateId) {
 void
 StoreMIDPEventInVmThread(MidpEvent event, int isolateId) {
 
-    int max_isolates = getInternalPropertyInt("MAX_ISOLATES");
-
-    if (0 == max_isolates) {
-        REPORT_ERROR(LC_AMS, "MAX_ISOLATES property not set");
-        return;
-    }
+    int max_isolates = MAX_ISOLATES;
 
     if( -1 != isolateId ) {
         StoreMIDPEventInVmThreadImp(event, isolateId);

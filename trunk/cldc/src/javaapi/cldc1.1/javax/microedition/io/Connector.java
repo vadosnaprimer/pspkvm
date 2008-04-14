@@ -140,9 +140,9 @@ public class Connector {
     static {
         /* Set up the platform name */
         platform = System.getProperty("microedition.platform");
-        if ((platform == null) || (platform.equals("generic"))) {
+        //if ((platform == null) || (platform.equals("generic"))) {
             platform = "j2me";
-        }
+        //}
 
         /* Set up the library class root path */
         /* This may vary from one CLDC implementation to another */
