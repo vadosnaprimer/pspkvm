@@ -34,6 +34,8 @@ extern "C" {
 #include "string.h"
 #include "dirent.h"
 
+#define DEBUG_JAVACALL_DIR 1
+
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen);
 
 typedef struct {
@@ -77,18 +79,24 @@ javacall_handle javacall_dir_open(const javacall_utf16* path, int pathLen) {
         handle = NULL;
     }
 #endif
+#ifdef DEBUG_JAVACALL_DIR
     javacall_print("javacall_dir_open:\n");
+#endif
     char* szPath = javacall_UNICODEsToUtf8(path, pathLen);
     if (!szPath) {
         return NULL;
     }
 
-    
+#ifdef DEBUG_JAVACALL_DIR    
    javacall_print(szPath);
    javacall_print("\n");
-    
+#endif    
+
     DIR* handle = opendir(szPath);
+
+#ifdef DEBUG_JAVACALL_DIR
     printf("return %x\n", handle);
+#endif
     return (javacall_handle)handle;
 }
     
@@ -158,7 +166,9 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle, int* /*OUT*/ outFi
     struct dirent* d = readdir((DIR*)handle);
     if (d != NULL) {
         int len = strlen(d->d_name);
+#ifdef DEBUG_JAVACALL_DIR
         javacall_printf("javacall_dir_get_next: %s, len=%d, dir=%d\n", d->d_name, len, (d->d_stat.st_attr & FIO_SO_IFDIR)?1:0);
+#endif
     	if (len >= JAVACALL_MAX_FILE_NAME_LENGTH - 1) {
     	    return NULL;
     	} else {
