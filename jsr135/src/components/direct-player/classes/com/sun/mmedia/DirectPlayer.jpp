@@ -233,6 +233,7 @@ public class DirectPlayer extends BasicPlayer
 
         if (stream != null) {
             contentLength = stream.getContentLength();
+            if (contentLength == 0) contentLength = -1;
         } else {
             contentLength = 0;
         }
