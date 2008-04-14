@@ -102,7 +102,7 @@ then
 			JAVACALL_OUTPUT_DIR=${JAVACALL_OUTPUT_DIR} \
 			USE_JSR_135=true \
 			USE_JSR_75=${USE_JSR_75} \
-			USE_PROPERTIES_FROM_FS=false \
+			USE_PROPERTIES_FROM_FS=true \
 			${DEBUG_OPTION}
 	fi
 	if [ $? != 0 ];then
