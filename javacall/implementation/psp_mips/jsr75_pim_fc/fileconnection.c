@@ -93,11 +93,12 @@ extern "C" {
 #include "javacall_file.h"
 #include "javautil_unicode.h"
 #include "javacall_fileconnection.h"
+#include "javacall_properties.h"
 
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen);
 
-static const char* photos_dir     = "photos/";
-static const char* videos_dir     = "videos/";
+static const char* photos_dir     = "photo/";
+static const char* videos_dir     = "video/";
 static const char* graphics_dir   = "graphics/";
 static const char* tones_dir      = "tones/";
 static const char* music_dir      = "music/";
@@ -111,13 +112,13 @@ static int music_dir_len;
 static int recordings_dir_len;
 static int private_dir_len;
 
-static const char* localized_photos_dir     = "My Photos";
-static const char* localized_videos_dir     = "My Videos";
-static const char* localized_graphics_dir   = "My Graphics";
-static const char* localized_tones_dir      = "My Tones";
-static const char* localized_music_dir      = "My Music";
-static const char* localized_recordings_dir = "My Recordings";
-static const char* localized_private_dir    = "Private";
+static const char* localized_photos_dir     = "photo/";
+static const char* localized_videos_dir     = "video/";
+static const char* localized_graphics_dir   = "graphics/";
+static const char* localized_tones_dir      = "tones/";
+static const char* localized_music_dir      = "music/";
+static const char* localized_recordings_dir = "recordings/";
+static const char* localized_private_dir    = "private/";
 static int localized_photos_dir_len;
 static int localized_videos_dir_len;
 static int localized_graphics_dir_len;
@@ -126,6 +127,7 @@ static int localized_music_dir_len;
 static int localized_recordings_dir_len;
 static int localized_private_dir_len;
 
+static int _fc_not_initialized = 0;
 
 /**
  * Makes all the required initializations for JSR 75 FileConnection
@@ -133,7 +135,9 @@ static int localized_private_dir_len;
  *         <tt>JAVACALL_FAIL</tt> if an error occured or feature is not supported
  */
 javacall_result javacall_fileconnection_init(void) {
+#ifdef DEBUG_JAVACALL_FILECONNECTION
     javacall_printf("javacall_fileconnection_init\n");
+#endif
 
     photos_dir_len = strlen(photos_dir);
     videos_dir_len = strlen(videos_dir);
@@ -151,7 +155,14 @@ javacall_result javacall_fileconnection_init(void) {
     localized_recordings_dir_len = strlen(localized_recordings_dir);
     localized_private_dir_len = strlen(localized_private_dir);
 
+    _fc_not_initialized = 1;
     return JAVACALL_OK;
+}
+
+inline static ensureInitialized() {
+    if (!_fc_not_initialized) {
+        javacall_fileconnection_init();
+    }
 }
 
 /**
@@ -405,6 +416,10 @@ javacall_result javacall_fileconnection_is_directory(const javacall_utf16* pathN
     int attrs;
     struct stat st;
 
+#ifdef DEBUG_JAVACALL_FILECONNECTION
+    javacall_printf("javacall_fileconnection_is_directory: %s\n", szOsFilename);
+#endif
+
     if(!szOsFilename) {
         javacall_print("Error: javacall_fileconnection_is_directory(), path name is too long\n");
         return JAVACALL_FAIL;
@@ -412,7 +427,7 @@ javacall_result javacall_fileconnection_is_directory(const javacall_utf16* pathN
 
     attrs = stat(szOsFilename, &st);
     if (attrs) {
-        javacall_print("Error: javacall_fileconnection_is_directory(), path not found\n");
+        javacall_printf("Error: javacall_fileconnection_is_directory(), path not found: %s\n", szOsFilename);
         return JAVACALL_FAIL;
     }
 
@@ -561,7 +576,7 @@ javacall_result javacall_fileconnection_get_total_size(const javacall_utf16* pat
  */
 javacall_result javacall_fileconnection_get_mounted_roots(javacall_utf16* /* OUT */ roots,
                                                           int rootsLen) {
-    static char* root = "root/\nmusic/\nphoto/\nvideo/\nrecordings/\ntones/";
+    static char* root = "root/\nmusic/\nphoto/\nvideo/\ngraphics/\nrecordings/\ntones/";
     int i;
     int len = strlen(root);
    
@@ -591,6 +606,8 @@ javacall_result
 javacall_fileconnection_get_photos_dir(javacall_utf16* /* OUT */ dir,
                                        int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen <= photos_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_photos_dir(), buffer is too small\n");
@@ -618,6 +635,8 @@ javacall_result
 javacall_fileconnection_get_videos_dir(javacall_utf16* /* OUT */ dir,
                                        int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen <= videos_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_videos_dir(), buffer is too small\n");
@@ -645,6 +664,8 @@ javacall_result
 javacall_fileconnection_get_graphics_dir(javacall_utf16* /* OUT */ dir,
                                          int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen < graphics_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_graphics_dir(), buffer is too small\n");
@@ -672,6 +693,8 @@ javacall_result
 javacall_fileconnection_get_tones_dir(javacall_utf16* /* OUT */ dir,
                                       int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen < tones_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_tones_dir(), buffer is too small\n");
@@ -699,6 +722,8 @@ javacall_result
 javacall_fileconnection_get_music_dir(javacall_utf16* /* OUT */ dir,
                                       int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen < music_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_music_dir(), buffer is too small\n");
@@ -726,6 +751,8 @@ javacall_result
 javacall_fileconnection_get_recordings_dir(javacall_utf16* /* OUT */ dir,
                                            int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen < recordings_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_recordings_dir(), buffer is too small\n");
@@ -755,6 +782,8 @@ javacall_result
 javacall_fileconnection_get_private_dir(javacall_utf16* /* OUT */ dir,
                                         int dirLen) {
     int i;
+
+    ensureInitialized();
     
     if (dirLen < private_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_private_dir(), buffer is too small\n");
@@ -779,7 +808,7 @@ javacall_fileconnection_get_private_dir(javacall_utf16* /* OUT */ dir,
  */
 javacall_result javacall_fileconnection_get_localized_mounted_roots(javacall_utf16* /* OUT */ roots,
                                                                     int rootsLen) {
-    static char* root = "";
+    static char* root = "root/;music/;photo/;video/;graphics/;recordings/;tones/";
     int i;
     int len = strlen(root);
    
@@ -808,6 +837,8 @@ javacall_result
 javacall_fileconnection_get_localized_photos_dir(javacall_utf16* /* OUT */ name,
                                                  int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_photos_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_photos_dir(), buffer is too small\n");
@@ -834,6 +865,8 @@ javacall_result
 javacall_fileconnection_get_localized_videos_dir(javacall_utf16* /* OUT */ name,
                                                  int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_videos_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_videos_dir(), buffer is too small\n");
@@ -860,6 +893,8 @@ javacall_result
 javacall_fileconnection_get_localized_graphics_dir(javacall_utf16* /* OUT */ name,
                                                    int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_graphics_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_graphics_dir(), buffer is too small\n");
@@ -887,6 +922,8 @@ javacall_result
 javacall_fileconnection_get_localized_tones_dir(javacall_utf16* /* OUT */ name,
                                                 int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_tones_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_tones_dir(), buffer is too small\n");
@@ -913,6 +950,8 @@ javacall_result
 javacall_fileconnection_get_localized_music_dir(javacall_utf16* /* OUT */ name,
                                                 int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_music_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_music_dir(), buffer is too small\n");
@@ -939,6 +978,8 @@ javacall_result
 javacall_fileconnection_get_localized_recordings_dir(javacall_utf16* /* OUT */ name,
                                                      int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_recordings_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_recordings_dir(), buffer is too small\n");
@@ -964,6 +1005,8 @@ javacall_fileconnection_get_localized_recordings_dir(javacall_utf16* /* OUT */ n
 javacall_result javacall_fileconnection_get_localized_private_dir(javacall_utf16* /* OUT */ name,
                                                   int nameLen) {
     int i;
+
+    ensureInitialized();
     
     if (nameLen < localized_private_dir_len) {
         javacall_print("Error: javacall_fileconnection_get_localized_private_dir(), buffer is too small\n");
@@ -995,13 +1038,26 @@ javacall_result javacall_fileconnection_get_path_for_root(const javacall_utf16* 
                                                           javacall_utf16* /* OUT */ pathName,
                                                           int pathNameLen) {
 
-    static char* realroot[] = {"ms0:/pspkvm/", "ms0:/pspkvm_pri/", "ms0:/PSP/MUSIC/", "ms0:/PSP/PHOTO/", "ms0:/PSP/VIDEO/", "ms0:/pspkvm/", "ms0:/pspkvm/"};
-    static char* root[] = {"root/", "private/", "music/", "photo/", "video/", "recordings/", "tones/", };
+    static char* realroot_def[] = {"ms0:/pspkvm/", "ms0:/pspkvm_pri/", "ms0:/PSP/MUSIC/", "ms0:/PSP/PHOTO/", "ms0:/PSP/VIDEO/", "ms0:/pspkvm/", "ms0:/pspkvm/", "ms0:/pspkvm/"};
+    static char* root[] = {"root/", "private/", "music/", "photo/", "video/", "recordings/", "tones/", "graphics/"};
+    static char* propname[] = {"root_dir", "private_dir", "music_dir", "photo_dir", "video_dir", "recordings_dir", "tones_dir", "graphics_dir"};
     int i, r;
     int len;
     int ne;
+    char* realroot[sizeof(root)/sizeof(char*)] = {0};
+    
+#ifdef DEBUG_JAVACALL_FILECONNECTION
+    javacall_printf("javacall_fileconnection_get_path_for_root:%s\n", javacall_UNICODEsToUtf8(rootName, rootNameLen));
+#endif
 
     for (r = 0; r < sizeof(root)/sizeof(char*); r++) {
+    	 if (realroot[r] == 0) {
+    	 	if (JAVACALL_OK != javacall_get_property(propname[r], JAVACALL_JSR75_PROPERTY, &realroot[r]) ||
+    	 	     realroot[r] == NULL) {
+    	 		realroot[r] = realroot_def[r];
+    	 	}
+    	 }
+    	 
     	 len = strlen(root[r]);
         if (rootNameLen != len) {
         	continue;
@@ -1031,8 +1087,11 @@ javacall_result javacall_fileconnection_get_path_for_root(const javacall_utf16* 
         
         return JAVACALL_OK;
     }
-
+    
+#ifdef DEBUG_JAVACALL_FILECONNECTION
     javacall_print("javacall_fileconnection_get_path_for_root failed: no root matched\n");
+#endif
+
     return JAVACALL_FAIL;
 }
 

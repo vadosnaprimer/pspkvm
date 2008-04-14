@@ -307,8 +307,7 @@ void midp_file_cache_write(char** ppszError, int handle,
     *ppszError = NULL;
 
 	if (0 == rmsCacheLimit) {
-		REPORT_ERROR(LC_AMS, "RMS_CACHE_LIMIT property not set");
-		return;
+		rmsCacheLimit = RMS_CACHE_LIMIT;
 	}
 
     if (length <= 0) {

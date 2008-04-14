@@ -129,19 +129,16 @@
   <property Key="DefaultContactList"
       Value=""
       Scope="internal"
-      Callout="getDefaultContactList"
       Comment="The directory name of the default contact list."/> 
 
   <property Key="DefaultEventList"
       Value=""
       Scope="internal"
-      Callout="getDefaultEventList"
       Comment="The directory name of the default event list."/> 
 
   <property Key="DefaultTodoList"
       Value=""
       Scope="internal"
-      Callout="getDefaultTodoList"
       Comment="The directory name of the default todo list."/> 
 
   <property Key="file.linebreak"

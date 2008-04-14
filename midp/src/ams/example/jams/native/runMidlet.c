@@ -75,7 +75,7 @@ static const char* const runUsageText =
  */
 int
 getHeapRequirement(){
-    int max_isolates = getInternalPropertyInt("MAX_ISOLATES");
+    int max_isolates = MAX_ISOLATES;
     int midp_heap_requirement;
 
     //calculate heap size

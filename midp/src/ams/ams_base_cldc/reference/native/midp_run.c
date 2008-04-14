@@ -376,14 +376,12 @@ midpInitializeUI(void) {
 
         reserved = getInternalPropertyInt("AMS_MEMORY_RESERVED_MVM");
         if (0 == reserved) {
-            REPORT_ERROR(LC_AMS, "AMS_MEMORY_RESERVED_MVM property not set");
-            return -1;
+            reserved = AMS_MEMORY_RESERVED_MVM;
         }
 
         limit = getInternalPropertyInt("AMS_MEMORY_LIMIT_MVM");
         if (0 == limit) {
-            REPORT_ERROR(LC_AMS, "AMS_MEMORY_LIMIT_MVM property not set");
-            return -1;
+            limit = AMS_MEMORY_LIMIT_MVM;
         }
 
         reserved = reserved * 1024;
@@ -397,6 +395,36 @@ midpInitializeUI(void) {
         JVM_SetConfig(JVM_CONFIG_FIRST_ISOLATE_TOTAL_MEMORY, limit);
     }
 #endif
+
+    {
+        int local_argc = 0;
+        char *local_argv[6];
+        char **argvp = local_argv;
+
+        /* common local_HI arguments */
+        //local_argv[local_argc++] = "-int";
+        //local_argv[local_argc++] = "+TraceNativeCalls";
+        //local_argv[local_argc++] = "+TraceGC";
+        //local_argv[local_argc++] = "+TraceHeapSize";
+        //local_argv[local_argc++] = "+TraceExceptions";
+
+        while (local_argc > 0) {
+            int n = JVM_ParseOneArg(local_argc, argvp);
+
+            if (n < 0) {
+                JVMSPI_PrintRaw("Ignoring unknown argument: ");
+                JVMSPI_PrintRaw(local_argv[0]);
+                JVMSPI_PrintRaw("\n");
+                JVMSPI_DisplayUsage(NULL);
+                break;
+            } else if (n == 0) {
+                break;
+            }
+            local_argc -= n;
+            argvp += n;
+        }
+
+    }
 
 #if ENABLE_JAVA_DEBUGGER
     {
