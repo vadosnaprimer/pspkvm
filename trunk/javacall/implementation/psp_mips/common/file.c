@@ -22,6 +22,8 @@ extern "C" {
 #include <pspiofilemgr.h>
 #define MAX_FILE_NAME_LEN JAVACALL_MAX_FILE_NAME_LENGTH
 
+//#define DEBUG_JAVACALL_FILE 1
+
 char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen) {
     static char result[MAX_FILE_NAME_LEN+1];
     if (fileNameLen >= MAX_FILE_NAME_LEN) {
@@ -77,8 +79,15 @@ javacall_result javacall_file_open(const javacall_utf16 * unicodeFileName, int f
     char* pszOsFilename = javacall_UNICODEsToUtf8(unicodeFileName, fileNameLen);
 
     if (pszOsFilename == NULL) {
+#ifdef DEBUG_JAVACALL_FILE
+        javacall_printf("javacall_file_open(): path name too long\n");
+#endif
        return JAVACALL_FAIL;
     }
+
+#ifdef DEBUG_JAVACALL_FILE
+        javacall_printf("javacall_file_open():%s\n", pszOsFilename);
+#endif
           
     int creationMode = (flags & JAVACALL_FILE_O_CREAT) ?  DEFAULT_CREATION_MODE_PERMISSION : 0;
     int nativeFlags = 0;
@@ -260,13 +269,28 @@ javacall_int64 javacall_file_sizeof(const javacall_utf16 * fileName, int fileNam
  * @param fileName name of file in unicode format
  * @param fileNameLen length of file name
  * @return <tt>JAVACALL_OK </tt> if it exists and is a regular file, 
- *         <tt>JAVACALL_FAIL</tt> or negative value otherwise (eg: 0 returned if it is a directory)
+ *         <tt>JAVACALL_FAIL</tt> or negative value otherwise
  */
 javacall_result javacall_file_exist(const javacall_utf16 * fileName, int fileNameLen) {
 
-    long size = javacall_file_sizeof(fileName, fileNameLen);
-    return (size == -1) ? JAVACALL_FAIL : JAVACALL_OK;
+    char* szOsFilename=javacall_UNICODEsToUtf8(fileName, fileNameLen);
+    int attrs;
+    struct stat st;
 
+    if(!szOsFilename) {
+        javacall_print("Error: javacall_file_exist(), path name is too long\n");
+        return JAVACALL_FAIL;
+    }
+
+    attrs = stat(szOsFilename, &st);
+    if (attrs) {
+#ifdef DEBUG_JAVACALL_FILE
+        javacall_printf("javacall_file_exist():%s path not found\n", szOsFilename);
+#endif
+        return JAVACALL_FAIL;
+    }
+
+    return ((st.st_mode & S_IFDIR) == 0) ? JAVACALL_OK : JAVACALL_FAIL;
 }
 
 
