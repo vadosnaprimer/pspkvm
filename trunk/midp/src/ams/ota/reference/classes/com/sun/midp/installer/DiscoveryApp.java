@@ -566,7 +566,14 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                     if (http_install) {
                         parent.installList = SuiteDownloadInfo.getDownloadInfoFromPage(in);
                     } else {
-                        parent.installList = SuiteDownloadInfo.getDownloadInfoFromDir(url);
+                        while (true) {
+                            parent.installList = SuiteDownloadInfo.getDownloadInfoFromDir(url);
+                            if (parent.installList.size() <=0 && !url.equals("ms0:/")) {
+                                url = "ms0:/";                                
+                            } else {
+                                break;
+                            }
+                        }
                     }
 
                     if (parent.installList.size() > 0) {
@@ -612,6 +619,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                             parent.lastDisplayChange <
                             GraphicalInstaller.ALERT_TIMEOUT);
 
+                        parent.installListBox.setTitle(url);
                         parent.display.setCurrent(parent.installListBox);
                         return;
                     }
