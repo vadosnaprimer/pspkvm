@@ -291,7 +291,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
         temp = http_install?urlTextBox.getString():last_dir;
 
-        ex = GraphicalInstaller.saveSettings(http_install, temp, MIDletSuite.INTERNAL_SUITE_ID);
+        ex = GraphicalInstaller.saveSettings(http_install, temp, MIDletSuite.INTERNAL_SUITE_ID, midlet);
         if (ex != null) {
             displayException(Resource.getString
                              (ResourceConstants.EXCEPTION), ex.toString());
