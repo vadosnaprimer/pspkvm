@@ -81,6 +81,8 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
     private boolean http_install;
 
+    private String lastInstallMidletName;
+
     /** Command object for URL screen to go and discover available suites. */
     private Command discoverCmd =
         new Command(Resource.getString(ResourceConstants.GOTO),
@@ -204,14 +206,14 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             	  last_dir = install_dir;
             } else {
                 if (!http_install) {
-                    saveURLSetting();
+                    saveURLSetting(((SuiteDownloadInfo)installList.elementAt(installListBox.getSelectedIndex())).label);
                 }
                 installSuite(installListBox.getSelectedIndex());
             }
         } else if (c == backCmd) {
             display.setCurrent(urlTextBox);
         } else if (c == saveCmd) {
-            saveURLSetting();
+            saveURLSetting(null);
         } else if (c == endCmd || c == Alert.DISMISS_COMMAND) {
             // goto back to the manager midlet
             notifyDestroyed();
@@ -249,6 +251,13 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                 defaultInstallListUrl = dis.readUTF();
             }
 
+            data = settings.getRecord(4);
+            if (data != null) {
+                bas = new ByteArrayInputStream(data);
+                dis = new DataInputStream(bas);
+                lastInstallMidletName = dis.readUTF();
+            }
+
         } catch (RecordStoreException e) {
             if (Logging.REPORT_LEVEL <= Logging.WARNING) {
                 Logging.report(Logging.WARNING, LogChannels.LC_AMS,
@@ -276,7 +285,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
     /**
      * Save the URL setting the user entered in to the urlTextBox.
      */
-    private void saveURLSetting() {
+    private void saveURLSetting(String midlet) {
         String temp;
         Exception ex;
 
@@ -542,6 +551,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             InputStreamReader in = null;
             String errorMessage;
             long startTime;
+            int selectedIndex = 0;
 
             startTime = System.currentTimeMillis();
 
@@ -552,6 +562,10 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                         "", url, 0,
                         Resource.getString(
                         ResourceConstants.AMS_GRA_INTLR_CONN_GAUGE_LABEL));
+
+                if (!url.startsWith("http://")) {
+                    http_install = false;
+                }
 
                 if (http_install) {
                     conn = (StreamConnection)Connector.open(url, Connector.READ);
@@ -594,7 +608,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                                 	suite.url = url.substring(0, last_slash + 1) + suite.url;
                                 }                            
                                 parent.installListBox.append(suite.label,
-                                                             (Image)null);
+                                                             (Image)null);                                
                             } else {
                                 String postfix;
                                 if (suite.dir) {
@@ -604,8 +618,15 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                                 }
                                 parent.installListBox.append(suite.label+postfix,
                                                              (Image)null);
+
+
+                                
+                                if (lastInstallMidletName != null && lastInstallMidletName.equals(suite.label)) {
+                                	selectedIndex = i;
+                                }               
                             }
                         }
+                        parent.installListBox.setSelectedIndex(selectedIndex, true);
 
                         parent.installListBox.addCommand(http_install?parent.backCmd:parent.endCmd);
                         parent.installListBox.addCommand(parent.installCmd);

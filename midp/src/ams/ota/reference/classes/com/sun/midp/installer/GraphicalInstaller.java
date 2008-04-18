@@ -98,6 +98,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     /** record is of the last installed midlet */
     public static final int SELECTED_MIDLET_RECORD_ID = 2;
     public static final int LOCAL_URL_RECORD_ID = 3;
+    public static final int LAST_MIDLET_NAME_RECORD_ID = 4;
 
     /** The installer that is being used to install or update a suite. */
     private Installer installer;
@@ -593,16 +594,21 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                                    openRecordStore(SETTINGS_STORE, true);
 
             try {
-                if (settings.getNumRecords() == 0) {
+                switch (settings.getNumRecords()) {
+                    case 0:
                     // space for a HTTP URL
                     settings.addRecord(null, 0, 0);
-
+                    case 1:
                     // space for current MIDlet Suite name
                     settings.addRecord(null, 0, 0);
-
+                    case 2:
                     // space for a local URL
                     settings.addRecord(null, 0, 0);
-                }
+                    case 3:
+                    // space for last install midlet name
+                    settings.addRecord(null, 0, 0);
+                    default:
+                }                
             } finally {
                 settings.closeRecordStore();
             }
@@ -616,7 +622,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     }
 
     public static Exception saveSettings(String url, int curMidlet) {
-        return saveSettings(false, url, curMidlet);
+        return saveSettings(false, url, curMidlet, null);
     }
     
     /**
@@ -628,7 +634,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      * @param curMidlet suiteId of the currently selected midlet
      * @return the Exception that may have been thrown, or null
      */
-    public static Exception saveSettings(boolean http_install, String url, int curMidlet) {
+    public static Exception saveSettings(boolean http_install, String url, int curMidlet, String name) {
         Exception ret = null;
 
         AccessController.checkPermission(Permissions.AMS_PERMISSION_NAME);
@@ -661,6 +667,15 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
             settings.setRecord(SELECTED_MIDLET_RECORD_ID,
                                data, 0, data.length);
 
+            if (name != null) {
+                bas.reset();
+    
+                dos.writeUTF(name);
+                data = bas.toByteArray();
+                settings.setRecord(LAST_MIDLET_NAME_RECORD_ID,
+                                   data, 0, data.length);
+            }
+            
             settings.closeRecordStore();
             dos.close();
         } catch (Exception e) {

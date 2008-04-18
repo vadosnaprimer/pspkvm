@@ -186,7 +186,7 @@ javacall_utf16* javacall_dir_get_next(javacall_handle handle,
     wcsncpy(name, pFindData->find_data.cFileName, JAVACALL_MAX_FILE_NAME_LENGTH);
     if (pFindData->find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
     	name[*outFileNameLength] = '\\';
-    	*outFileNameLength++;
+    	(*outFileNameLength)++;
     	name[*outFileNameLength] = 0;
     }
     return (name);
