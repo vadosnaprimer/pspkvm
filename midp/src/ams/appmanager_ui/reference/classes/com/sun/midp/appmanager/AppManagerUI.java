@@ -1727,6 +1727,7 @@ class AppManagerUI extends Form
             }
 
             if (cX < bgIconW) {
+            	  g.clipRect(0, 0, bgIconW, h);
                 if (hasFocus) {
                     g.drawImage(ICON_BG, 0, (h - bgIconH)/2,
                                 Graphics.TOP | Graphics.LEFT);
@@ -1753,6 +1754,7 @@ class AppManagerUI extends Form
                                 (bgIconH - DISABLED_IMAGE.getHeight())/2,
                                 Graphics.TOP | Graphics.LEFT);
                 }
+                g.setClip(cX, cY, cW, cH);
             }
 
         }
