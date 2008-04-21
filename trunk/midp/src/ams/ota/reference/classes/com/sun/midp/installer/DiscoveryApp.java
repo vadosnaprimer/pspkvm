@@ -46,8 +46,8 @@ import com.sun.midp.midlet.*;
 import com.sun.midp.log.Logging;
 import com.sun.midp.log.LogChannels;
 import com.sun.midp.io.j2me.storage.RandomAccessStream;
-import javax.microedition.lcdui.List;
-
+import javax.microedition.lcdui.Form;
+import javax.microedition.lcdui.CustomItem;
 /**
  * The Graphical MIDlet suite Discovery Application.
  * <p>
@@ -58,7 +58,7 @@ import javax.microedition.lcdui.List;
  * URL for a MIDP application descriptor. The selected URL is then passed to
  * graphical Installer.
  */
-public class DiscoveryApp extends MIDlet implements CommandListener {
+public class DiscoveryApp extends MIDlet implements ItemCommandListener, CommandListener {
 
     /** Display for this MIDlet. */
     private Display display;
@@ -75,7 +75,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
     /** Keeps track of when the display last changed, in milliseconds. */
     private long lastDisplayChange;
     /** Displays a list of suites to install to the user. */
-    private List installListBox;
+    private Form installListBox;
     /** Contains a list of suites to install. */
     private Vector installList;
 
@@ -192,7 +192,18 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             discoverSuitesToInstall(urlTextBox.getString());
         } else if (s == installListBox &&
                   (c == List.SELECT_COMMAND || c == installCmd)) {
-            SuiteDownloadInfo info = (SuiteDownloadInfo)installList.elementAt(installListBox.getSelectedIndex());
+                  System.out.println("install");
+                  
+            int selectedIndex = 0;
+            for (int i = 0; i < installListBox.size(); i++) {
+                if (((FileEntryItem)installListBox.get(i)).hasFocus()) {
+                	System.out.println("select "+i);
+                	selectedIndex = i;
+                	break;
+                }
+            }
+            
+            SuiteDownloadInfo info = (SuiteDownloadInfo)installList.elementAt(selectedIndex);
             if (info.dir) {
             	  String install_dir;
             	  if (info.label.equals("..")) {
@@ -206,9 +217,9 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             	  last_dir = install_dir;
             } else {
                 if (!http_install) {
-                    saveURLSetting(((SuiteDownloadInfo)installList.elementAt(installListBox.getSelectedIndex())).label);
+                    saveURLSetting(((SuiteDownloadInfo)installList.elementAt(selectedIndex)).label);
                 }
-                installSuite(installListBox.getSelectedIndex());
+                installSuite(selectedIndex);
             }
         } else if (c == backCmd) {
             display.setCurrent(urlTextBox);
@@ -219,7 +230,39 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             notifyDestroyed();
         }
     }
-
+ 
+    public void commandAction(Command c, Item item) {
+        if (c == installCmd) {
+        	int selectedIndex = 0;
+            for (int i = 0; i < installListBox.size(); i++) {
+                if (installListBox.get(i) == item) {
+                	System.out.println("select "+i);
+                	selectedIndex = i;
+                	break;
+                }
+            }
+            
+            SuiteDownloadInfo info = (SuiteDownloadInfo)installList.elementAt(selectedIndex);
+            if (info.dir) {
+            	  String install_dir;
+            	  if (info.label.equals("..")) {
+            	      install_dir = new String(info.url.substring(0, info.url.lastIndexOf('/')));
+            	      install_dir = new String(install_dir.substring(0, install_dir.lastIndexOf('/') + 1));
+            	  } else {
+            	      install_dir = new String(info.url + new String("/"));
+            	  }
+            	  
+            	  discoverSuitesToInstall(install_dir);
+            	  last_dir = install_dir;
+            } else {
+                if (!http_install) {
+                    saveURLSetting(((SuiteDownloadInfo)installList.elementAt(selectedIndex)).label);
+                }
+                installSuite(selectedIndex);
+            }
+        }
+    }
+    
     /**
      * Get the settings the Manager saved for the user.
      */
@@ -551,7 +594,7 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
             InputStreamReader in = null;
             String errorMessage;
             long startTime;
-            int selectedIndex = 0;
+            FileEntryItem selectedItem = null;
 
             startTime = System.currentTimeMillis();
 
@@ -592,44 +635,39 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
                     if (parent.installList.size() > 0) {
                         parent.installListBox =
-                            new List(Resource.getString
+                            new Form(Resource.getString
                                      (ResourceConstants.
-                                      AMS_DISC_APP_SELECT_INSTALL),
-                                     Choice.IMPLICIT);
+                                      AMS_DISC_APP_SELECT_INSTALL));
 
                         // Add each suite
                         for (int i = 0; i < parent.installList.size(); i++) {
                             SuiteDownloadInfo suite =
                                 (SuiteDownloadInfo)installList.elementAt(i);
+                            FileEntryItem item = new FileEntryItem(suite.label, suite.dir, parent);
+                            item.setDefaultCommand(parent.installCmd);
+                            item.setItemCommandListener(parent);
+                            parent.installListBox.append(item);
+                            if (i == 0) {
+                                selectedItem = item;
+                            }
+
                             if (suite.http) {
                                 if (!suite.url.startsWith("http://") && !suite.url.startsWith("https://")) {
                                 	//relative path
                                 	int last_slash = url.lastIndexOf('/');
                                 	suite.url = url.substring(0, last_slash + 1) + suite.url;
                                 }                            
-                                parent.installListBox.append(suite.label,
-                                                             (Image)null);                                
+                                                                
                             } else {
-                                String postfix;
-                                if (suite.dir) {
-                                    postfix = new String("/");
-                                } else {
-                                    postfix = new String(""); 
-                                }
-                                parent.installListBox.append(suite.label+postfix,
-                                                             (Image)null);
-
-
                                 
                                 if (lastInstallMidletName != null && lastInstallMidletName.equals(suite.label)) {
-                                	selectedIndex = i;
+                                	selectedItem = item;
                                 }               
                             }
                         }
-                        parent.installListBox.setSelectedIndex(selectedIndex, true);
-
+                        
                         parent.installListBox.addCommand(http_install?parent.backCmd:parent.endCmd);
-                        parent.installListBox.addCommand(parent.installCmd);
+                        //parent.installListBox.addCommand(parent.installCmd);
                         parent.installListBox.setCommandListener(parent);
 
                         /*
@@ -642,6 +680,8 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
 
                         parent.installListBox.setTitle(url);
                         parent.display.setCurrent(parent.installListBox);
+                        parent.display.setCurrentItem(selectedItem);
+
                         return;
                     }
 
@@ -684,5 +724,122 @@ public class DiscoveryApp extends MIDlet implements CommandListener {
                 notifyDestroyed();
             }
         }
+    }
+
+    class FileEntryItem extends CustomItem {
+    	private boolean hasFocus;
+    	private boolean dir;
+    	private String text;
+    	private DiscoveryApp parent;
+    	private final Font ENTRY_FONT;
+    	
+       FileEntryItem(String str, boolean isDir, DiscoveryApp theParent) {
+       	super(null);
+       	text = str;
+       	dir = isDir;
+       	hasFocus = false;
+       	parent = theParent;
+       	ENTRY_FONT = Font.getFont(Font.FACE_SYSTEM,
+                                                         Font.STYLE_BOLD,
+                                                         Font.SIZE_SMALL);
+       }
+    	
+       /**
+         * Gets the minimum width of a midlet representation in
+         * the App Selector Screen.
+         * @return the minimum width of a midlet representation
+         *         in the App Selector Screen.
+         */
+        protected int getMinContentWidth() {
+            return parent.installListBox.getWidth();
+        }
+
+        /**
+         * Gets the minimum height of a midlet representation in
+         * the App Selector Screen.
+         * @return the minimum height of a midlet representation
+         *         in the App Selector Screen.
+         */
+        protected int getMinContentHeight() {
+            return ENTRY_FONT.getHeight();
+        }
+
+        /**
+         * Gets the preferred width of a midlet representation in
+         * the App Selector Screen based on the passed in height.
+         * @param height the amount of height available for this Item
+         * @return the minimum width of a midlet representation
+         *         in the App Selector Screen.
+         */
+        protected int getPrefContentWidth(int height) {
+            return parent.installListBox.getWidth();
+        }
+
+        /**
+         * Gets the preferred height of a midlet representation in
+         * the App Selector Screen based on the passed in width.
+         * @param width the amount of width available for this Item
+         * @return the minimum height of a midlet representation
+         *         in the App Selector Screen.
+         */
+        protected int getPrefContentHeight(int width) {
+            return ENTRY_FONT.getHeight();
+        }
+
+        /**
+         * Paints the content of a midlet representation in
+         * the App Selector Screen.
+         * Note that icon representing that foreground was requested
+         * is painted on to of the existing ickon.
+         * @param g The graphics context where painting should be done
+         * @param w The width available to this Item
+         * @param h The height available to this Item
+         */
+        protected void paint(Graphics g, int w, int h) {
+             g.setFont(ENTRY_FONT);
+             if (dir) {
+                 g.setColor(0, 0, 128);
+             } else {
+                 g.setColor(0, 0, 0);
+             }
+             g.drawString(text, 5, (h - ENTRY_FONT.getHeight())/2,
+                            Graphics.LEFT | Graphics.TOP);           
+        }
+
+        /**
+         * Handles traversal.
+         * @param dir The direction of traversal (Canvas.UP, Canvas.DOWN,
+         *            Canvas.LEFT, Canvas.RIGHT)
+         * @param viewportWidth The width of the viewport in the AppSelector
+         * @param viewportHeight The height of the viewport in the AppSelector
+         * @param visRect_inout The return array that tells AppSelector
+         *        which portion of the MidletCustomItem has to be made visible
+         * @return true if traversal was handled in this method
+         *         (this MidletCustomItem just got focus or there was an
+         *         internal traversal), otherwise false - to transfer focus
+         *         to the next item
+         */
+        protected boolean traverse(int dir,
+                                   int viewportWidth, int viewportHeight,
+                                   int visRect_inout[]) {
+            if (!hasFocus) {
+                hasFocus = true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Handles traversal out. This method is called when this
+         * MidletCustomItem looses focus.
+         */
+        protected void traverseOut() {
+            hasFocus = false;
+        }
+
+        boolean hasFocus() {
+        	return hasFocus;
+        }
+       
     }
 }
