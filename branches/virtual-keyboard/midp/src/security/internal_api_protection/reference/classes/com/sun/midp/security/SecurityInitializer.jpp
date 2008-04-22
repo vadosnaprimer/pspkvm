@@ -166,6 +166,7 @@ public final class SecurityInitializer {
 
         // #ifdef ENABLE_CHAMELEON
         "com.sun.midp.chameleon.skins.resources.SkinResources$SecurityTrusted",
+        "javax.microedition.lcdui.KeyboardLayer$SecurityTrusted",
         // #endif ENABLE_CHAMELEON
 
         // #ifndef ENABLE_CHAMELEON
