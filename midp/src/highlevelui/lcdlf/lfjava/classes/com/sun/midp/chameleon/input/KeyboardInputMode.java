@@ -227,6 +227,20 @@ public class KeyboardInputMode implements InputMode {
     /** input subset x constraint map */
     private static final boolean[][] isMap = {
         // |ANY|EMAILADDR|NUMERIC|PHONENUMBER|URL|DECIMAL
+        { true, true, true, true, true, true }, // IS_FULLWIDTH_DIGITS
+        { true, true, true, true, true, true }, // IS_FULLWIDTH_LATIN
+        { true, true, true, true, true, true }, // IS_HALFWIDTH_KATAKANA
+        { true, true, true, true, true, true }, // IS_HANJA
+        { true, true, true, true, true, true }, // IS_KANJI
+        { true, true, true, true, true, true }, // IS_LATIN
+        { true, true, true, true, true, true }, // IS_LATIN_DIGITS
+        { true, true, true, true, true, true }, // IS_SIMPLIFIED_HANZI
+        { true, true, true, true, true, true }, // IS_TRADITIONAL_HANZI
+        { true, true, true, true, true, true }, // MIDP_UPPERCASE_LATIN
+        { true, true, true, true, true, true }, // MIDP_LOWERCASE_LATIN
+        { true, true, true, true, true, true }  // NULL
+
+        /*
         { false, false, false, false, false, false }, // IS_FULLWIDTH_DIGITS
         { false, false, false, false, false, false }, // IS_FULLWIDTH_LATIN  
         { true,  true,  false, false, true,  false }, // IS_HALFWIDTH_KATAKANA
@@ -239,6 +253,7 @@ public class KeyboardInputMode implements InputMode {
         { false, false, false, false, false, false }, // MIDP_UPPERCASE_LATIN
         { false, false, false, false, false, false }, // MIDP_LOWERCASE_LATIN
         { true,  true,  false, false, true,  false }  // NULL
+        */
     };
     
     /**

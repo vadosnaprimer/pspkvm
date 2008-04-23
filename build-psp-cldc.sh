@@ -185,6 +185,7 @@ then
 			JSR_120_DIR=${JSR_120_DIR} \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
+			SOFT_KEYBOARD_ENABLED=true \
 			${DEBUG_OPTION}
 		if [ $? != 0 ];then
 			echo make failed for ${BUILD_TARGET} module ${BUILDMODULE}
