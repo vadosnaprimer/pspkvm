@@ -48,6 +48,8 @@ import com.sun.midp.chameleon.skins.resources.PTIResources;
 import com.sun.midp.chameleon.skins.resources.InputModeResources;
 import com.sun.midp.configurator.Constants;
 
+import com.sun.midp.i18n.Resource;
+import com.sun.midp.i18n.ResourceConstants;
 
 import java.util.*;
 
@@ -143,6 +145,13 @@ class TextFieldLFImpl extends ItemLFImpl implements
 
     /** A TimerTask which will repaint scrolling text  on a repeated basis */
     protected TextScrollPainter textScrollPainter;
+
+    // #ifdef ENABLE_KEYBOARD [
+    /**
+     * This is a flag to turn on the keyboard initial a time.
+     */
+    protected boolean showKeyboard;
+    // #endif
 
     /** flag indicating the pointer press event is happened but release is
         still not handled */
@@ -1121,7 +1130,20 @@ class TextFieldLFImpl extends ItemLFImpl implements
 
         addInputCommands();
 
+        // #ifdef ENABLE_KEYBOARD [
+        Display disp = getCurrentDisplay();
+        if (disp != null) {
+            if (disp.isKeyboardEnabled()) {
+            	  String name = disp.getKeyboardIMName();
+            	  if (name != null) {
+                    inputModeIndicator.setDisplayMode(name);
+                    return;
+            	  }
+            }
+        }
+        // #endif
         inputModeIndicator.setDisplayMode(im.getName());
+        
     }
     
     // End Chameleon's TextInputComponent Interface
@@ -1507,6 +1529,21 @@ class TextFieldLFImpl extends ItemLFImpl implements
         
         // Show indicator layer
         enableLayers();
+        // #ifdef ENABLE_KEYBOARD [
+        // Show keyboard layer if this is initial traverse 
+        if (showKeyboard) {
+            if(getCurrentDisplay() != null && getCurrentDisplay().isKeyboardAutoOpen()) {
+            	  InputMode mode = getInputSession().getCurrentInputMode();
+            	  if (mode == null || mode.getName() == null || 
+            	  	mode.getName().equals(Resource.getString(ResourceConstants.LCDUI_TF_KEYBOARD))) {
+            	  	
+                    getCurrentDisplay().OpenKeyboard();
+            	  }
+            	  
+                showKeyboard = false;
+            }
+        }         
+        // #endif
         
         return ret;
     }
@@ -1543,6 +1580,13 @@ class TextFieldLFImpl extends ItemLFImpl implements
         if (firstTimeInTraverse || dir == CustomItem.NONE) {
 
             if (firstTimeInTraverse) {
+                // #ifdef ENABLE_KEYBOARD [
+                // First of all, update input mode of keyboard
+                if (getCurrentDisplay() != null && getCurrentDisplay().isKeyboardEnabled()) {
+                    getCurrentDisplay().initKeyboardInputMode();
+                }
+                showKeyboard = true;
+                // #endif ]
                 if (editable) {
                     TextInputSession is = getInputSession();
                     InputMode im = is.getCurrentInputMode();
@@ -1629,8 +1673,15 @@ class TextFieldLFImpl extends ItemLFImpl implements
             hidePTILayer();
 	    currentDisplay.hidePopup(inputModeIndicator);
         }
+
+	// #ifdef ENABLE_KEYBOARD [
+            if (currentDisplay.isKeyboardAutoOpen()) {
+                currentDisplay.CloseKeyboard();
+            }
+        // #endif
      }
 
+            
    /**
     * Enable some layers related to the item. This method should be called outside of
     * LCDUILock to avoid deadlocking with Chameleon internal lock 'layers'.
@@ -1667,15 +1718,19 @@ class TextFieldLFImpl extends ItemLFImpl implements
         
         firstTimeInTraverse = true;
         
+        
         if (editable) {
             TextInputSession is = getInputSession();
-            InputMode im = is.getCurrentInputMode();
+            InputMode im = null;
+            if (is != null ) {
+                im = is.getCurrentInputMode();
+            }
             if (im != null && im.hasDisplayable()) { 
                 disableTF();
                 ((ScreenLFImpl)tf.owner.getLF()).resetToTop = false;
             } else { 
-                disableInput();
   
+                disableInput();
                 if (im != null) { 
                     interruptedIM = im; 
                 } else {
@@ -1687,6 +1742,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
         } else {
 	    cursor.option = Text.PAINT_USE_CURSOR_INDEX;
             cursor.visible = false;
+
             cursor.index = tf.buffer.length();
         }
         xScrollOffset = 0;
@@ -1850,7 +1906,9 @@ class TextFieldLFImpl extends ItemLFImpl implements
         disableTF();
         removeInputCommands();       
         TextInputSession is = getInputSession();
+        if (is != null) {
         is.endSession();
+        }
         // reset input mode name
         inputModeIndicator.setDisplayMode(null);
     }
@@ -1890,6 +1948,12 @@ class TextFieldLFImpl extends ItemLFImpl implements
             // implementation of Item.addCommand() to not add
             // the same command twice, as stated in the MIDP spec
             tf.addCommand(inputMenu);                       
+            // #ifdef ENABLE_KEYBOARD [
+            // MUST Remove after addCommand to follow right call processes.
+            if (getCurrentDisplay() != null && getCurrentDisplay().isKeyboardEnabled()) {
+                //removeInputCommands();
+            }
+            // #endif ]
         }
     }
 
