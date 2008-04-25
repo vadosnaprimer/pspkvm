@@ -32,7 +32,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      *
      * @param tf The TextEditor that triggered this popup layer.
      */
-    private KeyboardLayer(TextFieldLFImpl tf) {
+    private KeyboardLayer(TextFieldLFImpl tf) throws VirtualKeyboardException {
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
@@ -57,7 +57,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      *
      * @param canvas The Canvas that triggered this popup layer.
      */
-    private KeyboardLayer(CanvasLFImpl canvas) {
+    private KeyboardLayer(CanvasLFImpl canvas) throws VirtualKeyboardException {
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
@@ -146,7 +146,8 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      * @param tf TextField look/feel instance for the keyboard layer
      * @return a KeyboardLayer instance.
      */
-    static KeyboardLayer getInstance(TextFieldLFImpl tf) {
+    static KeyboardLayer getInstance(TextFieldLFImpl tf)  
+                                                           throws VirtualKeyboardException {
         if ((instanceTF == null) || (instanceTF.tfContext != tf)) {
             instanceTF = new KeyboardLayer(tf);
             instanceTF_Y = instanceTF.bounds[Y];
@@ -166,7 +167,8 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      * @param canvas Canvas look/feel instance for the keypad layer
      * @return a KeyboardLayer instance.
      */
-    static KeyboardLayer getInstance(CanvasLFImpl canvas) {
+    static KeyboardLayer getInstance(CanvasLFImpl canvas) 
+                                                           throws VirtualKeyboardException {
         if ((instanceCV == null) || (instanceCV.cvContext != canvas)) {
             instanceCV = new KeyboardLayer(canvas);
             instanceTF = null;
@@ -276,7 +278,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         keys = new char[4][];
 
         // numerals
-        keys[0] = new char[22]; // numerals
+        keys[0] = new char[23]; // numerals
         for (char i=0; i<10; i++) {  // 0..9
             keys[0][i] = (char)(i+48);
         }
@@ -291,7 +293,8 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         keys[0][18] = '%';
         keys[0][19] = '^';
         keys[0][20] = '#';
-        keys[0][21] = ' ';
+        keys[0][21] = '_';
+        keys[0][22] = ' ';
 
         // Roman, lower case
         keys[1] = new char[27]; // numerals

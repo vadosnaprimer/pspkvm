@@ -75,7 +75,7 @@ class VirtualKeyboard {
      */
     public VirtualKeyboard(char[][] keys, 
                            VirtualKeyboardListener vkl,
-                           boolean displayTextArea) {
+                           boolean displayTextArea) throws VirtualKeyboardException {
         textKbd = displayTextArea;
         if(textKbd){
               PADDING = 4;
@@ -136,7 +136,8 @@ class VirtualKeyboard {
         if (neededRows > maxRows) {
             System.err.println("Keys list is too long for this size of screen.");
             System.err.println("Please split your keyboard array to multiple arrays.");
-            System.exit(0);
+            //System.exit(0);
+            throw new VirtualKeyboardException("Keys list is too long for this size of screen.");
         }
         maxRows = neededRows;
         int neededHeight=0;
@@ -1157,5 +1158,27 @@ class VirtualKeyboard {
     //When input method is changed, process this key to update UI 
     final static int IM_CHANGED_KEY = 99;
 
+}
+
+class VirtualKeyboardException extends Exception {
+    /**
+     * Constructs an <code>IOException</code> with <code>null</code>
+     * as its error detail message.
+     */
+    public VirtualKeyboardException() {
+    super();
+    }
+
+    /**
+     * Constructs an <code>IOException</code> with the specified detail
+     * message. The error message string <code>s</code> can later be
+     * retrieved by the <code>{@link java.lang.Throwable#getMessage}</code>
+     * method of class <code>java.lang.Throwable</code>.
+     *
+     * @param   s   the detail message.
+     */
+    public VirtualKeyboardException(String s) {
+    super(s);
+    }
 }
 
