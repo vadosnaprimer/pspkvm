@@ -112,6 +112,9 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewSignal->waitingFor = UI_SIGNAL;
         pNewMidpEvent->type    = ROTATION_EVENT;
         break;
+    case MIDP_JC_EVENT_NETWORK_REQUEST:
+    	 netDialog(0);
+        break;
 
 #ifdef ENABLE_JSR_75
     case JSR75_FC_JC_EVENT_ROOTCHANGED:

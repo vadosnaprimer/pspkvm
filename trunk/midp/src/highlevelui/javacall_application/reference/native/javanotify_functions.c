@@ -1496,3 +1496,10 @@ void /* OPTIONAL */ javanotify_rotation() {
      e.eventType = MIDP_JC_EVENT_ROTATION;
      midp_jc_event_send(&e);
 }
+
+void javanotify_network_connect() {
+    midp_jc_event_union e;
+    e.eventType = MIDP_JC_EVENT_NETWORK_REQUEST;
+    midp_jc_event_send(&e);
+}
+

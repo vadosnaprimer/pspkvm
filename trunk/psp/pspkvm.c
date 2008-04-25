@@ -301,6 +301,7 @@ int KeyThread(SceSize args, void *argp)
 #define MULTITASK_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_TRIANGLE)
 #define EXIT_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_CROSS)
 #define DEBUG_TRACE_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_START)
+#define NETWORK_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_SQUARE)
 #define SHIFT_KEY1 PSP_CTRL_LTRIGGER
 #define SHIFT_KEY2 PSP_CTRL_RTRIGGER
 
@@ -400,6 +401,19 @@ int KeyThread(SceSize args, void *argp)
 		    	continue;	    	
 		    }
 
+		    if (lastPspKey == NETWORK_KEY) {
+		    	if (pspKey == 0) {
+		    		lastPspKey = 0;
+		    	}
+		    	continue;	    	
+		    }
+
+		    if (pspKey == NETWORK_KEY) {
+		    	javanotify_network_connect();
+		    	lastPspKey = pspKey;
+		    	continue;
+		    }
+
 		    if (pspKey == DEBUG_TRACE_KEY) {
 		    	javanotify_key_event(JAVACALL_KEY_DEBUG_TRACE, JAVACALL_KEYPRESSED);
 		    	//display_log(1);
@@ -496,6 +510,13 @@ int netDialog(int status)
 #ifdef DEBUG_JAVACALL_NETWORK
     	javacall_printf("netDialog: enter %d\n", status);
 #endif
+
+       if (status == 0) {
+       	sceNetApctlGetState(&state);
+       	if (state > 0) {
+       		status = 1;
+       	}
+       }
 	
    	pspUtilityNetconfData data;
 
