@@ -2388,7 +2388,11 @@ public class Display {
             (((TextField)item).textFieldLF instanceof TextFieldLFImpl)) {
                 TextFieldLF textLF =  ((TextField)item).textFieldLF;
                 TextFieldLFImpl textLFImpl = (TextFieldLFImpl)textLF;
-                keyboardLayer = KeyboardLayer.getInstance(textLFImpl);
+                try {
+                    keyboardLayer = KeyboardLayer.getInstance(textLFImpl);
+                } catch (VirtualKeyboardException e) {
+                    keyboardLayer = null;
+                }
 
                 switch (textLFImpl.getConstraints()) {
                     case TextField.DECIMAL:
@@ -2429,7 +2433,11 @@ public class Display {
             if (!isKeypadEnabled()) {
                 return false;
             }
-            keyboardLayer = KeyboardLayer.getInstance((CanvasLFImpl)workDisplayLF);
+            try {
+                keyboardLayer = KeyboardLayer.getInstance((CanvasLFImpl)workDisplayLF);
+            } catch (VirtualKeyboardException e) {
+                keyboardLayer = null;
+            }
         } else if (workDisplayLF instanceof FormLFImpl) {
             // Check conditions to open soft keyboard.
             if (!isKeyboardEnabled()) {
@@ -2450,8 +2458,11 @@ public class Display {
                 //It really depends on the order of modes
                 InputMode[] modes = textLFImpl.getInputSession().getAvailableModes();
                 textLFImpl.getInputSession().setCurrentInputMode(modes[0]);
-                
-                keyboardLayer = KeyboardLayer.getInstance(textLFImpl);
+                try {                    
+                	keyboardLayer = KeyboardLayer.getInstance(textLFImpl);
+                } catch (VirtualKeyboardException e) {
+                    keyboardLayer = null;
+                }
             }
             else {
                 keyboardLayer = null;
