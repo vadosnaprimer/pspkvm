@@ -246,13 +246,13 @@ void setupChannelsToLog(const char* pStrChannelList);
  * @see reportToLog
  * @{
  */
-#define REPORT_CALL_TRACE(ch, msg) REPORT_WARN(ch, msg)
-#define REPORT_CALL_TRACE1(ch, msg, a1) REPORT_WARN1(ch, msg, a1)
-#define REPORT_CALL_TRACE2(ch, msg, a1, a2) REPORT_WARN2(ch, msg, a1, a2)
+#define REPORT_CALL_TRACE(ch, msg) REPORT_INFO(ch, msg)
+#define REPORT_CALL_TRACE1(ch, msg, a1) REPORT_INFO1(ch, msg, a1)
+#define REPORT_CALL_TRACE2(ch, msg, a1, a2) REPORT_INFO2(ch, msg, a1, a2)
 #define REPORT_CALL_TRACE3(ch, msg, a1, a2, a3) \
-  REPORT_WARN3(ch, msg, a1, a2, a3)
+  REPORT_INFO3(ch, msg, a1, a2, a3)
 #define REPORT_CALL_TRACE4(ch, msg, a1, a2, a3, a4) \
-  REPORT_WARN4(ch, msg, a1, a2, a3, a4)
+  REPORT_INFO4(ch, msg, a1, a2, a3, a4)
 
 #ifdef __cplusplus
 }

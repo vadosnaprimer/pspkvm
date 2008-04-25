@@ -95,6 +95,7 @@ extern "C" {
 #include "javacall_fileconnection.h"
 #include "javacall_properties.h"
 
+
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen);
 
 static const char* photos_dir     = "photo/";
@@ -427,7 +428,9 @@ javacall_result javacall_fileconnection_is_directory(const javacall_utf16* pathN
 
     attrs = stat(szOsFilename, &st);
     if (attrs) {
-        javacall_printf("Error: javacall_fileconnection_is_directory(), path not found: %s\n", szOsFilename);
+#ifdef DEBUG_JAVACALL_FILECONNECTION
+        javacall_printf("javacall_fileconnection_is_directory(), path not found: %s\n", szOsFilename);
+#endif
         return JAVACALL_FAIL;
     }
 
@@ -496,7 +499,7 @@ javacall_result javacall_fileconnection_dir_exists(const javacall_utf16* pathNam
 
     javacall_bool res;
     if(JAVACALL_OK != javacall_fileconnection_is_directory(pathName, pathNameLen, &res)) {
-        javacall_print("Error: javacall_fileconnection_dir_exists(), cannot access directory\n");
+        javacall_print("javacall_fileconnection_dir_exists(): not exist directory\n");
         return JAVACALL_FAIL;
     }
 
