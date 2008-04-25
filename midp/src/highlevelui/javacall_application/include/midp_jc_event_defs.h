@@ -139,7 +139,8 @@ typedef enum {
 
     /** PSP specific from here**/
 						,
-    MIDP_JC_EVENT_SHUTDOWN_MIDLET
+    MIDP_JC_EVENT_SHUTDOWN_MIDLET,
+    MIDP_JC_EVENT_NETWORK_REQUEST
 } midp_jc_event_type;
 
 
