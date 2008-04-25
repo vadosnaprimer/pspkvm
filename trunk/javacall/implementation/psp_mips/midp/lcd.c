@@ -26,7 +26,8 @@
 #define USE_PSP_GU 1
 #define ALWAYS_USE_PSP_GU 1
 
-#include "javacall_lcd.h" 
+#include "javacall_lcd.h"
+#include "javacall_properties.h"
 #include <pspdisplay.h>
 #include <stdlib.h>
 #if USE_PSP_GU
@@ -51,6 +52,7 @@ static unsigned short int __attribute__((aligned(16))) _offscreen[512*512];
 static javacall_pixel* scbuff = _offscreen;
 
 static int _enable_lcd_flush = 1;
+static int fit_scr = -1;
 
 #if USE_PSP_GU
 
@@ -246,6 +248,15 @@ javacall_result javacall_lcd_init(void) {
 	    memset(scbuff, 0, sizeof(_offscreen));
           sceGuDisplay(1);
        }
+
+       if (fit_scr == -1) {
+           char* result;
+           fit_scr = 0;
+           if (javacall_get_property("fit_screen", JAVACALL_INTERNAL_PROPERTY, &result) == JAVACALL_OK) {
+               if (result != NULL && (result[0] == 'y' || result[0] == 'Y')) fit_scr = 1;
+           }
+       }
+            
        return JAVACALL_OK;
 }
 
@@ -360,7 +371,7 @@ javacall_result javacall_lcd_flush_partial(int ystart, int yend){
     					screenImage.image, screenImage.width,
     					0, 0, scr_w, scr_h);
     			*/
-    			if (scr_w <= 272 && scr_h <= 480){
+    			if (scr_w <= 272 && scr_h <= 480 && !fit_scr){
     				advancedBlit(scr_x,scr_y,scr_w,scr_h,(272-scr_w)/2,(480-scr_h)/2,scr_w,scr_h,16, 90);
     			}
     			else if (scr_w/272.0f >= scr_h/480.0f){
@@ -375,10 +386,10 @@ javacall_result javacall_lcd_flush_partial(int ystart, int yend){
     			}
     		}
     		else {
-    			/*if (scr_w <= 480 && scr_h <= 272){
+    			if (scr_w <= 480 && scr_h <= 272  && !fit_scr){
     				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-scr_w)/2,(272-scr_h)/2,scr_w,scr_h,16, 0);
     			}
-    			else */if (scr_h/272.0f >= scr_w/480.0f){
+    			else if (scr_h/272.0f >= scr_w/480.0f){
     				const int des_w = scr_w*272/scr_h;
     				const int des_h = 272;
     				advancedBlit(scr_x,scr_y,scr_w,scr_h,(480-des_w)/2,(272-des_h)/2,des_w,des_h,16, 0);
