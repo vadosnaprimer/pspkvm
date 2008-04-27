@@ -156,6 +156,16 @@ Running tips
 	When user select a jad/jar file from memory stick to run, a "Device Select" menu will appear. Choose you preffered device size and model here, and press CIRCLE key to decide. If want to change the preffered device setting, go back to AMS and move the highlight onto the MIDlet whose setting you want to change, then select "Select Device" from menu.
 	
 - Change default key assignment for specified game
-
-- Change defualt JSR75 Fileconnection root directories mapping in pspkvm.ini.
 	Default key assignment may not fit your game, you can go to AMS and move the highlight onto the MIDlet whose key assignment you want to change, then select "Select Device" from menu. Change the key setting as what you want. REMEBER:"Shift" means Left Trigger or Right Tirgger.
+	
+- Change defualt JSR75 Fileconnection root directories mapping in pspkvm.ini.
+	The default root directories mapping is as following:
+         		/root -> ms0:/pspkvm/
+		/music -> ms0:/PSP/MUSIC/
+		/photo -> ms0:/PSP/PHOTO/
+		/video -> ms0:/PSP/VIDEO/
+		/recordings -> ms0:/pspkvm/
+		/tones -> ms0:/pspkvm/
+		/graphics -> ms0:/pspkvm/
+		/private -> ms0:/pspkvm_pri/
+	However, you can change the default mapping in pspkvm.ini. Please open pspkvm.ini in PSPKVM's install directory, change the values in [jsr75] section. If the value is left blank, default value is applied.
