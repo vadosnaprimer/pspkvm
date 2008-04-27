@@ -1,5 +1,5 @@
-pspkvm v0.3.1
-8 Apr. 2008
+pspkvm v0.3.2
+27 Apr. 2008
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
@@ -12,9 +12,16 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- Add JSR75(File Connection) support
-- Minor optimization of draw_rgb
-- Enlarge Java Heap to avoid OutOfMemoryError for some games
+- Virtual Keyboard support
+- Use "L+R+Square" to call up network connection dialog at any time (slim version only)
+- Add pspkvm.ini confituation file
+- JSR75 root directories configurable by pspkvm.ini
+- Strech small device screen to fit PSP screen
+- Support CW90
+- Resolve bug: can not enter jad/jar file selector form, if the original jar file direcory is deleted
+- Implement microedition.platform property. Now can run Cangshenlu.
+- Don't show mess icon in AMS
+- Resolve the bug that can't output voice in jstardict
 
 --------------------------------
 General information
@@ -41,14 +48,13 @@ Fetures
 - Device emulation. You can choose device type to emulate for different screen sizes and key codes, either at installation time or from "Select device" menu
 - Change default key assignment for specific application.
 - JSR75(File Connection)
+- Virtual Keyboard Input
 
 --------------------------------
 TODO
 --------------------------------
 - Graphic optimization (High)
-- Game loading time optimization (High)
 - Resolve game compatibility regression (High)
-- Virtual keyboard (High)
 - JSR179 implementation (Medium)
 - JSR184 (Low)
 - MIPS JIT compiler and Interpreter generator (Low)
@@ -60,12 +66,6 @@ Known issues:
 - javacall_file_truncate doesn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
 - Multimedia temporary files may leave on your memory stick sometimes, especially after VM crash. They're usually not big, but if you wanna delete the by hands, just goto your PSP's /PSP/GAME/pspkvm/ directory, find the file whose name likes xxxxxxxx_tmp_mus.mid, delete them.
 - Fileconnection rmdir operation may fail for unknown reasons
-
-Regrssions (comparing with pspkvm 0.1.0a):
-- Game compatibility: Since we changed our code base to phoneME, some games MAY NOT run correctly on pspkvm 0.3.0, which ran well on pspkvm 0.1.0a. Although we tested many contents before this release, we still belive that there must be some app/games have regression. Any bug report of compatibility regressions is welcome, and important!
-- CW90 is now supported now, but will come in near future.
-- Some Chinese characters cannot be displayed correctly in file selection screen. But all kinds of memory sticks should work now.
-- Loading speed: Actually it's a feature not regression :-p There's a speed/space trading inside of the new code. Some games decompress resources from jar when loading; To avoid too much memory consumption for large file decompressing, pspkvm 0.3.0 uses an fix-sized buffer to read and inflate files from jar, which slows down the speed of decompressing if the resource is larger than 32K. But pspkvm 0.1.0a always read-in completely regardless the resource size, and then decompress in memory, so some games loading speed is slower in pspkvm 0.3.0 than pspkvm 0.1.0a. But the good thing is it would never fail for lacking of memory when decompress large resources from jar.
 
 --------------------------------
 Run from binary bundle
@@ -150,10 +150,12 @@ Running tips
 	
 - Connect to network
 	Before a Java MIDlet wants to use network, you need to connect your PSP to network at first. To setup this connection, please select "Network Setup" in AMS(the 2nd item in AMS MIDlets list), then all the wifi connections you've setup in PSP will be listed. Select one and until an alert popup to tell you if it's succeeded. Once it says "Successfully connected by profile xxx", that means your network is setup, and back to AMS and run you MIDlet which uses network.
-	*Tips for 3.xx OE users: you don't have to setup network in "Network Setup" menu. When the first your MIDlet want to access wifi network, a PSP network setup dialog will popup and prompt you connecting. But it only appears at the fisrt the Java VM want to access network, if you disconnected network after setup, you'll have to re-setup network manually by "Network Setup" menu.
+	*Tips for 3.xx OE users: you don't have to setup network in "Network Setup" menu. When the first your MIDlet want to access wifi network, a PSP network setup dialog will popup and prompt you connecting. And also, you can press "L+R+Square" at any time to call up network setup dialog.
 	
 - Select device to emulate
 	When user select a jad/jar file from memory stick to run, a "Device Select" menu will appear. Choose you preffered device size and model here, and press CIRCLE key to decide. If want to change the preffered device setting, go back to AMS and move the highlight onto the MIDlet whose setting you want to change, then select "Select Device" from menu.
 	
 - Change default key assignment for specified game
+
+- Change defualt JSR75 Fileconnection root directories mapping in pspkvm.ini.
 	Default key assignment may not fit your game, you can go to AMS and move the highlight onto the MIDlet whose key assignment you want to change, then select "Select Device" from menu. Change the key setting as what you want. REMEBER:"Shift" means Left Trigger or Right Tirgger.
