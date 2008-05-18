@@ -49,6 +49,12 @@ class SourceAssembler: public Macros {
     gp_segment,     /* For global pointer info */
     bss_segment     /* Can only contains zeros */
   };
+  virtual void comment        (const char* fmt, ...);
+  void eol_comment    (const char* fmt, ...);
+  void comment_section(const char* fmt, ...);
+  void set_use_offset_comments(bool value) {
+    _use_offset_comments = value;
+  }
 
  private:
   // Note: The InterpreterGenerator needs to be a friend only because
