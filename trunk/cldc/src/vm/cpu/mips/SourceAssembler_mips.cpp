@@ -137,37 +137,92 @@ void SourceAssembler::start() {
 
   // make sure people know that this file shouldn't be edited
   comment_section("Generated assembly file -- do *not* edit");
+
+
+  // FIXME: temp stuff to make target build link
+  bind_global("call_on_primordial_stack");
+  bind_global("current_thread_to_primordial");
+  bind_global("interpreter_deoptimization_entry");
+  bind_global("interpreter_fast_method_entry_0");
+  bind_global("interpreter_fast_method_entry_1");
+  bind_global("interpreter_fast_method_entry_2");
+  bind_global("interpreter_fast_method_entry_3");
+  bind_global("interpreter_fast_method_entry_4");
+  bind_global("interpreter_method_entry");
+  bind_global("invoke_pending_entries");
+  bind_global("jvm_fast_globals");
+  bind_global("native_integer_toString_entry");
+  bind_global("native_jvm_unchecked_byte_arraycopy_entry");
+  bind_global("native_jvm_unchecked_char_arraycopy_entry");
+  bind_global("native_jvm_unchecked_int_arraycopy_entry");
+  bind_global("native_jvm_unchecked_long_arraycopy_entry");
+  bind_global("native_jvm_unchecked_obj_arraycopy_entry");
+  bind_global("native_math_ceil_entry");
+  bind_global("native_math_cos_entry");
+  bind_global("native_math_floor_entry");
+  bind_global("native_math_sin_entry");
+  bind_global("native_math_sqrt_entry");
+  bind_global("native_math_tan_entry");
+  bind_global("native_stringbuffer_append_entry");
+  bind_global("native_string_charAt_entry");
+  bind_global("native_string_endsWith_entry");
+  bind_global("native_string_equals_entry");
+  bind_global("native_string_indexof0_entry");
+  bind_global("native_string_indexof0_string_entry");
+  bind_global("native_string_indexof_entry");
+  bind_global("native_string_indexof_string_entry");
+  bind_global("native_string_init_entry");
+  bind_global("native_string_startsWith0_entry");
+  bind_global("native_string_startsWith_entry");
+  bind_global("native_string_substringI_entry");
+  bind_global("native_string_substringII_entry");
+  bind_global("native_system_arraycopy_entry");
+  bind_global("native_vector_addElement_entry");
+  bind_global("native_vector_elementAt_entry");
+  bind_global("primordial_to_current_thread");
+  bind_global("quick_int_native_method_entry");
+  bind_global("quick_obj_native_method_entry");
+  bind_global("quick_void_native_method_entry");
+  bind_global("shared_fast_getbyte_accessor");
+  bind_global("shared_fast_getbyte_static_accessor");
+  bind_global("shared_fast_getchar_accessor");
+  bind_global("shared_fast_getchar_static_accessor");
+  bind_global("shared_fast_getdouble_accessor");
+  bind_global("shared_fast_getdouble_static_accessor");
+  bind_global("shared_fast_getfloat_accessor");
+  bind_global("shared_fast_getfloat_static_accessor");
+  bind_global("shared_fast_getint_accessor");
+  bind_global("shared_fast_getint_static_accessor");
+  bind_global("shared_fast_getlong_accessor");
+  bind_global("shared_fast_getlong_static_accessor");
+  bind_global("shared_fast_getshort_accessor");
+  bind_global("shared_fast_getshort_static_accessor");
 }
 
 void SourceAssembler::stop() {
-#if 0
   if (GenerateGNUCode) {
     stream()->print_cr("\t.end");
   } else { 
     stream()->print_cr("\tEND");
   }
-#endif
 }
 
 void SourceAssembler::comment(const char* fmt, ...) {
-#if 0
   if (!GenerateGPTableOnly) {
     if (jvm_strlen(fmt) == 0) { 
       stream()->cr();
     } else { 
       va_list ap;
       va_start(ap, fmt);
-        stream()->print("\t%s ", GenerateGNUCode ? "@ " : ";");
+        stream()->print("\t%s ", GenerateGNUCode ? "# " : ";");
         stream()->vprint(fmt, ap);
         stream()->cr();
       va_end(ap);
     }
   }
-#endif
 }
 
 void SourceAssembler::eol_comment(const char* fmt, ...) {
-#if 0
   if (_eol_comment[0] == 0) {
     va_list ap;
     va_start(ap, fmt);
@@ -176,22 +231,19 @@ void SourceAssembler::eol_comment(const char* fmt, ...) {
   } else { 
     // comments from inner macros shouldn't override already created ones.
   }
-#endif
 }
 
 
 void SourceAssembler::comment_section(const char* fmt, ...) {
-#if 0
   stream()->cr();
   stream()->cr();
   comment("------------------------------------------------------");
   va_list ap;
   va_start(ap, fmt);
-    stream()->print("\t%s ", GenerateGNUCode ? "@ " : ";");
+    stream()->print("\t%s ", GenerateGNUCode ? "# " : ";");
     stream()->vprint(fmt, ap);
     stream()->cr();
   va_end(ap);
-#endif
 }
 
 #if 0
@@ -205,6 +257,13 @@ void SourceAssembler::align(int alignment) {
   }
 }
 #endif
+
+void SourceAssembler::bind_global(Label& L) {
+  //_segment->flush_global();
+
+  L.bind(stream(), true);
+  //_segment->set_in_global();
+}
 
 
 #endif

@@ -1,9 +1,11 @@
 
 class Segment;
 class SourceAssembler: public Macros {
+#ifndef PRODUCT
  protected:
   Stream* _stream;
   Disassembler _disasm;
+  char _eol_comment[1024];
 
  public:
   class Label {
@@ -73,8 +75,29 @@ class SourceAssembler: public Macros {
   SourceAssembler(Stream* stream) :
     _stream(stream), _disasm(stream), _segment(NULL), _segment_type(no_segment)
   {
-    //_eol_comment[0] = '\0';
-    //_use_offset_comments = false;
+    _eol_comment[0] = '\0';
+    _use_offset_comments = false;
   }
 
+  // support for labels
+  void import(Label& L)                { L.import(stream()); }
+  void import(const char* name)        { Label L(name); import(L); }
+  void global(Label& L)                { L.global(stream()); }
+  void make_local(Label& L)            { L.make_local(stream()); }
+  void bind  (Label& L)                { L.bind(stream()); }
+  void bind_global(Label& L);
+  void bind  (const char *name)        { Label L(name); bind(L); }
+  void bind_global(const char *name)   { Label L(name); bind_global(L); }
+        
+
+ public:
+  // accessors
+  Stream* stream() const {
+    return _stream;
+  } 
+  Disassembler& disassembler() {
+    return _disasm;
+  }
+
+#endif
 };
