@@ -1,0 +1,96 @@
+youyu45 2008/05/09:
+
+This is a build directory for testing the new MIPS assembler loop using QEMU.
+You need the following software:
+
+-------------
+GCC Toolchain
+-------------
+
+    You need this GCC toolchain to build a Linux/MIPSEL executable file
+    that runs under QEMU in "Linux user emulation mode"
+
+
+[1] Read this first:
+    http://kegel.com/crosstool/crosstool-0.43/doc/crosstool-howto.html#quick
+
+[2] Run the following commands
+
+    wget http://kegel.com/crosstool/crosstool-0.43.tar.gz
+    tar zxvf crosstool-0.43.tar.gz
+    cd crosstool-0.43
+    mkdir ~/downloads
+    sudo mkdir /opt/crosstool
+    sudo chown $USER /opt/crosstool
+
+[3] You may need to patch the crosstool script a little (I needed to do this
+    on my ubuntu 7.04 box)
+
+    Edit the last 'eval' line in demo-mipsel.sh to the following:
+
+        eval `cat mipsel.dat gcc-3.4.5-glibc-2.3.6-tls.dat` sh all.sh --notest --gdb
+
+    Run the following:
+
+        time sh demo-mipsel.sh
+
+    This will fail with some complain about version-info.h
+
+    Now, edit the file    
+    build/mipsel-unknown-linux-gnu/gcc-3.4.5-glibc-2.3.6/glibc-2.3.6/csu/version.c
+    and comment out the include of "version-info.h". I.e.:
+
+        //#include "version-info.h"
+
+
+    Finally, edit demo-mipsel.sh again to:
+
+        eval `cat mipsel.dat gcc-3.4.5-glibc-2.3.6-tls.dat` sh all.sh --notest --gdb  --nounpack
+
+    And run this again:
+
+        time sh demo-mipsel.sh
+
+
+    After that, add this to your path:
+
+        export PATH=${PATH}:/opt/crosstool/gcc-3.4.5-glibc-2.3.6/mipsel-unknown-linux-gnu/bin
+
+    You should now be able to run the command "mipsel-unknown-linux-gnu-gcc"
+
+
+----
+QEMU
+----
+
+    Download QEMU from:
+
+        http://fabrice.bellard.free.fr/qemu/qemu-0.9.1.tar.gz
+
+    Then, just extract and run "./configure; make"
+
+    To test if the toolchain works:
+
+        $ cd qemu-0.9.1/mipsel-linux-user
+        $ cat > test.c <<EOF
+        main() {printf("Hello\n");}
+	EOF
+        $ mipsel-unknown-linux-gnu-gcc -static test.c
+        $ ./qemu-mipsel ./a.out 
+        Hello
+
+-----------
+Build Monty
+-----------
+
+       $ cd ${PVPKVMROOT}/cldc/build/linux_mips_qemu
+       $ export JVMWorkSpace=${PSPKVMROOT}/cldc
+       $ export JDK_DIR=.... (jdk 1.4.x)
+
+       $ make product
+
+       $ /abs/path/to/qemu-0.9.1/mipsel-linux-user/qemu-mipsel target/bin/cldc_vm -cp xyz HelloWorld
+       Hello World!
+
+       Note: you must specify the absolute path of qemu-mipsel, or else it may fail to
+       load cldc_vm.
