@@ -1062,34 +1062,23 @@ class AppManagerUI extends Form
     private void remove(RunningMIDletSuiteInfo suiteInfo) {
         RunningMIDletSuiteInfo msi;
 
-        System.out.println("AppManagerUI.remove");
         if (suiteInfo == null) {
-            System.out.println("suiteInfo == null?????");
             // Invalid parameter, should not happen.
             return;
         }
 
         // the last item in AppSelector is time
         for (int i = 0; i < size(); i++) {
-        	System.out.println("loop "+i);
             msi = (RunningMIDletSuiteInfo)((MidletCustomItem)get(i)).msi;
             if (msi == suiteInfo) {
-            	  System.out.println("removeMissedTransaction....");
-                PAPICleanUp.removeMissedTransaction(suiteInfo.suiteId);
-	          System.out.println("removeMissedTransaction ok");
-                if (msi.proxy != null) {
-                	System.out.println("destroyMidlet...");
-                    msi.proxy.destroyMidlet();
-                    System.out.println("destroyMidlet ok");
+            	  PAPICleanUp.removeMissedTransaction(suiteInfo.suiteId);
+	          if (msi.proxy != null) {
+                   msi.proxy.destroyMidlet();
                 }
 
                 try {
-                    System.out.println("midletSuiteStorage.remove...");
                     midletSuiteStorage.remove(suiteInfo.suiteId);
-                    System.out.println("midletSuiteStorage.remove ok");
                 } catch (Throwable t) {
-                    System.out.println("midletSuiteStorage.remove exception:");
-                    t.printStackTrace();
                     if (t instanceof MIDletSuiteLockedException) {
                         String[] val = new String[1];
                         val[0] = suiteInfo.displayName;
