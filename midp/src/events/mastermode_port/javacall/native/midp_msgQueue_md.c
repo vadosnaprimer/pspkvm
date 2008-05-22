@@ -113,7 +113,9 @@ void checkForSystemSignal(MidpReentryData* pNewSignal,
         pNewMidpEvent->type    = ROTATION_EVENT;
         break;
     case MIDP_JC_EVENT_NETWORK_REQUEST:
+#ifdef PSP
     	 netDialog(0);
+#endif
         break;
 
 #ifdef ENABLE_JSR_75
