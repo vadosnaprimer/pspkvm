@@ -8,7 +8,8 @@ GCC Toolchain
 -------------
 
     You need this GCC toolchain to build a Linux/MIPSEL executable file
-    that runs under QEMU in "Linux user emulation mode"
+    that runs under QEMU. MIPSEL is "MIPS little endian", which matches 
+    the endianness of the PSP.
 
 
 [1] Read this first:
@@ -63,7 +64,7 @@ GCC Toolchain
 QEMU
 ----
 
-    Download QEMU from:
+    I have only tested with QEMU 0.9.1. You can download QEMU 0.9.1 from:
 
         http://fabrice.bellard.free.fr/qemu/qemu-0.9.1.tar.gz
 
@@ -79,9 +80,18 @@ QEMU
         $ ./qemu-mipsel ./a.out 
         Hello
 
------------
-Build Monty
------------
+    Install QEMU.
+
+        *** QEMU does not work properly from the QEMU source directory. You
+        *** must install it!
+
+        $ cd qemu-0.9.1/
+        $ sudo make install
+
+
+----------
+Build CLDC
+----------
 
        $ cd ${PVPKVMROOT}/cldc/build/linux_mips_qemu
        $ export JVMWorkSpace=${PSPKVMROOT}/cldc
@@ -89,8 +99,119 @@ Build Monty
 
        $ make product
 
-       $ /abs/path/to/qemu-0.9.1/mipsel-linux-user/qemu-mipsel target/bin/cldc_vm -cp xyz HelloWorld
+----------------------------------------------
+Running CLDC in QEMU Linux User Emulation Mode
+----------------------------------------------
+
+    QEMU can run cldc_vm in "linux user emulation" mode, which
+    means the cldc_vm process can easily access the files on your
+    host (x86) file system.
+
+
+       $ qemu-mipsel target/bin/cldc_vm -cp xyz HelloWorld
        Hello World!
 
-       Note: you must specify the absolute path of qemu-mipsel, or else it may fail to
-       load cldc_vm.
+       *** Note: you must run the qemu from the installation dir
+       *** (/usr/local/bin/qemu-mipsel). If you run qemu from its
+       *** source directory, it may fail to load cldc_vm.
+
+    The drawback is, as of QEMU 0.9.1, you cannot easily debug cldc_vm.
+    You could try this:
+
+       $ qemu-mipsel -g 1234 target/bin/cldc_vm -cp xyz HelloWorld &
+       $ mipsel-unknown-linux-gnu-gdb cldc_vm
+       (gdb) target remote localhost:1234
+       Remote debugging using localhost:1234
+       0x004001a0 in _ftext ()
+       (gdb) c
+
+    However, GDB's single-stepping commands such as "ni", "si", etc, do
+    not work. So you won't go very far with debugging the assembler 
+    code inside CLDC.
+
+
+------------------------------------------
+Running CLDC in QEMU System Emulation Mode
+------------------------------------------
+
+    To single step CLDC inside gdb, you need to get a real MISP board.
+
+    Or, if you are cheap like me, you can run QEMU in "System Emulation
+    Mode". This means you run an entire Linux OS under QEMU. It is not as
+    hard as it sounds, because QEMU already comes with Linux kernel and
+    file system images:
+
+        http://fabrice.bellard.free.fr/qemu/download.html
+
+    To begin, download and extract this file
+
+        http://fabrice.bellard.free.fr/qemu/mipsel-test-0.2.tar.gz
+
+    You will see 3 files:
+
+        initrd.gz               - init book disk
+        vmlinux-2.6.18-3-qemu   - mipsel kernel
+        run-qemu                - script
+
+    To run full Linux, you need to install Debian/MIPS by following 
+    these steps.
+
+        *** NOTE: there are many web pages about "how to set up
+        *** QEMU networking with TUN/VLAN/etc". DONT READ THESE
+        *** PAGES. You will be wasting your time. TUN/VLAN/etc,
+        *** are used for complicated situations. For our purposes,
+        *** using the default networking support in QEMU will suffice.
+
+    [1] Create a disk image
+
+        qemu-img create disk_hda 2G
+
+    [2] Comment/uncomment out run-qemu like this, and run it. It will
+        start Denian installation process.
+
+        #initarg="init=/bin/sh"
+        #initarg="root=/dev/hda1"
+        disk_hda="-hda disk_hda"
+
+    [3] If you are familiar with Debian installation, the rest will be 
+        a breeze. Otherwise, consult these pages
+
+        http://www.blog.komrades.org/?p=37
+        http://www.debian.org/ports/mips/
+
+    [4] The installation process may complain about missing kernel 
+        modules. Just ignore and continue.
+
+    [5] When installation finishes, you may want to backup the image:
+
+        tar cjSf disk_hda.backup.tar.bz2 disk_hda
+
+    [6] Edit run-qemu like this, and run it. It will boot up Debian.
+        start Denian installation process.
+
+        #initarg="init=/bin/sh"
+        initarg="root=/dev/hda1"
+        disk_hda="-hda disk_hda"
+
+    [7] When you log into the virtual Debian/MIPS, edit /etc/hosts
+        so that it has an IP address to your x86 host. Otherwise, 
+        whenever you try to connect to the x86 host, Debian/MIPS will
+        do a DNS (or reverse-DNS) lookup, which takes a few seconds and is
+        quite annoying.
+
+    [8] Install gdb and gcc inside Debian/MIPS
+
+        $ apt-get install build-essential gdb
+
+    [9] Copy the cldc_vm from your host with SCP, and start debugging it
+
+        $ scp me@myhost:cldc_vm .
+        $ gdb --args cldc_vm -cp . HelloWorld
+
+    [10] If you use SCP a lot, you can avoid entering password every time:
+
+        http://linuxproblem.org/art_9.html
+        
+
+    
+
