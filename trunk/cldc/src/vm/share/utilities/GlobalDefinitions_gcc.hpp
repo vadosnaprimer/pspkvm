@@ -126,7 +126,7 @@ inline unsigned int _rotr(unsigned int x, unsigned int y) {
    return (x >> y) | (x << (32 - y));
 }
 
-#elif defined(MIPS)
+#elif defined(MIPS_JVM) && !CROSS_GENERATOR
 
 #define BREAKPOINT __asm__("break #0xc3")
 #define panic()    __asm__("break #0xc3")
