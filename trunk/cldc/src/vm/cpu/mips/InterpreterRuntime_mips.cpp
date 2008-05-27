@@ -5,6 +5,11 @@
 
 extern "C" {
 
+//#if !ENABLE_INTERPRETER_GENERATOR
+//  JVMFastGlobals  jvm_fast_globals;
+//#endif
+
+
 OopDesc* _newobject(Thread*thread, OopDesc* raw_klass JVM_TRAPS) {
   UsingFastOops fast_oops;
   InstanceClass::Fast klass = raw_klass;
@@ -32,12 +37,23 @@ OopDesc* _anewarray(Thread *thread, OopDesc* raw_base_klass, int length
   return Universe::new_obj_array(&base_klass, length JVM_NO_CHECK_AT_BOTTOM_0);
 }
 
-address setup_stack_asm(address xsp) {
-  address* sp = (address*)xsp;
-  *--sp = NULL; // frame pointer
-  *--sp = NULL; // dummy
-  *--sp = NULL; // return_point
-  return (address)sp;
+address setup_stack_asm(address sp) {
+  jint* xsp = (jint*)sp;
+  *xsp = TestCompiler;
+    xsp += JavaStackDirection;
+  *xsp = (jint)force_terminated;
+    xsp += JavaStackDirection;
+  *xsp = (jint)Thread::finish;
+    xsp += JavaStackDirection;
+  *xsp = (jint)Thread::lightweight_thread_uncaught_exception;
+    xsp += JavaStackDirection;
+  *xsp = (jint)Thread::lightweight_thread_exit;
+    xsp += JavaStackDirection;
+  *xsp = (jint)start_lightweight_thread_asm;
+    xsp += JavaStackDirection;
+  *xsp = 0;                   // value of frame pointer
+  return (address)xsp;
 }
 
-} // extern "C"
+}
+// extern "C"

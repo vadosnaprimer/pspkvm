@@ -4,8 +4,8 @@
 #if ENABLE_INTERPRETER_GENERATOR
 
 void InterpreterGenerator::generate() {
-#if 0
   generate_interpreter_signature();
+#if 0
   // generate_test_code();
   generate_interpreter_method_entry();
   for (int i = 0; i < 5; i++) {
@@ -38,7 +38,6 @@ void InterpreterGenerator::generate() {
 }
 
 void InterpreterGenerator::generate_interpreter_signature() {
-#if 0
   Segment seg(this, code_segment, "Interpreter signature area");
   comment_section("Interpreter signature");
   if (GenerateDebugAssembly) {
@@ -52,7 +51,6 @@ void InterpreterGenerator::generate_interpreter_signature() {
   // Create the constant 1 to ind
   bind("assembler_loop_type");
   define_long(AssemblerLoopFlags::get_flags());
-#endif
 }
 
 #define PRINT_REGISTER(x) \

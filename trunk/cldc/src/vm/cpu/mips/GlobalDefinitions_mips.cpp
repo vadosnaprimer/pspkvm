@@ -12,6 +12,7 @@
 /// The file defines the "quick access" global variables for C interpreter. 
 extern "C" {
 
+#if 0
 unsigned char * _kni_parameter_base;
 
 #if ENABLE_INTERPRETATION_LOG
@@ -41,6 +42,7 @@ OopDesc*         _task_array_class_init_marker = NULL;
 
 #if ENABLE_JAVA_DEBUGGER
 int             _debugger_active = 0;
+#endif
 #endif
 }
 
