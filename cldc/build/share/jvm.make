@@ -733,6 +733,7 @@ CPP_INCLUDE_DIRS = \
   -I"$(WorkSpace)/src/vm/cpu/arm"           \
   -I"$(WorkSpace)/src/vm/cpu/c"             \
   -I"$(WorkSpace)/src/vm/cpu/i386"          \
+  -I"$(WorkSpace)/src/vm/cpu/mips"          \
   -I"$(WorkSpace)/src/vm/cpu/sh"            \
   -I"$(WorkSpace)/src/vm/cpu/thumb"         \
   -I"$(WorkSpace)/src/vm/cpu/thumb2"        \
@@ -765,6 +766,7 @@ vpath $(VPATH_PATTERNS) $(GEN_DIR)/incls
 vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/cpu/arm
 vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/cpu/c
 vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/cpu/i386
+vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/cpu/mips
 vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/cpu/sh
 vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/cpu/thumb
 vpath $(VPATH_PATTERNS) $(WorkSpace)/src/vm/os/$(os_family)
@@ -1944,6 +1946,9 @@ endif
 	$(BUILD_C_TARGET)
 
 %$(OBJ_SUFFIX): $(WorkSpace)/src/vm/cpu/i386/%.cpp
+	$(BUILD_C_TARGET)
+
+%$(OBJ_SUFFIX): $(WorkSpace)/src/vm/cpu/mips/%.cpp
 	$(BUILD_C_TARGET)
 
 %$(OBJ_SUFFIX): $(WorkSpace)/src/vm/cpu/sh/%.cpp
