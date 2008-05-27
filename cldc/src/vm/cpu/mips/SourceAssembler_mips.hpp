@@ -51,11 +51,18 @@ class SourceAssembler: public Macros {
     gp_segment,     /* For global pointer info */
     bss_segment     /* Can only contains zeros */
   };
+  void beg_segment(Segment *segment, SegmentType segment_type);
+  void end_segment();
+
+
   virtual void comment        (const char* fmt, ...);
   void eol_comment    (const char* fmt, ...);
   void comment_section(const char* fmt, ...);
   void set_use_offset_comments(bool value) {
     _use_offset_comments = value;
+  }
+  void set_current_commented_offset(int value) {
+    _current_commented_offset = value;
   }
 
  private:
@@ -99,5 +106,72 @@ class SourceAssembler: public Macros {
     return _disasm;
   }
 
+
+public:
+  // The instructions for source assembler
+  // In the future, these might be moved to Disassembler ...
+
+  int count_range(RegisterRange range);
+  void push(Register stk, RegisterRange range);
+  void addiu(Register rd, Register rn, int imm);
+  void sw(Register rn, Register rd, int offset);
+  void lw(Register rn, Register rd, int offset);
+  void la(Register rn, char *label);
+  void move(Register rd, Register rn);
+  void jr(Register rn);
+
+  const char* reg_name(Register reg);
+
+  int  find_gp_offset(const char *name);
+  void ldr_using_gp(Register reg, const char *name);
+  void str_using_gp(Register reg, const char *name);
+  void add_using_gp(Register reg, const char *name);
+
+  void emit_comment_and_cr();
+
+  // directives
+  void align(int offset);
+
+  // data definition
+  void define_byte(int    x);
+  void define_word(int    x);
+  void define_long(int    x);
+  void define_long(const Label& L);
+
+  void define_bytes(const char* s, bool word_align = true);
+  void define_zeros(int size); // zeroed area of (size) bytes
+
+#define DEFINE_GP_FOR_SOURCE(name, size) \
+  virtual void get_ ## name(Register reg) {           \
+     ldr_using_gp(reg, #name);                        \
+  }                                                   \
+  virtual void set_ ## name(Register reg) {           \
+     str_using_gp(reg, #name);                        \
+  }                                                   \
+  virtual void get_ ## name ## _addr(Register reg) {  \
+     add_using_gp(reg, #name);                        \
+  }
+
+  GP_GLOBAL_SYMBOLS_DO(_xx_pointers, DEFINE_GP_FOR_SOURCE)
+
+
+
 #endif
 };
+
+#ifndef PRODUCT
+class Segment: public StackObj {
+ private:
+  SourceAssembler* _sasm;
+  const char *_title;
+  bool _in_global;
+ public:
+  Segment(SourceAssembler* sasm, SourceAssembler::SegmentType segment, 
+          const char* title = NULL);
+  ~Segment();
+  void set_in_global() {
+    _in_global = true;
+  }
+  void flush_global();
+};
+#endif // PRODUCT

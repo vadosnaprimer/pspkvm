@@ -13,6 +13,7 @@ void FloatSupport::generate() {
 #endif
 
 extern "C" {
+#if !ENABLE_INTERPRETER_GENERATOR && !CROSS_GENERATOR
   // use compiler support
   jfloat jvm_fadd(jfloat x, jfloat y)            { return x + y; }
 
@@ -153,6 +154,7 @@ extern "C" {
   jint    jvm_dcmpl(jdouble x, jdouble y)        { 
     return  ((x > y) ? 1 : ( x == y) ? 0 : -1);
   }
+#endif
     
   jdouble jvm_dneg(jdouble x)                    { return -x; } 
 
