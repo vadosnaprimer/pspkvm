@@ -147,6 +147,7 @@ public class Database {
       addVpath(workspace + "/src/vm/cpu/arm/jazelle");
       addVpath(workspace + "/src/vm/cpu/c");
       addVpath(workspace + "/src/vm/cpu/i386");
+      addVpath(workspace + "/src/vm/cpu/mips");
       addVpath(workspace + "/src/vm/cpu/sh");
       addVpath(workspace + "/src/vm/cpu/thumb");
       addVpath(workspace + "/src/vm/cpu/thumb2");

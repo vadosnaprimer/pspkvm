@@ -220,7 +220,7 @@ void enable_cpu_variant() {}
 void disable_cpu_variant() {}
 #endif
 
-#if ARM || HITACHI_SH
+#if ARM || HITACHI_SH || MIPS_JVM
 jint compiler_patched_code[1];
 jint compiler_unpatched_code[1];
 
@@ -259,7 +259,7 @@ char*  _jvm_quick_native_exception;
 
 #endif
 
-#if ARM
+#if ARM || MIPS_JVM
 
 address gp_base_label;
 address gp_compiler_new_object_ptr;
@@ -322,7 +322,7 @@ void wmmx_set_timer_tick() { }
 // clear timer_tick from WMMX wCASF register
 void wmmx_clear_timer_tick() { }
 
-#endif /* ARM */
+#endif /* ARM || MIPS_JVM */
 
 
 #if HITACHI_SH
