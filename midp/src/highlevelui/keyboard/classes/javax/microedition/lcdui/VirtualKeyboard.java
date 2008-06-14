@@ -353,9 +353,13 @@ class VirtualKeyboard {
             } else {
 
                 switch (keyCode) {
-                    //Short cuts by number keys
-                   case Canvas.KEY_POUND:
+                  //Short cuts by number keys
+                  case Canvas.KEY_POUND:
             	        vkl.virtualMetaKeyEntered(CNINPUT_META_KEY);
+            	        break;
+            	    case Canvas.KEY_STAR:
+            	        currentKeyboard = (currentKeyboard+1) % keys.length;
+                      vkl.virtualMetaKeyEntered(IM_CHANGED_KEY);
             	        break;
             	    case Canvas.KEY_NUM2:
             	        vkl.virtualKeyEntered(type, '2');

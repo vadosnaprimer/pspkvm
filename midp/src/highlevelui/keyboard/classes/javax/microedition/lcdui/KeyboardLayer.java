@@ -593,9 +593,9 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         System.out.println("prepareKeyMapTextField:"+w+","+h);
         if (w >= 470) {
         	prepareKeyMapTextFieldFull();
-        } else if (w >= 240) {
+        } else if (w >= 230) {
         	prepareKeyMapTextFieldMed();
-        } else if (w >= 176) {
+        } else if (w >= 166) {
         	prepareKeyMapTextFieldSmall();
         } else {
         	throw new VirtualKeyboardException("Screen's too small to display virtual keyboard");
