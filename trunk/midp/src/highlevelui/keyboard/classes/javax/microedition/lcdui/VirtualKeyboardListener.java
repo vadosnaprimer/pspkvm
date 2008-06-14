@@ -32,6 +32,8 @@ interface VirtualKeyboardListener {
      * TextField's paint(..)
      */
     public void paintTextOnly(Graphics g, int width, int height);
+
+    public void paintCandidateBar(Graphics g, int width, int height);
     
     /**
      * should return the width of the owner Displayable

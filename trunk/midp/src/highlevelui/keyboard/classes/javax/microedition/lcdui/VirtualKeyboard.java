@@ -53,6 +53,8 @@ class VirtualKeyboard {
 
     int textfieldHeight = 0; // height of text field area, including adornments
 
+    int candidateFieldHeight = 0; // height of candidate input field
+
     char itemIndexWhenPressed;
     char PRESS_OUT_OF_BOUNDS = 0;
 
@@ -75,7 +77,7 @@ class VirtualKeyboard {
      */
     public VirtualKeyboard(char[][] keys, 
                            VirtualKeyboardListener vkl,
-                           boolean displayTextArea) throws VirtualKeyboardException {
+                           boolean displayTextArea, int neededColumns, int neededRows) throws VirtualKeyboardException {
         textKbd = displayTextArea;
         if(textKbd){
               PADDING = 4;
@@ -112,11 +114,16 @@ class VirtualKeyboard {
             fontHTop = (buttonH - fontH) / 2 ;
             fontWCenter = buttonW / 2;
         }
+        candidateFieldHeight = 25;
         
         maxRows = (kbHeight - PADDING) / (buttonH + PADDING);
 
         if(textKbd) {
-            maxColumns = (kbWidth - PADDING) / (buttonW + PADDING);
+            if (neededColumns == 0) {
+                maxColumns = (kbWidth - PADDING) / (buttonW + PADDING);
+            } else {
+                maxColumns = neededColumns;
+            }
             kbWidth = maxColumns * (buttonW + PADDING) + PADDING + 1;
             kbX = (vkl.getAvailableWidth() - kbWidth) / 2;
         } else {
@@ -126,13 +133,13 @@ class VirtualKeyboard {
 
         }
 
-        int neededRows = 0;
-
-        int tmpMax = 0; // will hold the longest keyboard.
-        for (int i=0; i<keys.length; i++) {
-            if (tmpMax < keys[i].length) tmpMax = keys[i].length ;
+        if (neededRows == 0) {
+            int tmpMax = 0; // will hold the longest keyboard.
+            for (int i=0; i<keys.length; i++) {
+                if (tmpMax < keys[i].length) tmpMax = keys[i].length ;
+            }
+            neededRows = (tmpMax + maxColumns - 1) / maxColumns;
         }
-        neededRows = (tmpMax + maxColumns - 1) / maxColumns;
         if (neededRows > maxRows) {
             System.err.println("Keys list is too long for this size of screen.");
             System.err.println("Please split your keyboard array to multiple arrays.");
@@ -146,7 +153,7 @@ class VirtualKeyboard {
              neededHeight = maxRows * (buttonH + PADDING) +
                            3 * PADDING + // between the keys and the meta keys
                            IMAGE_SIZE + META_PADDING * 3 + 
-                           textfieldHeight;
+                           textfieldHeight + candidateFieldHeight;
              kbY = kbHeight - neededHeight + 2*PADDING;
              kbHeight = neededHeight;
 
@@ -166,13 +173,14 @@ class VirtualKeyboard {
         fullColumns = keys[currentKeyboard].length / maxColumns;
         //need not be displayed in the canvas mode
         if(displayTextArea){  //hk
-            metaKeys = new Image[6];
+            metaKeys = new Image[7];
             metaKeys[OK_META_KEY] = Image.createImage(ok,0,ok.length);
             metaKeys[CANCEL_META_KEY] = Image.createImage(cancel,0,cancel.length);
             metaKeys[BACKSPACE_META_KEY] = Image.createImage(backspace,0,backspace.length);
             metaKeys[SHIFT_META_KEY] = Image.createImage(shift,0,shift.length);
             metaKeys[CAPS_META_KEY] = Image.createImage(caps,0,caps.length);
             metaKeys[MODE_META_KEY] = Image.createImage(mode,0,mode.length);
+            metaKeys[CNINPUT_META_KEY] = Image.createImage(shift,0,shift.length);
         }
      }
 
@@ -210,6 +218,7 @@ class VirtualKeyboard {
      * @param keyCode key code of key pressed
      */
     void traverse(int type, int keyCode) {
+        System.out.println("VirtualK: keyCode="+keyCode);
 
         // Soft button means dismiss to the virtual keyboard
         if (type == EventConstants.RELEASED && keyCode == EventConstants.SOFT_BUTTON2) {
@@ -329,11 +338,43 @@ class VirtualKeyboard {
 		    case CANCEL_META_KEY: //"cancel"
 			vkl.virtualMetaKeyEntered(CANCEL_META_KEY);
 			break;
-		    }                    
+		    case CNINPUT_META_KEY: //"cn_input"
+		       vkl.virtualMetaKeyEntered(CNINPUT_META_KEY);
+		       break;
+		    }
 		}
             }
         }
 
+        if (type != EventConstants.RELEASED) {
+            if (EventConstants.SYSTEM_KEY_CLEAR ==
+            	  KeyConverter.getSystemKey(keyCode)) {
+            	     vkl.virtualMetaKeyEntered(BACKSPACE_META_KEY);
+            } else {
+
+                switch (keyCode) {
+                    //Short cuts by number keys
+                   case Canvas.KEY_POUND:
+            	        vkl.virtualMetaKeyEntered(CNINPUT_META_KEY);
+            	        break;
+            	    case Canvas.KEY_NUM2:
+            	        vkl.virtualKeyEntered(type, '2');
+                       break;
+                   case Canvas.KEY_NUM4:
+                       vkl.virtualKeyEntered(type, '4');
+                       break;
+            	    case Canvas.KEY_NUM6:
+            	        vkl.virtualKeyEntered(type, '6');
+                       break;
+                   case Canvas.KEY_NUM8:
+                       vkl.virtualKeyEntered(type, '8');
+                       break;
+                   case Canvas.KEY_NUM5:
+                       vkl.virtualKeyEntered(type, '5');
+                       break;
+                }
+            }
+        }
         // triggers paint()
         vkl.repaintVK();
     }
@@ -344,11 +385,18 @@ class VirtualKeyboard {
      * @param g The graphics context to paint to
      */
     protected void paint(Graphics g) {
+        int actualHeight = kbHeight + candidateFieldHeight;
         g.setFont(f);
         g.setColor(LIGHT_GRAY);
 
-        g.fillRect(0,0,kbWidth,kbHeight);
-        drawBorder(g,0,0,kbWidth-1,kbHeight-1);
+        g.fillRect(0,0,kbWidth,actualHeight);
+        drawBorder(g,0,0,kbWidth-1,actualHeight-1);
+
+        if (candidateFieldHeight > 0) {
+            drawCandidateBar(g);
+        }
+
+        g.translate(0,candidateFieldHeight);
 
         if (textfieldHeight > 0) {
             drawTextField(g);
@@ -357,9 +405,9 @@ class VirtualKeyboard {
         g.translate(0,textfieldHeight);
         drawKeys(g);
 
-        g.translate(0,kbHeight - 
+        g.translate(0,actualHeight - 
                     (IMAGE_SIZE + 6 * META_PADDING) -
-                    textfieldHeight);
+                    textfieldHeight - candidateFieldHeight);
         if(textKbd)
             drawMetaKeys(g);
       
@@ -382,6 +430,21 @@ class VirtualKeyboard {
 
         vkl.paintTextOnly(g,kbWidth - 3*PADDING,
                           textfieldHeight - 2*PADDING);
+
+        g.translate(-PADDING - 1,-PADDING);
+        g.setClip(0,0,kbWidth,kbHeight);
+    }
+
+    void drawCandidateBar(Graphics g) {
+        
+        g.setClip(0,0,
+                         kbWidth - 2*PADDING, candidateFieldHeight); 
+
+
+        g.translate(PADDING + 1,PADDING);
+
+        vkl.paintCandidateBar(g,kbWidth - 3*PADDING,
+                          candidateFieldHeight - 2*PADDING);
 
         g.translate(-PADDING - 1,-PADDING);
         g.setClip(0,0,kbWidth,kbHeight);
@@ -1154,6 +1217,7 @@ class VirtualKeyboard {
     final static int BACKSPACE_META_KEY = 3;
     final static int SHIFT_META_KEY = 4;
     final static int CAPS_META_KEY = 5;
+    final static int CNINPUT_META_KEY = 6;
 
     //When input method is changed, process this key to update UI 
     final static int IM_CHANGED_KEY = 99;
