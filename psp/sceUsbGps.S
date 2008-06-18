@@ -1,0 +1,16 @@
+	.set noreorder
+
+#include "pspstub.s"
+
+	STUB_START	"sceUsbGps",0x00090000,0x000A0005
+	STUB_FUNC	0x268F95CA,sceUsbGpsSetInitDataLocation
+	STUB_FUNC	0x31F95CDE,sceUsbGps_31F95CDE
+	STUB_FUNC	0x54D26AA4,sceUsbGpsGetInitDataLocation
+	STUB_FUNC	0x69E4AAA8,sceUsbGps_69E4AAA8
+	STUB_FUNC	0x6EED4811,sceUsbGpsClose
+	STUB_FUNC	0x7C16AC3A,sceUsbGpsGetState
+	STUB_FUNC	0x934EC2B2,sceUsbGpsGetData
+	STUB_FUNC	0x9D8F99E8,sceUsbGps_9D8F99E8
+	STUB_FUNC	0x9F267D34,sceUsbGpsOpen
+	STUB_FUNC	0xA259CD67,sceUsbGpsReset
+	STUB_END
