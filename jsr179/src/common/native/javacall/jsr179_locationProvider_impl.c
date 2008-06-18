@@ -111,11 +111,8 @@ jsr179_result jsr179_provider_open(
 
     pcsl_string_status res;
 
-    printf("jsr179_provider_open: len=%d\n", name.length);
-
     if (PCSL_STRING_OK == (res = pcsl_string_convert_to_utf16(&name, pname, JAVACALL_LOCATION_MAX_PROPERTY_LENGTH, &len))) {
-    	 printf("javacall_location_provider_open is called...\n");
-        switch (javacall_location_provider_open(pname, pProvider)) {
+    	 switch (javacall_location_provider_open(pname, pProvider)) {
             case JAVACALL_OK:
                 return JSR179_STATUSCODE_OK;
             case JAVACALL_WOULD_BLOCK:
@@ -126,8 +123,6 @@ jsr179_result jsr179_provider_open(
                 return JSR179_STATUSCODE_FAIL;
         }
     }
-
-    printf("pcsl_string_convert_to_utf16 returns %d\n", res);
 
     return JSR179_STATUSCODE_FAIL;
 }
