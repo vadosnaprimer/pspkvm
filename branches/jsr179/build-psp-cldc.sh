@@ -27,6 +27,7 @@ USE_NAMS=false
 ENABLE_THUMB=false
 USE_NOKIA_UI=true
 USE_JSR_75=true
+USE_JSR_179=true
 
 while getopts \?J:Ccdehjmnpr: c
 do
@@ -80,6 +81,7 @@ JPEG_DIR=${WS_ROOT}/jpeg
 JSR_120_DIR=${WS_ROOT}/jsr120
 JSR_75_DIR=${WS_ROOT}/jsr75
 NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
+JSR_179_DIR=${WS_ROOT}/jsr179
 PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 #PSPDEV_GNU_TOOLS_DIR=
 
@@ -102,6 +104,7 @@ then
 			JAVACALL_OUTPUT_DIR=${JAVACALL_OUTPUT_DIR} \
 			USE_JSR_135=true \
 			USE_JSR_75=${USE_JSR_75} \
+			USE_JSR_179=${USE_JSR_179} \
 			USE_PROPERTIES_FROM_FS=true \
 			${DEBUG_OPTION}
 	fi
@@ -183,6 +186,8 @@ then
 			JSR_75_DIR=${JSR_75_DIR} \
 			JSR_135_DIR=${JSR_135_DIR} \
 			JSR_120_DIR=${JSR_120_DIR} \
+			USE_JSR_179=${USE_JSR_179} \
+			JSR_179_DIR=${JSR_179_DIR} \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			SOFT_KEYBOARD_ENABLED=true \
