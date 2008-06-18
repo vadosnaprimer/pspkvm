@@ -46,8 +46,8 @@ TARGET_COMPILER		= gcc
 TARGET_VM		= cldc_vm
 
 # Platform-specific compiler flags
-EXTRA_CPPFLAGS += -G0 -DPSP
-EXTRA_CFLAGS += -G0 -DPSP
+EXTRA_CPPFLAGS += -G0 -DPSP -fno-strict-aliasing
+EXTRA_CFLAGS += -G0 -DPSP -fno-strict-aliasing
 PATHSEP = \;
 
 # Platform-specific linker flags and libraries

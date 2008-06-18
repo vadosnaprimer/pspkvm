@@ -6,7 +6,7 @@ TARGET = pspkvm
 OBJS = pspkvm.o vram.o sceUsbGps.o
 
 INCDIR = 
-CFLAGS = -G0 -Wall -I$(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/inc
+CFLAGS = -G0 -Wall -fno-strict-aliasing -I$(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/inc
 CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 ASFLAGS = $(CFLAGS)
 
