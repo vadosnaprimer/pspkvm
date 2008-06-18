@@ -1,0 +1,220 @@
+#
+#
+#
+# Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr179
+
+# Project speficic definitions
+ifndef PROJECT_JSR_179_DIR
+PROJECT_JSR_179_DIR=$(JSR_179_DIR)
+endif
+
+# Build configuration options for choosing implementations
+# Currently supported values: java | platform
+#
+#JSR_179_STORE_IMPL = platform
+JSR_179_STORE_IMPL = java
+#JSR_179_ATAN2_IMPL = platform
+JSR_179_ATAN2_IMPL = java
+
+# Build configuration options for API implementation
+# Currently supported values: stubs | emulator | platform
+#
+#JSR_179_API_IMPL = stubs
+JSR_179_API_IMPL = platform
+
+# Native documentation to include in porting interfaces
+DOXYGEN_INPUT_LIST += \
+    $(JSR_179_DIR)/src/include/jsr179_location.h
+    
+# Javadoc source path
+JSR_179_SOURCEPATH = \
+    $(JSR_179_DIR)/src/common/classes \
+    $(JSR_179_DIR)/src/java_global/classes \
+    $(JSR_179_DIR)/src/platform_global/classes
+    
+
+JSR_179_PACKAGES = \
+    com.sun.j2me.location \
+    javax.microedition.location
+
+JAVADOC_ALL_SOURCEPATH += $(JSR_179_SOURCEPATH)
+JAVADOC_ALL_PACKAGES +=  $(JSR_179_PACKAGES)
+
+GROUP_DOC_ALL += \
+        -group "JSR179 Location" \
+	$(shell echo $(JSR_179_PACKAGES) | tr ' ' $(PATHSEP))
+
+# Java files for the ( jsr179 ) module
+#
+MODULE_JSR_179_JAVA_FILES = \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/LandmarkException.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/AddressInfo.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/Coordinates.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/Criteria.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/Landmark.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/LocationException.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/LandmarkStore.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/Location.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/QualifiedCoordinates.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/LocationListener.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/LocationProvider.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/Orientation.java \
+	$(JSR_179_DIR)/src/common/classes/javax/microedition/location/ProximityListener.java \
+	$(JSR_179_DIR)/src/common/classes/com/sun/j2me/location/LocationProviderImpl.java \
+	$(JSR_179_DIR)/src/common/classes/com/sun/j2me/location/PlatformLocationProvider.java \
+	$(JSR_179_DIR)/src/common/classes/com/sun/j2me/location/LocationImpl.java \
+	$(JSR_179_DIR)/src/common/classes/com/sun/j2me/location/ProximityNotifier.java \
+	$(JSR_179_DIR)/src/common/classes/com/sun/j2me/location/OrientationProvider.java \
+	$(JSR_179_DIR)/src/common/classes/com/sun/j2me/location/Util.java
+
+# Java files for the Landmark sub-system
+#
+ifeq ($(JSR_179_STORE_IMPL), platform)
+MODULE_JSR_179_JAVA_FILES += \
+ $(JSR_179_DIR)/src/platform_global/classes/com/sun/j2me/location/LocationPersistentStorage.java \
+ $(JSR_179_DIR)/src/platform_global/classes/com/sun/j2me/location/LandmarkImpl.java 
+ vpath % $(JSR_179_DIR)/src/platform_global/native/share
+ vpath % $(JSR_179_DIR)/src/platform_global/native/$(TARGET_OS)
+ MODULE_JSR_179_NATIVE_FILES += \
+     locationPersistentStorage_kni.c \
+     jsr179_landmarkStore_impl.c
+else
+MODULE_JSR_179_JAVA_FILES += \
+ $(JSR_179_DIR)/src/java_global/classes/com/sun/j2me/location/LocationPersistentStorage.java \
+ $(JSR_179_DIR)/src/java_global/classes/com/sun/j2me/location/LandmarkImpl.java 
+endif
+
+# Files for atan2 implementation
+#
+ifeq ($(JSR_179_ATAN2_IMPL), platform)
+ vpath % $(JSR_179_DIR)/src/platform_global/native/share
+ vpath % $(JSR_179_DIR)/src/platform_global/native/$(TARGET_OS)
+MODULE_JSR_179_NATIVE_FILES += \
+    jsr179_math_kni.c \
+    jsr179_atan2_impl.c
+else
+vpath % $(JSR_179_DIR)/src/java_global/native/math
+MODULE_JSR_179_NATIVE_FILES += \
+    jsr179_math_kni.c \
+    e_atan2.c \
+    s_atan.c 
+SUBSYSTEM_JSR_179_EXTRA_INCLUDES = \
+    -I$(JSR_179_DIR)/src/java_global/native/math 
+endif
+
+# Files for API implementation
+#
+ifeq ($(JSR_179_API_IMPL), stubs)
+vpath % $(JSR_179_DIR)/src/common/native/stubs
+MODULE_JSR_179_NATIVE_FILES += \
+    jsr179_locationProvider_impl.c
+endif
+ifeq ($(JSR_179_API_IMPL), platform)
+vpath % $(JSR_179_DIR)/src/common/native/$(TARGET_OS)
+MODULE_JSR_179_NATIVE_FILES += \
+    jsr179_locationProvider_impl.c
+endif
+#
+vpath % $(JSR_179_DIR)/src/common/native/share
+SUBSYSTEM_JSR_179_EXTRA_INCLUDES = \
+    -I$(JSR_179_DIR)/src/include
+SUBSYSTEM_JSR_179_NATIVE_FILES = \
+    $(MODULE_JSR_179_NATIVE_FILES) \
+    jsr179_locationProvider_kni.c \
+    jsr179_notify.c
+
+# Determines what option we have made and set it
+# to some variable that global makefile recognize
+#
+SUBSYSTEM_JSR_179_JAVA_FILES   = \
+    $(MODULE_JSR_179_JAVA_FILES)
+
+#I3TESTS    
+SUBSYSTEM_JSR_179_I3TEST_JAVA_FILES = \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/StubLocationListener.java \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/StubProximityListener.java \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/TestCriteria.java \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/TestLocationProvider.java \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/TestLandmark.java \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/TestLandmarkStore.java \
+	$(JSR_179_DIR)/src/tests/i3test/com/sun/j2me/location/TestThreadSafety.java
+
+JTWI_I3TEST_JAVA_FILES	+= $(SUBSYSTEM_JSR_179_I3TEST_JAVA_FILES)
+    
+# Internal paths for jsr 179 module
+#
+INTERNAL_JSR_179_CONFIG_DIR= $(JSR_179_DIR)/src/config
+
+# Include jsr 179 common properties in Configuration
+#
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+    $(INTERNAL_JSR_179_CONFIG_DIR)/common/properties_jsr179.xml
+
+JTWI_NATIVE_FILES	+= $(SUBSYSTEM_JSR_179_NATIVE_FILES)
+EXTRA_INCLUDES		+= $(SUBSYSTEM_JSR_179_EXTRA_INCLUDES)
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(JSR_179_DIR)/src/config
+ROMGEN_CFG_FILES     += jsr179_rom.cfg
+
+# Append JSR 179 source bundle creation to target
+source_bundle:: jsr_179_source_bundle
+
+# Create JSR 179 source in subdir 'jsr179/'
+JSR_179_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr179
+
+# Copy and filter JSR 179 source in JSR_179_SOURCE_OUTPUT_DIR
+jsr_179_source_bundle: SOURCE_OUTPUT_DIR
+	@echo " ... JSR 179 source bundle" $(LOG)
+	@$(call re_src_filter,$(JSR_179_DIR),$(JSR_179_SOURCE_OUTPUT_DIR),src)
+
+$(MIDP_OUTPUT_DIR)/classes.zip:: $(SUBSYSTEM_JSR_179_JAVA_FILES)
+	$(appendjavafiles)
+
+all:: jsr_179_all
+
+# We have to create 'landmarkstores' directory for saving landmarks
+# to the persistent storage.
+jsr_179_all:
+ifeq ($(JSR_179_STORE_IMPL), java)
+	@mkdir -p $(MIDP_OUTPUT_DIR)/appdb/landmarkstores
+endif
+
+EXTRA_CFLAGS += -DENABLE_JSR_179=1

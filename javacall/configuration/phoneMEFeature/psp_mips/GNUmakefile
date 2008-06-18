@@ -30,7 +30,7 @@ endif
 CC=psp-gcc
 AR=psp-ar
 
-CFLAGS += -I/usr/local/pspdev/psp/sdk/include -G0
+CFLAGS += -I/usr/local/pspdev/psp/sdk/include -G0 -fno-strict-aliasing
 include environment.gmk
 
 #For each project specified toolchain shall be selected

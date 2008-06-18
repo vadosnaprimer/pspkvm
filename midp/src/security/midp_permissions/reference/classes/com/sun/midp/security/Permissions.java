@@ -317,7 +317,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_LOC_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_LOCATION_TITLE,
         ResourceConstants.PERMISSION_LOCATION_QUE, 0,
-        BLANKET, SESSION, SESSION, ONESHOT);
+        BLANKET, SESSION, SESSION, SESSION); //PSP: Change Untrusted to Session
 
     /** Landmark store permission group. */
     static final PermissionGroup LANDMARK_GROUP = new PermissionGroup(
@@ -326,7 +326,7 @@ public final class Permissions {
         ResourceConstants.AMS_MGR_LANDMARK_SETTINGS_QUE_DONT,
         ResourceConstants.PERMISSION_LANDMARK_TITLE, 0,
         ResourceConstants.PERMISSION_LANDMARK_QUE,
-        BLANKET, SESSION, SESSION, ONESHOT);
+        BLANKET, SESSION, SESSION, SESSION); //PSP: Change Untrusted to Session
 
     /** Smart card permission group. */
     static final PermissionGroup SMART_CARD_GROUP = new PermissionGroup(

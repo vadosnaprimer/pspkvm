@@ -1554,7 +1554,7 @@ CPP_DEF_FLAGS	        += $(CPP_DEF_FLAGS_$(BUILD))
 # C compiler flags
 CPP_DEF_FLAGS           += -pipe -DGCC
 CPP_DEF_FLAGS           += -Wreturn-type -Wcomment -Wparentheses -Wformat
-CPP_DEF_FLAGS           += -fstrict-aliasing
+CPP_DEF_FLAGS           += -fno-strict-aliasing
 
 # C++ specific compiler flags
 CPLUSPLUS_FLAGS         += -fno-gnu-keywords

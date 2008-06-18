@@ -24,6 +24,15 @@
 #include <psputility_netparam.h>
 #include <pspgu.h>
 
+#if _PSP_FW_VERSION >= 200
+#include <pspusb.h>
+#include "pspusbgps.h"
+
+#define ENABLE_GPS 1
+#else
+#define ENABLE_GPS 0
+#endif
+
 #include <javacall_keypress.h>
 #include <javacall_lifecycle.h>
 #include <javacall_file.h>
@@ -529,6 +538,7 @@ int netDialog(int status)
 	data.base.fontThread = 18;
 	data.base.soundThread = 16;
 	data.action = status?PSP_NETCONF_ACTION_DISPLAYSTATUS:PSP_NETCONF_ACTION_CONNECTAP;
+	data.hotspot = 1;
 
 	suspend_key_input = 1;
 
@@ -578,6 +588,115 @@ int netDialog(int status)
 	return state==4?1:0;
 }
 
+
+int usbgps_enabled = 0;
+
+#if ENABLE_GPS
+#if 0
+static u32 usbState = 0, gpsState = -1;
+
+
+static void updateDisplay (gpsdata* data, satdata* sat)
+{
+ static u32 currentY = 0;
+
+ u32 x;
+
+
+ // Wait vblank
+ sceDisplayWaitVblankStart();
+
+ // Set current Y
+ pspDebugScreenSetXY(0,currentY);
+
+ // Show texts
+ printf("\n\nUSB State = 0x%X %s\n",usbState,(usbState & PSP_USB_ACTIVATED) ? "[activated]    " : "[deactivated]");
+ printf("GPS State = 0x%X\n",gpsState);
+ printf("Satellite(s) count = %d\n\n",sat->satellites_in_view);
+
+ printf("Data :\n------\n");
+ 
+ printf("Date: %d/%d/%d %d:%d:%d\n", data->year, data->month, data->date,
+ 								data->hour, data->minute, data->second);
+ printf("HDOP: %f\tSpeed: %f\n", data->hdop, data->speed);
+ printf("latitude:%f, longtitude:%f, altitude:%f\n", data->latitude, data->longitude, data->altitude);
+ 
+ printf("\n\n[CROSS to activate/deactivate USB device | TRIANGLE to quit]\n");
+}
+
+static int gpsmngr (SceSize args, void *argp) {
+  printf("Initialize_gps...\n");
+
+  sceUsbActivate(PSP_USBGPS_PID);
+  for (;;) {
+ 
+    // Get state of the USB
+    usbState = sceUsbGetState();
+ 
+     // Get state of GPS
+     if (usbState & PSP_USB_ACTIVATED)
+      sceUsbGpsGetState(&gpsState);
+     else
+      gpsState = -1;
+   
+     // Get data of GPS
+     if (gpsState == 0x3) {
+     	//sceUsbGpsGetData(&gpsd,&satd);
+     	//printf("latitude:%f, longtitude:%f, altitude:%f\n", gpsd.latitude, gpsd.longitude, gpsd.altitude);
+     	usbgps_status = JAVACALL_GPS_STATUS_INITIALIZED;
+       break;
+     }
+   
+     
+    //updateDisplay(&gpsd,&satd);
+    //sceKernelDelayThread(1000000);
+    
+  }
+
+  printf("GPS Initialize OK\n");
+  sceKernelExitDeleteThread(0);
+
+  return 0;
+}
+#endif
+static int moduleLoadStart (const char *path)
+{
+ SceUID loadResult, startResult;
+ int status;
+
+
+ loadResult = sceKernelLoadModule(path,0,NULL);
+ if (loadResult & 0x80000000) return loadResult;
+
+ startResult = sceKernelStartModule(loadResult,0,NULL,&status,NULL);
+ if (loadResult != startResult) return startResult;
+
+ return 0;
+}
+
+static int startUSBGPSDrivers() {
+	int res = 0;
+	
+	if (res = sceUsbStart(PSP_USBBUS_DRIVERNAME,0,0)) {
+		printf(PSP_USBBUS_DRIVERNAME" start failed\n");
+		return res;
+	}
+
+	if (res = sceUsbStart("USBAccBaseDriver",0,0)) {
+		printf("USBAccBaseDriver start failed\n");
+		return res;
+	}
+
+	if (res = sceUsbStart(PSP_USBGPS_DRIVERNAME,0,0)) {
+		printf(PSP_USBGPS_DRIVERNAME" start failed\n");
+		return res;
+	}
+
+	return res;
+}
+#endif //ENABLE_GPS
+
+
 int java_main(void)
 {
 	SceUID id;
@@ -585,6 +704,14 @@ int java_main(void)
 	//pspDebugScreenInit();
 	
 	SetupCallbacks();
+#if 1
+//#if ENABLE_GPS
+#if 0
+	SceUID thid_gpsmngr = sceKernelCreateThread("gps_manager_thread",gpsmngr, 0x40, 10000, 0, 0);
+	if(thid_gpsmngr >= 0) {                
+		sceKernelStartThread(thid_gpsmngr, 0, 0);        
+	}
+#endif
 
 	id = sceKernelSetAlarm(1000000, alarm_handler, (void*)0);
 	if (id < 0) {
@@ -608,6 +735,63 @@ int java_main(void)
 	}
 	
 	javacall_media_finalize();
+#else 
+ SceCtrlData pad;
+ u32 oldButtons = 0;
+
+ // Must be local ?
+ gpsdata gpsd;
+ satdata  satd;
+ 
+for (;;)
+ {
+  // Get state of GPS
+  if (usbState & PSP_USB_ACTIVATED)
+   sceUsbGpsGetState(&gpsState);
+  else
+   gpsState = -1;
+
+  // Get data of GPS
+  if (gpsState == 0x3) sceUsbGpsGetData(&gpsd,&satd);
+
+  // Read the buttons
+  sceCtrlReadBufferPositive(&pad,1);
+
+  if (oldButtons != pad.Buttons)
+  {
+   // Save the buttons
+   oldButtons = pad.Buttons;
+
+   // Exit if TRIANGLE
+   if (pad.Buttons & PSP_CTRL_TRIANGLE) break;
+
+   // Start / Stop GPS if CROSS
+   if (pad.Buttons & PSP_CTRL_CROSS)
+   {
+    if (usbState & PSP_USB_ACTIVATED)
+	 sceUsbDeactivate(PSP_USBGPS_PID);
+    else
+ 	 sceUsbActivate(PSP_USBGPS_PID);
+
+    sceUsbWaitCancel();
+
+    // Get state of the USB
+    usbState = sceUsbGetState();
+   }
+  }
+
+  // Update display
+  updateDisplay(&gpsd,&satd);
+ }
+
+ //sceUsbGpsClose();
+
+ // USB Deactivate
+ //sceUsbDeactivate(PSP_USBGPS_PID);
+ //sceUsbWaitCancel();
+ printf("PSP_CTRL_TRIANGLE\n");
+ sceKernelExitGame();
+#endif
 	return 0;
 }
 
@@ -657,19 +841,11 @@ static void setup_gu() {
 	sceKernelDcacheWritebackAll();
 }
 
-int mk_dir(const char* dir, SceMode mode)
-{
-    	return sceIoMkdir(dir, mode);
-}
-
-int rm_dir(const char* dir)
-{
-    	return sceIoRmdir(dir);
-}
-
 int main(void)
 {
 	SceUID thid;
+	int res = 0;
+	int ret_val = 0;
 	pspDebugScreenInit();
 
        printf("Setup GU\n");
@@ -679,42 +855,98 @@ int main(void)
 
 	printf("Loading network modules\n");
 #if _PSP_FW_VERSION >= 200
-       if (sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON) < 0) {
-    		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_COMMON);
-    		return JAVACALL_FAIL;
+       if ((ret_val = sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON)) < 0) {
+    		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_COMMON);    		
+    		goto fail;
     	}
 
-	if (sceUtilityLoadNetModule(PSP_NET_MODULE_INET) < 0) {
+	if ((ret_val = sceUtilityLoadNetModule(PSP_NET_MODULE_INET)) < 0) {
 		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_INET);
-		return JAVACALL_FAIL;
+		goto fail;
 	}
 
+#if ENABLE_GPS
+       usbgps_enabled = 0;
+
+	if (res = moduleLoadStart("usbacc.prx")) {
+		printf("Error, could not load usbacc.prx: %x\n", res);
+	}
+
+	if (res == 0 && (res = moduleLoadStart("usbgps.prx"))) {
+		printf("Error, could not load usbgps.prx: %x\n", res);		
+	}
+
+	if (res == 0 && (res = startUSBGPSDrivers())) {
+		printf("Error, could not start USB GPS drivers: %x\n", res);
+	} else if (res == 0) {
+		if (res = sceUsbGpsOpen()) {
+			printf("Error, sceUsbGpsOpen: %x\n",  res);
+		} else {
+			printf("USB GPS enabled\n");
+			usbgps_enabled = 1;
+		}
+	} else {
+		printf("Module loading failed. Can not use GPS device!\n");
+	}
+#endif //ENABLE_GPS
+
 #else	
-    	if(pspSdkLoadInetModules() < 0)	{	
-    		printf("Error, could not load inet modules\n");	
-    		sceKernelExitGame();	
-    		return -1;
+    	if(ret_val = pspSdkLoadInetModules() < 0)	{	
+    		printf("Error, could not load inet modules\n");
+    		goto fail;
     	}
 #endif
 	
 
     	printf("Network module loaded\n");
+
+	ret_val = 0;
     	
 	/* create user thread */
 	thid = sceKernelCreateThread("Java Thread", java_main,
 											0x2f, // default priority
 											512 * 1024, // stack size
-											PSP_THREAD_ATTR_USER, NULL); //# user mode
+											PSP_THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU, NULL); //# user mode
 
 	// start user thread, then wait for it to do everything else
 	sceKernelStartThread(thid, 0, 0);
+	printf("sceKernelWaitThreadEnd...\n");
 	sceKernelWaitThreadEnd(thid, NULL);
+	printf("sceKernelWaitThreadEnd OK\n");
 
+fail:
        sceGuTerm();
+       printf("sceKernelExitGame...\n");
 	/* quick clean exit */
 	sceKernelExitGame();
+	printf("sceKernelExitGame OK\n");
 
-	return 0;
+	return ret_val;
 
+}
+
+/**
+ * System stubs for workaround linking order problems
+ **/
+u32 _sceUsbGetState() {
+  return sceUsbGetState();
+}
+
+void _sceUsbActivate(u32 id) {
+  return sceUsbActivate(id);
+}
+
+void _sceUsbDeactivate(u32 id) {
+  return sceUsbDeactivate(id);
+}
+
+int mk_dir(const char* dir, SceMode mode)
+{
+    	return sceIoMkdir(dir, mode);
+}
+
+int rm_dir(const char* dir)
+{
+    	return sceIoRmdir(dir);
 }
 

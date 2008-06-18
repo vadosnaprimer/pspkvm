@@ -17,6 +17,7 @@ HELP="Options:
 
 BUILD_TARGET=WIN32_JAVACALL
 unset DEBUG_OPTION
+unset MIDP_DEBUG_OPTION
 unset CLEAN
 unset BUILD_JAVACALL_IMPL
 unset BUILD_PCSL
@@ -27,15 +28,19 @@ USE_NAMS=false
 ENABLE_THUMB=false
 USE_NOKIA_UI=true
 USE_JSR_75=true
+USE_JSR_179=true
 
-while getopts \?J:CTcdehjmnpr: c
+while getopts \?J:CTcdDehjmnpr: c
 do
 	case $c in
 	C)	CLEAN="true";;
 	J)	JDK_DIR=$OPTARG
 		export JDK_DIR;;
 	c)	BUILD_CLDC="true";;
-	d)	DEBUG_OPTION="USE_DEBUG=true";;
+	d)	DEBUG_OPTION="USE_DEBUG=true"
+		MIDP_DEBUG_OPTION="USE_DEBUG=true";;
+	D)	DEBUG_OPTION="USE_DEBUG=true"
+		MIDP_DEBUG_OPTION="USE_CLDC_RELEASE=true";;
 	e)	ERASE_BUILD_OUTPUT="true";CLEAN="true";;
 	h)	echo "${USAGE}"
 		echo "${HELP}"
@@ -78,6 +83,7 @@ RESTRICTED_CRYPTO_DIR=${WS_ROOT}/restricted_crypto
 TOOLS_DIR=${WS_ROOT}/tools
 JSR_120_DIR=${WS_ROOT}/jsr120
 NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
+JSR_179_DIR=${WS_ROOT}/jsr179
 #PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 PSPDEV_GNU_TOOLS_DIR=
 
@@ -100,6 +106,7 @@ then
 			JAVACALL_OUTPUT_DIR=${JAVACALL_OUTPUT_DIR} \
 			ENABLE_THUMB=${ENABLE_THUMB} \
 			USE_JSR_75=${USE_JSR_75} \
+			USE_JSR_179=${USE_JSR_179} \
 			USE_PROPERTIES_FROM_FS=false \
 			${DEBUG_OPTION}
 	fi
@@ -179,11 +186,14 @@ then
 			USE_JSR_75=${USE_JSR_75} \
 			JSR_75_DIR=${WS_ROOT}/jsr75 \
 			JSR_120_DIR=${JSR_120_DIR} \
+			USE_JSR_179=${USE_JSR_179} \
+			JSR_179_DIR=${JSR_179_DIR} \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			USE_MULTIPLE_ISOLATES=true \
 			skip_ams_executables=false \
-			${DEBUG_OPTION}
+			SOFT_KEYBOARD_ENABLED=true \
+			${MIDP_DEBUG_OPTION}
 		if [ $? != 0 ];then
 			echo make failed for ${BUILD_TARGET} module ${BUILDMODULE}
 			exit 1

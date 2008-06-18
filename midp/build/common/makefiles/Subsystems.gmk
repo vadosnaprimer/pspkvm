@@ -332,7 +332,7 @@ endif
 #####################################################################
 ifeq ($(USE_JSR_179), true)
 JPP_DEFS += -DENABLE_JSR_179
-include $(JSR_179_DIR)/build/$(SUBSYSTEM_MAKE_FILE)
+include $(JSR_179_DIR)/src/config/$(SUBSYSTEM_MAKE_FILE)
 endif
 
 #####################################################################
