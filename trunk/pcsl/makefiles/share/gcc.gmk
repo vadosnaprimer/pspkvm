@@ -78,5 +78,5 @@ LD_FLAGS += -Xlinker --no-warn-mismatch
 endif
 
 ifeq ($(PCSL_CPU), mips)
-CFLAGS   += -G0
+CFLAGS   += -G0 -fno-strict-aliasing
 endif

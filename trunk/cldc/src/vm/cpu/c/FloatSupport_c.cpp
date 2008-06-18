@@ -310,6 +310,10 @@ extern "C" {
 #if PROCESSOR_ARCHITECTURE_X86
     return JFP_lib_fcmpg_x86(x, y); 
 #else
+    if (F_JUST_NAN == *(jint*)&x ||
+    	 F_JUST_NAN == *(jint*)&y) {
+    	 return 1;
+    }
     return  ((x > y)   ?  1   : 
 	     (x == y)  ?  0 : 
 	     (x < y)   ? -1 : 1);
@@ -320,6 +324,10 @@ extern "C" {
 #if PROCESSOR_ARCHITECTURE_X86
     return JFP_lib_fcmpl_x86(x, y); 
 #else
+    if (F_JUST_NAN == *(jint*)&x ||
+    	 F_JUST_NAN == *(jint*)&y) {
+    	 return 1;
+    }
     return  ((x > y) ? 1 : ( x == y) ? 0 : -1);
 #endif
   }
