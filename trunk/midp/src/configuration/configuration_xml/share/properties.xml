@@ -52,7 +52,7 @@
         to 0 the alert will not be shown definitely."/>
 
   <property Key="system.jam_space"
-	  Value="1000000"
+	  Value="4000000"
 	  Scope="internal"
 	  Comment="Amount of space to reserve for JAM storage."/>
 
