@@ -40,6 +40,8 @@
 #include <midpMidletSuiteUtils.h>
 #include <midpUtilKni.h>
 
+#include <javacall_network.h>
+
 /**
  * @file
  *
@@ -215,3 +217,15 @@ char* strdup(const char* str) {
 char* midpMicroeditionPlatform() {
     return "NokiaN73";
 }
+
+#define MAX_HOST_LENGTH 256
+char* midpGetHTTPProxy() {
+    static char proxy[MAX_HOST_LENGTH+7];
+    memset(proxy, 0, MAX_HOST_LENGTH +7);
+    if (JAVACALL_FAIL == javacall_network_get_http_proxy(&proxy, NULL)) {
+        return "";
+    } else {
+        return proxy;
+    }
+}
+

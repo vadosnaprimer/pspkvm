@@ -53,6 +53,27 @@ extern "C" {
 #include <psputility_netparam.h>
 //#define DEBUG_JAVACALL_NETWORK 1
 struct _DNSHandle;
+#define MAX_HOST_LENGTH 256
+
+#define PSP_CONSTATE_PROFILE_NAME       0   /*char [64] */ 
+#define PSP_CONSTATE_BSSID              1   /*u8 [6] */ 
+#define PSP_CONSTATE_SSID               2   /*char [32] */ 
+#define PSP_CONSTATE_SSID_LENGTH        3   /*u32*/ 
+#define PSP_CONSTATE_SECURITY_TYPE      4   /*u32*/ 
+#define PSP_CONSTATE_STRENGTH           5   /*u8*/ 
+#define PSP_CONSTATE_CHANNEL            6   /*u8*/ 
+#define PSP_CONSTATE_POWER_SAVE         7   /*u8*/ 
+#define PSP_CONSTATE_IP                 8   /*char[16] */ 
+#define PSP_CONSTATE_SUBNETMASK         9   /*char[16]*/ 
+#define PSP_CONSTATE_GATEWAY           10   /*char[16]*/ 
+#define PSP_CONSTATE_PRIMDNS           11   /*char[16] */ 
+#define PSP_CONSTATE_SECDNS            12   /*char[16] */ 
+#define PSP_CONSTATE_USEPROXY          13   /*u32*/ 
+#define PSP_CONSTATE_PROXYURL          14   /*char[128] */ 
+#define PSP_CONSTATE_PROXYPORT         15   /*u16*/ 
+#define PSP_CONSTATE_8021_EAP_TYPE     16   /*u32*/ 
+#define PSP_CONSTATE_STARTBROWSER      17   /*u32*/ 
+#define PSP_CONSTATE_WIFISP            18   /*u32*/
 
 typedef struct _DNSHandle{
 	struct _DNSHandle* next;
@@ -752,8 +773,35 @@ javacall_result /*OPTIONAL*/ javacall_network_gethostbyaddr_finish(int ipn,
  * @retval JAVACALL_FAIL    if there is a network error
  */
 javacall_result /*OPTIONAL*/ javacall_network_get_http_proxy(/*OUT*/ char *pHttpProxy, /*OUT*/ char *pHttpsProxy) {
-    javacall_print("javacall: not implemented : javacall_network_get_http_proxy \n");
-    return JAVACALL_FAIL;
+    u32 isUseProxy;
+    u16 port;
+    static char url[MAX_HOST_LENGTH];
+
+    javacall_print("javacall_network_get_http_proxy\n");
+    
+    if (sceNetApctlGetInfo(PSP_CONSTATE_USEPROXY, &isUseProxy) || !isUseProxy) {
+    	 javacall_print("javacall_network_get_http_proxy not set\n");
+        return JAVACALL_FAIL;
+    }
+
+    if (sceNetApctlGetInfo(PSP_CONSTATE_PROXYURL, url) ||
+    	 sceNetApctlGetInfo(PSP_CONSTATE_PROXYPORT, &port)) {
+    	 javacall_print("javacall_network_get_http_proxy failed to get url or port\n");
+        return JAVACALL_FAIL;
+    }
+
+    javacall_printf("url:%s:%d\n", url, (unsigned int)port);
+    
+    if (pHttpProxy) {
+    	snprintf(pHttpProxy, MAX_HOST_LENGTH+6 , "%s:%d", url, (unsigned int)port);
+    }
+
+    if (pHttpsProxy) {
+    	return JAVACALL_FAIL;
+    }
+
+    javacall_print("javacall_network_get_http_proxy sucess\n");
+    return JAVACALL_OK;
 }
 
 javacall_result /*OPTIONAL*/ javacall_network_get_local_host_name(/*OUT*/ char *pLocalHost) {
