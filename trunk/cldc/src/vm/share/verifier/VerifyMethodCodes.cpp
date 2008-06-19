@@ -970,7 +970,17 @@ void VerifyMethodCodes::handle_invoker(int index, int /*num_of_args*/,
         // The type of the instance must be the same as or a subclass of the 
         // current class.
         // See instructionIsTypeSafe predicate in "CLDC 1.1 Appendix 1", p. 51
+
+        
+        /***
+         * M@x:
+         *     For backward compatibility, this check should be skipped; otherwise some
+         * MIDlets like Gmail cannot pass verification.
+         ***
+         *
         method_klass_name = verifying_class().name();
+         *
+         **/
       }
       // Verification of access to protected methods is done here because
       // the superclass must be loaded at this time (other checks are
