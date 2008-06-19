@@ -538,7 +538,7 @@ int netDialog(int status)
 	data.base.fontThread = 18;
 	data.base.soundThread = 16;
 	data.action = status?PSP_NETCONF_ACTION_DISPLAYSTATUS:PSP_NETCONF_ACTION_CONNECTAP;
-	data.hotspot = 1;
+	data.hotspot = 0;
 
 	suspend_key_input = 1;
 

@@ -84,9 +84,10 @@
 	  Scope="internal"
 	  Comment="Default input handler class."/>
 
-  <!-- property Key="com.sun.midp.io.http.proxy" 
-				Value="webcache:8080" 
-				Scope="internal"/ -->
+  <property Key="com.sun.midp.io.http.proxy" 
+				Value="" 
+				Callout="midpGetHTTPProxy"
+				Scope="internal"/>
   <!-- property Key="com.sun.midp.io.http.force_non_persistent" 
 				Value="false" 
 				Scope="internal"/ -->

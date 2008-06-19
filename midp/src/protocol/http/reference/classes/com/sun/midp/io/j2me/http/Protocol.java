@@ -154,7 +154,7 @@ public class Protocol extends ConnectionBaseAdapter
          * so when this method subclassed by HTTPS http_proxy will be null
          * and the proxy will not be added into the request.
          */
-        http_proxy = Configuration.getProperty("com.sun.midp.io.http.proxy");
+        http_proxy = null;//Configuration.getProperty("com.sun.midp.io.http.proxy");
         
         /*
          * CR#4455443 - allows for configuration options to shut off 
@@ -1933,7 +1933,9 @@ public class Protocol extends ConnectionBaseAdapter
 
         conn = new com.sun.midp.io.j2me.socket.Protocol();
 
-        if (http_proxy == null || url.host.equals("localhost") ||
+        http_proxy = Configuration.getProperty("com.sun.midp.io.http.proxy");
+
+        if (http_proxy == null || http_proxy.length() == 0 || url.host.equals("localhost") ||
             url.host.equals("127.0.0.1")) {
             /* bypass proxy when trying to connect to the same computer
              * and not using explicit IP or host name */
