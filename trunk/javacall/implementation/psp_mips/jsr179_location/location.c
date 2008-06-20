@@ -58,7 +58,7 @@ extern int usbgps_enabled;
 static int usbgps_status = JAVACALL_GPS_STATUS_UNINITIALIZED;
 
 static javacall_location_location providers_location =    
-{JAVACALL_TRUE, 14.393338422069922, 50.098237322508126, 5510.23, 1.0, 1.0, 20.1, 1.0, JAVACALL_LOCATION_MTE_SATELLITE, 0, 0, 0};
+{JAVACALL_TRUE, 14.393338422069922, 50.098237322508126, 5510.23, 10.0, 10.0, 20.1, 1.0, JAVACALL_LOCATION_MTE_SATELLITE, 0, 0, 0};
 static javacall_location_provider_info provider_info =
 {JAVACALL_TRUE,  JAVACALL_TRUE, JAVACALL_FALSE, JAVACALL_TRUE,
         0, 10, 10, 2000, 5000, 10000, 1000, 1000};
