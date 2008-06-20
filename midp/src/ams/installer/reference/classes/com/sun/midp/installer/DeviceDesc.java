@@ -21,6 +21,7 @@ package com.sun.midp.installer;
         private static native void resetKeymap0();
         private static native void setKeymap0(int iJavakey, int iNativekey);
         private static native int getJavaKeyNumber0();
+        private static native String getDevicePropid0(int id);
         
         
         public static DeviceDesc initDevicesDesc() {
@@ -120,6 +121,10 @@ package com.sun.midp.installer;
                   keymap[i] = getDefaultKeymap0(i);
               }
         	return keymap;
+        }
+
+        public static String getDevicePropid(int id) {
+            return getDevicePropid0(id);
         }
 
         public static native int devIdToDispId(int devId);

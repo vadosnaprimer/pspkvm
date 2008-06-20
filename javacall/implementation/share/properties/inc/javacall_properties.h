@@ -42,9 +42,12 @@ typedef enum {
     JAVACALL_INTERNAL_PROPERTY,
     JAVACALL_JSR75_PROPERTY,
     JAVACALL_AMS_PROPERTY,
+    JAVACALL_DEVICE_PROPERTY,
     JAVACALL_NUM_OF_PROPERTIES
 } javacall_property_type;
 
+#define JAVACALL_PROPERTY_MAX_KEY_LENGTH 64
+#define JAVACALL_PROPERTY_MAX_VAL_LENGTH 256
 
 /**
  * Gets the value of the specified property in the specified

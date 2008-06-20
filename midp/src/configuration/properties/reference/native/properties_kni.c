@@ -51,7 +51,7 @@
  * @return The converted C string upon success, otherwise
  *         <tt>NULL<tt>
  */
-static char*
+char*
 UnicodeToCString(jchar* uString, int length) {
     int        i;
     char*      cString;

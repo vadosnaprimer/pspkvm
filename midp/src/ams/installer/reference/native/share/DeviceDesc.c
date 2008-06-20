@@ -117,3 +117,20 @@ KNIDECL(com_sun_midp_installer_DeviceDesc_dispIdToDevId) {
     KNI_ReturnInt(javacall_devemu_get_deviceID(KNI_GetParameterAsInt(1)));
 }
 
+KNIEXPORT KNI_RETURNTYPE_OBJECT
+KNIDECL(com_sun_midp_installer_DeviceDesc_getDevicePropid0) {
+    int index;    
+    index = KNI_GetParameterAsInt(1);
+
+    KNI_StartHandles(1);
+    KNI_DeclareHandle(ret);
+
+    int len;
+    char* profile = javacall_devemu_get_device_pid(index);
+    if (profile && (len = strlen(profile)) > 0) {
+        KNI_NewStringUTF(profile, ret);
+    }
+
+    KNI_EndHandlesAndReturnObject(ret);
+}
+
