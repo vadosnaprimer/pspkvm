@@ -1661,6 +1661,15 @@ public class Protocol extends ConnectionBaseAdapter
         String filename;
         int numberOfKeys;
 
+        String forceReplaceUserAgent = System.getProperty("com.pspkvm.forceReplaceUserAgent");
+        String userAgent = System.getProperty("com.pspkvm.user-agent");
+        if (userAgent != null) {
+            if ("true".equals(forceReplaceUserAgent) ||
+                reqProperties.getPropertyIgnoreCase("User-Agent") == null) {
+                reqProperties.setPropertyIgnoreCase("User-Agent", userAgent);
+            }
+        }
+
         /*
          * JTWI security policy for untrusted MIDlets says to add a
          * user-agent field with the value "UNTRUSTED/1.0" but still include
