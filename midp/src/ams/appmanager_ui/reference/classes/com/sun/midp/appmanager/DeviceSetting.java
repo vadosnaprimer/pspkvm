@@ -143,7 +143,7 @@ public class DeviceSetting extends Form
     	        }
     	    }
     	} else if (item instanceof ChoiceGroup) {
-    	    selectedDevice = ((ChoiceGroup)item).getSelectedIndex();
+    	    selectedDevice = DeviceDesc.dispIdToDevId(((ChoiceGroup)item).getSelectedIndex());
     	}
     }
 
@@ -152,12 +152,17 @@ public class DeviceSetting extends Form
         int dev = 0;
         String name;
 
-        while ((name = GraphicalInstaller.getDeviceName(dev++)) != null) {        	
+        while ((name = GraphicalInstaller.getDeviceName(DeviceDesc.dispIdToDevId(dev++))) != null) {        	
             selector.append(name, null);
         }
 
-        selector.setSelectedIndex(selectedDevice, true);
-
+        try {
+            selector.setSelectedIndex(DeviceDesc.devIdToDispId(selectedDevice), true);
+        } catch (IndexOutOfBoundsException e) {
+            System.err.println("createDeviceSelector: selected device is out of list!");
+            selectedDevice = 0;
+            selector.setSelectedIndex(DeviceDesc.devIdToDispId(selectedDevice), true);
+        }
         selector.setLayout(Item.LAYOUT_NEWLINE_AFTER);
 
         return selector;

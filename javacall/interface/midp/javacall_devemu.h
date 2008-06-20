@@ -18,6 +18,8 @@ int javacall_devemu_get_current_device();
 void javacall_devemu_set_current_device(int id);
 int javacall_devemu_get_keycode(int id, javacall_key javacallkey);
 int javacall_devemu_get_rotation(int id);
+int javacall_devemu_get_displayID(int devid);
+int javacall_devemu_get_deviceID(int dispid);
 
 
 #ifdef __cplusplus

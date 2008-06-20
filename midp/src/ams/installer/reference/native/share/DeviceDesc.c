@@ -107,3 +107,13 @@ KNIDECL(com_sun_midp_installer_DeviceDesc_getJavaKeyNumber0) {
     KNI_ReturnInt(javacall_keymap_javakey_number());
 }
 
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(com_sun_midp_installer_DeviceDesc_devIdToDispId) {
+    KNI_ReturnInt(javacall_devemu_get_displayID(KNI_GetParameterAsInt(1)));
+}
+
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(com_sun_midp_installer_DeviceDesc_dispIdToDevId) {
+    KNI_ReturnInt(javacall_devemu_get_deviceID(KNI_GetParameterAsInt(1)));
+}
+

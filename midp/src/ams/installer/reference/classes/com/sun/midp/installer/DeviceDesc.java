@@ -121,4 +121,7 @@ package com.sun.midp.installer;
               }
         	return keymap;
         }
+
+        public static native int devIdToDispId(int devId);
+        public static native int dispIdToDevId(int dispId);
     }

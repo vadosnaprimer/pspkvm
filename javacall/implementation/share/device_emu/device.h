@@ -14,5 +14,6 @@ typedef struct {
 	int		KEY_SOFT2;
 	int		KEY_CLEAR;
 	int		ROTATE_ANGLE;
+	int		DISPLAY_ID;
 } DEVICE_INFO;
 #endif
