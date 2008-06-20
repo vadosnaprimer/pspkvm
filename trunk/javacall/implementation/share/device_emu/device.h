@@ -15,5 +15,6 @@ typedef struct {
 	int		KEY_CLEAR;
 	int		ROTATE_ANGLE;
 	int		DISPLAY_ID;
+	char*	DEVICE_PROPERTY_ID;
 } DEVICE_INFO;
 #endif

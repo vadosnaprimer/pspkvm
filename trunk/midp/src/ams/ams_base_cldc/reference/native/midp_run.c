@@ -64,6 +64,9 @@
 #include <suspend_resume.h>
 #endif
 
+#include <javacall_properties.h>
+#include "javacall_devemu.h"
+
 /**
  * @file
  *
@@ -260,15 +263,43 @@ static void setMonetClassPath(JvmPathChar **userClassPath, int pathLen) {
 /** The name of the runtime main internal class. */
 #define MIDP_MAIN "com.sun.midp.main.MIDletSuiteLoader"
 
+static char* getDeviceProperty(const char* key) {
+    static char combined_key[JAVACALL_PROPERTY_MAX_KEY_LENGTH+1];
+    char* value = NULL;
+
+    char* propid = javacall_devemu_get_device_pid(javacall_devemu_get_current_device());
+
+    if (propid == NULL) {
+        return NULL;
+    }
+
+    strncpy(combined_key, propid, JAVACALL_PROPERTY_MAX_KEY_LENGTH);
+    strncat(combined_key, ".", JAVACALL_PROPERTY_MAX_KEY_LENGTH - strlen(combined_key));
+    strncat(combined_key, key, JAVACALL_PROPERTY_MAX_KEY_LENGTH - strlen(combined_key));
+    
+    /* Look up the property value */
+    if (JAVACALL_OK == javacall_get_property(combined_key, JAVACALL_DEVICE_PROPERTY, &value)           
+        && (value != NULL)) {
+        return value;
+    } else {
+        return NULL;
+    }    
+}
+
+
 char*
 JVMSPI_GetSystemProperty(char* prop_name) {
 
-    char *result = (char *)getSystemProperty(prop_name);
+    char *result = getDeviceProperty(prop_name);
 
-    if (result == NULL && prop_name != NULL) {
-        if (strcmp(prop_name, TIMEZONE_PROP_NAME) == 0) {
-            /* Get the local timezone from the native platform */
-            result = getLocalTimeZone();
+    if (result == NULL) {
+        result = (char *)getSystemProperty(prop_name);
+    
+        if (result == NULL && prop_name != NULL) {
+            if (strcmp(prop_name, TIMEZONE_PROP_NAME) == 0) {
+                /* Get the local timezone from the native platform */
+                result = getLocalTimeZone();
+            }
         }
     }
 

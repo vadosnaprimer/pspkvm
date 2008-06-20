@@ -42,6 +42,7 @@ static const char application_prefix[] = "application:";
 static const char internal_prefix[] = "internal:";
 static const char jsr75_prefix[] = "jsr75:";
 static const char ams_prefix[] = "ams:";
+static const char device_prefix[] = "device:";
 
 /**
  * Initializes the configuration sub-system.
@@ -102,6 +103,8 @@ javacall_result javacall_get_property(const char* key,
         joined_key = javautil_string_strcat(jsr75_prefix, key);
     } else if (JAVACALL_AMS_PROPERTY == type) {
         joined_key = javautil_string_strcat(ams_prefix, key);
+    } else if (JAVACALL_DEVICE_PROPERTY == type) {
+        joined_key = javautil_string_strcat(device_prefix, key);
     }
 
     if (joined_key == NULL) {
@@ -148,6 +151,8 @@ javacall_result javacall_set_property(const char* key,
         joined_key = javautil_string_strcat(jsr75_prefix, key);
     } else if (JAVACALL_AMS_PROPERTY == type) {
         joined_key = javautil_string_strcat(ams_prefix, key);
+    } else if (JAVACALL_DEVICE_PROPERTY == type) {
+        joined_key = javautil_string_strcat(device_prefix, key);
     }
 
     if (joined_key == NULL) {
