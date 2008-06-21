@@ -508,86 +508,6 @@ int KeyThread(SceSize args, void *argp)
 }
 #endif
 
-int netDialog(int status)
-{
-	int state;
-
-#if _PSP_FW_VERSION >= 200
-
-	int running = 1;
-	
-#ifdef DEBUG_JAVACALL_NETWORK
-    	javacall_printf("netDialog: enter %d\n", status);
-#endif
-
-       if (status == 0) {
-       	sceNetApctlGetState(&state);
-       	if (state > 0) {
-       		status = 1;
-       	}
-       }
-	
-   	pspUtilityNetconfData data;
-
-	memset(&data, 0, sizeof(data));
-	data.base.size = sizeof(data);
-	data.base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
-	data.base.buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
-	data.base.graphicsThread = 17;
-	data.base.accessThread = 19;
-	data.base.fontThread = 18;
-	data.base.soundThread = 16;
-	data.action = status?PSP_NETCONF_ACTION_DISPLAYSTATUS:PSP_NETCONF_ACTION_CONNECTAP;
-	data.hotspot = 0;
-
-	suspend_key_input = 1;
-
-	sceUtilityNetconfInitStart(&data);
-
-	while(running)
-	{
-	      //sceGuDisplay(0);
-		switch(sceUtilityNetconfGetStatus())
-		{
-			case PSP_UTILITY_DIALOG_NONE:
-				running = 0;
-				break;
-
-			case PSP_UTILITY_DIALOG_VISIBLE:
-				javacall_lcd_enable_flush(0);
-	      			javacall_lcd_flush();
-				sceUtilityNetconfUpdate(1);				
-				sceDisplayWaitVblankStart();
-				sceGuSwapBuffers();
-				break;
-			case PSP_UTILITY_DIALOG_FINISHED:
-				javacall_lcd_enable_flush(1);				
-				break;
-
-			case PSP_UTILITY_DIALOG_QUIT:
-				sceUtilityNetconfShutdownStart();				
-				break;
-
-			default:
-				break;
-		}
-	}
-	javacall_lcd_enable_flush(1);
-#endif /*_PSP_FW_VERSION >= 200*/
-
-       sceKernelDelayThread(500000); 
-
-	sceNetApctlGetState(&state);
-#ifdef DEBUG_JAVACALL_NETWORK
-    	javacall_printf("netDialog: return %d\n", state);
-#endif
-	sceKernelDelayThread(500000); 
-
-	suspend_key_input = 0;
-	
-	return state==4?1:0;
-}
-
 
 int usbgps_enabled = 0;
 
@@ -713,7 +633,7 @@ int java_main(void)
 	}
 #endif
 
-	id = sceKernelSetAlarm(1000000, alarm_handler, (void*)0);
+	id = sceKernelSetAlarm(3000000, alarm_handler, (void*)0);
 	if (id < 0) {
 		printf("sceKernelSetAlarm error!\n");
 		return -1;
@@ -841,6 +761,195 @@ static void setup_gu() {
 	sceKernelDcacheWritebackAll();
 }
 
+int netDialog(int status)
+{
+	int state;
+
+#if _PSP_FW_VERSION >= 200
+
+	int running = 1;
+	
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("netDialog: enter %d\n", status);
+#endif
+
+       if (status == 0) {
+       	sceNetApctlGetState(&state);
+       	if (state > 0) {
+       		status = 1;
+       	}
+       }
+	
+   	pspUtilityNetconfData data;
+
+	memset(&data, 0, sizeof(data));
+	data.base.size = sizeof(data);
+	data.base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
+	data.base.buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
+	data.base.graphicsThread = 17;
+	data.base.accessThread = 19;
+	data.base.fontThread = 18;
+	data.base.soundThread = 16;
+	data.action = status?PSP_NETCONF_ACTION_DISPLAYSTATUS:PSP_NETCONF_ACTION_CONNECTAP;
+	data.hotspot = 0;
+
+	suspend_key_input = 1;
+
+	sceUtilityNetconfInitStart(&data);
+
+	while(running)
+	{
+	      //sceGuDisplay(0);
+		switch(sceUtilityNetconfGetStatus())
+		{
+			case PSP_UTILITY_DIALOG_NONE:
+				running = 0;
+				break;
+
+			case PSP_UTILITY_DIALOG_VISIBLE:
+				javacall_lcd_enable_flush(0);
+	      			javacall_lcd_flush();
+				sceUtilityNetconfUpdate(1);				
+				sceDisplayWaitVblankStart();
+				sceGuSwapBuffers();
+				break;
+			case PSP_UTILITY_DIALOG_FINISHED:
+				javacall_lcd_enable_flush(1);				
+				break;
+
+			case PSP_UTILITY_DIALOG_QUIT:
+				sceUtilityNetconfShutdownStart();				
+				break;
+
+			default:
+				break;
+		}
+	}
+	javacall_lcd_enable_flush(1);
+#endif /*_PSP_FW_VERSION >= 200*/
+
+       sceKernelDelayThread(500000); 
+
+	sceNetApctlGetState(&state);
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("netDialog: return %d\n", state);
+#endif
+	sceKernelDelayThread(500000); 
+
+	suspend_key_input = 0;
+	
+	return state==4?1:0;
+}
+
+int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen, unsigned short* out, int maxoutlen) {
+	int done=0;
+	int i;
+	
+	unsigned short* intext;
+	unsigned short* titletext;
+
+	suspend_key_input = 1;
+	printf("oskDialog: inlen=%d\n", inlen);
+
+	if (inlen >= maxoutlen) {
+		inlen = maxoutlen - 1;
+	}
+
+	intext = malloc((inlen + 1) * 2);
+	titletext = malloc((titlelen + 1) * 2);
+
+	memset(out, 0, maxoutlen);
+	
+	memcpy(intext, in, inlen*2);
+	memcpy(titletext, title, titlelen*2);
+	intext[inlen] = 0;
+	titletext[titlelen] = 0;
+
+	SceUtilityOskData data;
+	memset(&data, 0, sizeof(data));
+	data.language = 2;			// key glyphs: 0-1=hiragana, 2+=western/whatever the other field says
+	data.lines = 1;				// just one line
+	data.unk_24 = 1;			// set to 1
+	data.desc = titletext;
+	data.intext = intext;
+	data.outtextlength = maxoutlen + 1;	// sizeof(outtext) / sizeof(unsigned short)
+	data.outtextlimit = maxoutlen;		// just allow 50 chars
+	data.outtext = out;
+
+	SceUtilityOskParams osk;
+	memset(&osk, 0, sizeof(osk));
+	osk.base.size = sizeof(osk);
+	// dialog language: 0=Japanese, 1=English, 2=French, 3=Spanish, 4=German,
+	// 5=Italian, 6=Dutch, 7=Portuguese, 8=Russian, 9=Korean, 10-11=Chinese, 12+=default
+	osk.base.language = 1;
+	osk.base.buttonSwap = 1;		// X button: 1
+	osk.base.graphicsThread = 17;	// gfx thread pri
+	osk.base.accessThread = 19;			
+	osk.base.fontThread = 18;
+	osk.base.soundThread = 16;
+	osk.unk_48 = 1;
+	osk.data = &data;
+
+	int rc = sceUtilityOskInitStart(&osk);
+	if (rc) return 0;
+
+	while(!done) {
+		int i,j=0;
+
+		sceGuStart(GU_DIRECT,_gu_list);
+
+		// clear screen
+		sceGuClearColor(0x88554433);
+		sceGuClearDepth(0);
+		sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+
+		sceGuFinish();
+		sceGuSync(0,0);
+
+		switch(sceUtilityOskGetStatus()){
+			case PSP_UTILITY_DIALOG_INIT :
+			break;
+			case PSP_UTILITY_DIALOG_VISIBLE :
+			sceUtilityOskUpdate(2); // 2 is taken from ps2dev.org recommendation
+			break;
+			case PSP_UTILITY_DIALOG_QUIT :
+				printf("PSP_UTILITY_DIALOG_QUIT\n");
+			sceUtilityOskShutdownStart();
+			break;
+			case PSP_UTILITY_DIALOG_FINISHED :
+				printf("PSP_UTILITY_DIALOG_FINISHED\n");
+			break;
+			case PSP_UTILITY_DIALOG_NONE :
+			done = 1;
+			printf("PSP_UTILITY_DIALOG_NONE\n");
+			break;
+			default :
+			break;
+		}
+
+		// wait TWO vblanks because one makes the input "twitchy"
+		sceDisplayWaitVblankStart();
+		sceDisplayWaitVblankStart();
+		sceGuSwapBuffers();
+	}
+
+	for(i = 0; data.outtext[i]; i++);
+
+	if (data.rc == 1) {
+	    //cancelled
+	    memcpy(out, in, inlen*2);
+	    i = inlen;
+	}
+
+	printf("end of osk: %d\n", data.rc);
+	sceKernelDelayThread(500000); 
+
+	suspend_key_input = 0;
+
+	return i;
+}
+
+
 int main(void)
 {
 	SceUID thid;
@@ -933,11 +1042,11 @@ u32 _sceUsbGetState() {
 }
 
 void _sceUsbActivate(u32 id) {
-  return sceUsbActivate(id);
+  sceUsbActivate(id);
 }
 
 void _sceUsbDeactivate(u32 id) {
-  return sceUsbDeactivate(id);
+  sceUsbDeactivate(id);
 }
 
 int mk_dir(const char* dir, SceMode mode)

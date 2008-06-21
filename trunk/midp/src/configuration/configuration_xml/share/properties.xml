@@ -212,5 +212,16 @@
 		Scope="system"
 		Callout="getLocalTimeZone"
 		Comment="System function of getting local time zone."/>
+  <property Key="com.pspkvm.inputmethod" 
+		Value="" 
+		Scope="internal"
+		Callout="getSystemInputMethod"
+		Comment="Getting system input method."/>
+  <property Key="com.pspkvm.virtualkeyboard.autoopen" 
+		Value="" 
+		Scope="internal"
+		Callout="isVKAutoOpen"
+		Comment="Getting system input method."/>
+		
 </properties>
 </configuration>
