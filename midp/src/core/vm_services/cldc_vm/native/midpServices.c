@@ -41,7 +41,7 @@
 #include <midpUtilKni.h>
 
 #include <javacall_network.h>
-
+#include <javacall_properties.h>
 /**
  * @file
  *
@@ -226,6 +226,24 @@ char* midpGetHTTPProxy() {
         return "";
     } else {
         return proxy;
+    }
+}
+
+char* getSystemInputMethod() {
+    char* value;
+    if (JAVACALL_OK == javacall_get_property("com.pspkvm.inputmethod", JAVACALL_INTERNAL_PROPERTY, &value)) {
+        return value;
+    } else {
+        return NULL;
+    }
+}
+
+char* isVKAutoOpen() {
+    char* value;
+    if (JAVACALL_OK == javacall_get_property("com.pspkvm.virtualkeyboard.autoopen", JAVACALL_INTERNAL_PROPERTY, &value)) {
+        return value;
+    } else {
+        return NULL;
     }
 }
 

@@ -11,6 +11,7 @@ import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.*;
 import com.sun.midp.chameleon.layers.PopupLayer;
+import com.sun.midp.main.Configuration;
 
 
 /**
@@ -21,13 +22,13 @@ import com.sun.midp.chameleon.layers.PopupLayer;
 class VirtualKeyboard {
 
     /** indicates whether the virtual keyboard is enabled */
-    public static final boolean USE_VIRTUAL_KEYBOARD = true;
+    public static boolean USE_VIRTUAL_KEYBOARD = true;
 
     /** indicates whether the virtual keypad is enabled */
     public static final boolean USE_VIRTUAL_KEYPAD = false;
 
     /** indicates whether the virtual keyboard is opened automatically */
-    public static final boolean USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
+    public static boolean USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
 
     /** instance of the virtual keyboard listener */
     VirtualKeyboardListener vkl;
@@ -78,6 +79,17 @@ class VirtualKeyboard {
     public VirtualKeyboard(char[][] keys, 
                            VirtualKeyboardListener vkl,
                            boolean displayTextArea, int neededColumns, int neededRows) throws VirtualKeyboardException {
+       if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
+           USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
+       }
+
+       String im = Configuration.getProperty("com.pspkvm.inputmethod");
+       if(im != null && im.equals("sony-osk")){
+           USE_VIRTUAL_KEYBOARD = false;
+           USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
+           return;
+	}
+        
         textKbd = displayTextArea;
         if(textKbd){
               PADDING = 4;

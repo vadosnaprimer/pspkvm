@@ -51,6 +51,8 @@ import com.sun.midp.configurator.Constants;
 import com.sun.midp.i18n.Resource;
 import com.sun.midp.i18n.ResourceConstants;
 
+import com.sun.midp.main.Configuration;
+
 import java.util.*;
 
 /**
@@ -1218,6 +1220,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
         return i;
     }
 
+    private native int launchNativeTextField0(int keyCode, DynamicCharacterArray buffer, String title);
 
     /**
      * Handle a key press
@@ -1225,6 +1228,19 @@ class TextFieldLFImpl extends ItemLFImpl implements
      * @param keyCode the code for the key which was pressed
      */
     void uCallKeyPressed(int keyCode) {
+        String im = Configuration.getProperty("com.pspkvm.inputmethod");
+        if(im != null && im.equals("sony-osk")){
+       	if (launchNativeTextField0(keyCode, tf.buffer, tf.owner.getTitle()) == 0) {
+       		System.out.println("launchNativeTextField0 return");
+            
+		commit("");
+
+       	System.out.println("uCallKeyPressed return: "+tf.getString());
+
+       	return;
+       	}
+	}
+    
         boolean theSameKey = timers.contains(new TimerKey(keyCode));
 
         if (!theSameKey) {

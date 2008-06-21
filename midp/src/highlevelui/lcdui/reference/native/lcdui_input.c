@@ -33,6 +33,10 @@
 #include <commonKNIMacros.h>
 #include <keymap_input.h>
 #include <midpEventUtil.h>
+#include <midpString.h>
+#include <midpMalloc.h>
+#include <midpUtilKni.h>
+#include <midpError.h>
 
 /**
  * IMPL_NOTE:(Doxy - Change this format) 
@@ -120,3 +124,64 @@ KNIDECL(javax_microedition_lcdui_KeyConverter_getGameAction) {
 
     KNI_ReturnInt(keymap_get_game_action(keyCode));
 }
+/*
+static int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen, unsigned short** out, int maxoutlen) {
+       static short out_buf[128] = {'o', 'p', 'q', 'r', 's', 0};
+       *out = &out_buf[0];
+       return 3;
+}
+*/
+KNIEXPORT KNI_RETURNTYPE_INT
+KNIDECL(javax_microedition_lcdui_TextFieldLFImpl_launchNativeTextField0) {
+#ifdef PSP
+    MidpString text = NULL_MIDP_STRING;
+    MidpString title = NULL_MIDP_STRING;
+    int maxLength=0, currentLength = 0, keyCode=0; 
+    int result;
+    jchar* output;
+     
+        
+    KNI_StartHandles(4);
+    KNI_DeclareHandle(dynamicCharacterArrayObj);
+    KNI_DeclareHandle(dynamicCharacterArrayClass);
+    KNI_DeclareHandle(bufferJCharArray);
+    KNI_DeclareHandle(titleJString);
+
+    keyCode = KNI_GetParameterAsInt(1);
+    KNI_GetParameterAsObject(2, dynamicCharacterArrayObj);
+    KNI_GetObjectClass(dynamicCharacterArrayObj, dynamicCharacterArrayClass);
+    KNI_GetObjectField(dynamicCharacterArrayObj, 
+    KNI_GetFieldID(dynamicCharacterArrayClass, "buffer", "[C"), bufferJCharArray);
+    KNI_GetParameterAsObject(3, titleJString);
+
+    maxLength = KNI_GetArrayLength(bufferJCharArray);
+    currentLength = KNI_GetIntField(dynamicCharacterArrayObj, 
+    KNI_GetFieldID(dynamicCharacterArrayClass, "length", "I"));
+    
+    text = midpNewStringFromArray(bufferJCharArray, currentLength);
+    title = midpNewString(titleJString);
+    output = midpMalloc(maxLength + 1);
+    if (output && text.len > 0 && title.len > 0) {
+          result = oskDialog(text.data, text.len, title.data, title.len, output, maxLength);
+            
+          if (result >= 0) {
+              KNI_SetRawArrayRegion(bufferJCharArray, 0, result*sizeof (jchar), (jbyte*)output);
+              KNI_SetIntField(dynamicCharacterArrayObj, KNI_GetFieldID(dynamicCharacterArrayClass,
+                   "length", "I"), result);
+          }
+    } else {
+          KNI_ThrowNew(midpOutOfMemoryError, NULL);
+    }
+
+    midpFree(output);
+    MIDP_FREE_STRING(text);
+    MIDP_FREE_STRING(title); 
+
+    KNI_EndHandles();
+    
+    KNI_ReturnInt(0);
+#else
+    KNI_ReturnInt(-1);
+#endif
+}                  
+
