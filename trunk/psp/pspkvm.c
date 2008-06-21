@@ -37,6 +37,7 @@
 #include <javacall_lifecycle.h>
 #include <javacall_file.h>
 #include <javacall_keymap.h>
+#include <javacall_properties.h>
 
 /* Define the module info section */
 #if _PSP_FW_VERSION >= 200
@@ -764,6 +765,15 @@ static void setup_gu() {
 int netDialog(int status)
 {
 	int state;
+	int buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
+	char* res;
+	
+	if (JAVACALL_OK == javacall_get_property("com.pspkvm.acceptcross", 
+		                                                              JAVACALL_INTERNAL_PROPERTY, 
+		                                                              &res) && res != NULL &&
+		                                                               (res[0] == 'y' || res[0] == 'Y')) {
+		buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
+	}
 
 #if _PSP_FW_VERSION >= 200
 
@@ -785,7 +795,7 @@ int netDialog(int status)
 	memset(&data, 0, sizeof(data));
 	data.base.size = sizeof(data);
 	data.base.language = PSP_SYSTEMPARAM_LANGUAGE_ENGLISH;
-	data.base.buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
+	data.base.buttonSwap = buttonSwap;
 	data.base.graphicsThread = 17;
 	data.base.accessThread = 19;
 	data.base.fontThread = 18;
@@ -848,6 +858,16 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	unsigned short* intext;
 	unsigned short* titletext;
 
+	int buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
+	char* res;
+	
+	if (JAVACALL_OK == javacall_get_property("com.pspkvm.acceptcross", 
+		                                                              JAVACALL_INTERNAL_PROPERTY, 
+		                                                              &res) && res != NULL &&
+		                                                               (res[0] == 'y' || res[0] == 'Y')) {
+		buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
+	}
+
 	suspend_key_input = 1;
 	printf("oskDialog: inlen=%d\n", inlen);
 
@@ -873,7 +893,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	data.desc = titletext;
 	data.intext = intext;
 	data.outtextlength = maxoutlen + 1;	// sizeof(outtext) / sizeof(unsigned short)
-	data.outtextlimit = maxoutlen;		// just allow 50 chars
+	data.outtextlimit = maxoutlen;		
 	data.outtext = out;
 
 	SceUtilityOskParams osk;
@@ -882,7 +902,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	// dialog language: 0=Japanese, 1=English, 2=French, 3=Spanish, 4=German,
 	// 5=Italian, 6=Dutch, 7=Portuguese, 8=Russian, 9=Korean, 10-11=Chinese, 12+=default
 	osk.base.language = 1;
-	osk.base.buttonSwap = 1;		// X button: 1
+	osk.base.buttonSwap = buttonSwap;		// X button: 1
 	osk.base.graphicsThread = 17;	// gfx thread pri
 	osk.base.accessThread = 19;			
 	osk.base.fontThread = 18;
@@ -899,7 +919,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 		sceGuStart(GU_DIRECT,_gu_list);
 
 		// clear screen
-		sceGuClearColor(0x88554433);
+		sceGuClearColor(0x33333333);
 		sceGuClearDepth(0);
 		sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
 
