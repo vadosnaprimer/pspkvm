@@ -1,5 +1,5 @@
-pspkvm v0.3.2
-27 Apr. 2008
+pspkvm v0.4.0
+21 Jun. 2008
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
@@ -12,16 +12,27 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- Virtual Keyboard support
-- Use "L+R+Square" to call up network connection dialog at any time (slim version only)
-- Add pspkvm.ini confituation file
-- JSR75 root directories configurable by pspkvm.ini
-- Strech small device screen to fit PSP screen
-- Support CW90
-- Resolve bug: can not enter jad/jar file selector form, if the original jar file direcory is deleted
-- Implement microedition.platform property. Now can run Cangshenlu.
-- Don't show mess icon in AMS
-- Resolve the bug that can't output voice in jstardict
+- Change package name and purpose of release bundles.
+    1) pspkvm-bin-x.x.x-150-upgrade: Use this package if your PSP is 1.50 kernel and have installed pspkvm 0.3.2
+    2) pspkvm-bin-x.x.x-OE-upgrade: Use this package if your PSP is 3.xx OE kernel and have installed pspkvm 0.3.2
+    3) pspkvm-bin-x.x.x-150-allinone: Use this package if your PSP is 1.50 kernel and havn't installed pspkvm 0.3.2
+    4) pspkvm-bin-x.x.x-OE-allinone: Use this package if your PSP is 3.xx OE kernel and havn't installed pspkvm 0.3.2
+    *) Source code package is no longer provided in release; Instead, you can grab source code from svn, tags are created for each release.
+- JSR179 support (OE Version only). Currently support GPS290(Sony's USB GPS receiver) only, serial GPS will be supported in future
+- Chinese Input Method. Please see "Virtual Keyboard and Chinese Input tips" in "Running tips" section of Release Note
+- Use Sony's On screen Keyboard as alternate input method. Default is off, turn it on in pspkvm.ini
+- X/O swap in native dialog, configurable by pspkvm.ini
+- Get device specific properties from pspkvm.ini. User can set properties (e.g "microedition.platform", or User-Agent value) for specific device
+- Use HTTP proxy setting in network profile
+- Add SonyEricsson Generic device profile in Device Selection
+- Virtual Keyboard improvement:
+    1) Change key layout to be "QWERTY"
+    2) Add some short-cut keys
+    3) "Auto-open" property can be configured by pspkvm.ini
+- Resolve some MIDlets not run problems:
+    1) Super Action Hero
+    2) Gmail 1.5.0
+    3) Yahoo! GO
 
 --------------------------------
 General information
@@ -49,13 +60,14 @@ Fetures
 - Change default key assignment for specific application.
 - JSR75(File Connection)
 - Virtual Keyboard Input
+- Chinese Input
+- JSR179
 
 --------------------------------
 TODO
 --------------------------------
 - Graphic optimization (High)
 - Resolve game compatibility regression (High)
-- JSR179 implementation (Medium)
 - JSR184 (Low)
 - MIPS JIT compiler and Interpreter generator (Low)
 
@@ -66,19 +78,22 @@ Known issues:
 - javacall_file_truncate doesn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
 - Multimedia temporary files may leave on your memory stick sometimes, especially after VM crash. They're usually not big, but if you wanna delete the by hands, just goto your PSP's /PSP/GAME/pspkvm/ directory, find the file whose name likes xxxxxxxx_tmp_mus.mid, delete them.
 - Fileconnection rmdir operation may fail for unknown reasons
+- LocationProvider.getState() will always returns AVAILABLE once after GPS initialized, so LocationListener.providerStateChanged() doesn't work as expected.
 
 --------------------------------
 Run from binary bundle
 --------------------------------
 1. Download correct binary bundle:
-- If you have a 1.50 kernel PSP:
-   Download pspkvm-bin-x.x.x-150.zip
-- If you want to run pspkvm on 3.xx OE:
-   Download pspkvm-bin-x.x.x-slim.zip
-2. Extract the zip to PSP's /PSP/GAME/
-3. If you want MIDI support, download midi_res.zip and extract it to PSP's /PSP/GAME/pspkvm
-4. Here we go!
-NOTE: There's also an all-in-one bundle avaiable on download page, which contains MIDP support files. You don't have to download separated midi_res.zip if you choose "all-in-one".
+- If you have a 1.50 kernel PSP and have installed pspkvm 0.3.2:
+   Download pspkvm-bin-x.x.x-150-upgrade.zip
+- If you want to run pspkvm on 3.xx OE and have installed pspkvm 0.3.2:
+   Download pspkvm-bin-x.x.x-OE-upgrade.zip
+- If you have a 1.50 kernel PSP and haven't installed pspkvm 0.3.2:
+   Download pspkvm-bin-x.x.x-150-allinone.zip
+- If you want to run pspkvm on 3.xx OE and haven't installed pspkvm 0.3.2:
+   Download pspkvm-bin-x.x.x-OE-allinone.zip
+2. Extract the zip to PSP's /PSP/GAME/ or /PSP/GAME150
+3. Here we go!
 
 --------------------------------
 Building instructions
@@ -87,7 +102,7 @@ For the ones who are interested in our source code:
 0. You have to prepare the building enviroment for phoneME at first. Please refer the document from here: https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup
 
 Now assume you have installed the building environment by following the above instruction. In Cygwin:
-1. unzip the source bundle to a directory
+1. Grab the source code from svn to a local directory
 2. cd ${your_source_dir}
 3. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
 4. ./build-psp-cldc.sh
@@ -169,3 +184,11 @@ Running tips
 		/graphics -> ms0:/pspkvm/
 		/private -> ms0:/pspkvm_pri/
 	However, you can change the default mapping in pspkvm.ini. Please open pspkvm.ini in PSPKVM's install directory, change the values in [jsr75] section. If the value is left blank, default value is applied.
+	
+- Virtual Keyboard and Chinese Input tips:
+	"#" (SHIFT+START by default)            -> Open/Close Chinese Input
+	"*" (SHIFT+SELECT by default)           -> Switch input methods
+	4/6 (LEFT/RIGHT by default)             -> Select candidate chinese chars / Move cursor
+	2/8 (UP/DOWN by default)                -> Prev/Next page of candidate chinese chars
+	5 (SHIFT+CIRCLE by default)             -> Confirm selected chinese char
+	CLEAR (SHIFT+CROSS by default)          -> Backspace
