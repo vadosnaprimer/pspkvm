@@ -365,7 +365,7 @@ public class Protocol extends com.sun.midp.io.j2me.http.Protocol
 
         // check to see if a protocol is specified for the tunnel
         httpsTunnel = Configuration.getProperty("com.sun.midp.io.http.proxy");
-        if (httpsTunnel != null) {
+        if (httpsTunnel != null && httpsTunnel.length() > 0) {
             // Make the connection to the ssl tunnel
             tcpConnection.openPrim(classSecurityToken, "//" + httpsTunnel);
 
