@@ -1,0 +1,64 @@
+#
+#   
+#
+# Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+############################################################
+# Configuration file for switching implementations of PIM handler.
+#
+############################################################
+
+
+# Build configuration options for choosing implementations
+# Currently supported values: java | platform
+#
+ifndef JSR_75_PIM_HANDLER_IMPL
+JSR_75_PIM_HANDLER_IMPL = java
+endif
+
+ROMGEN_CFG_FILES += jsr75_rom_$(JSR_75_PIM_HANDLER_IMPL).cfg
+
+
+ifeq ($(JSR_75_PIM_HANDLER_IMPL), platform)
+# Java files for the sub-system
+#
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+    $(JSR_75_DIR)/src/config/common/properties_jsr75_platform.xml
+
+SUBSYSTEM_JSR_75_JAVA_FILES += \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMProxy.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMAttribute.java
+
+SUBSYSTEM_JSR_75_NATIVE_FILES += \
+    pimDatabase.c
+
+else
+
+# Java files for the sub-system
+#
+SUBSYSTEM_JSR_75_JAVA_FILES += \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMBridge.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMDatabase.java
+
+endif
+
