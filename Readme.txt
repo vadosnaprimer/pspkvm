@@ -1,5 +1,5 @@
-pspkvm v0.4.0
-21 Jun. 2008
+pspkvm v0.4.1
+28 Jun. 2008
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
@@ -12,27 +12,12 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- Change package name and purpose of release bundles.
-    1) pspkvm-bin-x.x.x-150-upgrade: Use this package if your PSP is 1.50 kernel and have installed pspkvm 0.3.2
-    2) pspkvm-bin-x.x.x-OE-upgrade: Use this package if your PSP is 3.xx OE kernel and have installed pspkvm 0.3.2
-    3) pspkvm-bin-x.x.x-150-allinone: Use this package if your PSP is 1.50 kernel and havn't installed pspkvm 0.3.2
-    4) pspkvm-bin-x.x.x-OE-allinone: Use this package if your PSP is 3.xx OE kernel and havn't installed pspkvm 0.3.2
-    *) Source code package is no longer provided in release; Instead, you can grab source code from svn, tags are created for each release.
-- JSR179 support (OE Version only). Currently support GPS290(Sony's USB GPS receiver) only, serial GPS will be supported in future
-- Chinese Input Method. Please see "Virtual Keyboard and Chinese Input tips" in "Running tips" section of Release Note
-- Use Sony's On screen Keyboard as alternate input method. Default is off, turn it on in pspkvm.ini
-- X/O swap in native dialog, configurable by pspkvm.ini
-- Get device specific properties from pspkvm.ini. User can set properties (e.g "microedition.platform", or User-Agent value) for specific device
-- Use HTTP proxy setting in network profile
-- Add SonyEricsson Generic device profile in Device Selection
-- Virtual Keyboard improvement:
-    1) Change key layout to be "QWERTY"
-    2) Add some short-cut keys
-    3) "Auto-open" property can be configured by pspkvm.ini
-- Resolve some MIDlets not run problems:
-    1) Super Action Hero
-    2) Gmail 1.5.0
-    3) Yahoo! GO
+- Bug fixes:
+  1) HTTPS connection always fail
+  2) On Screen Keyboard fail to open
+  3) Virtual Keyboard cannot input 4 and 6
+- Input symbols and numbers while Chinese Input is open
+- Improve performance of FileConnection InputStream.skip()
 
 --------------------------------
 General information
@@ -79,6 +64,7 @@ Known issues:
 - Multimedia temporary files may leave on your memory stick sometimes, especially after VM crash. They're usually not big, but if you wanna delete the by hands, just goto your PSP's /PSP/GAME/pspkvm/ directory, find the file whose name likes xxxxxxxx_tmp_mus.mid, delete them.
 - Fileconnection rmdir operation may fail for unknown reasons
 - LocationProvider.getState() will always returns AVAILABLE once after GPS initialized, so LocationListener.providerStateChanged() doesn't work as expected.
+- gmail 1.5.0 cannot login. Always get "Username and password do not match. You provided ()"
 
 --------------------------------
 Run from binary bundle
