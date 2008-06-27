@@ -374,19 +374,19 @@ class VirtualKeyboard {
                       vkl.virtualMetaKeyEntered(IM_CHANGED_KEY);
             	        break;
             	    case Canvas.KEY_NUM2:
-            	        vkl.virtualKeyEntered(type, '2');
+            	        vkl.virtualMetaKeyEntered(CURSOR_UP_META_KEY);
                        break;
                    case Canvas.KEY_NUM4:
-                       vkl.virtualKeyEntered(type, '4');
+                       vkl.virtualMetaKeyEntered(CURSOR_LEFT_META_KEY);
                        break;
             	    case Canvas.KEY_NUM6:
-            	        vkl.virtualKeyEntered(type, '6');
+            	        vkl.virtualMetaKeyEntered(CURSOR_RIGHT_META_KEY);
                        break;
                    case Canvas.KEY_NUM8:
-                       vkl.virtualKeyEntered(type, '8');
+                       vkl.virtualMetaKeyEntered(CURSOR_DOWN_META_KEY);
                        break;
                    case Canvas.KEY_NUM5:
-                       vkl.virtualKeyEntered(type, '5');
+                       vkl.virtualMetaKeyEntered(CNINPUT_SELECT_META_KEY);
                        break;
                 }
             }
@@ -1250,6 +1250,11 @@ class VirtualKeyboard {
     final static int SHIFT_META_KEY = 4;
     final static int CAPS_META_KEY = 5;
     final static int CNINPUT_META_KEY = 6;
+    final static int CURSOR_UP_META_KEY = 7;
+    final static int CURSOR_DOWN_META_KEY = 8;
+    final static int CURSOR_LEFT_META_KEY = 9;
+    final static int CURSOR_RIGHT_META_KEY = 10;
+    final static int CNINPUT_SELECT_META_KEY = 11;
 
     //When input method is changed, process this key to update UI 
     final static int IM_CHANGED_KEY = 99;

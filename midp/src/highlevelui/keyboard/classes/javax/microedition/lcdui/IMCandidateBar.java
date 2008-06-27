@@ -36,12 +36,15 @@ class IMCandidateBar {
     	return n;
     }
     
-    public void keyPressed(char c) {
+    public boolean keyPressed(char c) {
     	if (c >= 'a' && c <= 'z' && pinyin.length() < 6) {
     	    getCandidateChars(pinyin + c, 0, 5);
     	    pinyin = pinyin + c;
            cur_pos = 0;
            cur_sel = 0;
+           return true;
+    	} else {
+    	    return false;
     	}
     }
 
