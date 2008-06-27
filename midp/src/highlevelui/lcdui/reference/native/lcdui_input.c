@@ -161,19 +161,34 @@ KNIDECL(javax_microedition_lcdui_TextFieldLFImpl_launchNativeTextField0) {
     text = midpNewStringFromArray(bufferJCharArray, currentLength);
     title = midpNewString(titleJString);
     output = midpMalloc(maxLength + 1);
-    if (output && text.len > 0 && title.len > 0) {
-          result = oskDialog(text.data, text.len, title.data, title.len, output, maxLength);
-            
-          if (result >= 0) {
+    if (output) {
+    	int textlen = text.len;
+    	int titlelen = title.len;
+    	jchar* textdata = text.data;
+    	jchar* titledata = title.data;
+    	
+    	if (textlen <= 0) {
+    		textlen = 0;
+    		textdata = NULL;
+    	}
+    	if (titlelen <= 0) {
+    	   	titlelen = 0;
+    	   	titledata = NULL;
+    	}
+    	
+       result = oskDialog(textdata, textlen, titledata, titlelen, output, maxLength);
+
+       if (result >= 0) {
               KNI_SetRawArrayRegion(bufferJCharArray, 0, result*sizeof (jchar), (jbyte*)output);
               KNI_SetIntField(dynamicCharacterArrayObj, KNI_GetFieldID(dynamicCharacterArrayClass,
                    "length", "I"), result);
-          }
+       }
+       
+    	midpFree(output);
     } else {
           KNI_ThrowNew(midpOutOfMemoryError, NULL);
     }
-
-    midpFree(output);
+    
     MIDP_FREE_STRING(text);
     MIDP_FREE_STRING(title); 
 
