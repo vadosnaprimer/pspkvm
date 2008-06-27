@@ -1096,7 +1096,7 @@ public abstract class Installer {
                         MIDletSuite.PERMISSIONS_PROP,
                         MIDletSuite.PERMISSIONS_OPT_PROP
                     };
-
+/*
                     for (int i = 0; i < keys.length; i++) {
                         if (state.jadProps.getProperty(keys[i]) != null) {
                             if (state.jarProps.getProperty(keys[i]) == null) {
@@ -1107,7 +1107,7 @@ public abstract class Installer {
                                         keys[i]);
                             }
                         }
-                    }
+                    }*/
                 }
 
                 /*
@@ -1969,6 +1969,7 @@ public abstract class Installer {
             if (!dup.equals(value)) {
                 postInstallMsgBackToProvider(
                     OtaNotifier.ATTRIBUTE_MISMATCH_MSG);
+                System.out.println("jar.key="+key+" jar.val="+value+" jad.prop="+dup);
                 throw new InvalidJadException(
                     InvalidJadException.ATTRIBUTE_MISMATCH, key);
             }
