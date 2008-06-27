@@ -682,46 +682,18 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
             
         if (tfContext != null) {	    
             if (type != EventConstants.RELEASED) {
+            	boolean processed = false;
             	if (candidateBar != null) {
-                switch (c) {
-                  case '5':
-            	      int pos = tfContext.tf.getCaretPosition();
-            	      tfContext.tf.insert(candidateBar.getSelected(), pos);
-            	      tfContext.tf.getString();
-            	      candidateBar.reset();
-            	      break;
-            	    case '2':
-            	      candidateBar.prevPage();
-            	    break;
-            	    case '4':
-            	      candidateBar.prevChar();
-            	      break;
-            	    case '6':
-            	      candidateBar.nextChar();
-            	      break;
-            	    case '8':
-            	      candidateBar.nextPage();
-            	      break;
-            	    default:
-                    candidateBar.keyPressed(c);
-            	  }
-                repaintVK();
-              } else {
-                switch (c) {
-            	    case '4':
-            	      tfContext.moveCursor(Canvas.LEFT);
-            	      break;
-            	    case '6':
-            	      tfContext.moveCursor(Canvas.RIGHT);
-            	      break;
-             	    default:                    
-                    tfContext.uCallKeyPressed(c);
-                    tfContext.tf.getString();
-                    return;
-            	  }
-                repaintVK();
+            	    processed = candidateBar.keyPressed(c);
+            	}
+
+            	if (!processed) {
+                  tfContext.uCallKeyPressed(c);
+                  tfContext.tf.getString();
+                  return;
               }
-            }
+              repaintVK();
+            }              
         } else if (cvContext != null) {
 
             switch (c) {
@@ -774,6 +746,41 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
             disp = cvContext.currentDisplay;
         } else {
             return;
+        }
+
+
+        if (tfContext != null && candidateBar != null) {
+            switch (metaKey) {
+                  case VirtualKeyboard.CNINPUT_SELECT_META_KEY:
+            	      int pos = tfContext.tf.getCaretPosition();
+            	      tfContext.tf.insert(candidateBar.getSelected(), pos);
+            	      tfContext.tf.getString();
+            	      candidateBar.reset();
+            	      break;
+            	    case VirtualKeyboard.CURSOR_UP_META_KEY:
+            	      candidateBar.prevPage();
+            	    break;
+            	    case VirtualKeyboard.CURSOR_LEFT_META_KEY:
+            	      candidateBar.prevChar();
+            	      break;
+            	    case VirtualKeyboard.CURSOR_RIGHT_META_KEY:
+            	      candidateBar.nextChar();
+            	      break;
+            	    case VirtualKeyboard.CURSOR_DOWN_META_KEY:
+            	      candidateBar.nextPage();
+            	      break;
+             }
+             repaintVK();
+        } else if (tfContext != null) {
+            switch (metaKey) {
+            	    case VirtualKeyboard.CURSOR_LEFT_META_KEY:
+            	      tfContext.moveCursor(Canvas.LEFT);
+            	      break;
+            	    case VirtualKeyboard.CURSOR_RIGHT_META_KEY:
+            	      tfContext.moveCursor(Canvas.RIGHT);
+            	      break;
+             }
+             repaintVK();
         }
 
         if (metaKey == vk.OK_META_KEY) {
