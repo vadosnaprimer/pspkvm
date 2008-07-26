@@ -32,31 +32,15 @@
 # other def. (like VPATH)
 ############################################################
 
-
-PUTPIXEL_PORT_LIB = putpixel_port
-LIB_SET += $(PUTPIXEL_PORT_LIB)
-
-
 # Local module directory
-PUTPIXEL_PORT_DIR = $(SUBSYSTEM_LOWUI_DIR)/putpixel_port
-
-# Java files for the sub-system
-#
-SUBSYSTEM_GRAPHICS_JAVA_FILES +=
-
-# Include path for the sub-system
-#
-SUBSYSTEM_GRAPHICS_EXTRA_INCLUDES += \
-    -I$(PUTPIXEL_PORT_DIR)/include
+PUTPIXEL_PORT_SRC_DIR = $(SUBSYSTEM_LOWUI_DIR)/putpixel_port/javacall
 
 # vpath for sub-system
 #
-ifeq ($(TARGET_PLATFORM), wince)
-    include $(PUTPIXEL_PORT_DIR)/wince/$(LIB_MAKE_FILE)
-else
-ifeq ($(TARGET_PLATFORM), javacall)
-    include $(PUTPIXEL_PORT_DIR)/javacall/$(LIB_MAKE_FILE)
-else
-    include $(PUTPIXEL_PORT_DIR)/stubs/$(LIB_MAKE_FILE)
-endif
-endif
+vpath % $(PUTPIXEL_PORT_SRC_DIR)/native
+
+
+# Native files for the sub-system
+#
+SUBSYSTEM_GRAPHICS_NATIVE_FILES += \
+    gxjport_text.c
