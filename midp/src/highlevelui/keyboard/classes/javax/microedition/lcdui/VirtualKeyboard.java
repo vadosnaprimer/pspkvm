@@ -107,17 +107,17 @@ class VirtualKeyboard {
         kbWidth = vkl.getAvailableWidth() - 2*PADDING;
         kbHeight = vkl.getAvailableHeight() - 2*PADDING;
 
-        f = Font.getFont(Font.FACE_PROPORTIONAL, // or SYSTEM
+        f = Font.getFont(Font.FACE_SYSTEM, // or SYSTEM
                          Font.STYLE_PLAIN, 
-                         Font.SIZE_SMALL);
+                         Font.SIZE_MEDIUM);
         fontW = f.charWidth('M');
         fontH = f.getHeight();
 
         
         if (textKbd) {
             textfieldHeight = fontH + 3 * PADDING;
-            buttonW = fontW * 2;
-            buttonH = fontH * 3/2;
+            buttonW = fontW + 8;
+            buttonH = fontH + 8;
             fontHTop = (buttonH - fontH) / 2 ;
             fontWCenter = buttonW / 2;
         } else {
