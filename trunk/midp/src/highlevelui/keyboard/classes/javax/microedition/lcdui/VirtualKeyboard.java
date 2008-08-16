@@ -92,7 +92,7 @@ class VirtualKeyboard {
         
         textKbd = displayTextArea;
         if(textKbd){
-              PADDING = 4;
+              PADDING = 1;
         } else {
               PADDING = 2;
         }
