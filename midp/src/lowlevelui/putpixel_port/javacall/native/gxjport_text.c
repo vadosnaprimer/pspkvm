@@ -28,6 +28,16 @@
 #include <gxj_putpixel.h>
 #include <javacall_font.h>
 
+/* convert color to 16bit color */
+/*
+#define RGB24TORGB16(x) (((( x ) & 0x00F80000) >> 8) + \
+                         ((( x ) & 0x0000FC00) >> 5) + \
+			 ((( x ) & 0x000000F8) >> 3) )
+*/
+#define RGB24TORGB16(x) (((( x ) & 0x00F80000) >> 19) + \
+                             ((( x ) & 0x0000FC00) >> 5) + \
+                             ((( x ) & 0x000000F8) << 8) )
+
 /**
  * @file
  *
@@ -38,14 +48,12 @@ int gxjport_draw_chars(int pixel, const jshort *clip, void *dst, int dotted,
                        int face, int style, int size,
                        int x, int y, int anchor,
                        const jchar *chararray, int n) {
-    (void)dotted;
-    (void)anchor;
     gxj_screen_buffer * dest = (gxj_screen_buffer *)dst;
     
     if (JAVACALL_OK != javacall_font_set_font(face, style, size))
     	return KNI_FALSE;
     
-    if (JAVACALL_OK != javacall_font_draw(pixel, clip[0], clip[1], clip[2], clip[3], 
+    if (JAVACALL_OK != javacall_font_draw(RGB24TORGB16(pixel), clip[0], clip[1], clip[2], clip[3], 
     	                              dest->pixelData, dest->width, dest->height, x, y,
     	                              chararray, n))
     	return KNI_FALSE;
