@@ -226,7 +226,7 @@ class CldcPlatformRequest implements PlatformRequest {
 
             httpConnection = (HttpConnection)conn;
 
-            httpConnection.setRequestMethod(HttpConnection.HEAD);
+    //        httpConnection.setRequestMethod(HttpConnection.HEAD);
 
             httpConnection.setRequestProperty("Accept", "*/*");
 
@@ -237,9 +237,19 @@ class CldcPlatformRequest implements PlatformRequest {
             }
 
             configuration = System.getProperty("microedition.configuration");
-            httpConnection.setRequestProperty("User-Agent",
-                "Profile/" + profile + " Configuration/" + configuration);
 
+            String forceReplaceUserAgent = System.getProperty("com.pspkvm.forceReplaceUserAgent");
+            String userAgent = System.getProperty("com.pspkvm.user-agent");
+            if (userAgent != null) {
+                if ("true".equals(forceReplaceUserAgent) ||
+                    httpConnection.getRequestProperty("User-Agent") == null) {
+                    httpConnection.setRequestProperty("User-Agent", userAgent);
+                }
+            }else {
+
+                httpConnection.setRequestProperty("User-Agent",
+                "Profile/" + profile + " Configuration/" + configuration);
+            }
             httpConnection.setRequestProperty("Accept-Charset",
                                               "UTF-8, ISO-8859-1");
 
