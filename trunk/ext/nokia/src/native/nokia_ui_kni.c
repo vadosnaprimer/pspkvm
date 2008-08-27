@@ -483,7 +483,7 @@ KNIDECL(com_nokia_mid_ui_DirectGraphicsImpl_drawPixels___3SZIIIIIIII) {
 		}
 		if ((height <= 0) || (width <= 0) || (scanlength <= 0)){
 
-		} else if ((offset < 0) || ((offset + (height * scanlength)) > KNI_GetArrayLength(pixels))) {
+		} else if ((offset < 0) || ((offset + ((height-1) * scanlength)+width) > KNI_GetArrayLength(pixels))) {
 			//KNI_ThrowNew("java/lang/ArrayIndexOutOfBoundsException", "");
 		} else {
             jshort clip[4]; /* Defined in Graphics.java as 4 shorts */
@@ -561,7 +561,7 @@ KNIDECL(com_nokia_mid_ui_DirectGraphicsImpl_drawPixels___3IZIIIIIIII) {
 		
 		if ((height < 0) || (width < 0) || (scanlength < 0)){
 
-		} else if ((offset < 0) || ((offset + (height * scanlength)) > KNI_GetArrayLength(pixels))) {
+		} else if ((offset < 0) || ((offset + ((height-1) * scanlength)+width) > KNI_GetArrayLength(pixels))) {
 			//KNI_ThrowNew("java/lang/ArrayIndexOutOfBoundsException", "");
 		} else {
             jshort clip[4]; /* Defined in Graphics.java as 4 shorts */
