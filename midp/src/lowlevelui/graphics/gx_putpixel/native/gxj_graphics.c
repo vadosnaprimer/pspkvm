@@ -38,6 +38,9 @@
 #include <gxapi_graphics.h>
 #endif
 
+#ifdef PSP
+#define USE_PSP_VFPU 1
+#endif
 /**
  * @file
  *
@@ -174,6 +177,30 @@ gx_copy_area(const jshort *clip,
             PREMULTUPLY_ALPHA(Cdr, 0xff) )
 
 
+#ifdef USE_PSP_VFPU
+static float falpha_table[256];
+static int falpha_table_initilized = 0;
+static void falpha_table_init() {
+    int a;
+    	for (a = 0; a < 256; a++) {
+           falpha_table[a] = (float)a/255.0f;
+    	}
+    falpha_table_initilized = 1;
+}
+#endif
+static unsigned char alpha_table[64][256];
+static int alpha_table_initilized = 0;
+
+static void alpha_table_init() {
+    int c, a;
+    for (c = 0; c < 64; c++) {
+    	for (a = 0; a < 256; a++) {
+           alpha_table[c][a] = PREMULTUPLY_ALPHA(c, a);
+    	}
+    }
+    alpha_table_initilized = 1;
+}
+
 /**
  * Combine source and destination colors to achieve blending and transparency
  * effects.
@@ -202,7 +229,24 @@ static jint alphaComposition(jint src, jint dst) {
 extern void asm_draw_rgb(jint* src, int srcSpan, unsigned short* dst,
     int dstSpan, int width, int height);
 #endif
-
+/*
+#define GXJ_RGB24TORGB16VFPU(pFrom, pTo) \
+	do {  \
+	__asm__ __volatile__ ( \
+    	" ulv.q C000.q,0(%1)\n" \
+    	" ulv.q C020.q, 16(%1)\n" \       
+    	" vt5650.q C010.p,C000.q\n" \
+    	" vt5650.q C030.p,C020.q\n" \
+    	" sv.s S010, 0(%0)\n" \
+       " sv.s S011, 4(%0)\n" \
+    	" sv.s S030, 8(%0)\n" \
+       " sv.s S031, 16(%0)\n" \
+       " vsync\n" \
+       " vflush\n" \
+    	:: "r"(pTo), "r"(pFrom) \
+    	); \
+	} while(0);
+	*/
 /** Draw image in RGB format */
 void
 gx_draw_rgb(const jshort *clip,
@@ -217,11 +261,19 @@ gx_draw_rgb(const jshort *clip,
     gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
       gxj_get_image_screen_buffer_impl(dst, &screen_buffer, NULL));
     int sbufWidth = sbuf->width;
+    int sbufHeight = sbuf->height;
 
-    const jshort clipX1 = clip[0];
-    const jshort clipY1 = clip[1];
-    const jshort clipX2 = clip[2];
-    const jshort clipY2 = clip[3];
+    jshort clipX1 = clip[0];
+    jshort clipY1 = clip[1];
+    jshort clipX2 = clip[2];
+    jshort clipY2 = clip[3];
+
+    if (clipX1 >= sbufWidth || clipX2 < 0 || clipY1 >= sbufHeight || clipY2 < 0) return;
+
+    if (clipX1 < 0) clipX1 = 0;
+    if (clipY1 < 0) clipY1 = 0;
+    if (clipX2 > sbufWidth) clipX2 = sbufWidth;
+    if (clipY2 > sbufHeight) clipY2 = sbufHeight;
 
     REPORT_CALL_TRACE(LC_LOWUI, "gx_draw_rgb()\n");
 
@@ -262,17 +314,30 @@ gx_draw_rgb(const jshort *clip,
 
     blocks = width / 8;
     remains = width % 8;
-            
+
+    if (!alpha_table_initilized) alpha_table_init();
+#if USE_PSP_VFPU
+    if (!falpha_table_initilized) falpha_table_init();
+#endif
+
     for (b = y; b < y + height;
         b++, dataRowIndex += scanlen,
         sbufRowIndex += sbufWidth) {
 
         if (!processAlpha) {
             int i;
-            jint* pFrom = &rgbData[offset + dataRowIndex];
-            gxj_pixel_type* pTo = &sbuf->pixelData[sbufRowIndex + x];
+            register jint* pFrom = &rgbData[offset + dataRowIndex];
+            register gxj_pixel_type* pTo = &sbuf->pixelData[sbufRowIndex + x];
+/*
+            if ((unsigned int)pTo & 3) {
+                *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            }
+    */    
             for (i = 0; i< blocks; i++) {
 #if 1
+            	//if (((unsigned int)pTo & 3) || ((unsigned int)pFrom & 0xf)) {
+		{
+
             	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
@@ -281,6 +346,33 @@ gx_draw_rgb(const jshort *clip,
             	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	  
+            	//} else {
+                //GXJ_RGB24TORGB16VFPU(pTo, pFrom);
+                /*
+                __asm__ __volatile__ ( 
+              	" ulv.q C000.q,0(%1)\n" 
+              	" ulv.q C020.q, 16(%1)\n" 
+              	" ulv.q C100.q,32(%1)\n" 
+              	" ulv.q C120.q, 48(%1)\n" 
+              	" vt5650.q C010.p,C000.q\n" 
+              	" vt5650.q C030.p,C020.q\n" 
+                     " vt5650.q C110.p,C100.q\n" 
+              	" vt5650.q C130.p,C120.q\n" 
+              	" sv.s S010, 0(%0)\n" 
+                     " sv.s S011, 4(%0)\n" 
+              	" sv.s S030, 8(%0)\n" 
+                     " sv.s S031, 12(%0)\n"
+                     " sv.s S110, 16(%0)\n" 
+                     " sv.s S111, 20(%0)\n" 
+              	" sv.s S130, 24(%0)\n" 
+                     " sv.s S131, 28(%0)\n"
+              	:: "r"(pTo), "r"(pFrom) 
+              	);
+                pTo += 16;
+                pFrom += 16;
+                */
+            	}
 #else
             	  __asm__ __volatile__ (
             	  " .set noreorder\n"
@@ -386,33 +478,241 @@ gx_draw_rgb(const jshort *clip,
             	  pFrom += 8;
 #endif 
             }
-            switch (remains) {
+            switch (remains) {            	
+            	/*
+            	case 15:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 14:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 13:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 12:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 11:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 10:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 9:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;    
+            	case 8:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;    
+            	*/
             	case 7:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	case 6:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	case 5:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	case 4:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	case 3:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
             	case 2:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
-            	case 1:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;
+            	case 1:  *pTo++ = GXJ_RGB24TORGB16((*pFrom)); pFrom++;    
             }
         } else {
+        
+            jint* psrc = rgbData+offset + dataRowIndex;
+            jint* pend = psrc + width;
+            gxj_pixel_type* pdst = sbuf->pixelData+sbufRowIndex+x;
 
-            for (a = x; a < x + width; a++) {
-                jint value = rgbData[offset + (a - x) + dataRowIndex];
-                int idx = sbufRowIndex + a;
-    
-                CHECK_PTR_CLIP(sbuf, &(sbuf->pixelData[idx]));
-    
-                if ((value & 0xff000000) == 0xff000000) {
-                    // Pixel has no alpha or no transparency
-                    sbuf->pixelData[idx] = GXJ_RGB24TORGB16(value);
-                } else {
-                    if ((value & 0xff000000) != 0) {
-                        jint background = GXJ_RGB16TORGB24(sbuf->pixelData[idx]);
-                        jint composition = alphaComposition(value, background);
-                        sbuf->pixelData[idx] = GXJ_RGB24TORGB16(composition);
+#if USE_PSP_VFPU
+            static float __attribute__((aligned(16))) s[24];
+            static float __attribute__((aligned(16))) d[24];
+            static float __attribute__((aligned(16))) res[24];
+
+            float* ps = &s[0];
+            float* pd = &d[0];
+
+            while (psrc <pend-5) {
+            	unsigned char* point = (unsigned char*)psrc;
+            	unsigned short* bg = (unsigned short*)pdst;
+            	//float fr, fg, fb;
+            	//unsigned short cr, cg, cb;
+            	
+            s[3] = falpha_table[point[3]];
+            s[2] = (float)point[0];
+            s[1] = (float)point[1];
+            s[0] = (float)point[2];
+            s[7] = falpha_table[point[7]];
+            s[6] = (float)point[4];
+            s[5] = (float)point[5];
+            s[4] = (float)point[6];
+            s[11] = falpha_table[point[11]];
+            s[10] = (float)point[8];
+            s[9] = (float)point[9];
+            s[8] = (float)point[10];
+            s[15] = falpha_table[point[15]];
+            s[14] = (float)point[12];
+            s[13] = (float)point[13];
+            s[12] = (float)point[14];
+            s[19] = falpha_table[point[19]];
+            s[18] = (float)point[16];
+            s[17] = (float)point[17];
+            s[16] = (float)point[18];
+            s[23] = falpha_table[point[23]];
+            s[22] = (float)point[20];
+            s[21] = (float)point[21];
+            s[20] = (float)point[22];
+
+
+
+            //d[3] = (float)0;
+            d[2] = (float)((bg[0] >> 8) & 0xF8);
+            d[1] = (float)((bg[0] >> 3) & 0xFC);
+            d[0] = (float)((bg[0] << 3) & 0xF8);
+            //d[7] = (float)0;
+            d[6] = (float)((bg[1] >> 8) & 0xF8);
+            d[5] = (float)((bg[1] >> 3) & 0xFC);
+            d[4] = (float)((bg[1] << 3) & 0xF8);
+            //d[11] = (float)0;
+            d[10] = (float)((bg[2] >> 8) & 0xF8);
+            d[9] = (float)((bg[2] >> 3) & 0xFC);
+            d[8] = (float)((bg[2] << 3) & 0xF8);
+            //d[15] = (float)0;
+            d[14] = (float)((bg[3] >> 8) & 0xF8);
+            d[13] = (float)((bg[3] >> 3) & 0xFC);
+            d[12] = (float)((bg[3] << 3) & 0xF8);
+            //d[19] = (float)0;
+            d[18] = (float)((bg[4] >> 8) & 0xF8);
+            d[17] = (float)((bg[4] >> 3) & 0xFC);
+            d[16] = (float)((bg[4] << 3) & 0xF8);
+            //d[23] = (float)0;
+            d[22] = (float)((bg[5] >> 8) & 0xF8);
+            d[21] = (float)((bg[5] >> 3) & 0xFC);
+            d[20] = (float)((bg[5] << 3) & 0xF8);
+
+
+            
+            __asm__ __volatile__ (
+            	  "lv.q   C000.q, 0(%1)\n"
+            	  "lv.q   C010.q, 0(%2)\n"            	  
+            	  "lv.q   C100.q, 16(%1)\n"
+            	  "lv.q   C110.q, 16(%2)\n"
+            	  "lv.q   C200.q, 32(%1)\n"
+            	  "lv.q   C210.q, 32(%2)\n"
+            	  "lv.q   C300.q, 48(%1)\n"
+            	  "lv.q   C310.q, 48(%2)\n"
+            	  "lv.q   C400.q, 64(%1)\n"
+            	  "lv.q   C410.q, 64(%2)\n"
+            	  "lv.q   C500.q, 80(%1)\n"
+            	  "lv.q   C510.q, 80(%2)\n"
+            	  
+            	  "vocp.s S003, S013\n"
+            	  "vocp.s S103, S113\n"
+            	  "vocp.s S203, S213\n"
+            	  "vocp.s S303, S313\n"    
+            	  "vocp.s S403, S413\n"
+            	  "vocp.s S503, S513\n"    
+            	  
+            	  "vscl.t C000, C000, S003\n"
+            	  "vscl.t C010, C010, S013\n"
+            	  "vscl.t C100, C100, S103\n"
+                "vscl.t C110, C110, S113\n"
+                "vscl.t C200, C200, S203\n"
+                "vscl.t C210, C210, S213\n"
+            	  "vscl.t C300, C300, S303\n"
+            	  "vscl.t C310, C310, S313\n"
+            	  "vscl.t C400, C400, S403\n"
+                "vscl.t C410, C410, S413\n"
+            	  "vscl.t C500, C500, S503\n"
+            	  "vscl.t C510, C510, S513\n"
+            	  
+            	  "vadd.t C000, C000, C010\n"
+            	  "vadd.t C100, C100, C110\n"
+            	  "vadd.t C200, C200, C210\n"
+            	  "vadd.t C300, C300, C310\n"
+            	  "vadd.t C400, C400, C410\n"
+            	  "vadd.t C500, C500, C510\n"
+            	  
+            	  "sv.q   C000, 0(%0)\n"
+            	  "sv.q   C100, 16(%0)\n"
+            	  "sv.q   C200, 32(%0)\n"
+            	  "sv.q   C300, 48(%0)\n"
+            	  "sv.q   C400, 64(%0)\n"
+            	  "sv.q   C500, 80(%0)\n"
+            	  :: "r"(res), "r"(pd), "r"(ps));
+
+                  psrc += 6;
+                  
+                *pdst++ = ((((unsigned short)res[2]) << 8) & 0xF800) | ((((unsigned short)res[1]) << 3) & 0x07E0) | ((((unsigned short)res[0]) >> 3) & 0x001F);                
+                *pdst++ = ((((unsigned short)res[6]) << 8) & 0xF800) | ((((unsigned short)res[5]) << 3) & 0x07E0) | ((((unsigned short)res[4]) >> 3) & 0x001F);
+                *pdst++ = ((((unsigned short)res[10]) << 8) & 0xF800) | ((((unsigned short)res[9]) << 3) & 0x07E0) | ((((unsigned short)res[8]) >> 3) & 0x001F);
+                *pdst++ = ((((unsigned short)res[14]) << 8) & 0xF800) | ((((unsigned short)res[13]) << 3) & 0x07E0) | ((((unsigned short)res[12]) >> 3) & 0x001F);
+                *pdst++ = ((((unsigned short)res[18]) << 8) & 0xF800) | ((((unsigned short)res[17]) << 3) & 0x07E0) | ((((unsigned short)res[16]) >> 3) & 0x001F);
+                *pdst++ = ((((unsigned short)res[22]) << 8) & 0xF800) | ((((unsigned short)res[21]) << 3) & 0x07E0) | ((((unsigned short)res[20]) >> 3) & 0x001F);
+            }
+/*
+            while (psrc <pend) {
+            	unsigned char* point = (unsigned char*)psrc++;
+            	unsigned short bg = (unsigned short)*pdst;
+            	float fr, fg, fb;
+            	unsigned short cr, cg, cb;
+            	
+            s[3] = falpha_table[point[3]];
+            s[2] = (float)point[0];
+            s[1] = (float)point[1];
+            s[0] = (float)point[2];
+
+            d[3] = (float)0;
+            d[2] = (float)((bg >> 8) & 0xF8);
+            d[1] = (float)((bg >> 3) & 0xFC);
+            d[0] = (float)((bg << 3) & 0xF8);
+            
+            __asm__ __volatile__ (
+            	  " .set noreorder\n"
+            	  "lv.q   C000, %0\n"
+            	  "lv.q   C010, %4\n"
+            	  "vocp.s S003, S013\n"
+            	  "vscl.t C000, C000, S003\n"
+            	  "vscl.t C010, C010, S013\n"
+            	  "vadd.t C000, C000, C010\n"
+            	  "mfv   %3, S000\n"
+            	  "mfv   %2, S001\n"
+            	  "mfv   %1, S002\n"
+            	  : "+m"(*d), "=r"(fr), "=r"(fg), "=r"(fb): "m"(*s));
+ 
+                cr = (unsigned short)fr;
+                cg = (unsigned short)fg;
+                cb = (unsigned short)fb;
+                *pdst++ = ((cr << 8) & 0xF800) | ((cg << 3) & 0x07E0) | ((cb >> 3) & 0x001F);                
+            }
+*/
+#endif
+            while (psrc <pend) {
+            	  register jint value;
+            	  register unsigned char alpha;
+            	  //CHECK_PTR_CLIP(sbuf, pdst);
+                while (psrc < pend - 8) {
+                    register jint* p = psrc;
+                    if (*p >> 24== 0)
+                    if (*++p >> 24== 0)
+                    if (*++p >> 24== 0)
+                    if (*++p >> 24== 0)
+                    if (*++p >> 24== 0)
+                    if (*++p >> 24== 0)
+                    if (*++p >> 24== 0)
+                    if (*++p >> 24== 0) {
+                    	  pdst += 8;
+                    	  psrc = p+1;
+                    	  continue;
                     }
+
+                    pdst += p - psrc;
+                    psrc = p;
+                    break;
                 }
+
+                value = *psrc++;
+                alpha = value >> 24;    
+                   
+                if (alpha == 0xff) {
+                    // Pixel has no alpha or no transparency
+                    *pdst = GXJ_RGB24TORGB16(value);
+                } else if (alpha != 0) {
+                    	   /*
+                    	   jint background = GXJ_RGB16TORGB24(*pdst);
+                        jint composition = alphaComposition(value, background);
+                        *pdst = GXJ_RGB24TORGB16(composition);
+                        */
+                        register unsigned short background = *pdst;
+                    	   register unsigned char alpha1 = 0xff - alpha;
+                    	   register unsigned short r = alpha_table[(value & 0x00F80000) >> 19][alpha] + alpha_table[background >> 11][alpha1];
+                    	   register unsigned short g = alpha_table[(value & 0x0000FC00) >> 10][alpha] + alpha_table[(background >> 5) & 0x3F][alpha1];
+                    	   register unsigned short b = alpha_table[(value & 0x000000F8) >> 3][alpha] + alpha_table[background & 0x1F][alpha1];
+                        if (r > 0x1F) r = 0x1F;
+                        if (g > 0x3F) g = 0x3F;
+                        if (b > 0x1F) b = 0x1F;
+                    	   *pdst = (r << 11) | (g << 5) | b;                    
+                }
+                pdst++;
             } /* loop by rgb data columns */
         }
     } /* loop by rgb data rows */
@@ -471,26 +771,26 @@ void
 gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int nYOriginDest, 
 		 jshort * dataSrc,  int nScanLen, int nXOriginSrc,  int nYOriginSrc,  
 		 int nWidth,  int nHeight, int transform, jboolean processAlpha) {
-	const int pix_size_dest = 2;
-	const int pix_size_src = 2;
+    const int pix_size_dest = 2;
+    const int pix_size_src = 2;
     unsigned char *destBitsPtr   = NULL,
                   *srcBitsPtr    = NULL,
                   *destBitsLimit = NULL;
     int x_dest = nXOriginDest, y_dest = nYOriginDest;
     int x_dest_incr = 1, y_dest_incr = 1;
-	int x_src = nXOriginSrc, y_src = nYOriginSrc; 
+    int x_src = nXOriginSrc, y_src = nYOriginSrc; 
 	//int x1_src = nXOriginSrc + nWidth, y1_src = nYOriginSrc + nHeight;
-	int x_src_incr = 1, y_src_incr = 1;
-	int i, j;
+    int x_src_incr = 1, y_src_incr = 1;
+    int i, j;
     int alpha;
 
     int t_width, width_src_incr, width_dest_incr;
     int t_height;
     int blocks, remains;
-
+    
     gxj_screen_buffer screen_buffer;
     gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
-      gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
+                                            gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
     int sbufWidth = sbuf->width;
 
     REPORT_CALL_TRACE(LC_LOWUI, "gx_draw_pixels_4444_to_565()\n");	    
@@ -498,12 +798,12 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
     if(transform & TRANSFORM_INVERTED_AXES) {
         t_width  = nHeight;
         t_height = nWidth;
-		y_dest = y_dest + (t_height - 1)*y_dest_incr;
-		y_dest_incr = -y_dest_incr;
-		x_dest = x_dest + (t_width - 1)*x_dest_incr;
-		x_dest_incr = -x_dest_incr;		
-		x_src_incr = nScanLen;
-		y_src_incr = 1;
+	 y_dest = y_dest + (t_height - 1)*y_dest_incr;
+	 y_dest_incr = -y_dest_incr;
+	 x_dest = x_dest + (t_width - 1)*x_dest_incr;
+	 x_dest_incr = -x_dest_incr;		
+	 x_src_incr = nScanLen;
+	 y_src_incr = 1;
     } else {
         t_width  = nWidth;
         t_height = nHeight;
@@ -514,82 +814,102 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
         y_dest_incr = -y_dest_incr;
     } 
 
+
+    if (x_dest+t_width >= sbufWidth) {
+	     t_width = sbufWidth - x_dest; //ensure not draw out of screen
+    }
+    
     if (transform & TRANSFORM_X_FLIP) {
         x_dest = x_dest + (t_width - 1)*x_dest_incr;
         x_dest_incr = -x_dest_incr;
-    } 
+    }
+    
+    y_dest_incr = y_dest_incr * sbufWidth;
+    if(!(transform & TRANSFORM_INVERTED_AXES)){
+	y_src_incr = y_src_incr * nScanLen;
+    }
+    
+    x_dest_incr *= pix_size_dest;
+    y_dest_incr *= pix_size_dest;
+    x_src_incr *= pix_size_src;
+    y_src_incr *= pix_size_src;
+    width_dest_incr = t_width*x_dest_incr;
+    width_src_incr = t_width*x_src_incr;
 
-	y_dest_incr = y_dest_incr * sbufWidth;
-	if(!(transform & TRANSFORM_INVERTED_AXES)){
-		y_src_incr = y_src_incr * nScanLen;
-	}
-	x_dest_incr *= pix_size_dest;
-	y_dest_incr *= pix_size_dest;
-	x_src_incr *= pix_size_src;
-	y_src_incr *= pix_size_src;
-	width_dest_incr = t_width*x_dest_incr;
-	width_src_incr = t_width*x_src_incr;
+    destBitsPtr = ((unsigned char *)sbuf->pixelData) + ((y_dest * sbufWidth + x_dest) * pix_size_dest);
+    srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
 
-	destBitsPtr = ((unsigned char *)sbuf->pixelData) + ((y_dest * sbufWidth + x_dest) * pix_size_dest);
-	srcBitsPtr = (unsigned char *)(dataSrc + ((y_src * nScanLen + x_src)/* * pix_size_src*/));	
+    destBitsLimit = ((unsigned char *)sbuf->pixelData) + (sbuf->width * sbuf->height * pix_size_dest);
 
-	destBitsLimit = ((unsigned char *)sbuf->pixelData) + (sbuf->width * sbuf->height * pix_size_dest);
-
-       blocks = t_width / 8;
-       remains = t_width % 8;
+/*
+    if (x_dest < 0) {
+		t_width += x_dest;
+		srcBitsPtr -= x_dest*pix_size_dest;
+		destBitsPtr -= x_dest*pix_size_dest;
+    }
+*/
+    blocks = t_width / 8;
+    remains = t_width % 8;
 	
-	for (j = 0; j < t_height; j++) {
-           if (!processAlpha) {
+    for (j = 0; j < t_height; j++) {
+         if (!processAlpha) {
+         	 
                if ((destBitsPtr < destBitsLimit)&& (destBitsPtr + width_dest_incr) < destBitsLimit) {
                    int i;
                    jshort* pFrom = (jshort*)srcBitsPtr;
                    gxj_pixel_type* pTo = (gxj_pixel_type*)destBitsPtr;
-                 if (x_dest_incr > 0) {
-                   for (i = 0; i< blocks; i++) {
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                   
+                   if (x_dest_incr > 0) {
+                   	
+                       for (i = 0; i< blocks; i++) {
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       }
+                       switch (remains) {
+                       	case 7:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 6:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 5:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 4:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 3:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 2:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 1:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       }
+                       
+                   } else {
+                   
+                       for (i = 0; i< blocks; i++) {
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       }
+                       switch (remains) {
+                       	case 7:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 6:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 5:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 4:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 3:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 2:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       	case 1:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
+                       }
+                       
                    }
-                   switch (remains) {
-                   	case 7:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 6:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 5:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 4:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 3:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 2:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 1:  *pTo++ = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   }
-                 } else {
-                   for (i = 0; i< blocks; i++) {
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   }
-                   switch (remains) {
-                   	case 7:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 6:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 5:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 4:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 3:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 2:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   	case 1:  *pTo-- = GXJ_RGB444TORGB565((*pFrom)); pFrom++;
-                   }
-                 }
-           	 }
+             	 }
+               
                destBitsPtr += y_dest_incr;
    		 srcBitsPtr += y_src_incr;
+   		 
            } else {
-   
    		
    		for (i = 0; i < t_width; i++) {
    			//M@x: never draw out of screen buffer
@@ -605,6 +925,7 @@ gx_draw_pixels_4444_to_565(const java_imagedata * imgDest, int nXOriginDest, int
    			destBitsPtr += x_dest_incr;//*pix_size_dest;
    			srcBitsPtr += x_src_incr;//*pix_size_src;
    		}
+   		
    		destBitsPtr += y_dest_incr - (width_dest_incr);
    		srcBitsPtr += y_src_incr - (width_src_incr);
    	}
@@ -633,6 +954,7 @@ gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int
 
     int blocks, remains;
 
+    
     gxj_screen_buffer screen_buffer;
     gxj_screen_buffer* sbuf = (gxj_screen_buffer*) getScreenBuffer(
       gxj_get_image_screen_buffer_impl(imgDest, &screen_buffer, NULL));
@@ -658,6 +980,11 @@ gx_draw_pixels_8888_to_565(const java_imagedata * imgDest, int nXOriginDest, int
         y_dest = y_dest + (t_height - 1)*y_dest_incr;
         y_dest_incr = -y_dest_incr;
     } 
+
+    
+    if (x_dest+t_width >= sbufWidth) {
+	     t_width = sbufWidth - x_dest; //ensure not draw out of screen
+    }
 
     if (transform & TRANSFORM_X_FLIP) {
         x_dest = x_dest + (t_width - 1)*x_dest_incr;
