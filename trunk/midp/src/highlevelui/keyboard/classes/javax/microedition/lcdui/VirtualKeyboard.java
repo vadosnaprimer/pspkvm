@@ -109,7 +109,7 @@ class VirtualKeyboard {
 
         f = Font.getFont(Font.FACE_SYSTEM, // or SYSTEM
                          Font.STYLE_PLAIN, 
-                         Font.SIZE_MEDIUM);
+                         Font.SIZE_SMALL);
         fontW = f.charWidth('M');
         fontH = f.getHeight();
 
