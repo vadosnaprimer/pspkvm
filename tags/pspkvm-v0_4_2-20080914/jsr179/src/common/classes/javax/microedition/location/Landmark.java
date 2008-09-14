@@ -1,0 +1,101 @@
+/*
+ *
+ *
+ * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 only, as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt).
+ * 
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ * 
+ * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+ * Clara, CA 95054 or visit www.sun.com if you need additional
+ * information or have any questions.
+ */
+package javax.microedition.location;
+import java.io.*;
+import com.sun.j2me.location.LandmarkImpl;
+
+/**
+ * This class is defined by the JSR-179 specification
+ * <em>Location API for J2ME for J2ME&trade;.</em>
+ */
+// JAVADOC COMMENT ELIDED
+public class Landmark {
+    
+    /** Landmark Implementation */
+    private LandmarkImpl landmark = null;
+
+    // JAVADOC COMMENT ELIDED
+    public Landmark(String name, String description, 
+		    QualifiedCoordinates coordinates,
+		    AddressInfo addressInfo) {
+        landmark = new LandmarkImpl(name, description, 
+                coordinates, addressInfo);
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public String getName() {
+        return landmark.getName();
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public String getDescription() {
+        return landmark.getDescription();
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public QualifiedCoordinates getQualifiedCoordinates() {
+        return landmark.getQualifiedCoordinates();
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public AddressInfo getAddressInfo() {
+        return landmark.getAddressInfo();
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public void setName(String name) {
+        if (name == null) {
+            throw new NullPointerException();
+        }
+        landmark.setName(name);
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public void setDescription(String description) {
+        landmark.setDescription(description);
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public void setQualifiedCoordinates(QualifiedCoordinates coordinates) {
+        landmark.setQualifiedCoordinates(coordinates);
+    }
+
+    // JAVADOC COMMENT ELIDED
+    public void setAddressInfo(AddressInfo addressInfo) {
+        landmark.setAddressInfo(addressInfo);
+    }
+    
+    // JAVADOC COMMENT ELIDED
+    Landmark(LandmarkImpl landmark) {
+        this.landmark = landmark;
+    }
+
+    // JAVADOC COMMENT ELIDED
+    LandmarkImpl getInstance() {
+        return landmark;
+    }
+}
+
