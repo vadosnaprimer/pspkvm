@@ -238,7 +238,12 @@ static javacall_font* getFont( javacall_font_face face,
     	 FT_UInt  glyph_index;
     	 FT_Glyph  glyph;
     	 
-        glyph_index = FT_Get_Char_Index( newface, i );
+        if (((glyph_index = FT_Get_Char_Index( newface, i )) == 0) && (i == (int)'a')) {
+        	free(newfont);
+        	FT_Done_Face(newface);
+        	javacall_printf("FT_Get_Char_Index returns 0: %s\n", facename);
+        	goto fail;
+        }
         FT_Load_Glyph( newface, glyph_index, FT_LOAD_DEFAULT );
         
         newfont->asc_cache[i].width = newface->glyph->metrics.horiAdvance / 64;
