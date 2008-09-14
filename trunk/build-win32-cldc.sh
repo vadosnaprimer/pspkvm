@@ -107,7 +107,7 @@ then
 			ENABLE_THUMB=${ENABLE_THUMB} \
 			USE_JSR_75=${USE_JSR_75} \
 			USE_JSR_179=${USE_JSR_179} \
-			USE_PROPERTIES_FROM_FS=false \
+			USE_PROPERTIES_FROM_FS=true \
 			${DEBUG_OPTION}
 	fi
 	if [ $? != 0 ];then
