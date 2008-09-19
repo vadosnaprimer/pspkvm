@@ -37,23 +37,26 @@ extern "C" {
 
 #define CACHE_SIZE 128
 #define CACHE2_SIZE 1024
+#define WCACHE_SIZE 4096
 
 typedef struct {
     int width;
     int top;
     FT_Bitmap* bitmap;
+    FT_Pixel_Mode mode;
 }font_cache;
 
 typedef struct {
     javacall_utf16 charcode;
-    int width;
+    unsigned short width;
 }wcache2;
 
 typedef struct {
     javacall_utf16 charcode;
     int width;
     int top;
-    FT_Bitmap* bitmap;
+    FT_Bitmap* bitmap;    
+    FT_Pixel_Mode mode;
 }bcache2;
 
 typedef struct {
@@ -61,7 +64,7 @@ typedef struct {
     //int width_cache[CACHE_SIZE];
     //FT_BitmapGlyph bitmap_cache[CACHE_SIZE];
     font_cache asc_cache[CACHE_SIZE];
-    wcache2 width_cache2[CACHE2_SIZE];
+    wcache2 width_cache2[WCACHE_SIZE];
     bcache2 bitmap_cache2[CACHE2_SIZE];
     int wcache2_p;
     int bcache2_p;
@@ -125,11 +128,11 @@ static javacall_font* getFont( javacall_font_face face,
     switch(style) {
     	case JAVACALL_FONT_STYLE_PLAIN: istyle = 0;
     	break;
-    	case JAVACALL_FONT_STYLE_BOLD: istyle = 1;
+    	case JAVACALL_FONT_STYLE_BOLD: istyle = 0;   //Don't support BOLD for now
     	break;
-    	case JAVACALL_FONT_STYLE_ITALIC: istyle = 2;
+    	case JAVACALL_FONT_STYLE_ITALIC: istyle = 0;  //Don't support Italic for now
     	break;
-    	case JAVACALL_FONT_STYLE_UNDERLINE: istyle = 3;
+    	case JAVACALL_FONT_STYLE_UNDERLINE: istyle = 0;  //Don't support Underline for now
     	break;
     	default:
     	return NULL;
@@ -248,26 +251,35 @@ static javacall_font* getFont( javacall_font_face face,
         
         newfont->asc_cache[i].width = newface->glyph->metrics.horiAdvance / 64;
         
-        if (newface->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
-            newfont->asc_cache[i].top = newface->glyph->bitmap_top;
-            newfont->asc_cache[i].bitmap = &newface->glyph->bitmap;
-        } else {
+        //if (newface->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+        //    FT_Bitmap* p = (FT_Bitmap*)malloc(sizeof(FT_Bitmap));
+        //    memcpy(p, &newface->glyph->bitmap, sizeof(FT_Bitmap));                        
+        //    newfont->asc_cache[i].bitmap = p;
+        //    newfont->asc_cache[i].top = newface->glyph->bitmap_top;
+        //    if (i == (int)'a') printf("FT_GLYPH_FORMAT_BITMAP:%s, %d, %d, %d, %d\n", facename, facesize, p->rows, p->width, p->pitch);
+        //} else {
+        	{
             FT_Get_Glyph( newface->glyph, &glyph );
             
             FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, NULL, 1);
             newfont->asc_cache[i].top = ((FT_BitmapGlyph)glyph)->top;
             newfont->asc_cache[i].bitmap = &((FT_BitmapGlyph)glyph)->bitmap;
+            newfont->asc_cache[i].mode = ((FT_BitmapGlyph)glyph)->bitmap.pixel_mode;
             //FT_Bitmap_Done(library, &((FT_BitmapGlyph)glyph)->bitmap);
             //FT_Done_Glyph(glyph);
         }
     }
 
     for (i = 0; i < CACHE2_SIZE; i++) {
-        newfont->width_cache2[i].width = 0;
-        newfont->width_cache2[i].charcode = (javacall_utf16)0;
         newfont->bitmap_cache2[i].bitmap = (FT_Bitmap*)0;
         newfont->bitmap_cache2[i].charcode = (javacall_utf16)0;
         newfont->bitmap_cache2[i].width = 0;
+        newfont->bitmap_cache2[i].mode = 0;
+    }
+
+    for (i = 0; i < WCACHE_SIZE; i++) {
+    	 newfont->width_cache2[i].width = 0;
+        newfont->width_cache2[i].charcode = (javacall_utf16)0;
     }
 
     newfont->face = newface;
@@ -277,7 +289,7 @@ static javacall_font* getFont( javacall_font_face face,
     newfont->facesize = facesize;
     newfont->wcache2_p = 0;
     newfont->bcache2_p = 0;
-
+    
     fonts[iface][istyle][isize] = newfont;
     return newfont;
 
@@ -289,12 +301,16 @@ fail:
 static void draw_bitmap( FT_Bitmap*  bitmap, javacall_pixel color,
 	                             int clipX1, int clipY1, int clipX2, int clipY2,
 	                             javacall_pixel* destbuf, 
-	                             int w, int h, int x, int y) {
-    
+	                             int w, int h, int x, int y, FT_Pixel_Mode mode) {
+    static unsigned char BitMask[8] = {0x80,0x40,0x20,0x10,0x8,0x4,0x2,0x1};
     FT_Int  i, j;  
     FT_Int  x_max = x + bitmap->width;  
     FT_Int  y_max = y + bitmap->rows;
     FT_Int xoffset, yoffset, xnum, ynum;
+
+    if ((clipX1 > x_max) || (clipX2 < x) || (clipY1 > y_max) || (clipY2 < y)) {
+    	return;
+    }
 
     clipX1 = clipX1<0?0:clipX1;
     clipY1 = clipY1<0?0:clipY1;
@@ -312,36 +328,61 @@ static void draw_bitmap( FT_Bitmap*  bitmap, javacall_pixel color,
 
     xnum = x_max - x - xoffset;
     ynum = y_max - y - yoffset;
+
+    if (xnum <= 0 || ynum <= 0)
+    	return;
     
     javacall_pixel* point = destbuf + (y + yoffset) * w + x + xoffset;
-    unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width + xoffset;
 
-    int block = xnum / 8;
-    int rem  = xnum % 8;
-    for ( j = 0; j < ynum; j++ )  {    	
-    	for ( i = 0; i < block ; i++)    {
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    		ALPHA_BLEND
-    	}
-    	
-    	switch (rem) {
-    		case 7: ALPHA_BLEND
-    	       case 6: ALPHA_BLEND
-    	       case 5: ALPHA_BLEND
-    	       case 4: ALPHA_BLEND
-    	       case 3: ALPHA_BLEND
-    	       case 2: ALPHA_BLEND
-    	       case 1: ALPHA_BLEND
-    	}
-    	
-    	point += (w - xnum);
-    	fontpoint += (bitmap->width - xnum);
+    if (mode == FT_PIXEL_MODE_MONO) {
+    	 unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width/8;
+    	 
+    	 int bitOffset = xoffset%8;
+    	 int pitch = bitmap->pitch*8;
+    	 for ( j = 0; j < ynum; j++) {    	 
+    	     for ( i = 0; i < xnum; i++, bitOffset++) {
+    	         if (bitOffset >= 8) {    	         	
+    	         	fontpoint+= bitOffset / 8;
+    	         	bitOffset %= 8;
+    	         }
+    	         if (*fontpoint & BitMask[bitOffset]) {
+    	             *point = color;
+    	         }
+    	         point++;
+    	     }
+    	     point += (w - xnum);
+    	     bitOffset += (pitch - xnum);
+    	 }
+    } else {
+        unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width + xoffset;
+    
+        int block = xnum / 8;
+        int rem  = xnum % 8;
+        for ( j = 0; j < ynum; j++ )  {    	
+        	for ( i = 0; i < block ; i++)    {
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        		ALPHA_BLEND
+        	}
+        	
+        	switch (rem) {
+        		case 7: ALPHA_BLEND
+        	       case 6: ALPHA_BLEND
+        	       case 5: ALPHA_BLEND
+        	       case 4: ALPHA_BLEND
+        	       case 3: ALPHA_BLEND
+        	       case 2: ALPHA_BLEND
+        	       case 1: ALPHA_BLEND
+        	}
+        	
+        	point += (w - xnum);
+        	fontpoint += (bitmap->width - xnum);
+        }
     }
 }
     
@@ -431,6 +472,7 @@ javacall_result javacall_font_draw(javacall_pixel   color,
     for (i = 0; i < textLen; i++) {
     	 int top, width;
     	 FT_Bitmap* bitmap;
+    	 FT_Render_Mode mode;
     	 
         FT_UInt  glyph_index;
     	 FT_Glyph  glyph = NULL;
@@ -440,6 +482,7 @@ javacall_result javacall_font_draw(javacall_pixel   color,
     	     top = current_font->asc_cache[text[i]].top;
     	     bitmap = current_font->asc_cache[text[i]].bitmap;
     	     width = current_font->asc_cache[text[i]].width;
+    	     mode = current_font->asc_cache[text[i]].mode;
     	 } else {
     	     int j;
     	     javacall_utf16 cc = text[i];
@@ -453,6 +496,7 @@ javacall_result javacall_font_draw(javacall_pixel   color,
     	        	top = current_font->bitmap_cache2[j].top;
     	        	bitmap = current_font->bitmap_cache2[j].bitmap;
     	        	width = current_font->bitmap_cache2[j].width;
+    	        	mode = current_font->bitmap_cache2[j].mode;
     	        	break;
     	        }
             }
@@ -464,11 +508,12 @@ javacall_result javacall_font_draw(javacall_pixel   color,
                     return JAVACALL_FAIL;
                 }
 
-                if (current_font->face->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
-                    top = current_font->face->glyph->bitmap_top;
-                    bitmap = &current_font->face->glyph->bitmap;
-                    width = current_font->face->glyph->metrics.horiAdvance / 64;
-                } else {
+                //if (current_font->face->glyph->format == FT_GLYPH_FORMAT_BITMAP) {
+                //    top = current_font->face->glyph->bitmap_top;
+                //    bitmap = &current_font->face->glyph->bitmap;
+                //    width = current_font->face->glyph->metrics.horiAdvance / 64;
+                //} else {
+                	{
                     if (FT_Get_Glyph( current_font->face->glyph, &glyph )) {
                         return JAVACALL_FAIL;
                     }
@@ -482,13 +527,15 @@ javacall_result javacall_font_draw(javacall_pixel   color,
                     width = current_font->face->glyph->metrics.horiAdvance / 64;
                 }
 
+                mode = bitmap->pixel_mode;
+
                 int icache = current_font->bcache2_p;
                 if (icache < CACHE2_SIZE) {
                   current_font->bcache2_p++;
                   current_font->bitmap_cache2[icache].charcode = cc;
                   current_font->bitmap_cache2[icache].width = width;
                   current_font->bitmap_cache2[icache].top = top;
-
+/*
                   if (current_font->face->glyph->format == FT_GLYPH_FORMAT_BITMAP) {                  
                       FT_Bitmap* pbmp = (FT_Bitmap*)malloc(sizeof(FT_Bitmap));
                       if (!pbmp) {
@@ -503,8 +550,11 @@ javacall_result javacall_font_draw(javacall_pixel   color,
                       current_font->bitmap_cache2[icache].bitmap = pbmp;              
                       
                   } else {                  
+                  */
+			{
                       current_font->bitmap_cache2[icache].bitmap = bitmap;
                   }
+                  current_font->bitmap_cache2[icache].mode = mode;
                 } else {
                   cached = 0; //cache full
                 }
@@ -515,14 +565,14 @@ javacall_result javacall_font_draw(javacall_pixel   color,
         	               clipX1, clipY1, clipX2, clipY2,
         	               destBuffer,
         	               destBufferHoriz, destBufferVert, x, 
-        	               y - top + 12);
+        	               y - top + 12, mode);
         x += width;
         
         if (!cached) {
         	if (glyph) 
         	    FT_Done_Glyph(glyph);
         	
-        	if (current_font->face->glyph->format != FT_GLYPH_FORMAT_BITMAP)
+        	//if (current_font->face->glyph->format != FT_GLYPH_FORMAT_BITMAP)
         	    FT_Bitmap_Done(library, bitmap);
         }
     }
@@ -609,9 +659,9 @@ int javacall_font_get_width(javacall_font_face     face,
     	} else {
     	    int j;
     	    javacall_utf16 cc = charArray[i];
-           for (j = 0; j < CACHE2_SIZE; j++) {
+           for (j = 0; j < WCACHE_SIZE; j++) {
            	 if (font->width_cache2[j].charcode == 0) {
-           	 	j = CACHE2_SIZE;
+           	 	j = WCACHE_SIZE;
            	 	break;
            	 }
            	 
@@ -621,7 +671,7 @@ int javacall_font_get_width(javacall_font_face     face,
     	        }
            }
            
-           if ( j < CACHE2_SIZE) {
+           if ( j < WCACHE_SIZE) {
            	continue;
            }
            
@@ -635,7 +685,7 @@ int javacall_font_get_width(javacall_font_face     face,
            res += w;
 
            icache = font->wcache2_p;
-           if (icache < CACHE2_SIZE) {
+           if (icache < WCACHE_SIZE) {
            	font->wcache2_p++;           
               font->width_cache2[icache].charcode = cc;
               font->width_cache2[icache].width = w;
