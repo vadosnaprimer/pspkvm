@@ -90,15 +90,15 @@
 
   <font
         Key="SCREEN_FONT_LABEL"
-      Value="FontResources.PROP_P_M"/>
+      Value="FontResources.PROP_P_S"/>
 
   <font
         Key="SCREEN_FONT_INPUT_TEXT"
-      Value="FontResources.PROP_P_M"/>
+      Value="FontResources.PROP_P_S"/>
 
   <font
         Key="SCREEN_FONT_STATIC_TEXT"
-      Value="FontResources.PROP_P_M"/>
+      Value="FontResources.PROP_P_S"/>
 
   <image
         Key="SCREEN_IMAGE_WASH"
