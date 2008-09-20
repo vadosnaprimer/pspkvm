@@ -48,7 +48,7 @@ PSP_MODULE_INFO("pspkvm", 0x1000, 1, 1);
 PSP_MAIN_THREAD_ATTR(0);
 #endif
 
-PSP_HEAP_SIZE_KB(7000);
+PSP_HEAP_SIZE_KB(6144);
 
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
