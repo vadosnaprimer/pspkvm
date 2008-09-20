@@ -46,7 +46,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
             vk = new VirtualKeyboard(keys, this, true, neededColumns, neededRows);
         }
 
-	setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight + 25);
+	setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
 	
         //candidateBar = new IMCandidateBar(vk.kbWidth, 25);
 
@@ -809,8 +809,14 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         } else if (metaKey == vk.CNINPUT_META_KEY) {
             if (candidateBar == null) {
             	candidateBar = new IMCandidateBar(vk.kbWidth, 25);
+            	vk.candidateFieldHeight = 25;
+            	setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
+            	disp.requestScreenRepaint();
             } else {
               candidateBar = null;
+              vk.candidateFieldHeight = 0;
+              setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight);
+              disp.requestScreenRepaint();
             }
         }
         // comment - customer may want backspace event also for Canvas.

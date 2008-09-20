@@ -115,7 +115,7 @@ class VirtualKeyboard {
 
         
         if (textKbd) {
-            textfieldHeight = fontH + 3 * PADDING;
+            textfieldHeight = fontH + 8 * PADDING;
             buttonW = fontW + 8;
             buttonH = fontH + 8;
             fontHTop = (buttonH - fontH) / 2 ;
@@ -126,7 +126,7 @@ class VirtualKeyboard {
             fontHTop = (buttonH - fontH) / 2 ;
             fontWCenter = buttonW / 2;
         }
-        candidateFieldHeight = 25;
+        candidateFieldHeight = 0;
         
         maxRows = (kbHeight - PADDING) / (buttonH + PADDING);
 
@@ -163,10 +163,10 @@ class VirtualKeyboard {
         // do not require to account for meta keys for a canvas keyboard-hk
         if(textKbd){
              neededHeight = maxRows * (buttonH + PADDING) +
-                           3 * PADDING + // between the keys and the meta keys
-                           IMAGE_SIZE + META_PADDING * 3 + 
+                           4* PADDING + // between the keys and the meta keys
+                           IMAGE_SIZE + META_PADDING * 4 + 
                            textfieldHeight + candidateFieldHeight;
-             kbY = kbHeight - neededHeight + 2*PADDING;
+             kbY = kbHeight - neededHeight - 4*PADDING;
              kbHeight = neededHeight;
 
         }else{
@@ -422,7 +422,7 @@ class VirtualKeyboard {
         drawKeys(g);
 
         g.translate(0,actualHeight - 
-                    (IMAGE_SIZE + 6 * META_PADDING) -
+                    (IMAGE_SIZE + 4*PADDING + 2 * META_PADDING) -
                     textfieldHeight - candidateFieldHeight);
         if(textKbd)
             drawMetaKeys(g);
@@ -442,12 +442,12 @@ class VirtualKeyboard {
                          kbWidth - 2*PADDING, textfieldHeight); 
 
 
-        g.translate(PADDING + 1,PADDING);
+        g.translate(PADDING + 1,0);
 
-        vkl.paintTextOnly(g,kbWidth - 3*PADDING,
-                          textfieldHeight - 2*PADDING);
+        vkl.paintTextOnly(g,kbWidth,
+                          textfieldHeight);
 
-        g.translate(-PADDING - 1,-PADDING);
+        g.translate(-PADDING - 1,0);
         g.setClip(0,0,kbWidth,kbHeight);
     }
 
@@ -457,7 +457,7 @@ class VirtualKeyboard {
                          kbWidth - 2*PADDING, candidateFieldHeight); 
 
 
-        g.translate(PADDING + 1,PADDING);
+        g.translate(PADDING + 1,2*PADDING);
 
         vkl.paintCandidateBar(g,kbWidth - 3*PADDING,
                           candidateFieldHeight - 2*PADDING);
@@ -524,7 +524,7 @@ class VirtualKeyboard {
             drawBorder(g,currX - 2*META_PADDING,   // x1
                        currY - 2*META_PADDING,     // y1
                        currX + mkWidth,
-                       currY + IMAGE_SIZE + 4*META_PADDING);
+                       currY + IMAGE_SIZE + 2*META_PADDING);
         }
 
         for (int i=0; i<metaKeys.length; i++) {
