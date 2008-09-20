@@ -1,4 +1,4 @@
-pspkvm v0.4.1
+pspkvm v0.4.2
 28 Jun. 2008
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
@@ -12,12 +12,12 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
+- FreeType2 fonts support. (Please see "Running tips: Use FreeType2 font files")
 - Bug fixes:
-  1) HTTPS connection always fail
-  2) On Screen Keyboard fail to open
-  3) Virtual Keyboard cannot input 4 and 6
-- Input symbols and numbers while Chinese Input is open
-- Improve performance of FileConnection InputStream.skip()
+  1) Mess display bug of NokiaUI for some games, e.g American Army.
+  2) Fix PlatformRequest() issue of not launching Installer for Jad/Jar files.
+- Add missing character in Chinese Input Method. Now full GB2312 charset is supported.
+- Optimize alpha-blending of drawRGB() with VFPU instructions.
 
 --------------------------------
 General information
@@ -47,12 +47,12 @@ Fetures
 - Virtual Keyboard Input
 - Chinese Input
 - JSR179
+- FreeType2 font support
 
 --------------------------------
 TODO
 --------------------------------
 - Graphic optimization (High)
-- Resolve game compatibility regression (High)
 - JSR184 (Low)
 - MIPS JIT compiler and Interpreter generator (Low)
 
@@ -108,6 +108,7 @@ Requirement:
     SDL_mixer
     libvorbis
     libogg
+    freetype2
     
 --------------------------------
 Running tips
@@ -178,3 +179,10 @@ Running tips
 	2/8 (UP/DOWN by default)                -> Prev/Next page of candidate chinese chars
 	5 (SHIFT+CIRCLE by default)             -> Confirm selected chinese char
 	CLEAR (SHIFT+CROSS by default)          -> Backspace
+	
+- Use FreeType2 font files
+	You can have 3 type of fonts: System, Proportional and Monospace. Copy your .ttf files into ms0:/PSP/GAME/PSPKVM and rename them as below:
+	System font: sys.ttf
+	Proportional font: pro.ttf
+	Monospace font: mono.ttf
+	If pro.ttf or mono.ttf is not found, sys.ttf will be used automatically; If no any of three font files are found, internal built-in font will be used.
