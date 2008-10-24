@@ -6,7 +6,7 @@ CC = $(ARCH)gcc -std=gnu99
 AR = $(ARCH)ar
 RANLIB = $(ARCH)ranlib
 RM = rm -f
-CFLAGS = -g -Wall -Wmissing-prototypes -Os -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include -I $(PSPSDK)/include -funit-at-a-time
+CFLAGS = -Wall -Wmissing-prototypes -Os -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include -I $(PSPSDK)/include -funit-at-a-time
 LFLAGS = -g -Wall -Os -G0 -L$(PSPPATH)/lib
 
 DEPDIR = .deps
@@ -146,7 +146,8 @@ API_OBJS = \
 	pspgl_varray_draw.o \
 	pspgl_varray_draw_elts.o \
 	pspgl_varray_draw_range_elts.o \
-	pspgl_vidmem.o
+	pspgl_vidmem.o \
+	eglCreatePixmapSurface.o
 
 libGL.a_OBJS = \
 	$(API_OBJS) \

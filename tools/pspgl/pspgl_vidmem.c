@@ -52,7 +52,7 @@ static int vidmem_map_insert_new (unsigned long idx, struct pspgl_buffer *buf)
 
 int __pspgl_vidmem_alloc (struct pspgl_buffer *buf)
 {
-	void *start = sceGeEdramGetAddr();
+	void *start = 0x04000000 + 512*272*2;//sceGeEdramGetAddr();
 	void *adr = start;
 	unsigned long i;
 	unsigned size;

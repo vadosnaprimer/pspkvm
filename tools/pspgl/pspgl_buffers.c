@@ -289,7 +289,7 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 
 	buffer_remove(data);
 
-	if (data->base) {
+	if (data->base && !(data->flags & BF_UNMANAGED)) {
 		if (is_edram_addr(data->base))
 			__pspgl_vidmem_free(data);
 		else

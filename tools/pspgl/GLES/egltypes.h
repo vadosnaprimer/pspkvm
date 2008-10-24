@@ -14,7 +14,25 @@ typedef void *EGLContext;
 typedef int EGLConfig;
 typedef int NativeDisplayType;
 typedef int NativeWindowType;
-typedef int NativePixmapType;
+typedef struct {
+  int width;
+  int height;
+  int stride;
+  unsigned char rSize;
+  unsigned char gSize;
+  unsigned char bSize;
+  unsigned char aSize;
+  unsigned char rOffset;
+  unsigned char gOffset;
+  unsigned char bOffset;
+  unsigned char aOffset;
+  void *pixels;        /* 8888 RGBA buffer, used by OpenGL ES */
+  int    pixels_by_gl;
+  void(*free)(void*);
+  void *screen_buffer; /* 565 RGB or 8888 ARGB buffer, used in another implementation */
+  int pixelBytes;
+  int atab[256], rtab[256], gtab[256], btab[256];
+} *NativePixmapType;
 
 /*
 ** EGL and native handle values
