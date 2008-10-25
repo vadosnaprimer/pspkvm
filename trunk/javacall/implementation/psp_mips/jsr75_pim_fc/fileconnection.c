@@ -82,7 +82,7 @@ extern "C" {
  * - javacall_fileconnection_dir_content_size()
  * - javanotify_fileconnection_root_changed()
  */
-
+#include <stdio.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <string.h>
@@ -498,6 +498,10 @@ javacall_result javacall_fileconnection_dir_exists(const javacall_utf16* pathNam
                                                    int pathNameLen) {
 
     javacall_bool res;
+#ifdef DEBUG_JAVACALL_FILECONNECTION
+    javacall_printf("javacall_fileconnection_dir_exists\n");
+#endif
+    
     if(JAVACALL_OK != javacall_fileconnection_is_directory(pathName, pathNameLen, &res)) {
         javacall_print("javacall_fileconnection_dir_exists(): not exist directory\n");
         return JAVACALL_FAIL;
