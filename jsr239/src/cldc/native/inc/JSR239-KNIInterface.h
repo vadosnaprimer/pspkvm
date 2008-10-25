@@ -44,7 +44,8 @@ typedef struct {
   unsigned char bOffset;
   unsigned char aOffset;
   void *pixels;        /* 8888 RGBA buffer, used by OpenGL ES */
-
+  int pixels_unmanaged;
+  void(*free)(void*);
   void *screen_buffer; /* 565 RGB or 8888 ARGB buffer, used in another implementation */
   int pixelBytes;
   int atab[256], rtab[256], gtab[256], btab[256];

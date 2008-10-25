@@ -152,6 +152,8 @@ JSR239_getWindowPixmap(jobject winHandle, jint width, jint height,
         JSR239_free(p);
         return (JSR239_Pixmap *) 0;
     }
+    p->pixels_unmanaged = 0;
+    p->free = JSR239_free;
 
     screenBufferSize = p->width*p->height*SCREEN_BUFFER_BPP;
     p->screen_buffer = JSR239_malloc(screenBufferSize);
@@ -190,7 +192,7 @@ JSR239_destroyPixmap(JSR239_Pixmap *pixmap) {
 #endif
 
     if (pixmap) {
-        if (pixmap->pixels) {
+    	 if (pixmap->pixels && !pixmap->pixels_unmanaged) {
             JSR239_free(pixmap->pixels);
         }
         if (pixmap->screen_buffer) {
@@ -330,10 +332,10 @@ copyFromScreenBuffer(JSR239_Pixmap *dst, void *sbuffer,
 #endif
 
             /* GL RGBA format */
-            blue = (argb8888 >> 24) & 0xff;
-            green = (argb8888 >> 16) & 0xff;
-            red = (argb8888 >> 8) & 0xff;
-            alpha = argb8888 & 0xff;
+            alpha = (argb8888 >> 24) & 0xff;
+            red = (argb8888 >> 16) & 0xff;
+            green = (argb8888 >> 8) & 0xff;
+            blue = argb8888 & 0xff;
 
 #ifdef DEBUG
             if ((x == 10 && y == 10) ||
