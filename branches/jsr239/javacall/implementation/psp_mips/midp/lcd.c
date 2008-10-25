@@ -24,7 +24,7 @@
  */
 
 #define USE_PSP_GU 1
-#define ALWAYS_USE_PSP_GU 1
+#define ALWAYS_USE_PSP_GU 0
 
 #include "javacall_lcd.h"
 #include "javacall_properties.h"

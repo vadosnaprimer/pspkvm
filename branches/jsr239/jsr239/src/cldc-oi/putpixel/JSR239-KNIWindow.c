@@ -24,6 +24,7 @@
 
 #include "JSR239-KNIInterface.h"
 
+#include <GLES/gl.h>
 #include <string.h>
 #include <gxj_putpixel.h>
 #include <midp_constants_data.h>
@@ -35,6 +36,16 @@
 #include <stdio.h>
 #endif
 
+/** * Get a C structure representing the given <tt>ImageData</tt> class. */
+#define GXAPI_GET_IMAGEDATA_PTR_FROM_GRAPHICS(handle) \
+	GXAPI_GET_GRAPHICS_PTR(handle)->img != NULL ? \
+	GXAPI_GET_GRAPHICS_PTR(handle)->img->imageData : \
+	(java_imagedata*)NULL
+
+/** * Convenient macro for getting screen buffer from a Graphics's target image. */
+#define GXJ_GET_GRAPHICS_SCREEN_BUFFER(g,sbuf) \
+	gxj_get_image_screen_buffer_impl(GXAPI_GET_IMAGEDATA_PTR_FROM_GRAPHICS(g),sbuf,g)
+	
 /**
  * Helper function.
  * Retrieve buffer for the specified graphics.
@@ -109,6 +120,11 @@ JSR239_putWindowContents(jobject graphicsHandle,
 
     void* s;
     void* d;
+#ifdef PSP
+#ifdef DEBUG
+    GLenum error;
+#endif
+#endif
 
     KNI_StartHandles(1);
     KNI_DeclareHandle(GraphicsClassHandle);
@@ -131,7 +147,7 @@ JSR239_putWindowContents(jobject graphicsHandle,
         jint dest_width = lcdlf_get_screen_width();
         jint dest_height = lcdlf_get_screen_height();
 
-        jint min_height = 0;
+        jint min_height = 0, actual_height = 0;
         
         gimg = GXJ_GET_GRAPHICS_SCREEN_BUFFER(graphicsHandle, &sbuf);
         if (gimg != NULL) {
@@ -147,6 +163,36 @@ JSR239_putWindowContents(jobject graphicsHandle,
         printf("  min height = %d\n", min_height);
 #endif
 
+#ifdef PSP
+        if (src->aSize == 0 && src->rSize == 5 && src->gSize == 6 &&
+            src->bSize == 5) {
+            /** Special optimization for RGB565 **/
+            min_height = (dest_height> src->height) ? src->height : dest_height;
+            actual_height = min_height - delta_height;
+            if (actual_height > 0) {
+                glReadPixels(0, 0, dest_width, actual_height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5_REV, 
+                	                 flipY?getGraphicsBuffer(graphicsHandle):src->screen_buffer);
+#ifdef DEBUG
+                error = glGetError();
+                if (error != GL_NO_ERROR) {
+                    printf("glReadPixels: error = 0x%x\n", error);
+                }
+#endif
+                if (!flipY) {
+                    int i;
+                    gxj_pixel_type* d = getGraphicsBuffer(graphicsHandle) + dest_width * (actual_height-1);
+                    gxj_pixel_type* s = (gxj_pixel_type*)(src->screen_buffer);
+                    for (i = 0; i < actual_height; i++) {
+                        JSR239_memcpy(d , s,
+                                                     dest_width * sizeof(gxj_pixel_type));
+                        s += dest_width;
+                        d -= dest_width;
+                    }
+                }
+            }
+        } else  
+#endif
+        {
         /* IMPL_NOTE: get clip sizes into account. */
         copyToScreenBuffer(src, delta_height, flipY);
 
@@ -166,6 +212,7 @@ JSR239_putWindowContents(jobject graphicsHandle,
             JSR239_memcpy(d, s,
                 dest_width * min_height * sizeof(gxj_pixel_type));
         }
+    }
     }
 
 #ifdef DEBUG
