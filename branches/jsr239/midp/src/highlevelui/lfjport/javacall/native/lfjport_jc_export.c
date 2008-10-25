@@ -151,7 +151,6 @@ int lfjport_get_screen_height() {
  */
 jboolean lfjport_direct_flush(const java_graphics *g, 
 		  	      const java_imagedata *offscreen_buffer, int h) {
-  /* return jcapp_direct_draw(g, offscreen_buffer, h); */
-
-  return KNI_FALSE;
+  (void)g;
+  return jcapp_direct_flush(&(offscreen_buffer->pixelData->elements[0]), h);
 }

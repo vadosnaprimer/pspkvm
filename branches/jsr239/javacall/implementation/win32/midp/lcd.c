@@ -1452,3 +1452,15 @@ void javacall_set_new_screen_size(int w, int h) {
     (void)h;
 }
 
+void javacall_lcd_enable_flush(int enable) {
+    (void)enable;
+}
+
+javacall_bool javacall_lcd_direct_flush(javacall_pixel* buf, int h) {
+    javacall_pixel* tmp = VRAM.hdc;
+    VRAM.hdc = buf;
+    RefreshScreen(0, 0, currentSkin->displayRect.width, h);
+    VRAM.hdc = tmp;
+    return JAVACALL_TRUE;
+}
+    

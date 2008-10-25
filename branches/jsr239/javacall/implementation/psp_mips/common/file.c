@@ -104,8 +104,15 @@ javacall_result javacall_file_open(const javacall_utf16 * unicodeFileName, int f
 
     if (fd < 0) {
         *handle = NULL;
+#ifdef DEBUG_JAVACALL_FILE
+        javacall_print("javacall_file_open(): failed\n");
+#endif
         return JAVACALL_FAIL;
     }
+
+#ifdef DEBUG_JAVACALL_FILE
+        javacall_printf("javacall_file_open(): handle=%d\n", fd);
+#endif
 
     *handle = (javacall_handle)fd;
     return JAVACALL_OK;
@@ -118,7 +125,9 @@ javacall_result javacall_file_open(const javacall_utf16 * unicodeFileName, int f
  *         <tt>JAVACALL_FAIL</tt> or negative value otherwise
  */
 javacall_result javacall_file_close(javacall_handle handle) {
-
+#ifdef DEBUG_JAVACALL_FILE
+        javacall_printf("javacall_file_close():%d\n", handle);
+#endif
 	int rc = close((int)handle);
     return (rc == 0) ? JAVACALL_OK : JAVACALL_FAIL;
 }
