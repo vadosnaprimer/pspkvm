@@ -161,3 +161,7 @@ int jcapp_get_screen_width() {
 int jcapp_get_screen_height() {
     return javacall_lcd_get_screen_height();
 }
+
+jboolean jcapp_direct_flush(const gxj_pixel_type *offscreen_buffer, int h) {
+    return javacall_lcd_direct_flush((javacall_pixel*)offscreen_buffer, h);
+}
