@@ -1485,7 +1485,7 @@ class AppManagerUI extends Form
         saveLastPlayedMIDlet(msi.suiteId);
         
         if (msi.hasSingleMidlet()) {
-            String title = new String("Laungching MIDlet...");
+            String title = new String("Launching MIDlet...");
             StringItem msg = new StringItem(msi.displayName, "");
 
             Form f = new Form(title);
