@@ -28,6 +28,8 @@
 #define _JCAPP_EXPORT_H_
 
 #include <kni.h>
+#include <gxj_putpixel.h>
+
 /**
  * @defgroup highui_jcapp Javacall Application External Interface
  * @ingroup highui
@@ -89,6 +91,8 @@ extern int jcapp_get_screen_width();
  *  Return screen height
  */
 extern int jcapp_get_screen_height();
+
+extern jboolean jcapp_direct_flush(const gxj_pixel_type *offscreen_buffer, int h);
 
 #ifdef __cplusplus
 }

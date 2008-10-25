@@ -248,6 +248,8 @@ void javacall_set_new_screen_size(int w, int h);
  **/
 void javacall_lcd_enable_flush(int enable);
 
+javacall_bool javacall_lcd_direct_flush(javacall_pixel*, int);
+
 /**
  * The platform should invoke this function in platform context
  * to rotate the screen.

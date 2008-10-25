@@ -30,6 +30,7 @@
 #include "javacall_properties.h"
 #include <pspdisplay.h>
 #include <stdlib.h>
+#include <stdio.h>
 #if USE_PSP_GU
 #include <pspge.h>
 #include <pspgu.h>
@@ -245,6 +246,7 @@ javacall_result javacall_lcd_init(void) {
        } else {
            //printf("Setup GU\n");
 	    //setup_gu();
+	    scbuff = (javacall_pixel*)((unsigned int)scbuff | 0x40000000);
 	    memset(scbuff, 0, sizeof(_offscreen));
           sceGuDisplay(1);
        }
@@ -331,21 +333,7 @@ javacall_result javacall_lcd_set_full_screen_mode(javacall_bool useFullScreen) {
 }
 
    
-/**
- * Flush the screen raster to the display. 
- * This function should not be CPU intensive and should not perform bulk memory
- * copy operations.
- * The following API uses partial flushing of the VRAM, thus may reduce the
- * runtime of the expensive flush operation: It should be implemented on
- * platforms that support it
- * 
- * @param ystart start vertical scan line to start from
- * @param yend last vertical scan line to refresh
- *
- * @retval JAVACALL_OK      success
- * @retval JAVACALL_FAIL    fail 
- */
-javacall_result javacall_lcd_flush_partial(int ystart, int yend){
+static javacall_result javacall_lcd_flush_partial_internal(javacall_pixel* scbuff, int ystart, int yend){
     if (ALWAYS_USE_PSP_GU || vscr_h > 272) {
         //Need scale
         swizzle_fast((u8*)swizzled_pixels,scbuff,vscr_w*2,vscr_h); // 512*2 because swizzle operates in bytes, and each pixel in a 16-bit texture is 2 bytes
@@ -417,6 +405,41 @@ javacall_result javacall_lcd_flush_partial(int ystart, int yend){
     		
     		pd += (512 - vscr_w);
         }
+    }
+    return JAVACALL_OK;
+}
+
+javacall_bool javacall_lcd_direct_flush(javacall_pixel* buf, int h) {
+    if ((unsigned int)buf & 0x03) {
+    	 //printf("WARNING: javacall_lcd_direct_flush can't be applied for non-aligned buffer\n");
+        return JAVACALL_FALSE;
+    }
+    
+    if (_enable_lcd_flush) {
+    	 if (javacall_lcd_flush_partial_internal(buf, 0, h) != JAVACALL_OK) {
+            return JAVACALL_FALSE;
+        }
+    }
+    return JAVACALL_TRUE;
+}
+
+/**
+ * Flush the screen raster to the display. 
+ * This function should not be CPU intensive and should not perform bulk memory
+ * copy operations.
+ * The following API uses partial flushing of the VRAM, thus may reduce the
+ * runtime of the expensive flush operation: It should be implemented on
+ * platforms that support it
+ * 
+ * @param ystart start vertical scan line to start from
+ * @param yend last vertical scan line to refresh
+ *
+ * @retval JAVACALL_OK      success
+ * @retval JAVACALL_FAIL    fail 
+ */
+javacall_result javacall_lcd_flush_partial(int ystart, int yend){
+    if (_enable_lcd_flush) {
+        return javacall_lcd_flush_partial_internal(scbuff, ystart, yend);
     }
     return JAVACALL_OK;
 }
