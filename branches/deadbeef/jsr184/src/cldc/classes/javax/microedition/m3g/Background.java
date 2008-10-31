@@ -215,10 +215,10 @@ public class Background extends Object3D {
 		quad_verts.put(11, 0);
 
 		//set data
-		glVertexPointer(3, GL.GL_FLOAT, 0, quad_verts);
-		glTexCoordPointer(2, GL.GL_FLOAT, 0, quad_uvs);
+		gl.glVertexPointer(3, GL.GL_FLOAT, 0, quad_verts);
+		gl.glTexCoordPointer(2, GL.GL_FLOAT, 0, quad_uvs);
 
-                glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
+                gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
 
 
 	        gl.glPopMatrix();

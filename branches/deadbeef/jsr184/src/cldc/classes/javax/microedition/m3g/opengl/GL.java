@@ -975,7 +975,7 @@ public class GL {
     }
    
     public void glMaterialfv(int face, int pname, float[] params, int params_offset){
-        jsr239_gl.glMaterialfv(face, pname, params, params, params_offset);
+        jsr239_gl.glMaterialfv(face, pname, params, params_offset);
     }
 
     public void glShadeModel(int mode){
@@ -1014,7 +1014,7 @@ public class GL {
 
     public void glTexEnvi(int target, int pname, int param){
         //FIXME: force converting to float
-	jsr239_gl.TexEnvf(target, pname, (float)param);
+	jsr239_gl.glTexEnvf(target, pname, (float)param);
     }
 
     public void glTexEnvfv(int target, int pname ,float[] params, int params_offset){
