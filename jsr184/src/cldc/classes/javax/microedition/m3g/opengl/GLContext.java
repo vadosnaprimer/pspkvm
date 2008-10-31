@@ -39,7 +39,7 @@ public class GLContext {
     }
 
     public void makeCurrent() {
-        egl.makeCurrent(eglDisplay, eglWindowSurface, eglWindowSurface, eglContext);
+        egl.eglMakeCurrent(eglDisplay, eglWindowSurface, eglWindowSurface, eglContext);
 
         //wait for MIDP rendering
 	egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, gc);
@@ -110,13 +110,13 @@ public class GLContext {
 
     int getWidth(){
         int[] val = new int[1];
-	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL_WIDTH, val);
+	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL10.EGL_WIDTH, val);
 	return val[0];
     }
 
     int getHeight(){
         int[] val = new int[1];
-	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL_HEIGHT, val);
+	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL10.EGL_HEIGHT, val);
 	return val[0];
     }
 

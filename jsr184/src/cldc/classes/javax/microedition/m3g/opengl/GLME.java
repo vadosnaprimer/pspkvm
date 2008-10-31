@@ -5,6 +5,7 @@
 
 package javax.microedition.m3g.opengl;
 
+import javax.microedition.lcdui.Graphics;
 /**
  * This class provides some help methods to prepare 
  * OpenGL context

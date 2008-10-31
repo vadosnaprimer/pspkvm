@@ -978,6 +978,10 @@ public class GL {
         jsr239_gl.glMaterialfv(face, pname, params, params_offset);
     }
 
+    public void glMaterialf(int face, int pname, float param){
+        jsr239_gl.glMaterialf(face, pname, param);
+    }
+
     public void glShadeModel(int mode){
         jsr239_gl.glShadeModel(mode);
     }
