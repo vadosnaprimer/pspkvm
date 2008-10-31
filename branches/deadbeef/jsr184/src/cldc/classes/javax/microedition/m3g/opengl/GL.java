@@ -811,6 +811,127 @@ public class GL {
   /** OpenGL ES 1.1 constant. */
   public static int GL_DOT3_RGBA                            = 0x86AF;
 
+  /**
+   * Constant for use with <code>glTexGen</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_NORMAL_MAP                                       = 0x8511;
+
+  /**
+   * Constant for use with <code>glTexGen</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_REFLECTION_MAP                                   = 0x8512;
+
+  /**
+   * Constant for use with <code>glBindTexture</code>,
+   * <code>glTexParameter</code>, <code>glEnable</code>,
+   * <code>glDisable</code>, and <code>glIsEnabled</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP                                 = 0x8513;
+
+  /**
+   * Constant for use with <code>glGetInteger</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_BINDING_CUBE_MAP                         = 0x8514;
+
+  // Need revisit - value
+  /**
+   * Constant for use with <code>glTexGen</code> for the
+   * <code>OES_texture_cube_map</code> extension.
+   */
+  public static int GL_STR                                              = -1;
+
+  /**
+   * Constant for use with <code>glTexGen</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_GEN_MODE                                 = 0x2500;
+
+  /**
+   * Constant for use with <code>glEnable</code> and
+   * <code>glDisable</code> (<code>OES_texture_cube_map</code>
+   * extension).
+   */
+  public static int GL_TEXTURE_GEN_STR                                  = 0x8D60;
+  
+  /**
+   * Constant for use with <code>glTexImage2D</code> and
+   * <code>glCompressedTexImage2D</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP_POSITIVE_X                      = 0x207D;
+
+  /**
+   * Constant for use with <code>glTexImage2D</code> and
+   * <code>glCompressedTexImage2D</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP_NEGATIVE_X                      = 0x207E;
+
+  /**
+   * Constant for use with <code>glTexImage2D</code> and
+   * <code>glCompressedTexImage2D</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP_POSITIVE_Y                      = 0x207F;
+
+  /**
+   * Constant for use with <code>glTexImage2D</code> and
+   * <code>glCompressedTexImage2D</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP_NEGATIVE_Y                      = 0x2080;
+
+  /**
+   * Constant for use with <code>glTexImage2D</code> and
+   * <code>glCompressedTexImage2D</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP_POSITIVE_Z                      = 0x2081;
+
+  /**
+   * Constant for use with <code>glTexImage2D</code> and
+   * <code>glCompressedTexImage2D</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_TEXTURE_CUBE_MAP_NEGATIVE_Z                      = 0x2082;
+
+  /**
+   * Constant for use with <code>glGetIntegerv</code>
+   * (<code>OES_texture_cube_map</code> extension).
+   */
+  public static int GL_MAX_CUBE_MAP_TEXTURE_SIZE                        = 0x851C;
+
+  /**
+   * Constant for use with <code>glBlendEquation</code>
+   * (<code>OES_blend_subtract</code> extension).
+   */
+  public static int GL_FUNC_ADD                                         = 0x8006;
+
+  /**
+   * Constant for use with <code>glBlendEquation</code>
+   * (<code>OES_blend_subtract</code> extension).
+   */
+  public static int GL_FUNC_SUBTRACT                                    = 0x800A;
+
+  /**
+   * Constant for use with <code>glBlendEquation</code>
+   * (<code>OES_blend_subtract</code> extension).
+   */
+  public static int GL_FUNC_REVERSE_SUBTRACT                            = 0x800B;
+
+
+  /**
+   * M@x:
+   *      GL_UNSIGNED_INT is not a valid OpenGL ES constant, we add it here ONLY for PSPKVM,
+   * since its JSR239 implementation actually base on pspgl, which supports GL_UNSIGNED_INT
+   * type of param. Note that GL_UNSIGNED_INT would make it pass by JSR239's bounds check.
+   */
+  public static int GL_UNSIGNED_INT					= 0x1405;
+
     private javax.microedition.khronos.opengles.GL11 jsr239_gl;
 
     /*FIXME: manage Light sources by ourselves*/

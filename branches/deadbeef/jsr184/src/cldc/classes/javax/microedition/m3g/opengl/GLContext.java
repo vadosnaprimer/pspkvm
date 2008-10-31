@@ -6,12 +6,8 @@
 package javax.microedition.m3g.opengl;
 
 import javax.microedition.lcdui.Graphics;
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.opengles.GL10;
+import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.opengles.*;
 
 /**
  * GLContext for the GLCanvas(Surface)
@@ -24,8 +20,8 @@ public class GLContext {
     private GL gl;
 
     //JSR239 context
-    private EGL10 egl;
-    private GL10 jsr239_gl;
+    private EGL11 egl;
+    private GL11 jsr239_gl;
     private EGLConfig eglConfig;
     private EGLSurface eglWindowSurface;
     private EGLContext eglContext;
@@ -59,10 +55,11 @@ public class GLContext {
         if(gl == null){
             gl = new GL(jsr239_gl); 
 	}
+        return gl;
     }
 
     public void init() {
-        egl = (EGL10)EGLContext.getEGL();
+        egl = (EGL11)EGLContext.getEGL();
 
 	eglDisplay = egl.eglGetDisplay(egl.EGL_DEFAULT_DISPLAY);
 
@@ -96,7 +93,7 @@ public class GLContext {
 
 	eglContext = egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, null);
 
-	jsr239_gl = (GL10)eglContext.getGL();
+	jsr239_gl = (GL11)eglContext.getGL();
 
 	eglWindowSurface = egl.eglCreateWindowSurface(eglDisplay, eglConfig, gc, null);
     }
