@@ -1,5 +1,6 @@
 package javax.microedition.m3g;
 
+import javax.microedition.m3g.util.BufferUtil;
 import java.nio.*;
 
 public abstract class IndexBuffer extends Object3D {

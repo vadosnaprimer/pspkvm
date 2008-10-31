@@ -2,6 +2,8 @@ package javax.microedition.m3g;
 
 import javax.microedition.m3g.opengl.GL;
 import javax.microedition.m3g.util.Color;
+import javax.microedition.m3g.util.BufferUtil;
+import java.nio.FloatBuffer;
 
 public class Background extends Object3D {
 
