@@ -123,8 +123,8 @@ public class Sprite3D extends Node {
 		quad_uvs.put(3, 0);
 		quad_uvs.put(4, 0);
 		quad_uvs.put(5, 1);
-		quad_uvs.put(6, u1);
-		quad_uvs.put(7, v1);
+		quad_uvs.put(6, 1);
+		quad_uvs.put(7, 1);
 
 		quad_verts.put(0, topLeft.x); //Top Left
 		quad_verts.put(1, topLeft.y);
