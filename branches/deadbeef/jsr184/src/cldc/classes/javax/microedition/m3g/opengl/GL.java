@@ -7,155 +7,550 @@ package javax.microedition.m3g.opengl;
 import java.nio.Buffer;
 
 public class GL {
-    public static final int GL_BYTE = 5120;
-
-    public static final int GL_SHORT = 5122;
-
-    public static final int GL_COLOR_BUFFER_BIT = 16384; 
-
-    public static final int GL_DEPTH_BUFFER_BIT = 256;
-
-    public static final int GL_LIGHT0 = 16384;
-
-    public static final int GL_LIGHT1 = 16385;
-
-    public static final int GL_LIGHT2 = 16386;
-
-    public static final int GL_LIGHT3 = 16387;
-
-    public static final int GL_LIGHT4 = 16388;
-
-    public static final int GL_LIGHT5 = 16389;
-
-    public static final int GL_LIGHT6 = 16390;
-
-    public static final int GL_LIGHT7 = 16391;
-
-    public static final int GL_PROJECTION = 5889;
-
-    public static final int GL_MODELVIEW = 5888;
-
-    public static final int GL_FLOAT = 5126;
-
-    public static final int GL_VERTEX_ARRAY = 32884;
-
-    public static final int GL_NORMALIZE = 2977;
-
-    public static final int GL_NORMAL_ARRAY = 32885;
-
-    public static final int GL_COLOR_ARRAY = 32886;
-
-    public static final int GL_TEXTURE0 = 33984;
-
-    public static final int GL_TEXTURE_2D = 3553;
-
-    public static final int GL_TEXTURE_COORD_ARRAY = 32888;
-
-    public static final int GL_TRIANGLE_STRIP = 5;
-
-    public static final int GL_TRIANGLES = 4;
-
-    public static final int GL_LIGHTING = 2896;
-
-    public static final int GL_FOG = 2912;
-
-    public static final int GL_CULL_FACE = 2884;
-
-    public static final int GL_BLEND = 3042;
-
-    public static final int GL_QUADS = 7;
-
-    public static final int GL_LEQUAL = 515;
-
-    public static final int GL_FUNC_ADD = 32774;
-
-    public static final int GL_DEPTH_TEST = 2929;
-
-    public static final int GL_GEQUAL = 518;
-
-    public static final int GL_ALPHA_TEST = 3008;
-
-    public static final int GL_SRC_ALPHA = 770;
-
-    public static final int GL_ONE = 1;
-
-    public static final int GL_ONE_MINUS_SRC_ALPHA = 771;
-
-    public static final int GL_DST_COLOR = 774;
-
-    public static final int GL_ZERO = 0;
-
-    public static final int GL_SRC_COLOR = 768;
-
-    public static final int GL_POLYGON_OFFSET_FILL = 32823;
-
-    public static final int GL_FOG_MODE = 2917;
-
-    public static final int GL_FOG_COLOR = 2918;
-
-    public static final int GL_FOG_DENSITY = 2914;
-
-    public static final int GL_FOG_START = 2915;
-
-    public static final int GL_FOG_END = 2916;
-
-    public static final int GL_EXP = 2048;
-
-    public static final int GL_LINEAR = 9729;
-
-    public static final int GL_LIGHT_MODEL_AMBIENT = 2899;
-
-    public static final int GL_DIFFUSE = 4609;
-
-    public static final int GL_AMBIENT = 4608;
-
-    public static final int GL_SPECULAR = 4610;
-
-    public static final int GL_POSITION = 4611;
-
-    public static final int GL_SPOT_CUTOFF = 4614;
-
-    public static final int GL_SPOT_EXPONENT = 4613;
-
-    public static final int GL_SPOT_DIRECTION = 4612;
-
-    public static final int GL_CONSTANT_ATTENUATION = 4615;
-
-    public static final int GL_LINEAR_ATTENUATION = 4616;
-
-    public static final int GL_QUADRATIC_ATTENUATION = 4617;
-
-    public static final int GL_FRONT_AND_BACK = 1032;
-
-    public static final int GL_EMISSION = 5632;
-
-    public static final int GL_SMOOTH = 7425;
-
-    public static final int GL_FLAT = 7424;
-
-    public static final int GL_FRONT = 1028;
-
-    public static final int GL_BACK = 1029;
-
-    public static final int GL_CCW = 2305;
-
-    public static final int GL_CW = 2304;
-
-    public static final int GL_MODELVIEW_MATRIX = 2982;
-
-    public static final int GL_UNSIGNED_BYTE = 5121;
-
-    public static final int GL_TEXTURE_MIN_FILTER = 10241;
-
-    public static final int GL_TEXTURE_MAG_FILTER = 10240;
-
-    public static final int GL_TEXTURE_WRAP_S = 10242;
-
-    public static final int GL_TEXTURE_WRAP_T = 10243;
-
-    public static final int GL_TEXTURE_ENV_MODE = 8704;
-
-    public static final int GL_TEXTURE_ENV_COLOR = 8705;
+  // ClearBufferMask
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DEPTH_BUFFER_BIT                     = 0x00000100;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_STENCIL_BUFFER_BIT                   = 0x00000400;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COLOR_BUFFER_BIT                     = 0x00004000;
+
+  // Boolean
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FALSE                                = 0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TRUE                                 = 1;
+
+  // BeginMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_POINTS                               = 0x0000;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINES                                = 0x0001;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINE_LOOP                            = 0x0002;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINE_STRIP                           = 0x0003;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TRIANGLES                            = 0x0004;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TRIANGLE_STRIP                       = 0x0005;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TRIANGLE_FAN                         = 0x0006;
+
+  // AlphaFunction
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NEVER                                = 0x0200;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LESS                                 = 0x0201;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_EQUAL                                = 0x0202;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LEQUAL                               = 0x0203;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_GREATER                              = 0x0204;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NOTEQUAL                             = 0x0205;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_GEQUAL                               = 0x0206;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ALWAYS                               = 0x0207;
+
+  // BlendingFactorDest
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ZERO                                 = 0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ONE                                  = 1;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SRC_COLOR                            = 0x0300;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ONE_MINUS_SRC_COLOR                  = 0x0301;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SRC_ALPHA                            = 0x0302;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ONE_MINUS_SRC_ALPHA                  = 0x0303;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DST_ALPHA                            = 0x0304;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ONE_MINUS_DST_ALPHA                  = 0x0305;
+
+  // BlendingFactorSrc
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DST_COLOR                            = 0x0306;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ONE_MINUS_DST_COLOR                  = 0x0307;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SRC_ALPHA_SATURATE                   = 0x0308;
+
+  // CullFaceMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FRONT                                = 0x0404;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_BACK                                 = 0x0405;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FRONT_AND_BACK                       = 0x0408;
+
+  // EnableCap
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG                                  = 0x0B60;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHTING                             = 0x0B50;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_2D                           = 0x0DE1;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_CULL_FACE                            = 0x0B44;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ALPHA_TEST                           = 0x0BC0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_BLEND                                = 0x0BE2;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COLOR_LOGIC_OP                       = 0x0BF2;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DITHER                               = 0x0BD0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_STENCIL_TEST                         = 0x0B90;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DEPTH_TEST                           = 0x0B71;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_POINT_SMOOTH                         = 0x0B10;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINE_SMOOTH                          = 0x0B20;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SCISSOR_TEST                         = 0x0C11;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COLOR_MATERIAL                       = 0x0B57;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NORMALIZE                            = 0x0BA1;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_RESCALE_NORMAL                       = 0x803A;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_POLYGON_OFFSET_FILL                  = 0x8037;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_VERTEX_ARRAY                         = 0x8074;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NORMAL_ARRAY                         = 0x8075;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COLOR_ARRAY                          = 0x8076;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_COORD_ARRAY                  = 0x8078;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MULTISAMPLE                          = 0x809D;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SAMPLE_ALPHA_TO_COVERAGE             = 0x809E;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SAMPLE_ALPHA_TO_ONE                  = 0x809F;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SAMPLE_COVERAGE                      = 0x80A0;
+
+  // ErrorCode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NO_ERROR                             = 0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_INVALID_ENUM                         = 0x0500;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_INVALID_VALUE                        = 0x0501;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_INVALID_OPERATION                    = 0x0502;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_STACK_OVERFLOW                       = 0x0503;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_STACK_UNDERFLOW                      = 0x0504;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_OUT_OF_MEMORY                        = 0x0505;
+
+  // FogMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_EXP                                  = 0x0800;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_EXP2                                 = 0x0801;
+
+  // FogParameter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG_DENSITY                          = 0x0B62;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG_START                            = 0x0B63;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG_END                              = 0x0B64;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG_MODE                             = 0x0B65;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG_COLOR                            = 0x0B66;
+
+  // FrontFaceDirection
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_CW                                   = 0x0900;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_CCW                                  = 0x0901;
+
+  // GetPName
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SMOOTH_POINT_SIZE_RANGE              = 0x0B12;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SMOOTH_LINE_WIDTH_RANGE              = 0x0B22;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ALIASED_POINT_SIZE_RANGE             = 0x846D;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ALIASED_LINE_WIDTH_RANGE             = 0x846E;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_IMPLEMENTATION_COLOR_READ_TYPE_OES   = 0x8B9A;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES = 0x8B9B;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_LIGHTS                           = 0x0D31;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_TEXTURE_SIZE                     = 0x0D33;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_MODELVIEW_STACK_DEPTH            = 0x0D36;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_PROJECTION_STACK_DEPTH           = 0x0D38;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_TEXTURE_STACK_DEPTH              = 0x0D39;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_VIEWPORT_DIMS                    = 0x0D3A;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_ELEMENTS_VERTICES                = 0x80E8;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_ELEMENTS_INDICES                 = 0x80E9;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MAX_TEXTURE_UNITS                    = 0x84E2;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NUM_COMPRESSED_TEXTURE_FORMATS       = 0x86A2;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COMPRESSED_TEXTURE_FORMATS           = 0x86A3;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SUBPIXEL_BITS                        = 0x0D50;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_RED_BITS                             = 0x0D52;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_GREEN_BITS                           = 0x0D53;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_BLUE_BITS                            = 0x0D54;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ALPHA_BITS                           = 0x0D55;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DEPTH_BITS                           = 0x0D56;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_STENCIL_BITS                         = 0x0D57;
+
+  // HintMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DONT_CARE                            = 0x1100;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FASTEST                              = 0x1101;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NICEST                               = 0x1102;
+
+  // HintTarget
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PERSPECTIVE_CORRECTION_HINT          = 0x0C50;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_POINT_SMOOTH_HINT                    = 0x0C51;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINE_SMOOTH_HINT                     = 0x0C52;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_POLYGON_SMOOTH_HINT                  = 0x0C53;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FOG_HINT                             = 0x0C54;
+
+  // LightModelParameter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT_MODEL_AMBIENT                  = 0x0B53;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT_MODEL_TWO_SIDE                 = 0x0B52;
+  /** OpenGL ES 1.0 constant. */
+
+  // LightParameter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_AMBIENT                              = 0x1200;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DIFFUSE                              = 0x1201;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SPECULAR                             = 0x1202;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_POSITION                             = 0x1203;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SPOT_DIRECTION                       = 0x1204;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SPOT_EXPONENT                        = 0x1205;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SPOT_CUTOFF                          = 0x1206;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_CONSTANT_ATTENUATION                 = 0x1207;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINEAR_ATTENUATION                   = 0x1208;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_QUADRATIC_ATTENUATION                = 0x1209;
+
+  // DataType
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_BYTE                                 = 0x1400;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_UNSIGNED_BYTE                        = 0x1401;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SHORT                                = 0x1402;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_UNSIGNED_SHORT                       = 0x1403;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FLOAT                                = 0x1406;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FIXED                                = 0x140C;
+
+  // LogicOp
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_CLEAR                                = 0x1500;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_AND                                  = 0x1501;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_AND_REVERSE                          = 0x1502;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COPY                                 = 0x1503;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_AND_INVERTED                         = 0x1504;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NOOP                                 = 0x1505;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_XOR                                  = 0x1506;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_OR                                   = 0x1507;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NOR                                  = 0x1508;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_EQUIV                                = 0x1509;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_INVERT                               = 0x150A;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_OR_REVERSE                           = 0x150B;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_COPY_INVERTED                        = 0x150C;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_OR_INVERTED                          = 0x150D;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NAND                                 = 0x150E;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SET                                  = 0x150F;
+
+  // MaterialParameters
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_EMISSION                             = 0x1600;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SHININESS                            = 0x1601;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_AMBIENT_AND_DIFFUSE                  = 0x1602;
+
+  // MatrixMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MODELVIEW                            = 0x1700;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PROJECTION                           = 0x1701;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE                              = 0x1702;
+
+  // PixelFormat
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ALPHA                                = 0x1906;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_RGB                                  = 0x1907;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_RGBA                                 = 0x1908;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LUMINANCE                            = 0x1909;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LUMINANCE_ALPHA                      = 0x190A;
+
+  // PixelStoreParameter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_UNPACK_ALIGNMENT                     = 0x0CF5;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PACK_ALIGNMENT                       = 0x0D05;
+
+  // PixelType
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_UNSIGNED_SHORT_4_4_4_4               = 0x8033;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_UNSIGNED_SHORT_5_5_5_1               = 0x8034;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_UNSIGNED_SHORT_5_6_5                 = 0x8363;
+
+  // ShadingModel
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_FLAT                                 = 0x1D00;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_SMOOTH                               = 0x1D01;
+
+  // StencilOp
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_KEEP                                 = 0x1E00;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_REPLACE                              = 0x1E01;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_INCR                                 = 0x1E02;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DECR                                 = 0x1E03;
+
+  // StringName
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_VENDOR                               = 0x1F00;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_RENDERER                             = 0x1F01;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_VERSION                              = 0x1F02;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_EXTENSIONS                           = 0x1F03;
+
+  // TextureEnvMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_MODULATE                             = 0x2100;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_DECAL                                = 0x2101;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_ADD                                  = 0x0104;
+
+  // TextureEnvParameter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_ENV_MODE                     = 0x2200;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_ENV_COLOR                    = 0x2201;
+
+  // TextureEnvTarget
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_ENV                          = 0x2300;
+
+  // TextureMagFilter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NEAREST                              = 0x2600;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINEAR                               = 0x2601;
+
+  // TextureMinFilter
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NEAREST_MIPMAP_NEAREST               = 0x2700;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINEAR_MIPMAP_NEAREST                = 0x2701;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_NEAREST_MIPMAP_LINEAR                = 0x2702;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LINEAR_MIPMAP_LINEAR                 = 0x2703;
+
+  // TextureParameterName
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_MAG_FILTER                   = 0x2800;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_MIN_FILTER                   = 0x2801;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_WRAP_S                       = 0x2802;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE_WRAP_T                       = 0x2803;
+
+  // TextureUnit
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE0                             = 0x84C0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE1                             = 0x84C1;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE2                             = 0x84C2;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE3                             = 0x84C3;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE4                             = 0x84C4;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE5                             = 0x84C5;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE6                             = 0x84C6;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE7                             = 0x84C7;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE8                             = 0x84C8;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE9                             = 0x84C9;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE10                            = 0x84CA;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE11                            = 0x84CB;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE12                            = 0x84CC;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE13                            = 0x84CD;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE14                            = 0x84CE;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE15                            = 0x84CF;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE16                            = 0x84D0;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE17                            = 0x84D1;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE18                            = 0x84D2;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE19                            = 0x84D3;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE20                            = 0x84D4;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE21                            = 0x84D5;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE22                            = 0x84D6;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE23                            = 0x84D7;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE24                            = 0x84D8;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE25                            = 0x84D9;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE26                            = 0x84DA;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE27                            = 0x84DB;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE28                            = 0x84DC;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE29                            = 0x84DD;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE30                            = 0x84DE;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_TEXTURE31                            = 0x84DF;
+
+  // TextureWrapMode
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_REPEAT                               = 0x2901;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_CLAMP_TO_EDGE                        = 0x812F;
+
+  // PixelInternalFormat
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE4_RGB8_OES                    = 0x8B90;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE4_RGBA8_OES                   = 0x8B91;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE4_R5_G6_B5_OES                = 0x8B92;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE4_RGBA4_OES                   = 0x8B93;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE4_RGB5_A1_OES                 = 0x8B94;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE8_RGB8_OES                    = 0x8B95;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE8_RGBA8_OES                   = 0x8B96;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE8_R5_G6_B5_OES                = 0x8B97;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE8_RGBA4_OES                   = 0x8B98;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_PALETTE8_RGB5_A1_OES                 = 0x8B99;
+
+  // LightName
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT0                               = 0x4000;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT1                               = 0x4001;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT2                               = 0x4002;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT3                               = 0x4003;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT4                               = 0x4004;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT5                               = 0x4005;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT6                               = 0x4006;
+  /** OpenGL ES 1.0 constant. */
+  public static int GL_LIGHT7                               = 0x4007;
 
 
     private javax.microedition.khronos.opengles.GL10 jsr239_gl;

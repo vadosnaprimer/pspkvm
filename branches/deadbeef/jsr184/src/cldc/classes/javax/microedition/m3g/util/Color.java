@@ -1,4 +1,4 @@
-package javax.microedtion.m3g.util;
+package javax.microedition.m3g.util;
 
 public class Color {
 

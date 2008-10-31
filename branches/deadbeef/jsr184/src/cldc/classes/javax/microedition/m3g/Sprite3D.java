@@ -3,6 +3,7 @@ package javax.microedition.m3g;
 import java.util.Hashtable;
 import javax.microedition.m3g.vecMath.*;
 import javax.microedition.m3g.opengl.GL;
+import javax.microedition.m3g.util.BufferUtil;
 
 public class Sprite3D extends Node {
 	private static Hashtable textures = new Hashtable();
