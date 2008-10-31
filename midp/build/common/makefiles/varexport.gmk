@@ -107,7 +107,6 @@ PATHVARLIST = $(sort \
   PROJECT_JSR_280_DIR \
   PROJECT_MIDP_DIR \
   PISCES_DIR \
-  SWERVE_DIR  \
   JC_DIR      \
   JPEG_DIR    \
   TOOLS_DIR   \

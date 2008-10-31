@@ -29,6 +29,7 @@ public class GLContext {
     private EGLConfig eglConfig;
     private EGLSurface eglWindowSurface;
     private EGLContext eglContext;
+    private EGLDisplay eglDisplay;
 
 
 
@@ -82,7 +83,7 @@ public class GLContext {
 	int[] s_configAttribs = {
             EGL10.EGL_RED_SIZE, redSize,
 	    EGL10.EGL_GREEN_SIZE, greenSize,
-	    EGL10_BLUE_SIZE, blueSize,
+	    EGL10.EGL_BLUE_SIZE, blueSize,
 	    EGL10.EGL_ALPHA_SIZE, alphaSize,
 	    EGL10.EGL_DEPTH_SIZE, depthSize,
 	    EGL10.EGL_STENCIL_SIZE, stencilSize,

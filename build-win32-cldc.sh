@@ -30,6 +30,7 @@ USE_NOKIA_UI=true
 USE_JSR_75=true
 USE_JSR_179=true
 USE_JSR_239=true
+USE_JSR_184=true
 
 while getopts \?J:CTcdDehjmnpr: c
 do
@@ -86,6 +87,7 @@ JSR_120_DIR=${WS_ROOT}/jsr120
 NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
 JSR_179_DIR=${WS_ROOT}/jsr179
 JSR_239_DIR=${WS_ROOT}/jsr239
+JSR_184_DIR=${WS_ROOT}/jsr184
 #PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 PSPDEV_GNU_TOOLS_DIR=
 
@@ -193,6 +195,8 @@ then
 			USE_JSR_239=${USE_JSR_239} \
 			JSR_239_DIR=${JSR_239_DIR} \
 			JSR_239_SDK_DIR=/works/OpenGL/sdk \
+			USE_JSR_184=${USE_JSR_184} \
+			JSR_184_DIR=${JSR_184_DIR} \
 			USE_GERBERA=false \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \

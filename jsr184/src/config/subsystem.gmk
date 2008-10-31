@@ -67,7 +67,7 @@ GROUP_DOC_ALL += \
 # System and internal properties
 #
 SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
-    $(JSR_239_DIR)/src/config/properties_jsr184.xml
+    $(JSR_184_DIR)/src/config/properties_jsr184.xml
 
 # Platform definitions
 #
@@ -146,7 +146,7 @@ MODULE_JSR_184_API_JAVA_FILES = \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/RenderEventListener.java
 
 #OpenGL ES classes
-MODULE_JSR_184_OGL_JAVA_FILES += \
+MODULE_JSR_184_OGL_JAVA_FILES = \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/opengl/GLCanvas.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/opengl/GL.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/opengl/GLContext.java \
@@ -155,7 +155,7 @@ MODULE_JSR_184_OGL_JAVA_FILES += \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/opengl/GLME.java
 
 # Util classes
-MODULE_JSR_184_UTIL_JAVA_FILES += \
+MODULE_JSR_184_UTIL_JAVA_FILES = \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/util/BufferUtil.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/util/Color.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/util/Reflection.java \
@@ -235,7 +235,7 @@ JSR_184_LIB_DIR:
 SUBSYSTEM_JSR_184_JAVA_FILES += \
     $(MODULE_JSR_184_API_JAVA_FILES) \
     $(MODULE_JSR_184_OGL_JAVA_FILES) \
-    $(MODULE_JSR_184_UTIL_JAVA_FILES) \
+    $(MODULE_JSR_184_UTIL_JAVA_FILES)
 #    $(MODULE_JSR_239_NIO_IMPL_JAVA_FILES) \
 #    $(MODULE_JSR_239_COM_SUN_JSR239_JAVA_FILES) \
 #    $(MODULE_JSR_239_EGL_IMPL_JAVA_FILES) \
