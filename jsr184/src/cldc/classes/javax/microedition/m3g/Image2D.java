@@ -6,7 +6,7 @@ import javax.microedition.lcdui.Image;
 import javax.microedition.m3g.opengl.GL;
 
 import javax.microedition.m3g.util.ResourceRetriever;
-
+import javax.microedition.m3g.util.BufferUtil;
 public class Image2D extends Object3D {
 	public static final int ALPHA = 96;
 	public static final int LUMINANCE = 97;
@@ -95,8 +95,8 @@ public class Image2D extends Object3D {
 	
 	private void loadFromImage(Image image)
 	{
-		this.width = image.getWidth(null);
-		this.height = image.getHeight(null);
+		this.width = image.getWidth();
+		this.height = image.getHeight();
 
 		if(width == -1 || height == -1)
 			throw new IllegalArgumentException("Failed to get width/height.");
