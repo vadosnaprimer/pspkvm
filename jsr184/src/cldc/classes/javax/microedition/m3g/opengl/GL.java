@@ -5,6 +5,8 @@
 package javax.microedition.m3g.opengl;
 
 import java.nio.Buffer;
+import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.opengles.GL10;
 
 public class GL {
   // ClearBufferMask
@@ -674,7 +676,7 @@ public class GL {
     }
 
     public void glBegin(int mode) {
-        jsr239_gl.glBegin(mode);
+        //jsr239_gl.glBegin(mode);
     }
 
 
@@ -683,7 +685,7 @@ public class GL {
     }
 
     public void glEnd(){
-        jsr239_gl.glEnd();
+        //jsr239_gl.glEnd();
     }
 
     public void glDepthFunc(int func){
@@ -742,7 +744,7 @@ public class GL {
         jsr239_gl.glLightf(light, pname, param);
     }
 
-    public void glIsEnabled(int cap){
+    public boolean glIsEnabled(int cap){
         switch(cap){
             case GL_LIGHT0:
 	    case GL_LIGHT1:
@@ -847,5 +849,10 @@ public class GL {
 	int m_offset1 = col * 4 + row;
         jsr239_gl.glMultMatrixf(v, m_offset1);
     }
+
+    public void glDrawArrays(int mode, int first, int count){
+        jsr239_gl.glDrawArrays(mode, first, count);
+    }
+
 
 }
