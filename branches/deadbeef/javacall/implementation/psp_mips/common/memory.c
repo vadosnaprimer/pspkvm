@@ -65,7 +65,7 @@ void javacall_memory_heap_deallocate(void* heap) {
  * @return	  a pointer to the newly allocated memory
  */
 void* /*OPTIONAL*/ javacall_malloc(unsigned int size){ 
-    return malloc(size) ;
+    return memalign(64, size) ;
 }
 
 /**
