@@ -74,7 +74,7 @@ public final class Graphics3D {
 			setGL(canvas.getGL());
 
 			// set the GLContext of the canvas to be the current context
-                        int contextStatus = canvas.getContext().makeCurrent();
+                        canvas.getContext().makeCurrent();
             
                          // Set default viewport?
                         if(this.viewportHeight == 0 || this.viewportWidth == 0)

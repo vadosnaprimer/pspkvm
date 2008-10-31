@@ -58,11 +58,11 @@ public class GLCanvas {
 
     public int getWidth() {
         //return getTargetWidth(graphics2D); 
-	Display.getCurrent().getWidth();
+	return glContext.getWidth();
     }
 
     public int getHeight() {
         //return getTargetHeight(graphics2D);
-	Display.getCurrent().getHeight();
+	return glContext.getHeight();
     }
 }

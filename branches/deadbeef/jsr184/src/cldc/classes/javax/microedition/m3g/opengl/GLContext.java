@@ -108,4 +108,16 @@ public class GLContext {
 	egl.eglTerminate(eglDisplay);
     }
 
+    int getWidth(){
+        int[] val = new int[1];
+	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL_WIDTH, val);
+	return val[0];
+    }
+
+    int getHeight(){
+        int[] val = new int[1];
+	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL_HEIGHT, val);
+	return val[0];
+    }
+
 }
