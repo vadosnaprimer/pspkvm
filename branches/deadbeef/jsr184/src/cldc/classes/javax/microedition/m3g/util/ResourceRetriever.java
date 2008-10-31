@@ -25,7 +25,7 @@ import java.io.InputStream;
 
     public static InputStream getResourceAsStream(final String filename) throws IOException {
         // Try to load resource from jar
-        InputStream stream = Class.getSystemResourceAsStream(filename);
+        InputStream stream = Class.getResourceAsStream(filename);
         // If not found in jar, then load from disk
 	// FIXME: add JSR75 support
         /*if (stream == null) {
