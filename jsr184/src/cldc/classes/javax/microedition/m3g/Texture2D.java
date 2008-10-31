@@ -141,7 +141,8 @@ public class Texture2D extends Transformable {
 		switch (wrap)
 		{
 			case Texture2D.WRAP_CLAMP:
-				return GL.GL_CLAMP;
+				return GL.GL_CLAMP_TO_EDGE; //GL_CLAMP_TO_EDGE is just fine, since JSR184 regard 
+				                                                 //WRAP_CLAMP as CLAMP mode with a border width of zero
 			default:
 				return GL.GL_REPEAT;
 		}
