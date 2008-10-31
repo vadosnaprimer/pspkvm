@@ -406,7 +406,7 @@ public class GL {
 
     public void glTexEnvi(int target, int pname, int param){
         //FIXME: force converting to float
-	jsr239_glTexEnvf(target, pname, (float)param);
+	jsr239_gl.TexEnvf(target, pname, (float)param);
     }
 
     public void glTexEnvfv(int target, int pname ,float[] params, int params_offset){
@@ -429,6 +429,10 @@ public class GL {
 	int row = m_offset / 4;
 	int m_offset1 = col * 4 + row;
 	jsr239_gl.glLoadMatrixf(v, m_offset1);
+    }
+
+    public void glDrawArrays(int mode, int first, int count) {
+    	jsr239_gl.glDrawArrays(mode, first, count);
     }
 
     public void glMultTransposeMatrixf(float[] m, int m_offset){

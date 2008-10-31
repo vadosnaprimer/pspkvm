@@ -2,7 +2,7 @@ package javax.microedition.m3g;
 
 import java.util.Hashtable;
 import javax.microedition.m3g.vecMath.*;
-import javax.microedtion.m3g.opengl.GL;
+import javax.microedition.m3g.opengl.GL;
 
 public class Sprite3D extends Node {
 	private static Hashtable textures = new Hashtable();
@@ -142,10 +142,10 @@ public class Sprite3D extends Node {
 		quad_verts.put(11, bottomRight.z);
 
 		//set data
-		glVertexPointer(3, GL.GL_FLOAT, 0, quad_verts);
-		glTexCoordPointer(2, GL.GL_FLOAT, 0, quad_uvs);
+		gl.glVertexPointer(3, GL.GL_FLOAT, 0, quad_verts);
+		gl.glTexCoordPointer(2, GL.GL_FLOAT, 0, quad_uvs);
 
-                glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
+                gl.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4);
 
 		gl.glPopMatrix();
 	        //disable client state
