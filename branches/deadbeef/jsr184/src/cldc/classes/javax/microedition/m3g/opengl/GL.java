@@ -554,14 +554,270 @@ public class GL {
   /** OpenGL ES 1.0 constant. */
   public static int GL_LIGHT7                               = 0x4007;
 
+// Begin GL 1.1
 
-    private javax.microedition.khronos.opengles.GL10 jsr239_gl;
+  // ClipPlaneName
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIP_PLANE0                          = 0x3000;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIP_PLANE1                          = 0x3001;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIP_PLANE2                          = 0x3002;
+  /** OpenGL ES 1.1 constant. */
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIP_PLANE3                          = 0x3003;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIP_PLANE4                          = 0x3004;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIP_PLANE5                          = 0x3005;
+
+  // GetPName
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CURRENT_COLOR                        = 0x0B00;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CURRENT_NORMAL                       = 0x0B02;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CURRENT_TEXTURE_COORDS               = 0x0B03;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POINT_SIZE                           = 0x0B11;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POINT_SIZE_MIN                       = 0x8126;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POINT_SIZE_MAX                       = 0x8127;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POINT_FADE_THRESHOLD_SIZE            = 0x8128;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POINT_DISTANCE_ATTENUATION           = 0x8129;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_LINE_WIDTH                           = 0x0B21;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CULL_FACE_MODE                       = 0x0B45;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_FRONT_FACE                           = 0x0B46;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SHADE_MODEL                          = 0x0B54;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DEPTH_RANGE                          = 0x0B70;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DEPTH_WRITEMASK                      = 0x0B72;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DEPTH_CLEAR_VALUE                    = 0x0B73;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DEPTH_FUNC                           = 0x0B74;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_CLEAR_VALUE                  = 0x0B91;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_FUNC                         = 0x0B92;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_VALUE_MASK                   = 0x0B93;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_FAIL                         = 0x0B94;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_PASS_DEPTH_FAIL              = 0x0B95;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_PASS_DEPTH_PASS              = 0x0B96;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_REF                          = 0x0B97;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STENCIL_WRITEMASK                    = 0x0B98;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_MATRIX_MODE                          = 0x0BA0;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_VIEWPORT                             = 0x0BA2;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_MODELVIEW_STACK_DEPTH                = 0x0BA3;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_PROJECTION_STACK_DEPTH               = 0x0BA4;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_STACK_DEPTH                  = 0x0BA5;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_MODELVIEW_MATRIX                     = 0x0BA6;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_PROJECTION_MATRIX                    = 0x0BA7;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_MATRIX                       = 0x0BA8;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ALPHA_TEST_FUNC                      = 0x0BC1;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ALPHA_TEST_REF                       = 0x0BC2;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_BLEND_DST                            = 0x0BE0;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_BLEND_SRC                            = 0x0BE1;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_LOGIC_OP_MODE                        = 0x0BF0;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SCISSOR_BOX                          = 0x0C10;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_CLEAR_VALUE                    = 0x0C22;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_WRITEMASK                      = 0x0C23;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_MAX_CLIP_PLANES                      = 0x0D32;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POLYGON_OFFSET_UNITS                 = 0x2A00;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_POLYGON_OFFSET_FACTOR                = 0x8038;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_BINDING_2D                   = 0x8069;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_VERTEX_ARRAY_SIZE                    = 0x807A;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_VERTEX_ARRAY_TYPE                    = 0x807B;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_VERTEX_ARRAY_STRIDE                  = 0x807C;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_NORMAL_ARRAY_TYPE                    = 0x807E;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_NORMAL_ARRAY_STRIDE                  = 0x807F;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_ARRAY_SIZE                     = 0x8081;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_ARRAY_TYPE                     = 0x8082;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_ARRAY_STRIDE                   = 0x8083;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_COORD_ARRAY_SIZE             = 0x8088;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_COORD_ARRAY_TYPE             = 0x8089;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_COORD_ARRAY_STRIDE           = 0x808A;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_VERTEX_ARRAY_POINTER                 = 0x808E;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_NORMAL_ARRAY_POINTER                 = 0x808F;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_ARRAY_POINTER                  = 0x8090;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_COORD_ARRAY_POINTER          = 0x8092;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SAMPLE_BUFFERS                       = 0x80A8;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SAMPLES                              = 0x80A9;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SAMPLE_COVERAGE_VALUE                = 0x80AA;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SAMPLE_COVERAGE_INVERT               = 0x80AB;
+
+  // HintTarget
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_GENERATE_MIPMAP_HINT                 = 0x8192;
+
+  // TextureParameterName
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_GENERATE_MIPMAP                      = 0x8191;
+
+  // TextureUnit
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ACTIVE_TEXTURE                       = 0x84E0;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CLIENT_ACTIVE_TEXTURE                = 0x84E1;
+
+  // Buffer Objects
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ARRAY_BUFFER                         = 0x8892;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ELEMENT_ARRAY_BUFFER                 = 0x8893;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ARRAY_BUFFER_BINDING                 = 0x8894;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ELEMENT_ARRAY_BUFFER_BINDING         = 0x8895;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_VERTEX_ARRAY_BUFFER_BINDING          = 0x8896;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_NORMAL_ARRAY_BUFFER_BINDING          = 0x8897;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COLOR_ARRAY_BUFFER_BINDING           = 0x8898;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING   = 0x889A;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_STATIC_DRAW                          = 0x88E4;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DYNAMIC_DRAW                         = 0x88E8;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_WRITE_ONLY                           = 0x88B9;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_BUFFER_SIZE                          = 0x8764;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_BUFFER_USAGE                         = 0x8765;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_BUFFER_ACCESS                        = 0x88BB;
+
+  // Texture combine + dot3
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SUBTRACT                             = 0x84E7;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COMBINE                              = 0x8570;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COMBINE_RGB                          = 0x8571;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_COMBINE_ALPHA                        = 0x8572;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_RGB_SCALE                            = 0x8573;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ADD_SIGNED                           = 0x8574;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_INTERPOLATE                          = 0x8575;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_CONSTANT                             = 0x8576;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_PRIMARY_COLOR                        = 0x8577;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_PREVIOUS                             = 0x8578;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_OPERAND0_RGB                         = 0x8590;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_OPERAND1_RGB                         = 0x8591;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_OPERAND2_RGB                         = 0x8592;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_OPERAND0_ALPHA                       = 0x8598;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_OPERAND1_ALPHA                       = 0x8599;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_OPERAND2_ALPHA                       = 0x859A;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_ALPHA_SCALE                          = 0x0D1C;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SRC0_RGB                             = 0x8580;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SRC1_RGB                             = 0x8581;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SRC2_RGB                             = 0x8582;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SRC0_ALPHA                           = 0x8588;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SRC1_ALPHA                           = 0x8589;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_SRC2_ALPHA                           = 0x858A;
+
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DOT3_RGB                             = 0x86AE;
+  /** OpenGL ES 1.1 constant. */
+  public static int GL_DOT3_RGBA                            = 0x86AF;
+
+    private javax.microedition.khronos.opengles.GL11 jsr239_gl;
 
     /*FIXME: manage Light sources by ourselves*/
-    private boolean[] lights_enable = new boolean[8];
+    //private boolean[] lights_enable = new boolean[8];
 
     public GL(javax.microedition.khronos.opengles.GL jsr239GL){
-        jsr239_gl = jsr239GL;
+        jsr239_gl = (javax.microedition.khronos.opengles.GL11)jsr239GL;
     }
 
     public void glClearColor(float red, float green, float blue, float alpha){
@@ -594,21 +850,6 @@ public class GL {
     }
 
     public void glEnable(int cap) {
-        switch(cap){
-            case GL_LIGHT0:
-	    case GL_LIGHT1:
-	    case GL_LIGHT2:
-	    case GL_LIGHT3:
-	    case GL_LIGHT4:
-	    case GL_LIGHT5:
-	    case GL_LIGHT6:
-	    case GL_LIGHT7:
-	        lights_enable[cap - GL_LIGHT0] = true;
-		break;
-	    default:
-	        break;
-
-	}
         jsr239_gl.glEnable(cap);
     }
 
@@ -617,21 +858,6 @@ public class GL {
     }
 
     public void glDisable(int cap) {
-         switch(cap){
-            case GL_LIGHT0:
-	    case GL_LIGHT1:
-	    case GL_LIGHT2:
-	    case GL_LIGHT3:
-	    case GL_LIGHT4:
-	    case GL_LIGHT5:
-	    case GL_LIGHT6:
-	    case GL_LIGHT7:
-	        lights_enable[cap - GL_LIGHT0] = false;
-		break;
-	    default:
-	        break;
-
-	}
        jsr239_gl.glDisable(cap);
     }
    
@@ -745,22 +971,7 @@ public class GL {
     }
 
     public boolean glIsEnabled(int cap){
-        switch(cap){
-            case GL_LIGHT0:
-	    case GL_LIGHT1:
-	    case GL_LIGHT2:
-	    case GL_LIGHT3:
-	    case GL_LIGHT4:
-	    case GL_LIGHT5:
-	    case GL_LIGHT6:
-	    case GL_LIGHT7:
-	        return lights_enable[cap - GL_LIGHT0];
-	    default:
-	        break;
-
-	}
-	return false;
-
+	return jsr239_gl.glIsEnabled(cap);
     }
    
     public void glMaterialfv(int face, int pname, float[] params, int params_offset){
@@ -781,7 +992,7 @@ public class GL {
 
     public void glGetFloatv(int pname, float[] params, int params_offset){
         //OpenGL ES1.1 supports this
-	((EGL11)jsr239_gl).glGetFloatv(pname, params, params_offset);
+	jsr239_gl.glGetFloatv(pname, params, params_offset);
     }
 
     public void glGenTextures(int n, int[] textures, int texture_offset){
@@ -812,7 +1023,7 @@ public class GL {
 
     public void glLoadTransposeMatrixf(float[] m, int m_offset){
         float[] v = new float[m.length];
-	System.arrayCopy(m, 0, v, 0, m.length);
+	System.arraycopy(m, 0, v, 0, m.length);
         //restore the transpose matrix to original
 	//FIXME: assume containing only 16 elements
 	for(int i=0,n=3; i < 16 && n > 0; i += 5, n--){
@@ -834,7 +1045,7 @@ public class GL {
 
     public void glMultTransposeMatrixf(float[] m, int m_offset){
         float[] v = new float[m.length];
-	System.arrayCopy(m, 0, v, 0, m.length);
+	System.arraycopy(m, 0, v, 0, m.length);
         //restore the transpose matrix to original
 	//FIXME: assume containing only 16 elements
 	for(int i=0, n=3; i < 16 && n > 0; i += 5, n--){
@@ -849,10 +1060,5 @@ public class GL {
 	int m_offset1 = col * 4 + row;
         jsr239_gl.glMultMatrixf(v, m_offset1);
     }
-
-    public void glDrawArrays(int mode, int first, int count){
-        jsr239_gl.glDrawArrays(mode, first, count);
-    }
-
 
 }
