@@ -1,9 +1,9 @@
 package javax.microedition.m3g.util;
 
-import java.io.FileInputStream;
+//import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+//import java.net.URL;
 
 /**
  * Utility class that allows transparent reading of files from
@@ -11,7 +11,8 @@ import java.net.URL;
  * @author Pepijn Van Eeckhoudt
  */
  public class ResourceRetriever {
-    public static URL getResource(final String filename) throws IOException {
+ //FIXME: URL support in MIDP 
+ /*   public static URL getResource(final String filename) throws IOException {
         // Try to load resource from jar
         URL url = ClassLoader.getSystemResource(filename);
         // If not found in jar, then load from disk
@@ -20,16 +21,18 @@ import java.net.URL;
         } else {
             return url;
         }
-    }
+    }*/
 
     public static InputStream getResourceAsStream(final String filename) throws IOException {
         // Try to load resource from jar
-        InputStream stream = ClassLoader.getSystemResourceAsStream(filename);
+        InputStream stream = Class.getSystemResourceAsStream(filename);
         // If not found in jar, then load from disk
-        if (stream == null) {
+	// FIXME: add JSR75 support
+        /*if (stream == null) {
             return new FileInputStream(filename);
         } else {
             return stream;
-        }
+        }*/
+	return stream;
     }
 }

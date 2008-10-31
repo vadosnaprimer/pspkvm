@@ -143,6 +143,7 @@ MODULE_JSR_184_API_JAVA_FILES = \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/VertexArray.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/VertexBuffer.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/Image2D.java \
+    ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/TriangleStripArray.java \
     ${JSR_184_CLDC_IMPL_JAVA_DIR}/javax/microedition/m3g/RenderEventListener.java
 
 #OpenGL ES classes
