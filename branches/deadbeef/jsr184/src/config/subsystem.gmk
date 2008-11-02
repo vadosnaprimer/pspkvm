@@ -226,11 +226,11 @@ SUBSYSTEM_JSR_239_NATIVE_FILES += \
 #
 # Verify whether JSR_239_LIB_DIR is correctly specified
 #
-all:: JSR_184_LIB_DIR
+#all:: JSR_184_LIB_DIR
 
-JSR_184_LIB_DIR:
-	@echo " ... verifing JSR_184_LIB_DIR"
-	@$(verify_directory) $(LOG)
+#JSR_184_LIB_DIR:
+#	@echo " ... verifing JSR_184_LIB_DIR"
+#	@$(verify_directory) $(LOG)
 
 # Determines what option we have made and assigns it to the
 # variable that the global makefile recognizes.
