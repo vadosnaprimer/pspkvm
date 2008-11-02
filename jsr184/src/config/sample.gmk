@@ -42,12 +42,12 @@
 #    -I/usr/local/include/directfb-internal
 
 # Please modify the lines below if you build for Linux
-#ifeq ($(TARGET_OS), linux)
+ifeq ($(TARGET_OS), linux)
 # Please change path to libraries directory
 #    JSR_184_LIB_DIR = $(JSR_184_SDK_DIR)/lib
 # Please specify particular names of library files
-#    LIBS += -L$(JSR_184_LIB_DIR) -lGLES_CM
-#endif
+    LIBS += -lz
+endif
 
 # Please modify the lines below if you build for Win32
 #ifeq ($(TARGET_OS), win32)

@@ -1,6 +1,7 @@
 package javax.microedition.m3g;
 
 import javax.microedition.m3g.util.ResourceRetriever;
+import javax.microedition.m3g.util.Inflater;
 import java.io.*;
 import java.util.Vector;
 import javax.microedition.m3g.vecMath.*;
