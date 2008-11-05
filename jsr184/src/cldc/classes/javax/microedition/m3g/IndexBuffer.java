@@ -4,7 +4,7 @@ import javax.microedition.m3g.util.BufferUtil;
 import java.nio.*;
 
 public abstract class IndexBuffer extends Object3D {
-	protected IntBuffer buffer = null;
+	protected ShortBuffer buffer = null;
 
 	public int getIndexCount()
 	{
@@ -15,10 +15,10 @@ public abstract class IndexBuffer extends Object3D {
 	
 	protected void allocate(int numElements)
 	{
-		buffer = BufferUtil.newIntBuffer(numElements);
+		buffer = BufferUtil.newShortBuffer(numElements);
 	}
 	
-	IntBuffer getBuffer() {
+	ShortBuffer getBuffer() {
 		return buffer;
 	}
 }

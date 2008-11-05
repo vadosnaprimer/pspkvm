@@ -9,18 +9,18 @@ public class BufferUtil {
     }
 
     public static IntBuffer newIntBuffer(int numelements) {
-        int[] array = new int[numelements];
-        return IntBuffer.wrap(array);
+        ByteBuffer bb = ByteBuffer.allocateDirect(numelements*4);
+        return bb.asIntBuffer();
     }
 
     public static FloatBuffer newFloatBuffer(int capacity){
-        float[] array = new float[capacity];
-        return FloatBuffer.wrap(array);
+        ByteBuffer bb = ByteBuffer.allocateDirect(capacity*4);
+        return bb.asFloatBuffer();
     }
 
     public static ShortBuffer newShortBuffer(int capacity){
-        short[] array = new short[capacity];
-        return ShortBuffer.wrap(array);
+        ByteBuffer bb = ByteBuffer.allocateDirect(capacity*2);
+        return bb.asShortBuffer();
     }
 
 }
