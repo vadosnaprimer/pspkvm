@@ -67,7 +67,7 @@ GROUP_DOC_ALL += \
 # System and internal properties
 #
 SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
-    $(JSR_239_DIR)/src/config/properties_jsr184.xml
+    $(JSR_184_DIR)/src/config/properties_jsr184.xml
 
 # Platform definitions
 #
@@ -197,16 +197,11 @@ MODULE_JSR_184_UTIL_JAVA_FILES += \
 
 # Paths for native code
 #
-vpath % $(JSR_239_DIR)/src/cldc/native
+vpath % $(JSR_184_DIR)/src/cldc/native
                                                                             
-SUBSYSTEM_JSR_239_NATIVE_FILES += \
+SUBSYSTEM_JSR_184_NATIVE_FILES += \
         JSR184Inflater.c 
-#	JSR239-KNIBuffer.c \
-#	JSR239-KNIGL11Impl.c \
-#	JSR239-KNIEGL11Impl.c \
-#	JSR239-KNIInterface.c\
-#	JSR239-KNIMemory.c
-
+        
 #SUBSYSTEM_JSR_239_EXTRA_INCLUDES += \
 #   -I$(JSR_239_DIR)/src/cldc/native/inc
 
@@ -275,9 +270,8 @@ jsr_184_source_bundle:: SOURCE_OUTPUT_DIR
 $(MIDP_OUTPUT_DIR)/classes.zip:: $(SUBSYSTEM_JSR_184_JAVA_FILES)
 	$(appendjavafiles)
 
-#JTWI_I3TEST_JAVA_FILES += $(SUBSYSTEM_JSR_239_I3TEST_JAVA_FILES)
-JTWI_NATIVE_FILES      += $(SUBSYSTEM_JSR_239_NATIVE_FILES)
-#EXTRA_INCLUDES         += $(SUBSYSTEM_JSR_239_EXTRA_INCLUDES)
+JTWI_NATIVE_FILES      += $(SUBSYSTEM_JSR_184_NATIVE_FILES)
+#EXTRA_INCLUDES         += $(SUBSYSTEM_JSR_184_EXTRA_INCLUDES)
 
 #
 # Remove "-Werror" from $(CFLAGS) for all native files

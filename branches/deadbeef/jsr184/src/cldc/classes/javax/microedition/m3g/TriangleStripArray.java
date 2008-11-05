@@ -10,14 +10,14 @@ public class TriangleStripArray extends IndexBuffer {
 
 		// fill indexbuffer
 		allocate(sum + (stripLengths.length-1)*3);
-		int index = firstIndex;
+		short index = (short)firstIndex;
 		for(int i=0; i<stripLengths.length; i++)
 		{
 			if(i != 0)
 			{
 				// if this is not the first strip,
 				// we need to connect the strips
-				buffer.put(index-1);
+				buffer.put((short)(index-1));
 				buffer.put(index);
 				if((buffer.position() % 2)==1) // may need extra index for correct winding
 					buffer.put(index);
@@ -55,14 +55,14 @@ public class TriangleStripArray extends IndexBuffer {
 			{
 				// if this is not the first strip,
 				// we need to connect the strips
-				buffer.put(indices[index-1]);
-				buffer.put(indices[index]);
+				buffer.put((short)indices[index-1]);
+				buffer.put((short)indices[index]);
 				if((buffer.position() % 2)==1) // may need extra index for correct winding
-					buffer.put(indices[index]);
+					buffer.put((short)indices[index]);
 			}
 			for(int s=0; s<stripLengths[i]; ++s)
 			{
-				buffer.put(indices[index++]);
+				buffer.put((short)indices[index++]);
 			}
 		}
 		// reset position and set limit

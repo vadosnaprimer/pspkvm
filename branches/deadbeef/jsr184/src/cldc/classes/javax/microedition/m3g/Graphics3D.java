@@ -329,13 +329,13 @@ public final class Graphics3D {
 
         if(triangles instanceof TriangleStripArray)
 		{	
-			IntBuffer indices = triangles.getBuffer();
+			ShortBuffer indices = triangles.getBuffer();
 			indices.position(0);
-			gl.glDrawElements(GL.GL_TRIANGLE_STRIP, triangles.getIndexCount(), GL.GL_UNSIGNED_INT, indices);
+			gl.glDrawElements(GL.GL_TRIANGLE_STRIP, triangles.getIndexCount(), GL.GL_UNSIGNED_SHORT, indices);
 		}
-		else
-			gl.glDrawElements(GL.GL_TRIANGLES, triangles.getIndexCount(), GL.GL_UNSIGNED_INT, triangles.getBuffer());
-
+		else {
+			gl.glDrawElements(GL.GL_TRIANGLES, triangles.getIndexCount(), GL.GL_UNSIGNED_SHORT, triangles.getBuffer());
+			}
         gl.glPopMatrix();
 	}
 	
