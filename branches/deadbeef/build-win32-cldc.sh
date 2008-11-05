@@ -197,7 +197,7 @@ then
 			JSR_239_SDK_DIR=/works/OpenGL/sdk \
 			USE_JSR_184=${USE_JSR_184} \
 			JSR_184_DIR=${JSR_184_DIR} \
-			USE_GERBERA=false \
+			USE_GERBERA=true \
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			USE_MULTIPLE_ISOLATES=true \

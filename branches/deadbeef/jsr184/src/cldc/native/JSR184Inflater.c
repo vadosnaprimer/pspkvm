@@ -8,23 +8,26 @@
 #include <stdio.h>
 #endif
 
-#include <zlib.h>
-#include <assert.h>
+//#include <zlib.h>
+//#include <assert.h>
 
-static z_stream strm;
+//static z_stream strm;
 
 KNIEXPORT KNI_RETURNTYPE_VOID
 Java_javax_microedition_m3g_util_Inflater_initNativeInflater() {
+#if 0
     strm.zalloc = Z_NULL;
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
     strm.avail_in = 0;
     strm.next_in = Z_NULL;
     inflateInit(&strm);
+#endif
 }
 
 KNIEXPORT KNI_RETURNTYPE_INT
 Java_javax_microedition_m3g_util_Inflater_inflate() {
+#if 0
     int offset;
     int inLength, outLength;
     char *buf_in;
@@ -70,11 +73,14 @@ Java_javax_microedition_m3g_util_Inflater_inflate() {
     free(buf_out);
 
     KNI_ReturnInt(outLength);
-
+#endif
+    KNI_ReturnInt(0);
 }
 
 KNIEXPORT KNI_RETURNTYPE_VOID
 Java_javax_microedition_m3g_util_Inflater_destroyNativeInflater() {
+#if 0
     inflateEnd(&strm);
+#endif
     KNI_ReturnVoid();
 }
