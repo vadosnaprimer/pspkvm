@@ -28,6 +28,8 @@ ENABLE_THUMB=false
 USE_NOKIA_UI=true
 USE_JSR_75=true
 USE_JSR_179=true
+USE_JSR_172=true
+USE_JSR_226=true
 
 while getopts \?J:Ccdehjmnpr: c
 do
@@ -82,6 +84,9 @@ JSR_120_DIR=${WS_ROOT}/jsr120
 JSR_75_DIR=${WS_ROOT}/jsr75
 NOKIA_UI_DIR=${WS_ROOT}/ext/nokia
 JSR_179_DIR=${WS_ROOT}/jsr179
+JSR_172_DIR=${WS_ROOT}/jsr172
+JSR_226_DIR=${WS_ROOT}/jsr226
+PISCES_DIR=${WS_ROOT}/pisces
 PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
 #PSPDEV_GNU_TOOLS_DIR=
 
@@ -191,6 +196,11 @@ then
 			USE_NOKIA_UI=${USE_NOKIA_UI} \
 			NOKIA_UI_DIR=${NOKIA_UI_DIR} \
 			SOFT_KEYBOARD_ENABLED=true \
+			JSR_172_DIR=${JSR_172_DIR} \
+			USE_JSR_172=${USE_JSR_172} \
+			USE_JSR_226=${USE_JSR_226} \
+			JSR_226_DIR=${JSR_226_DIR} \
+			PISCES_DIR=${PISCES_DIR} \
 			${DEBUG_OPTION}
 		if [ $? != 0 ];then
 			echo make failed for ${BUILD_TARGET} module ${BUILDMODULE}
