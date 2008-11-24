@@ -277,11 +277,11 @@ public class NumberParser extends AbstractParser {
      *         pair.
      */
     public static float buildFloat(int mant, final int exp) {
-        if (exp < -125 || mant == 0) {
+        if (exp < -37 || mant == 0) {
             return 0f;
         }
 
-        if (exp >  128) {
+        if (exp >  37) {
             if (mant > 0) {
                 return Float.POSITIVE_INFINITY;
             } else {
@@ -307,7 +307,7 @@ public class NumberParser extends AbstractParser {
     /**
      * Array of powers of ten.
      */
-    private static final float[] POW_10 = new float [128];
+    private static final float[] POW_10 = new float [38];
     static {
         float cur = 0.1f;
         for (int i = 0; i < POW_10.length; i++) {
