@@ -179,10 +179,10 @@ private:
           "If enabled, Java stack traces are printed with more information")\
                                                                             \
       /* GC  and heap Flags */                                              \
-  product(int, HeapCapacity, 6 * 1280 * 1024,                               \
+  product(int, HeapCapacity, 7 * 1280 * 1024,                               \
           "Maximum size of object heap in bytes")                           \
                                                                             \
-  product(int, HeapMin, 6 * 1280 * 1024,                                    \
+  product(int, HeapMin, 7 * 1280 * 1024,                                    \
           "Minimin heap size in bytes. 0 means for the system to pick "     \
           "a good initial value. This flag is ignored "                     \
           "if SUPPORTS_ADJUSTABLE_MEMORY_CHUNK=0")                          \

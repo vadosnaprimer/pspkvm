@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+  <head>
+    <!--
+
+    Copyright  2007  Sun Microsystems, Inc. All rights reserved.
+
+    -->
+    <title>Perseus Utility Package</title>
+  </head>
+
+  <body>
+    <p>The Perseus Utility package contains supporting classes and interfaces such as SVG constants
+       definitions and a Base64 decoding utility.</p>
+    <p>The main classes are:</p>
+    <ul>
+        <li><code>SVGConstants</code>. Contains the SVG constants (attributes, tag names) used
+        in SVG Tiny. The interface defines constants for generic XML processing (e.g., the XML
+        namespace value), CSS constants (e.g., property names and values) and SVG constants.</li>
+        <li><code>Base64DecodeStream</code>. This class is used to decode Strings that represent 
+        Base64 encoded data. In Perseus, this is used to decode xlink:href attributes (e.g., on the
+        <code>&lt;image&gt;</code> element) that encode the referenced resource into the attribute
+        value rather than really pointing to it.</li>
+        <li><code>LocalizableSupport</code>. This class is used to ease loading the appropriate 
+        resource bundle for a given locale. It is typically used by <code>Messages</code> classes, 
+        such as the one in the <code>com.sun.perseus.builder</code> package.</li>
+    </ul>
+  </body>
+</html>

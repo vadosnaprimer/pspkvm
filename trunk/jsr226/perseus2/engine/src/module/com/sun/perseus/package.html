@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+  <head>
+    <!--
+
+    Copyright  2007  Sun Microsystems, Inc. All rights reserved.
+
+    -->
+    <title>Perseus Package</title>
+  </head>
+
+  <body>
+    <p>Perseus is an API for rendering <a href="http://www.w3.org/Graphics/SVG">SVG</a>
+    (Scalable Vector Graphics) content on the Java platform. </p>
+
+    <p>SVG is an XML syntax for describing rich, animated and scripted Graphics</p>.
+
+    <p>Perseus can handle the
+    <a href="http://www.w3.org/TR/SVGMobile/">SVG Tiny</a> profile of SVG.</p>
+
+    <p>The Perseus packages are as follows:</p>
+
+    <ul>
+        <li><code>com.sun.perseus.builder</code>. Contains the classes used
+        to convert an SVG Tiny document into an internal representation that
+        can be rendered. This packages uses the SAX API and relies on the 
+        <code>com.sun.perseus.parser</code> package for parsing specific attribute
+        types such as CSS color values.</li>
+        <li><code>com.sun.perseus.parser</code>. Contains classes for parsing
+        complex attribute values such as affine transformation, path data or 
+        color values. </li>
+        <li><code>
+        <li><code>com.sun.perseus.model</code>. Contains the classes used to 
+        represent the SVG Tiny document in memory. This can be though of as
+        a lightweight Document Object Model.</li>
+        <li><code>com.sun.perseus.render</code>. Contains the classes used
+        to render the internal memory representation of the SVG document.</li>
+        <li><code>com.sun.perseus.apps</code>. Contains unsupported sample applications
+        that use the Perseus API.</li>
+        <li><code>com.sun.perseus.util</code>. Contains supporting utilities
+        such as constants interfaces (e.g., <code>SVGConstants</code> which contains
+        all the SVG Tiny constants.</code>
+    </ul>
+
+  </body>
+</html>
