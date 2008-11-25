@@ -1397,7 +1397,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
          * Add this timer to the active pool. 
          */
         public void start() {
-            timerService.schedule(this, 700);
+            timerService.schedule(this, 350);
             timers.addElement(this);
         }
 
