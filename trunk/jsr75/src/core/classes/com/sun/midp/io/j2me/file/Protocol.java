@@ -932,7 +932,7 @@ public class Protocol extends ConnectionBaseAdapter implements FileConnection {
         if (fileHandler == null) {
             fileHandler = getFileHandler();
 	     fileHandler.connect(fileRoot, filePath + fileName);
-	     fileHandler.createPrivateDir(fileRoot);
+	     //fileHandler.createPrivateDir(fileRoot);
         }
     }
 
