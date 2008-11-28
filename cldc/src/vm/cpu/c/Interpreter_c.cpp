@@ -29,6 +29,9 @@
 #include <stdarg.h>
 #include <setjmp.h>
 
+#define  USE_MIPS_ASM_OPTIMIZED_INTERPRETER 0
+#define USE_THREADED_MIPS_INTERPRETER 0
+
 extern "C" {
 
   // external routines used when quickening
@@ -240,6 +243,98 @@ extern "C" {
 #define UNIMPL(x)                                               \
     tty->print_cr("UNIMPLEMENTED BYTECODE: %s\n", #x);          \
     BREAKPOINT;
+
+#if defined(MIPS) && USE_MIPS_ASM_OPTIMIZED_INTERPRETER
+
+#define REG_JPC "s6"
+#define REG_JSP "s7"
+#define REG_JLP "s5"
+
+#define load_jpc \
+    __asm__ __volatile__ ( \
+        " .set noreorder\n" \
+        " move $"REG_JPC", %0\n" \
+        " .set reorder\n" \
+        ::"r"(g_jpc) \
+    );
+
+#define load_jsp \
+    __asm__ __volatile__ ( \
+        " .set noreorder\n" \
+        " move $"REG_JSP", %0\n" \
+        " .set reorder\n" \
+        ::"r"(g_jsp) \
+    );
+
+#define load_jlp \
+    __asm__ __volatile__ ( \
+        " .set noreorder\n" \
+        " move $"REG_JLP", %0\n" \
+        " .set reorder\n" \
+        ::"r"(g_jlocals) \
+    );
+
+#define load_all_java_pointers \
+	load_jpc \
+	load_jsp \
+	load_jlp
+	
+#define save_jpc \
+     __asm__ __volatile__ ( \
+    " .set noreorder\n" \
+    " move %0, $"REG_JPC"\n" \
+    " .set reorder\n" \
+    :"=r"(g_jpc) \
+    );
+
+#define save_jsp \
+     __asm__ __volatile__ ( \
+    " .set noreorder\n" \
+    " move %0, $"REG_JSP"\n" \
+    " .set reorder\n" \
+    :"=r"(g_jsp) \
+    );
+
+#define save_jlp \
+     __asm__ __volatile__ ( \
+    " .set noreorder\n" \
+    " move %0, $"REG_JLP"\n" \
+    " .set reorder\n" \
+    :"=r"(g_jlocals) \
+    );
+
+#define save_all_java_pointers \
+	save_jlp \
+	save_jsp \
+	save_jpc
+	
+#define push_global_registers \
+     __asm__ __volatile__ ( \
+	  "sub $sp,$sp,12\n" \
+  	  "sw $"REG_JPC", 0($sp)\n" \
+  	  "sw $"REG_JSP", 4($sp)\n" \
+  	  "sw $"REG_JLP", 8($sp)\n" \
+     );
+
+#define pop_global_registers \
+     __asm__ __volatile__ ( \
+         "lw $"REG_JLP", 8($sp)\n" \
+         "lw $"REG_JSP", 4($sp)\n" \
+      	  "lw $"REG_JPC", 0($sp)\n" \
+      	  "add  $sp,$sp,12\n" \
+     );
+#else
+#define load_jpc
+#define load_jsp
+#define load_jlp
+#define load_all_java_pointers
+#define save_jpc
+#define save_jsp
+#define sava_jlp
+#define push_global_registers
+#define save_all_java_pointers
+#define pop_global_registers
+#endif //MIPS
 
 // Interpreter entrance/exit
 enum {
@@ -1720,9 +1815,15 @@ enum {
   }
 
   static void dispatch_return_point() {
+    register jint v_int1 = GET_THREAD_INT(int1_value);
+    
     if (!CURRENT_HAS_PENDING_EXCEPTION) {
-      interpreter_dispatch_table[GET_THREAD_INT(int1_value)]();
+      push_global_registers
+      load_all_java_pointers
+      interpreter_dispatch_table[v_int1]();
+      pop_global_registers
     }
+    
   }
 
   static inline void interpreter_call_vm_dispatch(address callback,
@@ -2367,6 +2468,10 @@ enum {
     invoke_java_method(method, invoker_size);
   }
 
+  
+#if !defined(MIPS) || !(USE_MIPS_ASM_OPTIMIZED_INTERPRETER)
+
+
   /* bytecodes implementation follows */
 
 #define START_BYTECODES
@@ -2384,7 +2489,7 @@ enum {
 
   START_BYTECODES
 
-  BYTECODE_IMPL(nop)
+  BYTECODE_IMPL(nop)            	  
     ADVANCE(1);
   BYTECODE_IMPL_END
 
@@ -4696,4 +4801,2485 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 #endif // __GNUC__
 #endif // ENABLE_PAGE_PROTECTION
 
+#else // MIPS
+
+
+  /* bytecodes implementation follows */
+
+#define START_BYTECODES
+#define END_BYTECODES
+#define BYTECODE_IMPL_NO_STEP BYTECODE_IMPL
+#if ENABLE_JAVA_DEBUGGER
+#define BYTECODE_IMPL(x) static void bc_impl_##x() {            \
+  if (_debugger_active & DEBUGGER_STEPPING) {                   \
+    interpreter_call_vm((address)&handle_single_step, T_VOID);  \
+  }
+#else
+
+#define BYTECODE_IMPL_ASM(x) static void bc_impl_##x() { \
+     __asm__ __volatile__ (
+     
+#define BYTECODE_IMPL(x) static void bc_impl_##x##_internal() __attribute__((noinline)); \
+    static void bc_impl_##x() { \
+    save_all_java_pointers \
+    bc_impl_##x##_internal(); \
+    load_all_java_pointers \
+   }\
+   static void bc_impl_##x##_internal() {
+
+#endif
+
+#if (USE_THREADED_MIPS_INTERPRETER)
+#define BYTECODE_IMPL_END_ASM \
+	"lbu $v0, 0($"REG_JPC")\n" \
+	"sll $v0, $v0, 2\n" \
+	"addu $v0, $v0, $gp\n" \
+	"lw $v1, 0($v0)\n" \
+	"j $v1\n" \
+	"nop\n" \
+	);}
+#else
+#define BYTECODE_IMPL_END_ASM "\n");}
+#endif
+#define BYTECODE_IMPL_END    }
+
+#define ADVANCE_ASM(x) " add $"REG_JPC", $"REG_JPC", "#x"\n"
+#define PUSH_ASM(x) "\n"); \
+	                            __asm__ __volatile__( \
+                                       " sub $"REG_JSP", $"REG_JSP", 4\n" \
+	                                " li    $t7, "#x"\n" \
+	                                " sw $t7, 0($"REG_JSP")\n" \
+	                                :::"t7"); \
+                                   __asm__ __volatile__(
+                                          
+#define POP_ASM() " add $"REG_JSP", $"REG_JSP", 4\n"
+
+#define PUSH_INT_ASM(r)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sub $"REG_JSP", $"REG_JSP", 4\n" \
+                                          " sw $"#r", 0($"REG_JSP") \n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+                                          
+#define POP_INT_ASM(r)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r", 0($"REG_JSP") \n" \
+                                          " add $"REG_JSP", $"REG_JSP", 4\n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+#define GET_SIGNED_BYTE_ASM(x, r) \
+	                                   "\n");\
+	                                   __asm__ __volatile__( \
+                                          " addiu $"#r", $"REG_JPC", 1\n" \
+                                          " lb $"#r", "#x"($"#r") \n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+
+#define GET_BYTE_ASM(x, r) \
+	                                   "\n");\
+	                                   __asm__ __volatile__( \
+                                          " addiu $"#r", $"REG_JPC", 1\n" \
+                                          " lbu $"#r", "#x"($"#r") \n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+                                          
+#define GET_LOCAL_ASM(rs, rd) \
+	                                   "\n");\
+	                                   __asm__ __volatile__( \
+                                          " sll $t7, $"#rs", 2\n" \
+                                          " subu $t7, $"REG_JLP", $t7\n" \
+                                          " lw $"#rd", 0($t7) \n" \
+                                          :::#rs, #rd, "t7"); \
+                                          __asm__ __volatile__(
+
+#define SET_LOCAL_ASM(r, v) \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sll $t7, $"#r", 2\n" \
+                                          " subu $t7, $"REG_JLP", $t7\n" \
+                                          " sw $"#v", 0($t7) \n" \
+                                          :::#r, #v, "t7"); \
+                                          __asm__ __volatile__(
+	
+  START_BYTECODES
+
+  BYTECODE_IMPL_ASM(nop)            	  
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(aconst_null)
+    PUSH_ASM(0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_m1)
+    PUSH_ASM(-1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_0)
+    PUSH_ASM(0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_1)
+    PUSH_ASM(1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_2)
+    PUSH_ASM(2)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_3)
+    PUSH_ASM(3)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_4)
+    PUSH_ASM(4)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iconst_5)
+    PUSH_ASM(5)
+    ADVANCE_ASM(1)
+   BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(lconst_0)
+    LONG_PUSH(0);
+    ADVANCE(1);
+   BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lconst_1)
+    LONG_PUSH(1);
+    ADVANCE(1);
+   BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(fconst_0)
+    PUSH_ASM(0)
+    ADVANCE_ASM(1)
+   BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(fconst_1)
+    PUSH_ASM(1065353216)
+    ADVANCE_ASM(1)
+   BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(fconst_2)
+    PUSH_ASM(1073741824)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(dconst_0)
+    DOUBLE_PUSH(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(dconst_1)
+#if HARDWARE_LITTLE_ENDIAN
+    PUSH_ASM(1072693248)
+    PUSH_ASM(0)
+#else
+    PUSH_ASM(0)
+    PUSH_ASM(1072693248)
+#endif
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(bipush)
+    GET_SIGNED_BYTE_ASM(0, t0)
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(2)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(sipush)
+    PUSH(GET_SIGNED_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(ldc)
+    interpreter_call_vm_redo((address)&quicken, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(ldc_w)
+    interpreter_call_vm_redo((address)&quicken, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(ldc2_w)
+    interpreter_call_vm_redo((address)&quicken, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(iload)
+    GET_BYTE_ASM(0, t0)
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(2)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(iload_wide)
+    iload(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lload)
+    lload(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lload_wide)
+    lload(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(fload)
+    GET_BYTE_ASM(0, t0)
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(2)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(fload_wide)
+    fload(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dload)
+    dload(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dload_wide)
+    dload(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(aload)
+    GET_BYTE_ASM(0, t0)
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(2)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(aload_wide)
+    aload(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(iload_0)
+    "li $t0, 0\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iload_1)
+    "li $t0, 1\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iload_2)
+    "li $t0, 2\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iload_3)
+    "li $t0, 3\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(lload_0)
+    lload(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lload_1)
+    lload(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lload_2)
+    lload(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lload_3)
+    lload(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(fload_0)
+    "li $t0, 0\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(fload_1)
+    "li $t0, 1\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(fload_2)
+    "li $t0, 2\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(fload_3)
+    "li $t0, 3\n"
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(dload_0)
+    dload(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dload_1)
+    dload(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dload_2)
+    dload(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dload_3)
+    dload(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_0)
+    aload(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_1)
+    aload(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_2)
+    aload(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_3)
+    aload(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(iaload)
+    if (array_load(T_INT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(laload)
+    if (array_load(T_LONG)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(faload)
+    if (array_load(T_FLOAT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(daload)
+    if (array_load(T_DOUBLE)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aaload)
+    if (array_load(T_OBJECT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(baload)
+    if (array_load(T_BYTE)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(caload)
+    if (array_load(T_CHAR)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(saload)
+    if (array_load(T_SHORT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(istore)
+    istore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(istore_wide)
+    istore(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore)
+    lstore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore_wide)
+    lstore(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fstore)
+    fstore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fstore_wide)
+    fstore(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore)
+    dstore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore_wide)
+    dstore(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(astore)
+    astore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(astore_wide)
+    astore(GET_SHORT(0));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(istore_0)
+    istore(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(istore_1)
+    istore(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(istore_2)
+    istore(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(istore_3)
+    istore(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore_0)
+    lstore(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore_1)
+    lstore(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore_2)
+    lstore(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore_3)
+    lstore(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fstore_0)
+    fstore(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fstore_1)
+    fstore(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fstore_2)
+    fstore(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fstore_3)
+    fstore(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore_0)
+    dstore(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore_1)
+    dstore(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore_2)
+    dstore(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore_3)
+    dstore(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(astore_0)
+    astore(0);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(astore_1)
+    astore(1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(astore_2)
+    astore(2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(astore_3)
+    astore(3);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(iastore)
+    if (array_store(T_INT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lastore)
+    if (array_store(T_LONG)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fastore)
+    if (array_store(T_FLOAT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dastore)
+    if (array_store(T_DOUBLE)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aastore)
+    if (array_store(T_OBJECT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(bastore)
+    if (array_store(T_BYTE)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(castore)
+    if (array_store(T_CHAR)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(sastore)
+    if (array_store(T_SHORT)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(pop)
+    POP_ASM()
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(pop2)
+    POP_ASM()
+    POP_ASM()
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(dup)
+    jint v = PEEK(0);
+    PUSH(v);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(dup_x1)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(dup_x2)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t2)
+    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM(t2)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(dup2)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(dup2_x1)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t2)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM(t2)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(dup2_x2)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t2)
+    POP_INT_ASM(t3)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM(t3)
+    PUSH_INT_ASM(t2)
+    PUSH_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(swap)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM(t1)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(iadd)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    " add $t0, $t0, $t1\n"
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(ladd)
+    jlong val1 = LONG_POP();
+    jlong val2 = LONG_POP();
+    LONG_PUSH(val1 + val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(fadd)
+    jfloat val1 = FLOAT_POP();
+    jfloat val2 = FLOAT_POP();
+    FLOAT_PUSH(jvm_fadd(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dadd)
+    jdouble val1 = DOUBLE_POP();
+    jdouble val2 = DOUBLE_POP();
+    DOUBLE_PUSH(jvm_dadd(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL_ASM(isub)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    " sub $t0, $t0, $t1\n"
+    PUSH_INT_ASM(t0)
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(lsub)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 - val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(fsub)
+    jfloat val2 = FLOAT_POP();
+    jfloat val1 = FLOAT_POP();
+    FLOAT_PUSH(jvm_fsub(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dsub)
+    jdouble val2 = DOUBLE_POP();
+    jdouble val1 = DOUBLE_POP();
+    DOUBLE_PUSH(jvm_dsub(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL(imul)
+    jint val2 = POP();
+    jint val1 = POP();
+    PUSH(val1 * val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lmul)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 * val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fmul)
+    jfloat val2 = FLOAT_POP();
+    jfloat val1 = FLOAT_POP();
+    FLOAT_PUSH(jvm_fmul(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dmul)
+    jdouble val1 = DOUBLE_POP();
+    jdouble val2 = DOUBLE_POP();
+    DOUBLE_PUSH(jvm_dmul(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(idiv)
+    jint val2 = POP();
+    jint val1 = POP();
+    if (val2 == 0) {
+      interpreter_throw_ArithmeticException();
+      return;
+    }
+    jint rv = val1;
+    if (val1 != 0x80000000 || val2 != -1) {
+      rv  /=  val2;
+    }
+    PUSH(rv);
+
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ldiv)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    if (val2 == 0) {
+      interpreter_throw_ArithmeticException();
+      return;
+    }
+    LONG_PUSH(val1 / val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fdiv)
+    jfloat val2 = FLOAT_POP();
+    jfloat val1 = FLOAT_POP();
+    FLOAT_PUSH(jvm_fdiv(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ddiv)
+    jdouble val2 = DOUBLE_POP();
+    jdouble val1 = DOUBLE_POP();
+    DOUBLE_PUSH(jvm_ddiv(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(irem)
+    jint val2 = POP();
+    jint val1 = POP();
+    if (val2 == 0) {
+      interpreter_throw_ArithmeticException();
+      return;
+    }
+    if (val1 == 0x80000000 && val2 == -1) {
+      PUSH(val1 % 1);
+    } else {
+      PUSH(val1 % val2);
+    }
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lrem)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    if (val2 == 0) {
+      interpreter_throw_ArithmeticException();
+      return;
+    }
+    LONG_PUSH(val1 % val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(frem)
+    jfloat val2 = FLOAT_POP();
+    jfloat val1 = FLOAT_POP();
+    FLOAT_PUSH(jvm_frem(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(drem)
+    jdouble val2 = DOUBLE_POP();
+    jdouble val1 = DOUBLE_POP();
+    DOUBLE_PUSH(jvm_drem(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL(ineg)
+    jint val = POP();
+    PUSH(-val);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lneg)
+    jlong val = LONG_POP();
+    LONG_PUSH(-val);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(fneg)
+    jfloat val = FLOAT_POP();
+    FLOAT_PUSH(jvm_fmul(val, -1.0f));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dneg)
+    jdouble val = DOUBLE_POP();
+    DOUBLE_PUSH(jvm_dneg(val));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL(ishl)
+    jint val2 = POP();
+    jint val1 = POP();
+    PUSH(val1 << (val2 & 0x1f));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lshl)
+    jint  val2 = POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 << (val2 & 0x3f));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ishr)
+    jint val2 = POP();
+    jint val1 = POP();
+    PUSH(val1 >> (val2 & 0x1f));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lshr)
+    jint  val2 = POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 >> (val2 & 0x3f));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(iushr)
+    jint val2 = POP() & 0x1f;
+    jint val1 = POP();
+    val1 = (juint)val1 >> val2;
+    PUSH(val1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lushr)
+    jint  val2 = POP() & 0x3f;
+    jlong val1 = LONG_POP();
+    val1 = (julong)val1 >> val2;
+    LONG_PUSH(val1);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(iand)
+    jint val2 = POP();
+    jint val1 = POP();
+    PUSH(val1 & val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(land)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 & val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ior)
+    jint val2 = POP();
+    jint val1 = POP();
+    PUSH(val1 | val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lor)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 | val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ixor)
+    jint val2 = POP();
+    jint val1 = POP();
+    PUSH(val1 ^ val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lxor)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+    LONG_PUSH(val1 ^ val2);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(iinc)
+    GET_BYTE_ASM(0, t0)
+    GET_SIGNED_BYTE_ASM(1, t1)
+    GET_LOCAL_ASM(t0, t2)
+    "add $t2, $t2, $t1\n"
+    SET_LOCAL_ASM(t0, t2)
+    ADVANCE_ASM(3)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(iinc_wide)
+    jint   n   = GET_SHORT(0);
+    jint   inc = GET_SIGNED_SHORT(2);
+    jint   val = GET_LOCAL(n);
+    SET_LOCAL(n, val + inc);
+    ADVANCE(5);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(i2l)
+    jlong val = POP();
+    LONG_PUSH(val);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(i2f)
+    FLOAT_PUSH(jvm_i2f(POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(i2d)
+    DOUBLE_PUSH(jvm_i2d(POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(l2i)
+    jint val = (jint)LONG_POP();
+    PUSH(val);
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(l2f)
+    FLOAT_PUSH(jvm_l2f(LONG_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(l2d)
+    DOUBLE_PUSH(jvm_l2d(LONG_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL(f2i)
+    PUSH(jvm_f2i(FLOAT_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(f2l)
+    LONG_PUSH(jvm_f2l(FLOAT_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(f2d)
+    DOUBLE_PUSH(jvm_f2d(FLOAT_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(d2i)
+    PUSH(jvm_d2i(DOUBLE_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(d2l)
+    LONG_PUSH(jvm_d2l(DOUBLE_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL(d2f)
+    FLOAT_PUSH(jvm_d2f(DOUBLE_POP()));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_ASM(i2b)
+    "lb $v0, 0($"REG_JSP")\n"
+    "sw $v0, 0($"REG_JSP")\n"
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(i2c)
+    "lhu $v0, 0($"REG_JSP")\n"
+    "sw $v0, 0($"REG_JSP")\n"
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL_ASM(i2s)
+    "lh $v0, 0($"REG_JSP")\n"
+    "sw $v0, 0($"REG_JSP")\n"
+    ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_ASM
+
+  BYTECODE_IMPL(lcmp)
+    jlong val2 = LONG_POP();
+    jlong val1 = LONG_POP();
+
+    jint rv = val1 < val2 ? -1 : val1 == val2 ? 0 : 1;
+    PUSH(rv);
+
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+#if ENABLE_FLOAT
+  BYTECODE_IMPL(fcmpl)
+    jfloat rval = FLOAT_POP();
+    jfloat lval = FLOAT_POP();
+
+    PUSH(jvm_fcmpl(lval, rval));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fcmpg)
+    jfloat rval = FLOAT_POP();
+    jfloat lval = FLOAT_POP();
+
+    PUSH(jvm_fcmpg(lval, rval));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dcmpl)
+    jdouble rval = DOUBLE_POP();
+    jdouble lval = DOUBLE_POP();
+
+    PUSH(jvm_dcmpl(lval, rval));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dcmpg)
+    jdouble rval = DOUBLE_POP();
+    jdouble lval = DOUBLE_POP();
+
+    PUSH(jvm_dcmpg(lval, rval));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+#endif
+
+  BYTECODE_IMPL(ifeq)
+    jint val = POP();
+    branch(val == 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ifne)
+    jint val = POP();
+    branch(val != 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(iflt)
+    jint val = POP();
+    branch(val < 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ifge)
+    jint val = POP();
+    branch(val >= 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ifgt)
+    jint val = POP();
+    branch(val > 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ifle)
+    jint val = POP();
+    branch(val <= 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_icmpeq)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 == val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_icmpne)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 != val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_icmplt)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 < val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_icmpge)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 >= val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_icmpgt)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 > val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_icmple)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 <= val2);
+   BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_acmpeq)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 == val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(if_acmpne)
+    jint val2 = POP();
+    jint val1 = POP();
+    branch(val1 != val2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(goto)
+    branch(true);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(tableswitch)
+    jint index = POP();
+    // method entry point is 4-byte aligned, jpc points to
+    // tableswitch bytecode
+    address aligned_jpc = (address)((jint)(g_jpc + 1 + 3) & ~3);
+    // get default target
+    jint    target = int_from_addr(aligned_jpc);
+    jint    low    = int_from_addr(aligned_jpc + 4);
+    jint    high   = int_from_addr(aligned_jpc + 8);
+    if (index >= low && index <= high) {
+      target = int_from_addr(aligned_jpc + 12 + (index - low) * 4);
+    }
+    g_jpc += target;
+    check_timer_tick();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lookupswitch)
+    jint key = POP();
+    // method entry point is 4-byte aligned, jpc points to
+    // lookupswitch bytecode
+    address aligned_jpc = (address)((jint)(g_jpc + 1 + 3) & ~3);
+    // get default target
+    jint    target = int_from_addr(aligned_jpc);
+    jint    npairs = int_from_addr(aligned_jpc + 4);
+
+    while (npairs-- > 0) {
+      aligned_jpc += 8;
+      if (int_from_addr(aligned_jpc) == key) {
+        target = int_from_addr(aligned_jpc + 4);
+        break;
+      }
+    }
+    // branch to target offset
+    g_jpc += target;
+    check_timer_tick();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ireturn)
+    return_internal(T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lreturn)
+    return_internal(T_LONG);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(freturn)
+    return_internal(T_FLOAT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dreturn)
+    return_internal(T_DOUBLE);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(areturn)
+    return_internal(T_OBJECT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(return)
+    return_internal(T_VOID);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(getstatic)
+    interpreter_call_vm_dispatch((address)&getstatic, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(putstatic)
+    interpreter_call_vm_dispatch((address)&putstatic, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(getfield)
+    interpreter_call_vm_redo((address)&getfield, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(putfield)
+    interpreter_call_vm_redo((address)&putfield, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(invokevirtual)
+    interpreter_call_vm_redo((address)&quicken, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(invokespecial)
+    interpreter_call_vm_redo((address)&quicken, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(invokestatic)
+    interpreter_call_vm_dispatch((address)&quicken_invokestatic, T_INT);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(invokeinterface)
+    interpreter_call_vm_redo((address)&quicken, T_INT);
+  BYTECODE_IMPL_END
+
+  static void new_return_point() {
+    PUSH(GET_THREAD_INT(obj_value));
+    ADVANCE(3);
+  }
+
+  BYTECODE_IMPL(new)
+    shared_call_vm_internal((address)&newobject, (address)&new_return_point,
+                            T_OBJECT, 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(newarray)
+    jint type = GET_BYTE(0);
+    jint len = POP();
+
+    // actually newarray is different on x86 and everything else,
+    // as x86 C code reads it from Java stack, and ARM, SH and C does it
+    // in interpreter
+    if (!interpreter_call_vm_2((address)&_newarray, T_ARRAY, type, len)) {
+      // put returned value on stack
+      PUSH(GET_THREAD_INT(obj_value));
+      ADVANCE(2);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(anewarray)
+    if (!interpreter_call_vm((address)&anewarray, T_ARRAY)) {
+      // remove length from stack
+      POP();
+      // put returned value on stack
+      PUSH(GET_THREAD_INT(obj_value));
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(arraylength)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(GET_ARRAY_LENGTH(obj));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(athrow)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    shared_call_vm_internal(NULL, NULL, T_ILLEGAL, 1, obj);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(checkcast)
+    if (!interpreter_call_vm((address)&checkcast, T_VOID)) {
+      // checkcast can throw an exception
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(instanceof)
+    // instanceof can throw an exception, like in
+    // vm.instr.instanceofX.instanceof012.instanceof01201m1_1.instanceof01201m1
+    // when we're using invalid class index in Java file
+    if (interpreter_call_vm((address)&instanceof, T_INT)) {
+      return;
+    }
+
+    // remove object from stack
+    POP();
+
+    // put returned value on stack
+    PUSH(GET_THREAD_INT(int1_value));
+
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(monitorenter)
+    // Get the object to lock from the stack
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+
+    // IMPL_NOTE: Increment the bytecode pointer before locking to make
+    // asynchronous exceptions work???
+    ADVANCE(1);
+    monitor_enter_internal(obj);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(monitorexit)
+    // Get the object to unlock from the stack
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+
+    if (!monitor_exit_internal(obj)) {
+      ADVANCE(1);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(wide)
+    ADVANCE(1);
+    load_jpc
+    interpreter_dispatch_table[(int)*g_jpc + WIDE_OFFSET]();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(multianewarray)
+    if (!interpreter_call_vm((address)&multianewarray, T_ARRAY)) {
+      // remove parameters
+      g_jsp += GET_BYTE(2) * BytesPerStackElement;
+      // put returned value on stack
+      PUSH(GET_THREAD_INT(obj_value));
+      ADVANCE(4);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ifnull)
+    jint val = POP();
+    branch(val == 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(ifnonnull)
+    jint val = POP();
+    branch(val != 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(goto_w)
+    jint offset = GET_INT(0);
+    g_jpc += offset;
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL_NO_STEP(breakpoint)
+#if ENABLE_JAVA_DEBUGGER
+    interpreter_call_vm((address)&handle_breakpoint, T_INT);
+    interpreter_dispatch_table[GET_THREAD_INT(int1_value)]();
+#else
+    UNIMPL(breakpoint);
+#endif
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_1_ldc)
+    fast_ldc(T_INT, false);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_1_ldc_w)
+    fast_ldc(T_INT, true);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_2_ldc_w)
+    fast_ldc(T_LONG, true);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_1_putstatic)
+    address addr = get_static_field_offset();
+    if (addr != NULL) {
+      *(jint*)addr = POP();
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_2_putstatic)
+    address addr = get_static_field_offset();
+    if (addr != NULL) {
+      long_to_addr(addr, LONG_POP());
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_a_putstatic)
+    address addr = get_static_field_offset();
+    if (addr != NULL) {
+      *(address*)addr = OBJ_POP();
+      write_barrier(addr);
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_1_getstatic)
+    address addr = get_static_field_offset();
+    if (addr != NULL) {
+      PUSH(*(jint*)addr);
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_2_getstatic)
+    address addr = get_static_field_offset();
+    if (addr != NULL) {
+      LONG_PUSH(long_from_addr(addr));
+      ADVANCE(3);
+    }
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_1_putstatic)
+    bc_impl_fast_1_putstatic();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_2_putstatic)
+    bc_impl_fast_2_putstatic();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_a_putstatic)
+    bc_impl_fast_a_putstatic();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_1_getstatic)
+    bc_impl_fast_1_getstatic();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_2_getstatic)
+    bc_impl_fast_2_getstatic();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_bputfield)
+    jbyte value = POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    *(jbyte*)(obj + GET_SHORT_NATIVE(0)) = value;
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_sputfield)
+    jshort value = POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    *(jshort*)(obj + GET_SHORT_NATIVE(0)) = value;
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_iputfield)
+    jint value = POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    *(jint*)(obj + GET_SHORT_NATIVE(0) * 4) = value;
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_lputfield)
+    jlong value = LONG_POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    long_to_addr(obj + GET_SHORT_NATIVE(0) * 4, value);
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_fputfield)
+    jfloat value = FLOAT_POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    *(jfloat*)(obj + GET_SHORT_NATIVE(0) * 4) = value;
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_dputfield)
+    jdouble value = DOUBLE_POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    double_to_addr(obj + GET_SHORT_NATIVE(0) * 4, value);
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_aputfield)
+    address value = OBJ_POP();
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    obj += GET_SHORT_NATIVE(0) * 4;
+    *(address*)obj = value;
+    write_barrier(obj);
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_bgetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jbyte*)(obj + GET_SHORT_NATIVE(0)));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_sgetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jshort*)(obj + GET_SHORT_NATIVE(0)));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_cgetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jushort*)(obj + GET_SHORT_NATIVE(0)));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_igetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jint*)(obj + GET_SHORT_NATIVE(0) * 4));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_lgetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    LONG_PUSH(long_from_addr(obj + GET_SHORT_NATIVE(0) * 4));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_fgetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    FLOAT_PUSH(*(jfloat*)(obj + GET_SHORT_NATIVE(0) * 4));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_dgetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    DOUBLE_PUSH(double_from_addr(obj + GET_SHORT_NATIVE(0) * 4));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_agetfield)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    OBJ_PUSH(*(address*)(obj + GET_SHORT_NATIVE(0) * 4));
+    ADVANCE(3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_invokevirtual)
+    fast_invoke_internal(false, true, 3);
+   BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_invokestatic)
+    fast_invoke_internal(true, false, 3);
+   BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_invokestatic)
+    fast_invoke_internal(true, false, 3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_invokeinterface)
+    // read arguments
+    jushort index = GET_SHORT(0);
+    jubyte  num_params = GET_BYTE(2);
+
+    // Get constant pool of current method
+    address cpool = GET_FRAME(cpool);
+
+    // Get the method index and class id from resolved constant pool entry
+    jushort method_index =  first_ushort_from_cpool(cpool, index);
+    jushort class_id = second_ushort_from_cpool(cpool, index);
+
+    // Get receiver object and perform the null check
+    address receiver = OBJ_PEEK(num_params - 1);
+    NULL_CHECK(receiver);
+
+    // Get class of receiver object
+    receiver = *(address*)receiver;
+    receiver = *(address*)receiver;
+
+    // Get the itable from the class of the receiver object
+    // Get the ClassInfo
+    address ci = *(address*)(receiver + JavaClass::class_info_offset());
+    // get length of vtable and itable
+    jushort vlength = *(jushort*)(ci + ClassInfo::vtable_length_offset());
+    jint ilength = *(jushort*)(ci + ClassInfo::itable_length_offset());
+    // start of itable
+    address itable = ci + ClassInfoDesc::header_size() + vlength * 4;
+
+    // Lookup interface method table by linear search
+    for (itable = ci + ClassInfoDesc::header_size() + vlength*4; ; ilength--){
+      // IMPL_NOTE: or < 0
+      if (ilength <= 0) {
+       interpreter_throw_IncompatibleClassChangeError();
+       return;
+      }
+
+      // found
+      if (class_id == int_from_addr(itable)) {
+        break;
+      }
+
+      itable += 8;
+    }
+
+    // method table of the receiver class
+    address table = int_from_addr(itable + 4) + ci;
+    address method = *(address*)(table + method_index * 4);
+    invoke_java_method(method, 5);
+  BYTECODE_IMPL_END
+
+  static void bc_impl_fast_invokenative_internal();
+
+  static void invokenative_return_point() {        	
+    if (GET_THREAD_INT(async_redo)) {
+      // Clear Thread.async_redo so that we won't loop indefinitely
+      SET_THREAD_INT(async_redo, 0);
+      bc_impl_fast_invokenative_internal();
+      return;
+    }
+
+    // Clear async_info (even if the methods was never redone)
+    SET_THREAD_INT(async_info, 0);
+
+    // Clear async_info (even if the methods was never redone)
+    SET_THREAD_INT(async_info, 0);
+
+    switch (GET_BYTE(0)) {
+      case T_INT:
+        PUSH(GET_THREAD_INT(int1_value));
+        bc_impl_ireturn_internal();
+        break;
+
+      case T_FLOAT:
+        PUSH(GET_THREAD_INT(int1_value));
+        bc_impl_freturn_internal();
+        break;
+
+      case T_VOID:
+        bc_impl_return_internal();
+        break;
+
+      case T_LONG:
+        PUSH(GET_THREAD_INT(int2_value));
+        PUSH(GET_THREAD_INT(int1_value));
+        bc_impl_lreturn_internal();
+        break;
+
+      case T_DOUBLE:
+        PUSH(GET_THREAD_INT(int2_value));
+        PUSH(GET_THREAD_INT(int1_value));
+        bc_impl_dreturn_internal();
+        break;
+
+      case T_OBJECT:
+        PUSH(GET_THREAD_INT(obj_value));
+        bc_impl_areturn_internal();
+        break;
+
+      default:
+        SHOULD_NOT_REACH_HERE();
+    }
+  }
+
+  BYTECODE_IMPL(fast_invokenative)
+    address method = callee_method();
+    // Point _kni_parameter_base to the first parameter
+    address locals = g_jlocals;
+
+    // Set space for fake parameter for static method (KNI-ism)
+    if (get_access_flags(method) & JVM_ACC_STATIC) {
+      locals += 4;
+    }
+    _kni_parameter_base = locals;
+
+    // Get the native method pointer from the bytecode
+    address native_ptr =
+      *(address*)(g_jpc + Method::native_code_offset_from_bcp());
+
+    method_transition();
+
+    shared_call_vm_internal(native_ptr, (address)&invokenative_return_point,
+                            (BasicType)GET_BYTE(0), 0);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_new)
+    bc_impl_new();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_init_new)
+    bc_impl_new();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_anewarray)
+    bc_impl_anewarray();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_checkcast)
+    bc_impl_checkcast();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_instanceof)
+    bc_impl_instanceof();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_invokevirtual_final)
+    fast_invoke_internal(true, true, 3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_invokespecial)
+    // Get constant pool index
+    jushort idx = GET_SHORT(0);
+    // Get constant pool of current method
+    address cpool = GET_FRAME(cpool);
+    // Get vtable index from constant pool entry
+    jushort vindex = first_ushort_from_cpool(cpool, idx);
+    // Get the class id from constant pool entry
+    jushort klazz_id = second_ushort_from_cpool(cpool, idx);
+    // Get class by its id
+    address klazz = get_class_by_id(klazz_id);
+    // Get the ClassInfo
+    address ci = *(address*)(klazz + JavaClass::class_info_offset());
+    // Get method from vtable of the ClassInfo
+    address method = get_method_from_ci(ci, vindex);
+    // Get the number of parameters from method
+    jushort num_params = get_num_params(method);
+    // Get receiver object and perform the null check
+    address receiver = OBJ_PEEK(num_params - 1);
+    NULL_CHECK(receiver);
+
+    invoke_java_method(method, 3);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_igetfield_1)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jint*)(obj + GET_BYTE(0) * 4));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(fast_agetfield_1)
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    OBJ_PUSH(*(address*)(obj + GET_BYTE(0) * 4));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+#if !ENABLE_CPU_VARIANT
+
+  BYTECODE_IMPL(aload_0_fast_igetfield_1)
+    aload(0);
+    bc_impl_fast_igetfield_1_internal();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_0_fast_igetfield_4)
+    aload(0);
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jint*)(obj + 4));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_0_fast_igetfield_8)
+    aload(0);
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    PUSH(*(jint*)(obj + 8));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_0_fast_agetfield_1)
+    aload(0);
+    bc_impl_fast_agetfield_1_internal();
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_0_fast_agetfield_4)
+    aload(0);
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    OBJ_PUSH(*(address*)(obj + 4));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(aload_0_fast_agetfield_8)
+    aload(0);
+    address obj = OBJ_POP();
+    NULL_CHECK(obj);
+    OBJ_PUSH(*(address*)(obj + 8));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(init_static_array)
+    address ref = OBJ_PEEK(0);
+    NULL_CHECK(ref);
+    int size_factor = 1 << (int)GET_BYTE(0);
+    int count = (jushort)GET_SHORT_NATIVE(1);
+    int len = GET_ARRAY_LENGTH(ref);
+    if (count < 0 || count > len) {
+      interpreter_throw_ArrayIndexOutOfBoundsException();
+      return;
+    }
+    jvm_memcpy(ref + Array::base_offset(), (g_jpc + 4), count * size_factor);
+    ADVANCE(4 + size_factor * count);
+  BYTECODE_IMPL_END
+
+#elif ENABLE_ARM11_JAZELLE_DLOAD_BUG_WORKAROUND
+
+  BYTECODE_IMPL(lload_safe)
+    lload(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(lstore_safe)
+    lstore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dload_safe)
+    dload(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+  BYTECODE_IMPL(dstore_safe)
+    dstore(GET_BYTE(0));
+    ADVANCE(2);
+  BYTECODE_IMPL_END
+
+#endif
+
+  BYTECODE_IMPL(pop_and_npe_if_null)
+    NULL_CHECK(OBJ_POP());
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+
+  END_BYTECODES
+
+  void undef_bc() {
+    tty->print_cr("Undefined bytecode hit: 0x%x at %x", *g_jpc, g_jpc);
+    BREAKPOINT;
+  }
+
+} /* of extern "C" */
+
+
+#define DEF_BC(name)               \
+    interpreter_dispatch_table[Bytecodes::_##name] = &bc_impl_##name
+#define DEF_BC_WIDE(name)          \
+    interpreter_dispatch_table[Bytecodes::_##name + WIDE_OFFSET] = \
+       &bc_impl_##name##_wide
+#if ENABLE_FLOAT
+#define DEF_BC_FLOAT(name)          \
+    interpreter_dispatch_table[Bytecodes::_##name] = \
+       &bc_impl_##name
+#else
+#define DEF_BC_FLOAT(name)
+#endif
+
+static void init_dispatch_table() {
+  DEF_BC(nop);
+  DEF_BC(aconst_null);
+  DEF_BC(iconst_m1);
+  DEF_BC(iconst_0);
+  DEF_BC(iconst_1);
+  DEF_BC(iconst_2);
+  DEF_BC(iconst_3);
+  DEF_BC(iconst_4);
+  DEF_BC(iconst_5);
+  DEF_BC(lconst_0);
+  DEF_BC(lconst_1);
+  DEF_BC(fconst_0);
+  DEF_BC(fconst_1);
+  DEF_BC(fconst_2);
+  DEF_BC(dconst_0);
+  DEF_BC(dconst_1);
+  DEF_BC(bipush);
+  DEF_BC(sipush);
+  DEF_BC(ldc);
+  DEF_BC(ldc_w);
+  DEF_BC(ldc2_w);
+  DEF_BC(iload);
+  DEF_BC_WIDE(iload);
+  DEF_BC(lload);
+  DEF_BC_WIDE(lload);
+  DEF_BC(fload);
+  DEF_BC_WIDE(fload);
+  DEF_BC(dload);
+  DEF_BC_WIDE(dload);
+  DEF_BC(aload);
+  DEF_BC_WIDE(aload);
+  DEF_BC(iload_0);
+  DEF_BC(iload_1);
+  DEF_BC(iload_2);
+  DEF_BC(iload_3);
+  DEF_BC(lload_0);
+  DEF_BC(lload_1);
+  DEF_BC(lload_2);
+  DEF_BC(lload_3);
+  DEF_BC(fload_0);
+  DEF_BC(fload_1);
+  DEF_BC(fload_2);
+  DEF_BC(fload_3);
+  DEF_BC(dload_0);
+  DEF_BC(dload_1);
+  DEF_BC(dload_2);
+  DEF_BC(dload_3);
+  DEF_BC(aload_0);
+  DEF_BC(aload_1);
+  DEF_BC(aload_2);
+  DEF_BC(aload_3);
+  DEF_BC(iaload);
+  DEF_BC(laload);
+  DEF_BC(faload);
+  DEF_BC(daload);
+  DEF_BC(aaload);
+  DEF_BC(baload);
+  DEF_BC(caload);
+  DEF_BC(saload);
+  DEF_BC(istore);
+  DEF_BC_WIDE(istore);
+  DEF_BC(lstore);
+  DEF_BC_WIDE(lstore);
+  DEF_BC(fstore);
+  DEF_BC_WIDE(fstore);
+  DEF_BC(dstore);
+  DEF_BC_WIDE(dstore);
+  DEF_BC(astore);
+  DEF_BC_WIDE(astore);
+  DEF_BC(istore_0);
+  DEF_BC(istore_1);
+  DEF_BC(istore_2);
+  DEF_BC(istore_3);
+  DEF_BC(lstore_0);
+  DEF_BC(lstore_1);
+  DEF_BC(lstore_2);
+  DEF_BC(lstore_3);
+  DEF_BC(fstore_0);
+  DEF_BC(fstore_1);
+  DEF_BC(fstore_2);
+  DEF_BC(fstore_3);
+  DEF_BC(dstore_0);
+  DEF_BC(dstore_1);
+  DEF_BC(dstore_2);
+  DEF_BC(dstore_3);
+  DEF_BC(astore_0);
+  DEF_BC(astore_1);
+  DEF_BC(astore_2);
+  DEF_BC(astore_3);
+  DEF_BC(iastore);
+  DEF_BC(lastore);
+  DEF_BC(fastore);
+  DEF_BC(dastore);
+  DEF_BC(aastore);
+  DEF_BC(bastore);
+  DEF_BC(castore);
+  DEF_BC(sastore);
+  DEF_BC(pop);
+  DEF_BC(pop2);
+  DEF_BC(dup);
+  DEF_BC(dup_x1);
+  DEF_BC(dup_x2);
+  DEF_BC(dup2);
+  DEF_BC(dup2_x1);
+  DEF_BC(dup2_x2);
+  DEF_BC(swap);
+  DEF_BC(iadd);
+  DEF_BC(ladd);
+  DEF_BC_FLOAT(fadd);
+  DEF_BC_FLOAT(dadd);
+  DEF_BC(isub);
+  DEF_BC(lsub);
+  DEF_BC_FLOAT(fsub);
+  DEF_BC_FLOAT(dsub);
+  DEF_BC(imul);
+  DEF_BC(lmul);
+  DEF_BC(fmul);
+  DEF_BC(dmul);
+  DEF_BC(idiv);
+  DEF_BC(ldiv);
+  DEF_BC(fdiv);
+  DEF_BC(ddiv);
+  DEF_BC(irem);
+  DEF_BC(lrem);
+  DEF_BC_FLOAT(frem);
+  DEF_BC_FLOAT(drem);
+  DEF_BC(ineg);
+  DEF_BC(lneg);
+  DEF_BC_FLOAT(fneg);
+  DEF_BC_FLOAT(dneg);
+  DEF_BC(ishl);
+  DEF_BC(lshl);
+  DEF_BC(ishr);
+  DEF_BC(lshr);
+  DEF_BC(iushr);
+  DEF_BC(lushr);
+  DEF_BC(iand);
+  DEF_BC(land);
+  DEF_BC(ior);
+  DEF_BC(lor);
+  DEF_BC(ixor);
+  DEF_BC(lxor);
+  DEF_BC(iinc);
+  DEF_BC_WIDE(iinc);
+  DEF_BC(i2l);
+  DEF_BC(i2f);
+  DEF_BC(i2d);
+  DEF_BC(l2i);
+  DEF_BC(l2f);
+  DEF_BC_FLOAT(l2d);
+  DEF_BC(f2i);
+  DEF_BC(f2l);
+  DEF_BC(f2d);
+  DEF_BC(d2i);
+  DEF_BC_FLOAT(d2l);
+  DEF_BC(d2f);
+  DEF_BC(i2b);
+  DEF_BC(i2c);
+  DEF_BC(i2s);
+  DEF_BC(lcmp);
+  DEF_BC_FLOAT(fcmpl);
+  DEF_BC_FLOAT(fcmpg);
+  DEF_BC_FLOAT(dcmpl);
+  DEF_BC_FLOAT(dcmpg);
+  DEF_BC(ifeq);
+  DEF_BC(ifne);
+  DEF_BC(iflt);
+  DEF_BC(ifge);
+  DEF_BC(ifgt);
+  DEF_BC(ifle);
+  DEF_BC(if_icmpeq);
+  DEF_BC(if_icmpne);
+  DEF_BC(if_icmplt);
+  DEF_BC(if_icmpge);
+  DEF_BC(if_icmpgt);
+  DEF_BC(if_icmple);
+  DEF_BC(if_acmpeq);
+  DEF_BC(if_acmpne);
+  DEF_BC(goto);
+  DEF_BC(tableswitch);
+  DEF_BC(lookupswitch);
+  DEF_BC(ireturn);
+  DEF_BC(lreturn);
+  DEF_BC(freturn);
+  DEF_BC(dreturn);
+  DEF_BC(areturn);
+  DEF_BC(return);
+  DEF_BC(getstatic);
+  DEF_BC(putstatic);
+  DEF_BC(getfield);
+  DEF_BC(putfield);
+  DEF_BC(invokevirtual);
+  DEF_BC(invokespecial);
+  DEF_BC(invokestatic);
+  DEF_BC(invokeinterface);
+  DEF_BC(new);
+  DEF_BC(newarray);
+  DEF_BC(newarray);
+  DEF_BC(arraylength);
+  DEF_BC(athrow);
+  DEF_BC(checkcast);
+  DEF_BC(instanceof);
+  DEF_BC(monitorenter);
+  DEF_BC(monitorexit);
+  DEF_BC(wide);
+  DEF_BC(anewarray);
+  DEF_BC(multianewarray);
+  DEF_BC(ifnull);
+  DEF_BC(ifnonnull);
+  DEF_BC(goto_w);
+  DEF_BC(breakpoint);
+  DEF_BC(fast_1_ldc);
+  DEF_BC(fast_1_ldc_w);
+  DEF_BC(fast_2_ldc_w);
+  DEF_BC(fast_1_putstatic);
+  DEF_BC(fast_2_putstatic);
+  DEF_BC(fast_a_putstatic);
+  DEF_BC(fast_1_getstatic);
+  DEF_BC(fast_2_getstatic);
+  DEF_BC(fast_bputfield);
+  DEF_BC(fast_sputfield);
+  DEF_BC(fast_iputfield);
+  DEF_BC(fast_lputfield);
+  DEF_BC(fast_fputfield);
+  DEF_BC(fast_dputfield);
+  DEF_BC(fast_aputfield);
+  DEF_BC(fast_bgetfield);
+  DEF_BC(fast_sgetfield);
+  DEF_BC(fast_igetfield);
+  DEF_BC(fast_lgetfield);
+  DEF_BC(fast_fgetfield);
+  DEF_BC(fast_dgetfield);
+  DEF_BC(fast_agetfield);
+  DEF_BC(fast_cgetfield);
+  DEF_BC(fast_invokevirtual);
+  DEF_BC(fast_invokestatic);
+  DEF_BC(fast_invokeinterface);
+  DEF_BC(fast_invokenative);
+  DEF_BC(fast_new);
+  DEF_BC(fast_anewarray);
+  DEF_BC(fast_checkcast);
+  DEF_BC(fast_instanceof);
+  DEF_BC(fast_invokevirtual_final);
+  DEF_BC(fast_invokespecial);
+  DEF_BC(fast_invokespecial);
+  DEF_BC(fast_igetfield_1);
+  DEF_BC(fast_agetfield_1);
+#if !ENABLE_CPU_VARIANT
+  DEF_BC(aload_0_fast_igetfield_1);
+  DEF_BC(aload_0_fast_igetfield_4);
+  DEF_BC(aload_0_fast_igetfield_8);
+  DEF_BC(aload_0_fast_agetfield_1);
+  DEF_BC(aload_0_fast_agetfield_4);
+  DEF_BC(aload_0_fast_agetfield_8);
+  DEF_BC(init_static_array);
+#elif ENABLE_ARM11_JAZELLE_DLOAD_BUG_WORKAROUND
+  //used to replace ordinary bytecodes for some versions of JAZELLE 
+  DEF_BC(lload_safe);
+  DEF_BC(lstore_safe);
+  DEF_BC(dload_safe);
+  DEF_BC(dstore_safe);
+#endif 
+  DEF_BC(pop_and_npe_if_null);
+  DEF_BC(fast_init_1_putstatic);
+  DEF_BC(fast_init_2_putstatic);
+  DEF_BC(fast_init_a_putstatic);
+  DEF_BC(fast_init_1_getstatic);
+  DEF_BC(fast_init_2_getstatic);
+  DEF_BC(fast_init_invokestatic);
+  DEF_BC(fast_init_new);
+}
+#undef DEF_BC
+#undef DEF_BC_WIDE
+
+// we couldn't use tty here, as it could be not initialized yet
+// on all target platforms for C interpreter fprtinf(stderr, ...)
+// is acceptable
+#define MY_GUARANTEE(cond, str) \
+    if (!(cond)) {              \
+       fprintf(stderr, ">>>>>> C INTERPRETER: %s\n", str);      \
+       BREAKPOINT;              \
+    }
+
+static void init() {
+  // put all built-in limitations here
+  MY_GUARANTEE(!TaggedJavaStack, "tagged stack not supported");
+  MY_GUARANTEE(JavaStackDirection < 0, "Cannot handle forward stacks");
+
+  inside_interpreter = false;
+
+#if ENABLE_FLOAT
+  // initialize FPU unit if needed
+  InitFPU();
+#endif
+
+  // make it clean
+  for (int i=0; i < ARRAY_SIZE(interpreter_dispatch_table); i++) {
+    interpreter_dispatch_table[i] = &undef_bc;
+  }
+  // init bytecodes dispatch table
+  init_dispatch_table();
+}
+#undef MY_GUARANTEE
+
+// interpreter
+static void Interpret() {
+  register address jpc;
+      
+  // Start a new thread or continue in another existing thread
+  // after thread termination.
+  // NOTE that it also can invoke longjmp, so it must be called after setjmp
+  resume_thread();
+
+  push_global_registers
+  load_all_java_pointers
+
+  
+  /**
+   * M@x: use GP to remember interpreter_dispatch_table base addr, since all PSP codes
+   *          compiled with -G0
+   **/
+  __asm__ __volatile__ (
+  "move $gp, %0\n"
+  ::"r"(interpreter_dispatch_table)
+  );
+  
+
+  
+  // process bytecodes in the infinite loop
+  if (TraceBytecodes) {
+    for (;;) {
+      save_all_java_pointers      
+      interpreter_call_vm((address)&trace_bytecode, T_VOID);
+      load_all_java_pointers
+      	
+      __asm__ __volatile__ (
+      	  "move %0, $"REG_JPC"\n"
+      	  :"=r"(jpc)
+      	);
+      interpreter_dispatch_table[*jpc]();
+    }
+  } else {
+    for (;;) {
+      __asm__ __volatile__ (
+	"lbu $v0, 0($"REG_JPC")\n" \
+	"sll $v0, $v0, 2\n" \
+	"addu $v0, $v0, $gp\n" \
+	"lw $v1, 0($v0)\n" \
+	"jalr $v1\n" \
+	"nop\n" \
+      	);
+      //interpreter_dispatch_table[*jpc]();
+    }
+  }
+
+  save_all_java_pointers
+  pop_global_registers
+
+  return;
+}
+
+void primordial_to_current_thread() {
+  // Mark that primordial_to_current_thread() was called.
+  // JVM::stop() checks this variable and calls current_thread_to_primordial()
+  _primordial_sp = (address) 1;
+  do {
+    // We use longjmp to exit from interpreter;
+    // this helps us to avoid additional checks on every bytecode execution.
+    // WARNING: no stack objects are allowed in interpreter implementation
+    int rv = setjmp(interpreter_env);
+    if (rv == JMP_ENTER) {
+      GUARANTEE(!inside_interpreter, "Cannot enter interpreter recursively");
+      inside_interpreter = true;
+      Interpret();
+      SHOULD_NOT_REACH_HERE(); // Interpret() can exit only by longjmp
+    }
+    inside_interpreter = false;
+
+    if (rv == JMP_CONTEXT_CHANGED) {
+      continue;
+    } else if (rv == JMP_STOPPED_MANUALLY || Universe::is_stopping()) {
+      break;
+    }
+    GUARANTEE(rv == JMP_THREAD_EXIT, "no other values");
+
+    if (CURRENT_HAS_PENDING_EXCEPTION) {
+      Thread::lightweight_thread_uncaught_exception();
+    }
+    if (!TestCompiler) {
+      Thread::finish();
+      force_terminated(Thread::current());
+    }
+#if ENABLE_ISOLATES
+    thread_task_cleanup();
+#endif
+    Thread::lightweight_thread_exit();
+  } while (Scheduler::get_next_runnable_thread()->not_null());
+}
+
+void current_thread_to_primordial() {
+  BREAK_INTERPRETER_LOOP(JMP_STOPPED_MANUALLY);
+}
+
+void call_on_primordial_stack(void (*)(void)) {
+  SHOULD_NOT_REACH_HERE();
+}
+
+void invoke_pending_entries(Thread* thread) {
+  SHOULD_NOT_REACH_HERE();
+}
+
+// simple way to do global initialization
+class Initer {
+public:
+  Initer() {
+    // IMPL_NOTE: consider whether this should be fixed
+    init();
+  }
+  static Initer me;
+};
+
+Initer Initer::me;
+
+typedef struct JavaFrameDebug {
+  int stack_bottom_pointer;
+  int stored_int_value1;
+  int stored_int_value2;
+  int bcp_store;
+  int locals_pointer;
+  int cpool;
+  int method;
+  int caller_fp;
+  int return_address;
+} JavaFrameDebug;
+
+JavaFrameDebug * jfp_debug() {
+  return (JavaFrameDebug*)( ((int)g_jfp) +
+                            JavaFrame::stack_bottom_pointer_offset() );
+}
+
+#if ENABLE_COMPILER
+bool __is_arm_compiler_active() {
+  return Compiler::is_active();
+}
+#endif
+
+#if ENABLE_CPU_VARIANT
+extern "C" {
+  void initialize_cpu_variant() {}
+  void enable_cpu_variant() {}
+  void disable_cpu_variant() {}
+
+  void bytecode_dispatch_0x0FE() {}
+  void bytecode_dispatch_0x0FF() {}
+  void bytecode_dispatch_0x100() {}
+  void bytecode_dispatch_0x101() {}
+  void bytecode_dispatch_0x102() {}
+  void bytecode_dispatch_0x103() {}
+  void bytecode_dispatch_0x104() {}
+  void bytecode_dispatch_0x105() {}
+}
+#endif
+
+#if ENABLE_REFLECTION || ENABLE_JAVA_DEBUGGER
+  void entry_return_void()   {}
+  void entry_return_word()   {}
+  void entry_return_long()   {}
+  void entry_return_float()  {}
+  void entry_return_double() {}
+  void entry_return_object() {}
+#endif
+#if  ENABLE_JAVA_DEBUGGER
+  void shared_call_vm_oop_return() {}
+#endif
+
+extern "C" {
+  void wmmx_set_timer_tick() { }
+  void wmmx_clear_timer_tick() { }
+
+  // fast globals can be defined in ASM loop, for AOT romizer
+#if !CROSS_GENERATOR
+  JVMFastGlobals  jvm_fast_globals;
+#endif
+  void * _current_thread_addr = &jvm_fast_globals.current_thread;
+
+#if ENABLE_FAST_MEM_ROUTINES || defined(USE_LIBC_GLUE)
+void* jvm_memcpy(void *dest, const void *src, int n) {
+  return (void*)memcpy(dest, src, n);
+}
+int jvm_memcmp(const void *s1, const void *s2, int n) {
+  return (int)memcmp(s1, s2, n);
+}
+#endif
+
+#if !defined(PRODUCT) || ENABLE_TTY_TRACE
+// These are to allow stack walking, e.g. ps(), even when executing bytecodes
+bool update_java_pointers() {
+  if (g_jfp == NULL || g_jsp == NULL) {
+    return false;
+  }
+  const int bci = g_jpc - (GET_FRAME(method) + Method::base_offset());
+  if (bci < 0 || bci >= 65536) {
+    return false;
+  }
+  SET_THREAD_INT(last_java_fp, (jint)g_jfp);
+  SET_THREAD_INT(last_java_sp, (jint)g_jsp);
+  SET_FRAME(bcp_store, g_jpc);
+  SET_FRAME(locals_pointer, g_jlocals);
+  return true;
+}
+
+void revert_java_pointers() {
+  SET_THREAD_INT(last_java_fp, 0);
+  SET_THREAD_INT(last_java_sp, 0);
+}
+#endif
+
+#if ENABLE_ARM_VFP
+void vfp_redo() {}
+void vfp_fcmp_redo() {}
+void vfp_double_redo() {}
+void vfp_dcmp_redo() {}
+#endif
+
+#if ENABLE_PAGE_PROTECTION
+// Take care of page-boundary alignment of _protected_page variable
+#ifdef __GNUC__
+#define ALIGN(x) __attribute__ ((aligned (x)))
+unsigned char _protected_page[PROTECTED_PAGE_SIZE] ALIGN(4096);
+#else 
+unsigned char _dummy1[PROTECTED_PAGE_SIZE];
+unsigned char _protected_page[PROTECTED_PAGE_SIZE];
+unsigned char _dummy2[PROTECTED_PAGE_SIZE];
+#endif // __GNUC__
+#endif // ENABLE_PAGE_PROTECTION
+
+
+#endif // MIPS
 } // extern "C"
