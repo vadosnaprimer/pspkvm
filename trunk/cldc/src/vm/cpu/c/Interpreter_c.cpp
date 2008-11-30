@@ -4880,19 +4880,32 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " add $"REG_JSP", $"REG_JSP", 4\n" \
                                           :::#r); \
                                           __asm__ __volatile__(
+
+#define PUSH_FLOAT_ASM(r)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sub $"REG_JSP", $"REG_JSP", 4\n" \
+                                          " swc1 $"#r", 0($"REG_JSP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(
+                                          
+#define POP_FLOAT_ASM(r)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lwc1 $"#r", 0($"REG_JSP") \n" \
+                                          " add $"REG_JSP", $"REG_JSP", 4\n" \
+                                          ); \
+                                          __asm__ __volatile__(
+
 #define GET_SIGNED_BYTE_ASM(x, r) \
 	                                   "\n");\
 	                                   __asm__ __volatile__( \
-                                          " addiu $"#r", $"REG_JPC", 1\n" \
-                                          " lb $"#r", "#x"($"#r") \n" \
+                                          " lb $"#r", "#x"+1($"REG_JPC") \n" \
                                           :::#r); \
                                           __asm__ __volatile__(
 
 #define GET_BYTE_ASM(x, r) \
 	                                   "\n");\
 	                                   __asm__ __volatile__( \
-                                          " addiu $"#r", $"REG_JPC", 1\n" \
-                                          " lbu $"#r", "#x"($"#r") \n" \
+                                          " lbu $"#r", "#x"+1($"REG_JPC") \n" \
                                           :::#r); \
                                           __asm__ __volatile__(
                                           
@@ -4913,7 +4926,75 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " sw $"#v", 0($t7) \n" \
                                           :::#r, #v, "t7"); \
                                           __asm__ __volatile__(
+
+#define ASM_SUBCALL_DECL(n, x) \
+	void BRANCH_ASM_SUBCALL_##n() __attribute__((noinline));  \
+	void BRANCH_ASM_SUBCALL_##n() { \
+	      save_all_java_pointers \
+	      x ; \
+	      load_all_java_pointers \
+       }
+
+#define ASM_SUBCALL(n) \
+	__asm__ __volatile__ ( \
+	"j BRANCH_ASM_SUBCALL_"#n"\n" \
+	);
+
+ASM_SUBCALL_DECL(BRANCH_1,
+                                  interpreter_call_vm_1((address)&timer_tick, T_VOID, (jint)NATIVE_ARG))
+
+#if (USE_THREADED_MIPS_INTERPRETER)
+
+#define BRANCH_ASM(c) "\n" );\
+	      __asm__ __volatile__ ( \
+	       c" 1f\n" \
+       	"lbu $v0, 3($"REG_JPC")\n" \
+       	"sll $v0, $v0, 2\n" \
+       	"addu $v0, $v0, $gp\n" \
+       	"lw $v1, 0($v0)\n" \
+       	"addu $"REG_JPC", $"REG_JPC", 3\n" \
+       	"j $v1\n" \
+       	"1: \n" \
+	      "lbu $v1, 1($"REG_JPC")\n" \
+	      "lbu $v0, 2($"REG_JPC")\n" \
+	      "sll $v1, $v1, 8\n" \
+	      "or $v1, $v1, $v0\n" \
+	      "seh $v1, $v1\n" \
+	      "addu $"REG_JPC", $"REG_JPC", $v1\n" \
+	      "bgtz %0, 2f\n" \
+	      	"lbu $v0, 0($"REG_JPC")\n" \
+       	"sll $v0, $v0, 2\n" \
+       	"addu $v0, $v0, $gp\n" \
+       	"lw $v1, 0($v0)\n" \
+       	"j $v1\n" \
+       	"nop\n" \
+	      "2: \n" \
+	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
+	      ASM_SUBCALL(BRANCH_1) \
+             __asm__ __volatile__ (
+#else
 	
+#define BRANCH_ASM(c) "\n" );\
+	      __asm__ __volatile__ ( \
+	      c" 1f\n" \
+              "addu $"REG_JPC", $"REG_JPC", 3\n" \
+              "jr $ra\n" \
+       	"1: \n" \
+	      "lbu $v1, 1($"REG_JPC")\n" \
+	      "lbu $v0, 2($"REG_JPC")\n" \
+	      "sll $v1, $v1, 8\n" \
+	      "or $v1, $v1, $v0\n" \
+	      "seh $v1, $v1\n" \
+	      "addu $"REG_JPC", $"REG_JPC", $v1\n" \
+	      "bgtz %0, 2f\n" \
+	      "jr $ra\n" \
+	      "2: \n" \
+	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
+	      ASM_SUBCALL(BRANCH_1) \
+             __asm__ __volatile__ (
+
+#endif
+
   START_BYTECODES
 
   BYTECODE_IMPL_ASM(nop)            	  
@@ -5524,12 +5605,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
   BYTECODE_IMPL_END
 
 #if ENABLE_FLOAT
-  BYTECODE_IMPL(fadd)
-    jfloat val1 = FLOAT_POP();
-    jfloat val2 = FLOAT_POP();
-    FLOAT_PUSH(jvm_fadd(val1, val2));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fadd)
+    POP_FLOAT_ASM(f12)
+    POP_FLOAT_ASM(f13)
+    "add.s	$f0,$f12,$f13\n"
+    PUSH_FLOAT_ASM(f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dadd)
     jdouble val1 = DOUBLE_POP();
@@ -5554,12 +5635,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
   BYTECODE_IMPL_END
 
 #if ENABLE_FLOAT
-  BYTECODE_IMPL(fsub)
-    jfloat val2 = FLOAT_POP();
-    jfloat val1 = FLOAT_POP();
-    FLOAT_PUSH(jvm_fsub(val1, val2));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fsub)
+    POP_FLOAT_ASM(f13)
+    POP_FLOAT_ASM(f12)
+    "sub.s	$f0,$f12,$f13\n"
+    PUSH_FLOAT_ASM(f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dsub)
     jdouble val2 = DOUBLE_POP();
@@ -5569,12 +5650,13 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
   BYTECODE_IMPL_END
 #endif
 
-  BYTECODE_IMPL(imul)
-    jint val2 = POP();
-    jint val1 = POP();
-    PUSH(val1 * val2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(imul)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(v1)
+    "mult $v1, $t0\n"
+    "mflo $v1\n"
+    PUSH_INT_ASM(v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lmul)
     jlong val2 = LONG_POP();
@@ -5583,12 +5665,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fmul)
-    jfloat val2 = FLOAT_POP();
-    jfloat val1 = FLOAT_POP();
-    FLOAT_PUSH(jvm_fmul(val1, val2));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fmul)
+    POP_FLOAT_ASM(f12)
+    POP_FLOAT_ASM(f13)
+    "mul.s	$f0,$f12,$f13\n"
+    PUSH_FLOAT_ASM(f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dmul)
     jdouble val1 = DOUBLE_POP();
@@ -5706,12 +5788,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
   BYTECODE_IMPL_END
 #endif
 
-  BYTECODE_IMPL(ishl)
-    jint val2 = POP();
-    jint val1 = POP();
-    PUSH(val1 << (val2 & 0x1f));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ishl)
+    POP_INT_ASM(a1)
+    POP_INT_ASM(v1)
+    "sllv	$v1,$v1,$a1\n"
+    PUSH_INT_ASM(v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lshl)
     jint  val2 = POP();
@@ -5720,12 +5802,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(ishr)
-    jint val2 = POP();
-    jint val1 = POP();
-    PUSH(val1 >> (val2 & 0x1f));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ishr)
+    POP_INT_ASM(a1)
+    POP_INT_ASM(v1)
+    "srav	$v1,$v1,$a1\n"
+    PUSH_INT_ASM(v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lshr)
     jint  val2 = POP();
@@ -5734,13 +5816,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(iushr)
-    jint val2 = POP() & 0x1f;
-    jint val1 = POP();
-    val1 = (juint)val1 >> val2;
-    PUSH(val1);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(iushr)
+    POP_INT_ASM(a1)
+    POP_INT_ASM(v1)
+    "srlv	$v1,$v1,$a1\n"
+    PUSH_INT_ASM(v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lushr)
     jint  val2 = POP() & 0x3f;
@@ -5750,12 +5831,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(iand)
-    jint val2 = POP();
-    jint val1 = POP();
-    PUSH(val1 & val2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(iand)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    "and $t0, $t0, $t1\n"
+    PUSH_INT_ASM(t0)    
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(land)
     jlong val2 = LONG_POP();
@@ -5764,12 +5845,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(ior)
-    jint val2 = POP();
-    jint val1 = POP();
-    PUSH(val1 | val2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ior)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    "or $t0, $t0, $t1\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lor)
     jlong val2 = LONG_POP();
@@ -5778,12 +5859,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(ixor)
-    jint val2 = POP();
-    jint val1 = POP();
-    PUSH(val1 ^ val2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ixor)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    "xor $t0, $t0, $t1\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lxor)
     jlong val2 = LONG_POP();
@@ -5933,87 +6014,87 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
   BYTECODE_IMPL_END
 #endif
 
-  BYTECODE_IMPL(ifeq)
-    jint val = POP();
-    branch(val == 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifeq)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("beqz $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(ifne)
-    jint val = POP();
-    branch(val != 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifne)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bnez $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(iflt)
-    jint val = POP();
-    branch(val < 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(iflt)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bltz $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(ifge)
-    jint val = POP();
-    branch(val >= 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifge)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bgez $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(ifgt)
-    jint val = POP();
-    branch(val > 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifgt)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bgtz $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(ifle)
-    jint val = POP();
-    branch(val <= 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifle)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("blez $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_icmpeq)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 == val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_icmpeq)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("beq $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_icmpne)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 != val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_icmpne)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bne $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_icmplt)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 < val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_icmplt)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("blt $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_icmpge)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 >= val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_icmpge)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bge $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_icmpgt)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 > val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_icmpgt)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bgt $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_icmple)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 <= val2);
-   BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_icmple)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("ble $t0, $t1,")
+   BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_acmpeq)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 == val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_acmpeq)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("beq $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(if_acmpne)
-    jint val2 = POP();
-    jint val1 = POP();
-    branch(val1 != val2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(if_acmpne)
+    POP_INT_ASM(t1)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bne $t0, $t1,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(goto)
-    branch(true);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(goto)
+    BRANCH_ASM("j")
+  BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL(tableswitch)
     jint index = POP();
