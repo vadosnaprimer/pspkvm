@@ -187,7 +187,11 @@ typedef struct _pcslMemStruct {
 
 #ifdef PCSL_MEMORY_USE_STATIC
 /* Cannot allocate dynamic memory on the phone. Use static array. */
-static char PcslMemory[DEFAULT_POOL_SIZE];       /* Where PCSL memory starts */
+static char
+#ifndef _MSC_VER
+__attribute__((aligned(16))) 
+#endif
+PcslMemory[DEFAULT_POOL_SIZE];       /* Where PCSL memory starts */
 #else  /* use malloc or similar function provided */
 static char* PcslMemory;                         /* Where PCSL memory starts */
 #endif
