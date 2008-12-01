@@ -6566,6 +6566,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     POP_INT_ASM(t0)
     NULL_CHECK_ASM(t0)
     GET_SHORT_NATIVE_ASM(0, t1)
+    "sll $t1, $t1, 2\n"
     "addu $t0, $t0, $t1\n"
     "lwc1 $f0, 0($t0)\n"
     PUSH_FLOAT_ASM(f0)
