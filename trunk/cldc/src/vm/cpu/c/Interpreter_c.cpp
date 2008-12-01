@@ -29,7 +29,7 @@
 #include <stdarg.h>
 #include <setjmp.h>
 
-#define  USE_MIPS_ASM_OPTIMIZED_INTERPRETER 0
+#define  USE_MIPS_ASM_OPTIMIZED_INTERPRETER 1
 #define USE_THREADED_MIPS_INTERPRETER 0
 
 extern "C" {
@@ -4836,7 +4836,6 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 	"addu $v0, $v0, $gp\n" \
 	"lw $v1, 0($v0)\n" \
 	"j $v1\n" \
-	"nop\n" \
 	);}
 #define BYTECODE_IMPL_END_AND_ADVANCE_ASM(x) \
 	".set noreorder\n" \
@@ -4908,7 +4907,41 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " lbu $"#r", "#x"+1($"REG_JPC") \n" \
                                           :::#r); \
                                           __asm__ __volatile__(
-                                          
+
+#define GET_SHORT_ASM(x, r) \
+						"\n");\
+	                                   __asm__ __volatile__( \
+                                          " lbu $t7, "#x"+1($"REG_JPC") \n" \
+                                          " lbu $"#r", "#x"+2($"REG_JPC") \n" \
+                                          " sll $t7, $t7, 8\n" \
+                                          " or $"#r", $"#r", $t7\n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+
+#define GET_SIGNED_SHORT_ASM(x, r) \
+						"\n");\
+	                                   __asm__ __volatile__( \
+                                          " lb   $t7, "#x"+1($"REG_JPC") \n" \
+                                          " lbu $"#r", "#x"+2($"REG_JPC") \n" \
+                                          " sll $t7, $t7, 8\n" \
+                                          " or $"#r", $"#r", $t7\n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+
+#if HARDWARE_LITTLE_ENDIAN && ENABLE_NATIVE_ORDER_REWRITING
+#define GET_SHORT_NATIVE_ASM(x, r) \
+                                          "\n");\
+	                                   __asm__ __volatile__( \
+                                          " lbu $t7, "#x"+2($"REG_JPC") \n" \
+                                          " lbu $"#r", "#x"+1($"REG_JPC") \n" \
+                                          " sll $t7, $t7, 8\n" \
+                                          " or $"#r", $"#r", $t7\n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+#else
+#define GET_SHORT_NATIVE_ASM(x, r) \
+         GET_SHORT_ASM(x, r)
+#endif                              
 #define GET_LOCAL_ASM(rs, rd) \
 	                                   "\n");\
 	                                   __asm__ __volatile__( \
@@ -4928,20 +4961,29 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           __asm__ __volatile__(
 
 #define ASM_SUBCALL_DECL(n, x) \
-	void BRANCH_ASM_SUBCALL_##n() __attribute__((noinline));  \
-	void BRANCH_ASM_SUBCALL_##n() { \
+	void _ASM_SUBCALL_##n() __attribute__((noinline));  \
+	void _ASM_SUBCALL_##n() { \
 	      save_all_java_pointers \
 	      x ; \
 	      load_all_java_pointers \
        }
 
 #define ASM_SUBCALL(n) \
-	__asm__ __volatile__ ( \
-	"j BRANCH_ASM_SUBCALL_"#n"\n" \
-	);
+	"j _ASM_SUBCALL_"#n"\n"
 
 ASM_SUBCALL_DECL(BRANCH_1,
                                   interpreter_call_vm_1((address)&timer_tick, T_VOID, (jint)NATIVE_ARG))
+
+ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
+                                  interpreter_throw_NullPointerException())
+                                  
+#define NULL_CHECK_ASM(r) "\n" ); \
+	      __asm__ __volatile__ ( \
+	      "bnez $"#r", 1f\n" \
+	      ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+	      "1: \n" \
+	      ); \
+             __asm__ __volatile__ (
 
 #if (USE_THREADED_MIPS_INTERPRETER)
 
@@ -4969,8 +5011,8 @@ ASM_SUBCALL_DECL(BRANCH_1,
        	"j $v1\n" \
        	"nop\n" \
 	      "2: \n" \
-	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
 	      ASM_SUBCALL(BRANCH_1) \
+	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
              __asm__ __volatile__ (
 #else
 	
@@ -4989,10 +5031,9 @@ ASM_SUBCALL_DECL(BRANCH_1,
 	      "bgtz %0, 2f\n" \
 	      "jr $ra\n" \
 	      "2: \n" \
-	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
 	      ASM_SUBCALL(BRANCH_1) \
+	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
              __asm__ __volatile__ (
-
 #endif
 
   START_BYTECODES
@@ -5072,12 +5113,12 @@ ASM_SUBCALL_DECL(BRANCH_1,
   BYTECODE_IMPL_ASM(bipush)
     GET_SIGNED_BYTE_ASM(0, t0)
     PUSH_INT_ASM(t0)
-    BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(sipush)
-    PUSH(GET_SIGNED_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(sipush)
+    GET_SIGNED_SHORT_ASM(0, t0)
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_NO_STEP(ldc)
     interpreter_call_vm_redo((address)&quicken, T_INT);
@@ -5095,12 +5136,13 @@ ASM_SUBCALL_DECL(BRANCH_1,
     GET_BYTE_ASM(0, t0)
     GET_LOCAL_ASM(t0, t1)
     PUSH_INT_ASM(t1)
-    BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(iload_wide)
-    iload(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(iload_wide)
+    GET_SHORT_ASM(0, t0)
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(lload)
     lload(GET_BYTE(0));
@@ -5139,10 +5181,11 @@ ASM_SUBCALL_DECL(BRANCH_1,
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(aload_wide)
-    aload(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(aload_wide)
+    GET_SHORT_ASM(0, t0)
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(iload_0)
     "li $t0, 0\n"
@@ -5310,10 +5353,11 @@ ASM_SUBCALL_DECL(BRANCH_1,
     SET_LOCAL_ASM(t0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(istore_wide)
-    istore(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(istore_wide)
+    GET_SHORT_ASM(0, t0)
+    POP_INT_ASM(t1)
+    SET_LOCAL_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(lstore)
     lstore(GET_BYTE(0));
@@ -5331,10 +5375,11 @@ ASM_SUBCALL_DECL(BRANCH_1,
     SET_LOCAL_ASM(t0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(fstore_wide)
-    fstore(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fstore_wide)
+    GET_SHORT_ASM(0, t0)
+    POP_INT_ASM(t1)
+    SET_LOCAL_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(dstore)
     dstore(GET_BYTE(0));
@@ -5352,10 +5397,11 @@ ASM_SUBCALL_DECL(BRANCH_1,
     SET_LOCAL_ASM(t0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(astore_wide)
-    astore(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(astore_wide)
+    GET_SHORT_ASM(0, t0)
+    POP_INT_ASM(t1)
+    SET_LOCAL_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(istore_0)
     "li $t0, 0\n"
@@ -5706,12 +5752,12 @@ ASM_SUBCALL_DECL(BRANCH_1,
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fdiv)
-    jfloat val2 = FLOAT_POP();
-    jfloat val1 = FLOAT_POP();
-    FLOAT_PUSH(jvm_fdiv(val1, val2));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fdiv)
+    POP_FLOAT_ASM(f12)
+    POP_FLOAT_ASM(f13)
+    "div.s	$f0,$f12,$f13\n"
+    PUSH_FLOAT_ASM(f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(ddiv)
     jdouble val2 = DOUBLE_POP();
@@ -5762,11 +5808,11 @@ ASM_SUBCALL_DECL(BRANCH_1,
   BYTECODE_IMPL_END
 #endif
 
-  BYTECODE_IMPL(ineg)
-    jint val = POP();
-    PUSH(-val);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ineg)
+    POP_INT_ASM(t0)
+    "sub $t0, $zero, $t0\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lneg)
     jlong val = LONG_POP();
@@ -5879,15 +5925,15 @@ ASM_SUBCALL_DECL(BRANCH_1,
     GET_LOCAL_ASM(t0, t2)
     "add $t2, $t2, $t1\n"
     SET_LOCAL_ASM(t0, t2)
-    BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(iinc_wide)
-    jint   n   = GET_SHORT(0);
-    jint   inc = GET_SIGNED_SHORT(2);
-    jint   val = GET_LOCAL(n);
-    SET_LOCAL(n, val + inc);
-    ADVANCE(5);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(iinc_wide)
+    GET_SHORT_ASM(0, t0)
+    GET_SHORT_ASM(2, t1)
+    GET_LOCAL_ASM(t0, t2)
+    "add $t1, $t1, $t2\n"
+    SET_LOCAL_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(5)
 
   BYTECODE_IMPL(i2l)
     jlong val = POP();
@@ -5895,10 +5941,12 @@ ASM_SUBCALL_DECL(BRANCH_1,
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(i2f)
-    FLOAT_PUSH(jvm_i2f(POP()));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(i2f)
+    POP_INT_ASM(t0)
+    "mtc1	$t0,$f1\n"
+    "cvt.s.w	$f0,$f1"
+    PUSH_FLOAT_ASM(f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(i2d)
     DOUBLE_PUSH(jvm_i2d(POP()));
@@ -6281,11 +6329,14 @@ ASM_SUBCALL_DECL(BRANCH_1,
     }
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(wide)
-    ADVANCE(1);
-    load_jpc
-    interpreter_dispatch_table[(int)*g_jpc + WIDE_OFFSET]();
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(wide)
+    ADVANCE_ASM(1)
+    "lbu $v0, 0($"REG_JPC")\n" 
+    "sll $v0, $v0, 2\n" 
+    "addu $v0, $v0, $gp\n"
+    "lw $v1, 255($v0)\n"
+    "j $v1\n" 
+  BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL(multianewarray)
     if (!interpreter_call_vm((address)&multianewarray, T_ARRAY)) {
@@ -6297,20 +6348,29 @@ ASM_SUBCALL_DECL(BRANCH_1,
     }
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(ifnull)
-    jint val = POP();
-    branch(val == 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifnull)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("beqz $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(ifnonnull)
-    jint val = POP();
-    branch(val != 0);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(ifnonnull)
+    POP_INT_ASM(t0)
+    BRANCH_ASM("bnez $t0,")
+  BYTECODE_IMPL_END_ASM
 
-  BYTECODE_IMPL(goto_w)
-    jint offset = GET_INT(0);
-    g_jpc += offset;
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(goto_w)
+    GET_BYTE_ASM(0, t0)
+    GET_BYTE_ASM(1, t1)
+    GET_BYTE_ASM(2, v0)
+    GET_BYTE_ASM(3, v1)
+    "sll $v0, $v0, 8\n"
+    "or $v1, $v0, $v1\n"
+    "sll $t1, $t1, 16\n"
+    "or $v1, $t1, $v1\n"
+    "sll $t0, $t0, 24\n"
+    "or $v1, $t0, $v1\n"
+    "add $"REG_JPC", $"REG_JPC", $v1\n"
+  BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_NO_STEP(breakpoint)
 #if ENABLE_JAVA_DEBUGGER
@@ -6394,29 +6454,33 @@ ASM_SUBCALL_DECL(BRANCH_1,
     bc_impl_fast_2_getstatic();
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fast_bputfield)
-    jbyte value = POP();
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    *(jbyte*)(obj + GET_SHORT_NATIVE(0)) = value;
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_bputfield)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    NULL_CHECK_ASM(t1)
+    GET_SHORT_NATIVE_ASM(0, v0)
+    "addu $v0, $v0, $t1\n"
+    "sb $t0, 0($v0)\n"
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(fast_sputfield)
-    jshort value = POP();
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    *(jshort*)(obj + GET_SHORT_NATIVE(0)) = value;
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_sputfield)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    NULL_CHECK_ASM(t1)
+    GET_SHORT_NATIVE_ASM(0, v0)
+    "addu $v0, $v0, $t1\n"
+    "sh $t0, 0($v0)\n"
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(fast_iputfield)
-    jint value = POP();
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    *(jint*)(obj + GET_SHORT_NATIVE(0) * 4) = value;
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_iputfield)
+    POP_INT_ASM(t0)
+    POP_INT_ASM(t1)
+    NULL_CHECK_ASM(t1)
+    GET_SHORT_NATIVE_ASM(0, v0)
+    "sll $v0, $v0, 2\n"
+    "addu $v0, $v0, $t1\n"
+    "sw $t0, 0($v0)\n"
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(fast_lputfield)
     jlong value = LONG_POP();
@@ -6426,13 +6490,15 @@ ASM_SUBCALL_DECL(BRANCH_1,
     ADVANCE(3);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fast_fputfield)
-    jfloat value = FLOAT_POP();
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    *(jfloat*)(obj + GET_SHORT_NATIVE(0) * 4) = value;
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_fputfield)
+    POP_FLOAT_ASM(f0)
+    POP_INT_ASM(t1)
+    NULL_CHECK_ASM(t1)
+    GET_SHORT_NATIVE_ASM(0, v0)
+    "sll $v0, $v0, 2\n"
+    "addu $v0, $v0, $t1\n"
+    "swc1 $f0, 0($v0)\n"
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(fast_dputfield)
     jdouble value = DOUBLE_POP();
@@ -6452,33 +6518,42 @@ ASM_SUBCALL_DECL(BRANCH_1,
     ADVANCE(3);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fast_bgetfield)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(*(jbyte*)(obj + GET_SHORT_NATIVE(0)));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_bgetfield)
+    POP_INT_ASM(t0)
+    NULL_CHECK_ASM(t0)
+    GET_SHORT_NATIVE_ASM(0, t1)
+    "addu $t0, $t0, $t1\n"
+    "lb $t1, 0($t0)\n"
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(fast_sgetfield)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(*(jshort*)(obj + GET_SHORT_NATIVE(0)));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_sgetfield)
+    POP_INT_ASM(t0)
+    NULL_CHECK_ASM(t0)
+    GET_SHORT_NATIVE_ASM(0, t1)
+    "addu $t0, $t0, $t1\n"
+    "lh $t1, 0($t0)\n"
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(fast_cgetfield)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(*(jushort*)(obj + GET_SHORT_NATIVE(0)));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_cgetfield)
+    POP_INT_ASM(t0)
+    NULL_CHECK_ASM(t0)
+    GET_SHORT_NATIVE_ASM(0, t1)
+    "addu $t0, $t0, $t1\n"
+    "lhu $t1, 0($t0)\n"
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(fast_igetfield)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(*(jint*)(obj + GET_SHORT_NATIVE(0) * 4));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_igetfield)
+    POP_INT_ASM(t0)
+    NULL_CHECK_ASM(t0)
+    GET_SHORT_NATIVE_ASM(0, t1)
+    "sll $t1, $t1, 2\n"
+    "addu $t0, $t0, $t1\n"
+    "lw $t1, 0($t0)\n"
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(fast_lgetfield)
     address obj = OBJ_POP();
@@ -6487,12 +6562,14 @@ ASM_SUBCALL_DECL(BRANCH_1,
     ADVANCE(3);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fast_fgetfield)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    FLOAT_PUSH(*(jfloat*)(obj + GET_SHORT_NATIVE(0) * 4));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_fgetfield)
+    POP_INT_ASM(t0)
+    NULL_CHECK_ASM(t0)
+    GET_SHORT_NATIVE_ASM(0, t1)
+    "addu $t0, $t0, $t1\n"
+    "lwc1 $f0, 0($t0)\n"
+    PUSH_FLOAT_ASM(f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(fast_dgetfield)
     address obj = OBJ_POP();
@@ -6501,12 +6578,15 @@ ASM_SUBCALL_DECL(BRANCH_1,
     ADVANCE(3);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fast_agetfield)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    OBJ_PUSH(*(address*)(obj + GET_SHORT_NATIVE(0) * 4));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_agetfield)
+    POP_INT_ASM(t0)
+    NULL_CHECK_ASM(t0)
+    GET_SHORT_NATIVE_ASM(0, t1)
+    "sll $t1, $t1, 2\n"
+    "addu $t0, $t0, $t1\n"
+    "lw $t1, 0($t0)\n"
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(fast_invokevirtual)
     fast_invoke_internal(false, true, 3);
