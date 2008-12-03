@@ -6,6 +6,7 @@
 package javax.microedition.m3g.opengl;
 
 import javax.microedition.lcdui.Graphics;
+import java.util.Hashtable;
 /**
  * This class provides some help methods to prepare 
  * OpenGL context
@@ -15,23 +16,39 @@ import javax.microedition.lcdui.Graphics;
 public class GLME {
     private static GLME instance;
 
-    private GLCanvas canvas ;
+    private Hashtable graphicsToCanvas = new Hashtable();
+
+    private GLContext glContext;
+
+    private GLME(){
+	//create singleton GLContext for this device
+	glContext = new GLContext();
+    }
 
     public static GLME getInstance() {
-        if(instance == null)
+	if(instance == null)
 	    instance = new GLME();
 
 	return instance;
     }
-    
+
     public GLCanvas getRenderTarget(Graphics g){
-        if(canvas == null)
+	GLCanvas canvas = (GLCanvas)graphicsToCanvas.get(g);
+	if(canvas == null){
 	    canvas = new GLCanvas(g);
-        return canvas;
+	    graphicsToCanvas.put(g, canvas);
+	}
+	if(!glContext.isAttached())
+	    glContext.attach(g);
+	return canvas;
     }
 
     public GL getGL(){
-       return canvas.getContext().getGL(); 
+	return glContext.getGL(); 
+    }
+
+    public GLContext getGLContext(){
+	return glContext;
     }
 
 

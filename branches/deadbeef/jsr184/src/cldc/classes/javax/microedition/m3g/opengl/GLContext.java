@@ -29,37 +29,49 @@ public class GLContext {
 
 
 
-    public GLContext(Graphics g){
-        gc = g;
+    public GLContext(){
 	init();
     }
 
-    public void makeCurrent() {
-        egl.eglMakeCurrent(eglDisplay, eglWindowSurface, eglWindowSurface, eglContext);
+    public void attach(Graphics g){
+	gc = g;
+	eglWindowSurface = egl.eglCreateWindowSurface(eglDisplay, eglConfig, gc, null);
+    }
 
-        //wait for MIDP rendering
+    public void detach(){
+	egl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
+	egl.eglDestroySurface(eglDisplay, eglWindowSurface);
+	gc = null;
+    }
+
+    public boolean isAttached(){
+	return (gc != null);
+    }
+
+    public void makeCurrent() {
+	egl.eglMakeCurrent(eglDisplay, eglWindowSurface, eglWindowSurface, eglContext);
+
+	//wait for MIDP rendering
 	egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, gc);
     }
 
     public void swapBuffers() {
-        jsr239_gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 	jsr239_gl.glFinish();
 
 	egl.eglWaitGL();
 
 	egl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
-
     }
 
     public GL getGL() {
-        if(gl == null){
-            gl = new GL(jsr239_gl); 
+	if(gl == null){
+	    gl = new GL(jsr239_gl); 
 	}
-        return gl;
+	return gl;
     }
 
     public void init() {
-        egl = (EGL11)EGLContext.getEGL();
+	egl = (EGL11)EGLContext.getEGL();
 
 	eglDisplay = egl.eglGetDisplay(egl.EGL_DEFAULT_DISPLAY);
 
@@ -78,7 +90,7 @@ public class GLContext {
 	int stencilSize = EGL10.EGL_DONT_CARE;
 
 	int[] s_configAttribs = {
-            EGL10.EGL_RED_SIZE, redSize,
+	    EGL10.EGL_RED_SIZE, redSize,
 	    EGL10.EGL_GREEN_SIZE, greenSize,
 	    EGL10.EGL_BLUE_SIZE, blueSize,
 	    EGL10.EGL_ALPHA_SIZE, alphaSize,
@@ -95,24 +107,22 @@ public class GLContext {
 
 	jsr239_gl = (GL11)eglContext.getGL();
 
-	eglWindowSurface = egl.eglCreateWindowSurface(eglDisplay, eglConfig, gc, null);
     }
 
+    //should be called by GLME
     public void release() {
-        egl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
 	egl.eglDestroyContext(eglDisplay, eglContext);
-	egl.eglDestroySurface(eglDisplay, eglWindowSurface);
 	egl.eglTerminate(eglDisplay);
     }
 
     int getWidth(){
-        int[] val = new int[1];
+	int[] val = new int[1];
 	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL10.EGL_WIDTH, val);
 	return val[0];
     }
 
     int getHeight(){
-        int[] val = new int[1];
+	int[] val = new int[1];
 	egl.eglQuerySurface(eglDisplay, eglWindowSurface, EGL10.EGL_HEIGHT, val);
 	return val[0];
     }
