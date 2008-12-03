@@ -18,21 +18,21 @@ public class Inflater {
     private native void destroyNativeInflater();
 
     public Inflater(){
-       initNativeInflater(); 
+	initNativeInflater(); 
     }
 
     public void setInput(byte[] b, int offset, int length){
-        compressed_data = b;
+	compressed_data = b;
 	mOffset = offset;
 	mLength = length;
     }
 
     public int inflate(byte[] uncompressed){
-        return inflate(compressed_data, mOffset, mLength, uncompressed);
+	return inflate(compressed_data, mOffset, mLength, uncompressed);
     }
 
     public void end(){
-        destroyNativeInflater();
+	destroyNativeInflater();
     }
 
 }

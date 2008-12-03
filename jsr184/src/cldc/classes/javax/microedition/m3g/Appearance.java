@@ -2,73 +2,73 @@ package javax.microedition.m3g;
 
 public class Appearance extends Object3D {
 
-	int numTextureUnits = 8; // TODO: get from caps
+    int numTextureUnits = 8; // TODO: get from caps
 
-	private int layer = 0;
-	private CompositingMode compositingMode;
-	private Fog fog;
-	private PolygonMode polygonMode;
-	private Material material;
-	private Texture2D[] textures;
-	
-	public Appearance()
-	{
-		textures = new Texture2D[numTextureUnits];
-	}
-	
-	public void setLayer(int layer) {
-		this.layer = layer;
-	}
+    private int layer = 0;
+    private CompositingMode compositingMode;
+    private Fog fog;
+    private PolygonMode polygonMode;
+    private Material material;
+    private Texture2D[] textures;
 
-	public int getLayer() {
-		return layer;
-	}
+    public Appearance()
+    {
+	textures = new Texture2D[numTextureUnits];
+    }
 
-	public void setFog(Fog fog) {
-		this.fog = fog;
-	}
+    public void setLayer(int layer) {
+	this.layer = layer;
+    }
 
-	public Fog getFog() {
-		return fog;
-	}
+    public int getLayer() {
+	return layer;
+    }
 
-	public void setPolygonMode(PolygonMode polygonMode) {
-		this.polygonMode = polygonMode;
-	}
+    public void setFog(Fog fog) {
+	this.fog = fog;
+    }
 
-	public PolygonMode getPolygonMode() {
-		return polygonMode;
-	}
+    public Fog getFog() {
+	return fog;
+    }
 
-	public void setMaterial(Material material) {
-		this.material = material;
-	}
+    public void setPolygonMode(PolygonMode polygonMode) {
+	this.polygonMode = polygonMode;
+    }
 
-	public Material getMaterial() {
-		return material;
-	}
-	
-	public void setCompositingMode(CompositingMode compositingMode)
-	{
-		this.compositingMode = compositingMode;
-	}
-	
-	public CompositingMode getCompositingMode()
-	{
-		return this.compositingMode;
-	}
-	
-	public void setTexture(int index, Texture2D texture)
-	{
-		if (index < 0 || index > numTextureUnits - 1)
-			throw new IndexOutOfBoundsException("index must be in [0," + numTextureUnits + "]");
-		textures[index] = texture;
-	}
-	
-	public Texture2D getTexture(int index)
-	{
-		if (index < 0 || index > numTextureUnits - 1)
-			throw new IndexOutOfBoundsException("index must be in [0," + numTextureUnits + "]");
-		return textures[index];
-	}
+    public PolygonMode getPolygonMode() {
+	return polygonMode;
+    }
+
+    public void setMaterial(Material material) {
+	this.material = material;
+    }
+
+    public Material getMaterial() {
+	return material;
+    }
+
+    public void setCompositingMode(CompositingMode compositingMode)
+    {
+	this.compositingMode = compositingMode;
+    }
+
+    public CompositingMode getCompositingMode()
+    {
+	return this.compositingMode;
+    }
+
+    public void setTexture(int index, Texture2D texture)
+    {
+	if (index < 0 || index > numTextureUnits - 1)
+	    throw new IndexOutOfBoundsException("index must be in [0," + numTextureUnits + "]");
+	textures[index] = texture;
+    }
+
+    public Texture2D getTexture(int index)
+    {
+	if (index < 0 || index > numTextureUnits - 1)
+	    throw new IndexOutOfBoundsException("index must be in [0," + numTextureUnits + "]");
+	return textures[index];
+    }
 }

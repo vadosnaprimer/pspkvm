@@ -17,38 +17,39 @@ import javax.microedition.lcdui.Display;
  */
 public class GLCanvas {
     private Vector renderListeners;
-    
+
     private GLContext glContext;
 
     private Graphics graphics2D;
 
     GLCanvas(Graphics g2D){
-        graphics2D = g2D;
-	glContext = new GLContext(g2D);
+	graphics2D = g2D;
+	glContext = GLME.getInstance().getGLContext();
+	glContext.attach(g2D);
     }
 
-    
+
 
     public void addGLEventListener(RenderEventListener listener) {
-       renderListeners.addElement(listener); 
+	renderListeners.addElement(listener); 
     }
 
     public void removeGLEventListener(RenderEventListener listener){
-       renderListeners.removeElement(listener); 
+	renderListeners.removeElement(listener); 
     }
 
     public void display() {
     }
 
     public GL getGL() {
-        return GLME.getInstance().getGL();
+	return GLME.getInstance().getGL();
     }
 
     public GLContext getContext() {
-       return glContext;
+	return GLME.getInstance().getGLContext();
     }
 
-   
+
     //FIXME: define KNI functions to do this. At this moment, using MIDP API to get displayable dimension
     //using native method to retrive pixel buffer dimension included in target 
     //graphics target for viewport
@@ -57,12 +58,12 @@ public class GLCanvas {
 
 
     public int getWidth() {
-        //return getTargetWidth(graphics2D); 
+	//return getTargetWidth(graphics2D); 
 	return glContext.getWidth();
     }
 
     public int getHeight() {
-        //return getTargetHeight(graphics2D);
+	//return getTargetHeight(graphics2D);
 	return glContext.getHeight();
     }
 }
