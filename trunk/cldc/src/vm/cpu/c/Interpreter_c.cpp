@@ -29,8 +29,12 @@
 #include <stdarg.h>
 #include <setjmp.h>
 
+#if !defined(_DEBUG )
 #define  USE_MIPS_ASM_OPTIMIZED_INTERPRETER 1
-#define USE_THREADED_MIPS_INTERPRETER 0
+#if defined(PRODUCT)
+#define USE_THREADED_MIPS_INTERPRETER 1
+#endif
+#endif
 
 extern "C" {
 
@@ -4829,6 +4833,9 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 
 #endif
 
+#define _ARRAY__length_offset "4"
+#define _WIDE_OFFSET " 255"
+
 #if (USE_THREADED_MIPS_INTERPRETER)
 #define BYTECODE_IMPL_END_ASM \
 	"lbu $v0, 0($"REG_JPC")\n" \
@@ -4838,14 +4845,12 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 	"j $v1\n" \
 	);}
 #define BYTECODE_IMPL_END_AND_ADVANCE_ASM(x) \
-	".set noreorder\n" \
 	"lbu $v0, "#x"($"REG_JPC")\n" \
 	"sll $v0, $v0, 2\n" \
 	"addu $v0, $v0, $gp\n" \
 	"lw $v1, 0($v0)\n" \
-	"j $v1\n" \
 	"addu $"REG_JPC", $"REG_JPC", "#x"\n" \
-	".set reorder\n" \
+	"j $v1\n" \
 	);}
 #else
 #define BYTECODE_IMPL_END_ASM "\n");}
@@ -4855,6 +4860,7 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 #endif
 #define BYTECODE_IMPL_END    }
 
+#define ADJUST_JSP_ASM(x) "add $"REG_JSP", $"REG_JSP", "#x"\n"
 #define ADVANCE_ASM(x) " add $"REG_JPC", $"REG_JPC", "#x"\n"
 #define PUSH_ASM(x) "\n"); \
 	                            __asm__ __volatile__( \
@@ -4868,9 +4874,68 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 
 #define PUSH_INT_ASM(r)  "\n"); \
 	                                   __asm__ __volatile__( \
+                                          " sw $"#r", -4($"REG_JSP") \n" \
                                           " sub $"REG_JSP", $"REG_JSP", 4\n" \
-                                          " sw $"#r", 0($"REG_JSP") \n" \
                                           :::#r); \
+                                          __asm__ __volatile__(
+
+#define PUSH_INT_2_ASM(r1, r2)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r1", -4($"REG_JSP") \n" \
+                                          " sw $"#r2", -8($"REG_JSP") \n" \
+                                          " sub $"REG_JSP", $"REG_JSP", 8\n" \
+                                          :::#r1, #r2); \
+                                          __asm__ __volatile__ (
+                                          
+#define PUSH_INT_ASM_NOSP(offset, r)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r", "#offset"-4($"REG_JSP") \n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+
+#define PUSH_INT_2_ASM_NOSP(offset, r1, r2)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r1", "#offset"-4($"REG_JSP") \n" \
+                                          " sw $"#r2", -8($"REG_JSP") \n" \
+                                          :::#r1, #r2); \
+                                          __asm__ __volatile__(
+
+#define PUSH_INT_3_ASM_NOSP(offset, r1, r2, r3)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r1", "#offset"-4($"REG_JSP") \n" \
+                                          " sw $"#r2", "#offset"-8($"REG_JSP") \n" \
+                                          " sw $"#r3", "#offset"-12($"REG_JSP") \n" \
+                                          :::#r1, #r2, #r3); \
+                                          __asm__ __volatile__(
+
+#define PUSH_INT_4_ASM_NOSP(offset, r1, r2, r3, r4)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r1", "#offset"-4($"REG_JSP") \n" \
+                                          " sw $"#r2", "#offset"-8($"REG_JSP") \n" \
+                                          " sw $"#r3", "#offset"-12($"REG_JSP") \n" \
+                                          " sw $"#r4", "#offset"-16($"REG_JSP") \n" \
+                                          :::#r1, #r2, #r3, #r4); \
+                                          __asm__ __volatile__(
+
+#define PUSH_INT_5_ASM_NOSP(offset, r1, r2, r3, r4, r5)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r1", "#offset"-4($"REG_JSP") \n" \
+                                          " sw $"#r2", "#offset"-8($"REG_JSP") \n" \
+                                          " sw $"#r3", "#offset"-12($"REG_JSP") \n" \
+                                          " sw $"#r4", "#offset"-16($"REG_JSP") \n" \
+                                          " sw $"#r5", "#offset"-20($"REG_JSP") \n" \
+                                          :::#r1, #r2, #r3, #r4, #r5); \
+                                          __asm__ __volatile__(
+
+#define PUSH_INT_6_ASM_NOSP(offset, r1, r2, r3, r4, r5, r6)  "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#r1", "#offset"-4($"REG_JSP") \n" \
+                                          " sw $"#r2", "#offset"-8($"REG_JSP") \n" \
+                                          " sw $"#r3", "#offset"-12($"REG_JSP") \n" \
+                                          " sw $"#r4", "#offset"-16($"REG_JSP") \n" \
+                                          " sw $"#r5", "#offset"-20($"REG_JSP") \n" \
+                                          " sw $"#r5", "#offset"-24($"REG_JSP") \n" \
+                                          :::#r1, #r2, #r3, #r4, #r5, #r6); \
                                           __asm__ __volatile__(
                                           
 #define POP_INT_ASM(r)   "\n"); \
@@ -4878,6 +4943,44 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " lw $"#r", 0($"REG_JSP") \n" \
                                           " add $"REG_JSP", $"REG_JSP", 4\n" \
                                           :::#r); \
+                                          __asm__ __volatile__(
+
+#define POP_INT_2_ASM(r1, r2)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r1", 0($"REG_JSP") \n" \
+                                          " lw $"#r2", 4($"REG_JSP") \n" \
+                                          " add $"REG_JSP", $"REG_JSP", 8\n" \
+                                          :::#r1, #r2); \
+                                          __asm__ __volatile__(
+
+#define POP_INT_ASM_NOSP(offset, r)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r", -"#offset"($"REG_JSP") \n" \
+                                          :::#r); \
+                                          __asm__ __volatile__(
+
+#define POP_INT_2_ASM_NOSP(offset, r1, r2)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r1", -"#offset"($"REG_JSP") \n" \
+                                          " lw $"#r2", -"#offset"+4($"REG_JSP") \n" \
+                                          :::#r1, #r2); \
+                                          __asm__ __volatile__(
+
+#define POP_INT_3_ASM_NOSP(offset, r1, r2, r3)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r1", -"#offset"($"REG_JSP") \n" \
+                                          " lw $"#r2", -"#offset"+4($"REG_JSP") \n" \
+                                          " lw $"#r3", -"#offset"+8($"REG_JSP") \n" \
+                                          :::#r1, #r2, #r3); \
+                                          __asm__ __volatile__(
+
+#define POP_INT_4_ASM_NOSP(offset, r1, r2, r3, r4)   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r1", -"#offset"($"REG_JSP") \n" \
+                                          " lw $"#r2", -"#offset"+4($"REG_JSP") \n" \
+                                          " lw $"#r3", -"#offset"+8($"REG_JSP") \n" \
+                                          " lw $"#r4", -"#offset"+12($"REG_JSP") \n" \
+                                          :::#r1, #r2, #r3, #r4); \
                                           __asm__ __volatile__(
 
 #define PUSH_FLOAT_ASM(r)  "\n"); \
@@ -4894,6 +4997,41 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           ); \
                                           __asm__ __volatile__(
 
+#define POP_FLOAT_ASM_NOSP(offset, f1) "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lwc1 $"#f1", "#offset"($"REG_JSP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(
+
+#define PUSH_FLOAT_ASM_NOSP(offset, f1) "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " swc1 $"#f1", "#offset"-4($"REG_JSP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(
+
+#define POP_FLOAT_2_ASM_NOSP(offset, f1, f2) "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lwc1 $"#f1", -"#offset"($"REG_JSP") \n" \
+                                          " lwc1 $"#f2", -"#offset"+4($"REG_JSP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(
+                                          
+#define PUSH_LONG_ASM(l,h) "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   "sw $"#h", -4($"REG_JSP")\n" \
+	                                   "sw $"#l", -8($"REG_JSP")\n" \
+	                                   "sub $"REG_JSP", $"REG_JSP", 8\n" \
+	                                   ); \
+	                                   __asm__ __volatile__(
+	                                   
+#define POP_LONG_ASM(l,h) "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   "lw $"#l", 0($"REG_JSP")\n" \
+	                                   "lw $"#h", 4($"REG_JSP")\n" \
+	                                   "add $"REG_JSP", $"REG_JSP", 8\n" \
+	                                   ); \
+	                                   __asm__ __volatile__(
+	                                   
 #define GET_SIGNED_BYTE_ASM(x, r) \
 	                                   "\n");\
 	                                   __asm__ __volatile__( \
@@ -4948,8 +5086,34 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " sll $t7, $"#rs", 2\n" \
                                           " subu $t7, $"REG_JLP", $t7\n" \
                                           " lw $"#rd", 0($t7) \n" \
-                                          :::#rs, #rd, "t7"); \
+                                          :::#rd, "t7"); \
                                           __asm__ __volatile__(
+
+#define GET_LOCAL_IMM_ASM(x, rd) \
+	                                   "\n");\
+	                                   __asm__ __volatile__( \
+                                          " lw $"#rd", -"#x"($"REG_JLP") \n" \
+                                          :::#rd); \
+                                          __asm__ __volatile__(
+
+#define GET_LOCAL_LO_IMM_ASM(x, v) \
+                        GET_LOCAL_IMM_ASM(x, v)
+                        
+#define GET_LOCAL_HI_IMM_ASM(x, v) \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " lw $"#v", -"#x"-4($"REG_JLP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(	
+
+#define GET_LOCAL_LO_HI_ASM(r, l, h) \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " sub $t7, $"REG_JLP", $"#r"\n" \
+                                          " lw $"#l", 0($t7) \n" \
+                                          " lw $"#h", -4($t7) \n" \
+                                          :::"t7"); \
+                                          __asm__ __volatile__(	
 
 #define SET_LOCAL_ASM(r, v) \
 	                                   "\n"); \
@@ -4957,8 +5121,34 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " sll $t7, $"#r", 2\n" \
                                           " subu $t7, $"REG_JLP", $t7\n" \
                                           " sw $"#v", 0($t7) \n" \
-                                          :::#r, #v, "t7"); \
+                                          :::"t7"); \
                                           __asm__ __volatile__(
+
+#define SET_LOCAL_IMM_ASM(x, v) \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#v", -"#x"($"REG_JLP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(
+
+#define SET_LOCAL_LO_IMM_ASM(x, v) \
+                        SET_LOCAL_IMM_ASM(x, v)
+                        
+#define SET_LOCAL_HI_IMM_ASM(x, v) \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+                                          " sw $"#v", -"#x"-4($"REG_JLP") \n" \
+                                          ); \
+                                          __asm__ __volatile__(	
+
+#define SET_LOCAL_LO_HI_ASM(r, l, h) \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " sub $t7, $"REG_JLP", $"#r"\n" \
+                                          " sw $"#l", 0($t7) \n" \
+                                          " sw $"#h", -4($t7) \n" \
+                                          :::"t7"); \
+                                          __asm__ __volatile__(	
 
 #define ASM_SUBCALL_DECL(n, x) \
 	void _ASM_SUBCALL_##n() __attribute__((noinline));  \
@@ -5009,7 +5199,6 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
        	"addu $v0, $v0, $gp\n" \
        	"lw $v1, 0($v0)\n" \
        	"j $v1\n" \
-       	"nop\n" \
 	      "2: \n" \
 	      ASM_SUBCALL(BRANCH_1) \
 	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
@@ -5043,7 +5232,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     
   BYTECODE_IMPL_ASM(aconst_null)
     PUSH_ASM(0)
-    BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(iconst_m1)
     PUSH_ASM(-1)
@@ -5160,10 +5349,11 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(fload_wide)
-    fload(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fload_wide)
+    GET_SHORT_ASM(0, t0)
+    GET_LOCAL_ASM(t0, t1)
+    PUSH_INT_ASM(t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL(dload)
     dload(GET_BYTE(0));
@@ -5188,114 +5378,110 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(iload_0)
-    "li $t0, 0\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(0, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(iload_1)
-    "li $t0, 1\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(4, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(iload_2)
-    "li $t0, 2\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(8, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(iload_3)
-    "li $t0, 3\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(12, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lload_0)
-    lload(0);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lload_0)
+    GET_LOCAL_LO_IMM_ASM(0, v1)
+    GET_LOCAL_HI_IMM_ASM(0, v0)
+    PUSH_LONG_ASM(v0, v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lload_1)
-    lload(1);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lload_1)
+    GET_LOCAL_LO_IMM_ASM(4, v1)
+    GET_LOCAL_HI_IMM_ASM(4, v0)
+    PUSH_LONG_ASM(v0, v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lload_2)
-    lload(2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lload_2)
+    GET_LOCAL_LO_IMM_ASM(8, v1)
+    GET_LOCAL_HI_IMM_ASM(8, v0)
+    PUSH_LONG_ASM(v0, v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lload_3)
-    lload(3);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lload_3)
+    GET_LOCAL_LO_IMM_ASM(12, v1)
+    GET_LOCAL_HI_IMM_ASM(12, v0)
+    PUSH_LONG_ASM(v0, v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fload_0)
-    "li $t0, 0\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(0, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fload_1)
-    "li $t0, 1\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(4, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fload_2)
-    "li $t0, 2\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(8, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fload_3)
-    "li $t0, 3\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(12, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
     
-  BYTECODE_IMPL(dload_0)
-    dload(0);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(dload_0)
+    GET_LOCAL_LO_IMM_ASM(0, t0)
+    GET_LOCAL_LO_IMM_ASM(0, t1)
+    PUSH_INT_2_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(dload_1)
-    dload(1);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(dload_1)
+    GET_LOCAL_LO_IMM_ASM(4, t0)
+    GET_LOCAL_LO_IMM_ASM(4, t1)
+    PUSH_INT_2_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(dload_2)
-    dload(2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(dload_2)
+    GET_LOCAL_LO_IMM_ASM(8, t0)
+    GET_LOCAL_LO_IMM_ASM(8, t1)
+    PUSH_INT_2_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(dload_3)
-    dload(3);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(dload_3)
+    GET_LOCAL_LO_IMM_ASM(12, t0)
+    GET_LOCAL_LO_IMM_ASM(12, t1)
+    PUSH_INT_2_ASM(t0, t1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(aload_0)
-    "li $t0, 0\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(0, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(aload_1)
-    "li $t0, 1\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(4, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(aload_2)
-    "li $t0, 2\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(8, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(aload_3)
-    "li $t0, 3\n"
-    GET_LOCAL_ASM(t0, t1)
+    GET_LOCAL_IMM_ASM(12, t1)
     PUSH_INT_ASM(t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
@@ -5359,15 +5545,19 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     SET_LOCAL_ASM(t0, t1)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(lstore)
-    lstore(GET_BYTE(0));
-    ADVANCE(2);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lstore)
+    GET_BYTE_ASM(0, t0)
+    POP_LONG_ASM(v0, v1)
+    "sll $t0, $t0, 2\n"
+    SET_LOCAL_LO_HI_ASM(t0, v1, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(lstore_wide)
-    lstore(GET_SHORT(0));
-    ADVANCE(3);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lstore_wide)
+    GET_SHORT_ASM(0, t0)
+    POP_LONG_ASM(v0, v1)
+    "sll $t0, $t0, 2\n"
+    SET_LOCAL_LO_HI_ASM(t0, v1, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(fstore)
     GET_BYTE_ASM(0, t0)
@@ -5404,71 +5594,67 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(istore_0)
-    "li $t0, 0\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(istore_1)
-    "li $t0, 1\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(4, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(istore_2)
-    "li $t0, 2\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(8, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(istore_3)
-    "li $t0, 3\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(12, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lstore_0)
-    lstore(0);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lstore_0)
+    POP_LONG_ASM(v0, v1)
+    SET_LOCAL_LO_IMM_ASM(0, v1)
+    SET_LOCAL_HI_IMM_ASM(0, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lstore_1)
-    lstore(1);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lstore_1)
+    POP_LONG_ASM(v0, v1)
+    SET_LOCAL_LO_IMM_ASM(4, v1)
+    SET_LOCAL_HI_IMM_ASM(4, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lstore_2)
-    lstore(2);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lstore_2)
+    POP_LONG_ASM(v0, v1)
+    SET_LOCAL_LO_IMM_ASM(8, v1)
+    SET_LOCAL_HI_IMM_ASM(8, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(lstore_3)
-    lstore(3);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lstore_3)
+    POP_LONG_ASM(v0, v1)
+    SET_LOCAL_LO_IMM_ASM(12, v1)
+    SET_LOCAL_HI_IMM_ASM(12, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fstore_0)
-    "li $t0, 0\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fstore_1)
-    "li $t0, 1\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(4, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fstore_2)
-    "li $t0, 2\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(8, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(fstore_3)
-    "li $t0, 3\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(12, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dstore_0)
@@ -5492,27 +5678,23 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(astore_0)
-    "li $t0, 0\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(astore_1)
-    "li $t0, 1\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(4, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(astore_2)
-    "li $t0, 2\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(8, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(astore_3)
-    "li $t0, 3\n"
     POP_INT_ASM(t1)
-    SET_LOCAL_ASM(t0, t1)
+    SET_LOCAL_IMM_ASM(12, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(iastore)
@@ -5568,8 +5750,11 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(pop2)
+    /*
     POP_ASM()
     POP_ASM()
+    */
+    " add $"REG_JSP", $"REG_JSP", 8\n"
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dup)
@@ -5579,68 +5764,45 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(dup_x1)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
+    PUSH_INT_3_ASM_NOSP(8, t0, t1, t0)
+    ADJUST_JSP_ASM(-4)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(dup_x2)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t2)
-    PUSH_INT_ASM(t0)
-    PUSH_INT_ASM(t2)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
+    POP_INT_3_ASM_NOSP(0, t0, t1, t2)
+    PUSH_INT_4_ASM_NOSP(12, t0, t2, t1, t0)
+    ADJUST_JSP_ASM(-4)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(dup2)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
+    PUSH_INT_4_ASM_NOSP(8, t1, t0, t1, t0)
+    ADJUST_JSP_ASM(-8)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(dup2_x1)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t2)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
-    PUSH_INT_ASM(t2)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
+    POP_INT_3_ASM_NOSP(0, t0, t1, t2)
+    PUSH_INT_5_ASM_NOSP(12, t1,t0,t2,t1,t0)
+    ADJUST_JSP_ASM(-8)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(dup2_x2)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t2)
-    POP_INT_ASM(t3)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
-    PUSH_INT_ASM(t3)
-    PUSH_INT_ASM(t2)
-    PUSH_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
+    POP_INT_4_ASM_NOSP(0, t0, t1, t2, t3)
+    PUSH_INT_6_ASM_NOSP(16, t1,t0,t3,t2,t1,t0)
+    ADJUST_JSP_ASM(-8)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(swap)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
-    PUSH_INT_ASM(t0)
-    PUSH_INT_ASM(t1)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
+    PUSH_INT_2_ASM_NOSP(8, t0, t1)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(iadd)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
     " add $t0, $t0, $t1\n"
-    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM_NOSP(8, t0)
+    ADJUST_JSP_ASM(4)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(ladd)
@@ -5667,10 +5829,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 #endif
 
   BYTECODE_IMPL_ASM(isub)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM_NOSP(0, t1, t0)
     " sub $t0, $t0, $t1\n"
-    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM_NOSP(8, t0)
+    ADJUST_JSP_ASM(4)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lsub)
@@ -5682,10 +5844,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 
 #if ENABLE_FLOAT
   BYTECODE_IMPL_ASM(fsub)
-    POP_FLOAT_ASM(f13)
-    POP_FLOAT_ASM(f12)
+    POP_FLOAT_2_ASM_NOSP(0, f13, f12)
     "sub.s	$f0,$f12,$f13\n"
-    PUSH_FLOAT_ASM(f0)
+    PUSH_FLOAT_ASM_NOSP(8, f0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dsub)
@@ -5697,11 +5859,11 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 #endif
 
   BYTECODE_IMPL_ASM(imul)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(v1)
+    POP_INT_2_ASM_NOSP(0, t0, v1)
     "mult $v1, $t0\n"
     "mflo $v1\n"
-    PUSH_INT_ASM(v1)
+    PUSH_INT_ASM_NOSP(8, v1)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lmul)
@@ -5712,10 +5874,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(fmul)
-    POP_FLOAT_ASM(f12)
-    POP_FLOAT_ASM(f13)
+    POP_FLOAT_2_ASM_NOSP(0, f12, f13)
     "mul.s	$f0,$f12,$f13\n"
-    PUSH_FLOAT_ASM(f0)
+    PUSH_FLOAT_ASM_NOSP(8, f0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dmul)
@@ -5753,10 +5915,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(fdiv)
-    POP_FLOAT_ASM(f12)
-    POP_FLOAT_ASM(f13)
+    POP_FLOAT_2_ASM_NOSP(0, f13, f12)
     "div.s	$f0,$f12,$f13\n"
-    PUSH_FLOAT_ASM(f0)
+    PUSH_FLOAT_ASM_NOSP(8, f0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(ddiv)
@@ -5809,9 +5971,9 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 #endif
 
   BYTECODE_IMPL_ASM(ineg)
-    POP_INT_ASM(t0)
+    POP_INT_ASM_NOSP(0, t0)
     "sub $t0, $zero, $t0\n"
-    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM_NOSP(4, t0)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lneg)
@@ -5821,11 +5983,12 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
 #if ENABLE_FLOAT
-  BYTECODE_IMPL(fneg)
-    jfloat val = FLOAT_POP();
-    FLOAT_PUSH(jvm_fmul(val, -1.0f));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fneg)
+    POP_FLOAT_ASM_NOSP(0, f12)
+    "li.s $f13, -1.0\n"
+    "mul.s	$f0,$f12,$f13\n"
+    PUSH_FLOAT_ASM_NOSP(0, f0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dneg)
     jdouble val = DOUBLE_POP();
@@ -5835,10 +5998,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 #endif
 
   BYTECODE_IMPL_ASM(ishl)
-    POP_INT_ASM(a1)
-    POP_INT_ASM(v1)
+    POP_INT_2_ASM_NOSP(0, a1, v1)
     "sllv	$v1,$v1,$a1\n"
-    PUSH_INT_ASM(v1)
+    PUSH_INT_ASM_NOSP(8, v1)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lshl)
@@ -5849,10 +6012,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(ishr)
-    POP_INT_ASM(a1)
-    POP_INT_ASM(v1)
+    POP_INT_2_ASM_NOSP(0,a1, v1)
     "srav	$v1,$v1,$a1\n"
-    PUSH_INT_ASM(v1)
+    PUSH_INT_ASM_NOSP(8, v1)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lshr)
@@ -5863,10 +6026,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(iushr)
-    POP_INT_ASM(a1)
-    POP_INT_ASM(v1)
+    POP_INT_2_ASM_NOSP(0, a1, v1)
     "srlv	$v1,$v1,$a1\n"
-    PUSH_INT_ASM(v1)
+    PUSH_INT_ASM_NOSP(8, v1)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lushr)
@@ -5878,10 +6041,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(iand)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
     "and $t0, $t0, $t1\n"
-    PUSH_INT_ASM(t0)    
+    PUSH_INT_ASM_NOSP(8, t0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(land)
@@ -5892,10 +6055,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(ior)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
     "or $t0, $t0, $t1\n"
-    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM_NOSP(8, t0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lor)
@@ -5906,10 +6069,10 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(ixor)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM_NOSP(0, t0, t1)
     "xor $t0, $t0, $t1\n"
-    PUSH_INT_ASM(t0)
+    PUSH_INT_ASM_NOSP(8, t0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(lxor)
@@ -5935,17 +6098,19 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     SET_LOCAL_ASM(t0, t1)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(5)
 
-  BYTECODE_IMPL(i2l)
-    jlong val = POP();
-    LONG_PUSH(val);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(i2l)
+    "lw $v0, 0($"REG_JSP")\n"
+    "addiu $"REG_JSP", $"REG_JSP", -4\n"
+    "sra $v1, $v0, 0x1f\n"
+    "sw $v1, 4($"REG_JSP")\n"
+    "sw $v0, 0($"REG_JSP")\n"
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(i2f)
-    POP_INT_ASM(t0)
+    POP_INT_ASM_NOSP(0, t0)
     "mtc1	$t0,$f1\n"
-    "cvt.s.w	$f0,$f1"
-    PUSH_FLOAT_ASM(f0)
+    "cvt.s.w	$f0,$f1\n"
+    PUSH_FLOAT_ASM_NOSP(4, f0)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(i2d)
@@ -5953,11 +6118,11 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     ADVANCE(1);
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(l2i)
-    jint val = (jint)LONG_POP();
-    PUSH(val);
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(l2i)
+    "lw $v0, 0($"REG_JSP")\n"
+    "sw $v0, 4($"REG_JSP")\n"
+    ADJUST_JSP_ASM(4)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(l2f)
     FLOAT_PUSH(jvm_l2f(LONG_POP()));
@@ -6093,50 +6258,42 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_icmpeq)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("beq $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_icmpne)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("bne $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_icmplt)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("blt $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_icmpge)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("bge $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_icmpgt)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("bgt $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_icmple)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("ble $t0, $t1,")
    BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_acmpeq)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("beq $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
   BYTECODE_IMPL_ASM(if_acmpne)
-    POP_INT_ASM(t1)
-    POP_INT_ASM(t0)
+    POP_INT_2_ASM(t1, t0)
     BRANCH_ASM("bne $t0, $t1,")
   BYTECODE_IMPL_END_ASM
 
@@ -6271,13 +6428,13 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     }
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(arraylength)
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(GET_ARRAY_LENGTH(obj));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
-
+  BYTECODE_IMPL_ASM(arraylength)
+    POP_INT_ASM_NOSP(0, v0)
+    NULL_CHECK_ASM(v0)
+    "lw $v0, "_ARRAY__length_offset"($v0)"
+    PUSH_INT_ASM_NOSP(4, v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
+  	
   BYTECODE_IMPL(athrow)
     address obj = OBJ_POP();
     NULL_CHECK(obj);
@@ -6334,7 +6491,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     "lbu $v0, 0($"REG_JPC")\n" 
     "sll $v0, $v0, 2\n" 
     "addu $v0, $v0, $gp\n"
-    "lw $v1, 255($v0)\n"
+    "lw $v1, "_WIDE_OFFSET"($v0)\n"
     "j $v1\n" 
   BYTECODE_IMPL_END_ASM
 
@@ -6455,8 +6612,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END
 
   BYTECODE_IMPL_ASM(fast_bputfield)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM(t0, t1)
     NULL_CHECK_ASM(t1)
     GET_SHORT_NATIVE_ASM(0, v0)
     "addu $v0, $v0, $t1\n"
@@ -6464,8 +6620,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(fast_sputfield)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM(t0, t1)
     NULL_CHECK_ASM(t1)
     GET_SHORT_NATIVE_ASM(0, v0)
     "addu $v0, $v0, $t1\n"
@@ -6473,8 +6628,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
   BYTECODE_IMPL_ASM(fast_iputfield)
-    POP_INT_ASM(t0)
-    POP_INT_ASM(t1)
+    POP_INT_2_ASM(t0, t1)
     NULL_CHECK_ASM(t1)
     GET_SHORT_NATIVE_ASM(0, v0)
     "sll $v0, $v0, 2\n"
@@ -6795,42 +6949,38 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     bc_impl_fast_igetfield_1_internal();
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(aload_0_fast_igetfield_4)
-    aload(0);
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(*(jint*)(obj + 4));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(aload_0_fast_igetfield_4)
+    GET_LOCAL_IMM_ASM(0, t0)
+    NULL_CHECK_ASM(t0)
+    "lw $t0, 4($t0)\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(aload_0_fast_igetfield_8)
-    aload(0);
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    PUSH(*(jint*)(obj + 8));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(aload_0_fast_igetfield_8)
+    GET_LOCAL_IMM_ASM(0, t0)
+    NULL_CHECK_ASM(t0)
+    "lw $t0, 8($t0)\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(aload_0_fast_agetfield_1)
     aload(0);
     bc_impl_fast_agetfield_1_internal();
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(aload_0_fast_agetfield_4)
-    aload(0);
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    OBJ_PUSH(*(address*)(obj + 4));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(aload_0_fast_agetfield_4)
+    GET_LOCAL_IMM_ASM(0, t0)
+    NULL_CHECK_ASM(t0)
+    "lw $t0, 4($t0)\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
-  BYTECODE_IMPL(aload_0_fast_agetfield_8)
-    aload(0);
-    address obj = OBJ_POP();
-    NULL_CHECK(obj);
-    OBJ_PUSH(*(address*)(obj + 8));
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(aload_0_fast_agetfield_8)
+    GET_LOCAL_IMM_ASM(0, t0)
+    NULL_CHECK_ASM(t0)
+    "lw $t0, 8($t0)\n"
+    PUSH_INT_ASM(t0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(init_static_array)
     address ref = OBJ_PEEK(0);
@@ -6857,7 +7007,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     lstore(GET_BYTE(0));
     ADVANCE(2);
   BYTECODE_IMPL_END
-
+  	
   BYTECODE_IMPL(dload_safe)
     dload(GET_BYTE(0));
     ADVANCE(2);
@@ -6870,14 +7020,15 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 
 #endif
 
-  BYTECODE_IMPL(pop_and_npe_if_null)
-    NULL_CHECK(OBJ_POP());
-    ADVANCE(1);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(pop_and_npe_if_null)
+    POP_INT_ASM(v0)
+    NULL_CHECK_ASM(v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   END_BYTECODES
 
   void undef_bc() {
+    save_jpc
     tty->print_cr("Undefined bytecode hit: 0x%x at %x", *g_jpc, g_jpc);
     BREAKPOINT;
   }
