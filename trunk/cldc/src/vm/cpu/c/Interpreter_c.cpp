@@ -4834,7 +4834,8 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 #endif
 
 #define _ARRAY__length_offset "4"
-#define _WIDE_OFFSET " 255"
+#define _ARRAY__base_offset "8"
+#define _WIDE_OFFSET " 255*4"
 
 #if (USE_THREADED_MIPS_INTERPRETER)
 #define BYTECODE_IMPL_END_ASM \
@@ -4859,6 +4860,7 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 	     BYTECODE_IMPL_END_ASM
 #endif
 #define BYTECODE_IMPL_END    }
+#define BYTECODE_IMPL_END_ASM_NOPC "\n");}
 
 #define ADJUST_JSP_ASM(x) "add $"REG_JSP", $"REG_JSP", "#x"\n"
 #define ADVANCE_ASM(x) " add $"REG_JPC", $"REG_JPC", "#x"\n"
@@ -5166,6 +5168,9 @@ ASM_SUBCALL_DECL(BRANCH_1,
 
 ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
                                   interpreter_throw_NullPointerException())
+
+ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
+                                  interpreter_throw_ArrayIndexOutOfBoundsException())
                                   
 #define NULL_CHECK_ASM(r) "\n" ); \
 	      __asm__ __volatile__ ( \
@@ -5224,6 +5229,147 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 	      ::"r"(_rt_timer_ticks):"v0", "v1"); \
              __asm__ __volatile__ (
 #endif
+
+#define ARRAY_LOAD_ASM_BYTE \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 4($"REG_JSP")\n" \
+                                          " lw $t7, 0($"REG_JSP") \n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " lb $t6, "_ARRAY__base_offset"($t7)\n" \
+                                          " sw $t6, 4($"REG_JSP")\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 4\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
+#define ARRAY_STORE_ASM_BYTE \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 8($"REG_JSP")\n" \
+                                          " lw $t7, 4($"REG_JSP")\n" \
+                                          " lw $t4, 0($"REG_JSP")\n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 12\n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " sb $t4, "_ARRAY__base_offset"($t7)\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t4", "t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
+#define ARRAY_LOAD_ASM_SHORT \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 4($"REG_JSP")\n" \
+                                          " lw $t7, 0($"REG_JSP") \n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " sll $t7, $t7, 1\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " lh $t6, "_ARRAY__base_offset"($t7)\n" \
+                                          " sw $t6, 4($"REG_JSP")\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 4\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
+#define ARRAY_STORE_ASM_SHORT \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 8($"REG_JSP")\n" \
+                                          " lw $t7, 4($"REG_JSP")\n" \
+                                          " lw $t4, 0($"REG_JSP")\n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 12\n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " sll $t7, $t7, 1\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " sh $t4, "_ARRAY__base_offset"($t7)\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t4", "t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
+#define ARRAY_LOAD_ASM_CHAR \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 4($"REG_JSP")\n" \
+                                          " lw $t7, 0($"REG_JSP") \n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " sll $t7, $t7, 1\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " lhu $t6, "_ARRAY__base_offset"($t7)\n" \
+                                          " sw $t6, 4($"REG_JSP")\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 4\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
+#define ARRAY_STORE_ASM_CHAR ARRAY_STORE_ASM_SHORT
 
   START_BYTECODES
 
@@ -5515,23 +5661,17 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     }
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(baload)
-    if (array_load(T_BYTE)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(baload)
+    ARRAY_LOAD_ASM_BYTE
+  BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(caload)
-    if (array_load(T_CHAR)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(caload)
+    ARRAY_LOAD_ASM_CHAR
+  BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(saload)
-    if (array_load(T_SHORT)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(saload)
+    ARRAY_LOAD_ASM_SHORT
+  BYTECODE_IMPL_END_ASM_NOPC
 
   BYTECODE_IMPL_ASM(istore)
     GET_BYTE_ASM(0, t0)
@@ -5727,23 +5867,17 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     }
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(bastore)
-    if (array_store(T_BYTE)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(bastore)
+    ARRAY_STORE_ASM_BYTE
+  BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(castore)
-    if (array_store(T_CHAR)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(castore)
+    ARRAY_STORE_ASM_CHAR
+  BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(sastore)
-    if (array_store(T_SHORT)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(sastore)
+    ARRAY_STORE_ASM_SHORT
+  BYTECODE_IMPL_END_ASM_NOPC
 
   BYTECODE_IMPL_ASM(pop)
     POP_ASM()
@@ -5800,7 +5934,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 
   BYTECODE_IMPL_ASM(iadd)
     POP_INT_2_ASM_NOSP(0, t0, t1)
-    " add $t0, $t0, $t1\n"
+    " addu $t0, $t0, $t1\n"
     PUSH_INT_ASM_NOSP(8, t0)
     ADJUST_JSP_ASM(4)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
@@ -5830,7 +5964,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 
   BYTECODE_IMPL_ASM(isub)
     POP_INT_2_ASM_NOSP(0, t1, t0)
-    " sub $t0, $t0, $t1\n"
+    " subu $t0, $t0, $t1\n"
     PUSH_INT_ASM_NOSP(8, t0)
     ADJUST_JSP_ASM(4)
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
@@ -5985,8 +6119,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
 #if ENABLE_FLOAT
   BYTECODE_IMPL_ASM(fneg)
     POP_FLOAT_ASM_NOSP(0, f12)
-    "li.s $f13, -1.0\n"
-    "mul.s	$f0,$f12,$f13\n"
+    "neg.s	$f0,$f12\n"
     PUSH_FLOAT_ASM_NOSP(0, f0)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
@@ -6086,7 +6219,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     GET_BYTE_ASM(0, t0)
     GET_SIGNED_BYTE_ASM(1, t1)
     GET_LOCAL_ASM(t0, t2)
-    "add $t2, $t2, $t1\n"
+    "addu $t2, $t2, $t1\n"
     SET_LOCAL_ASM(t0, t2)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
@@ -6094,7 +6227,7 @@ ASM_SUBCALL_DECL(interpreter_throw_NullPointerException_asm,
     GET_SHORT_ASM(0, t0)
     GET_SHORT_ASM(2, t1)
     GET_LOCAL_ASM(t0, t2)
-    "add $t1, $t1, $t2\n"
+    "addu $t1, $t1, $t2\n"
     SET_LOCAL_ASM(t0, t1)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(5)
 
