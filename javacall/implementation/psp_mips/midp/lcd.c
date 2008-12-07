@@ -246,7 +246,6 @@ javacall_result javacall_lcd_init(void) {
        } else {
            //printf("Setup GU\n");
 	    //setup_gu();
-	    scbuff = (javacall_pixel*)((unsigned int)scbuff | 0x40000000);
 	    memset(scbuff, 0, sizeof(_offscreen));
           sceGuDisplay(1);
        }
