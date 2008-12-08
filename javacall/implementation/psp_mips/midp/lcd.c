@@ -415,11 +415,11 @@ javacall_bool javacall_lcd_direct_flush(javacall_pixel* buf, int h) {
     }
     
     if (_enable_lcd_flush) {
-    	 if (javacall_lcd_flush_partial_internal(buf, 0, h) != JAVACALL_OK) {
-            return JAVACALL_FALSE;
+    	 if (javacall_lcd_flush_partial_internal(buf, 0, h) == JAVACALL_OK) {
+            return JAVACALL_TRUE;
         }
     }
-    return JAVACALL_TRUE;
+    return JAVACALL_FALSE;
 }
 
 /**
@@ -437,10 +437,7 @@ javacall_bool javacall_lcd_direct_flush(javacall_pixel* buf, int h) {
  * @retval JAVACALL_FAIL    fail 
  */
 javacall_result javacall_lcd_flush_partial(int ystart, int yend){
-    if (_enable_lcd_flush) {
         return javacall_lcd_flush_partial_internal(scbuff, ystart, yend);
-    }
-    return JAVACALL_OK;
 }
     
 javacall_bool javacall_lcd_reverse_orientation() {
