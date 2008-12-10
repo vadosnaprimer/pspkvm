@@ -28,7 +28,7 @@
 #include "incls/_Interpreter_c.cpp.incl"
 #include <stdarg.h>
 #include <setjmp.h>
-
+//#define BYTECODE_COUNT 1
 #if !defined(_DEBUG )
 #define  USE_MIPS_ASM_OPTIMIZED_INTERPRETER 1
 #if defined(PRODUCT)
@@ -112,6 +112,10 @@ extern "C" {
 
   /* bytecodes dispatch table */
   static func_t interpreter_dispatch_table[256+WIDE_OFFSET];
+  #ifdef BYTECODE_COUNT
+  static unsigned long interpreter_count_table[256+WIDE_OFFSET]={0};
+  int _output_interpreter_count = 0;
+  #endif
 
   // has_Interpreter, has_FloatingPoint, has_TraceBytecodes
   jint assembler_loop_type = 0x1 + 0x40 + 0x4;
@@ -4625,6 +4629,17 @@ static void Interpret() {
     }
   } else {
     for (;;) {
+#ifdef BYTECODE_COUNT
+      interpreter_count_table[*g_jpc]++;
+      if (_output_interpreter_count) {
+      	   int i;
+      	   _output_interpreter_count = 0;
+      	   for (i = 0; i < 256+WIDE_OFFSET; i++) {
+      	   	if (interpreter_count_table[i])
+      	       tty->print_cr("bc:%03x:%d", i, interpreter_count_table[i]);
+      	   }
+      }
+#endif
       interpreter_dispatch_table[*g_jpc]();
     }
   }
@@ -5033,6 +5048,22 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 	                                   "add $"REG_JSP", $"REG_JSP", 8\n" \
 	                                   ); \
 	                                   __asm__ __volatile__(
+
+#define PUSH_LONG_ASM_NOSP(offset,l,h) "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   "sw $"#h", "#offset"-4($"REG_JSP")\n" \
+	                                   "sw $"#l", "#offset"-8($"REG_JSP")\n" \
+	                                   ); \
+	                                   __asm__ __volatile__(
+
+#define POP_LONG_2_ASM_NOSP(l1,h1,l2,h2) "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   "lw $"#l1", 0($"REG_JSP")\n" \
+	                                   "lw $"#h1", 4($"REG_JSP")\n" \
+	                                   "lw $"#l2", 8($"REG_JSP")\n" \
+	                                   "lw $"#h2", 12($"REG_JSP")\n" \
+	                                   ); \
+	                                   __asm__ __volatile__(
 	                                   
 #define GET_SIGNED_BYTE_ASM(x, r) \
 	                                   "\n");\
@@ -5152,6 +5183,13 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " sw $"#h", -4($t7) \n" \
                                           :::"t7"); \
                                           __asm__ __volatile__(	
+
+#define GET_FRAME_ASM(r, offset) \
+						"\n");\
+	                                   __asm__ __volatile__( \
+                                          " lw $"#r", "#offset"(%0)\n" \
+                                          ::"r"(g_jfp):#r); \
+                                          __asm__ __volatile__(
 
 #define ASM_SUBCALL_DECL(n, x) \
 	void _ASM_SUBCALL_##n() __attribute__((noinline));  \
@@ -5428,6 +5466,65 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
                                           :::"t4", "t5", "t6", "t7"); \
                                           __asm__ __volatile__(
 
+#define ARRAY_LOAD_ASM_LONG \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 4($"REG_JSP")\n" \
+                                          " lw $t7, 0($"REG_JSP") \n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " sll $t7, $t7, 3\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " lw $t6, "_ARRAY__base_offset"($t7)\n" \
+                                          " lw $t5, "_ARRAY__base_offset"+4($t7)\n" \
+                                          " sw $t6, 0($"REG_JSP")\n" \
+                                          " sw $t5, 4($"REG_JSP")\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 8\n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
+#define ARRAY_STORE_ASM_LONG \
+	                                   "\n"); \
+	                                   __asm__ __volatile__( \
+	                                   " lw $t6, 12($"REG_JSP")\n" \
+                                          " lw $t7, 8($"REG_JSP")\n" \
+                                          " lw $t4, 4($"REG_JSP")\n" \
+                                          " lw $t3, 0($"REG_JSP")\n" \
+                                          " addu $"REG_JSP", $"REG_JSP", 16\n" \
+                                          " beqz $t6, 1f\n" \
+                                          " bltz $t7, 2f\n" \
+                                          " lw $t5, "_ARRAY__length_offset"($t6)\n" \
+                                          " bge $t7, $t5, 2f\n" \
+                                          " sll $t7, $t7, 3\n" \
+                                          " addu $t7, $t7, $t6\n" \
+                                          " sw $t3, "_ARRAY__base_offset"($t7)\n" \
+                                          " sw $t4, "_ARRAY__base_offset"+4($t7)\n" \
+                                          "lbu $v0, 1($"REG_JPC")\n" \
+                                          "sll $v0, $v0, 2\n" \
+                                          "addu $v0, $v0, $gp\n" \
+                                          "lw $v1, 0($v0)\n" \
+                                          "addu $"REG_JPC", $"REG_JPC", 1\n" \
+                                          "j $v1\n" \
+                                          "1: \n" \
+                                          ASM_SUBCALL(interpreter_throw_NullPointerException_asm) \
+                                          "2: \n" \
+                                          ASM_SUBCALL(interpreter_throw_ArrayIndexOutOfBoundsException_asm) \
+                                          :::"t3", "t4", "t5", "t6", "t7"); \
+                                          __asm__ __volatile__(
+
   START_BYTECODES
 
   BYTECODE_IMPL_ASM(nop)            	  
@@ -5694,17 +5791,13 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
     ARRAY_LOAD_ASM_INT
   BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(laload)
-    if (array_load(T_LONG)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(laload)
+    ARRAY_LOAD_ASM_LONG
+  BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(faload)
-    if (array_load(T_FLOAT)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(faload)
+    ARRAY_LOAD_ASM_INT
+  BYTECODE_IMPL_END_ASM_NOPC
 
   BYTECODE_IMPL(daload)
     if (array_load(T_DOUBLE)) {
@@ -5896,17 +5989,13 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
     ARRAY_STORE_ASM_INT
   BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(lastore)
-    if (array_store(T_LONG)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(lastore)
+    ARRAY_STORE_ASM_LONG
+  BYTECODE_IMPL_END_ASM_NOPC
 
-  BYTECODE_IMPL(fastore)
-    if (array_store(T_FLOAT)) {
-      ADVANCE(1);
-    }
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fastore)
+    ARRAY_STORE_ASM_INT
+  BYTECODE_IMPL_END_ASM_NOPC
 
   BYTECODE_IMPL(dastore)
     if (array_store(T_DOUBLE)) {
@@ -6001,10 +6090,10 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
 
 #if ENABLE_FLOAT
   BYTECODE_IMPL_ASM(fadd)
-    POP_FLOAT_ASM(f12)
-    POP_FLOAT_ASM(f13)
+    POP_FLOAT_2_ASM_NOSP(0, f12, f13)
     "add.s	$f0,$f12,$f13\n"
-    PUSH_FLOAT_ASM(f0)
+    PUSH_FLOAT_ASM_NOSP(8, f0)
+    ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dadd)
@@ -6259,11 +6348,11 @@ BYTECODE_IMPL_ASM(lshl)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(land)
-    POP_LONG_ASM(t0, t1)
-    POP_LONG_ASM(v0,v1)
+    POP_LONG_2_ASM_NOSP(t0, t1, v0, v1)
     "and $v0, $v0, $t0\n"
     "and $v1, $v1, $t1\n"
-    PUSH_LONG_ASM(v0, v1)
+    PUSH_LONG_ASM_NOSP(16, v0, v1)
+    ADJUST_JSP_ASM(8)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(ior)
@@ -6274,11 +6363,11 @@ BYTECODE_IMPL_ASM(lshl)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(lor)
-    POP_LONG_ASM(t0, t1)
-    POP_LONG_ASM(v0,v1)
+    POP_LONG_2_ASM_NOSP(t0, t1, v0, v1)
     "or $v0, $v0, $t0\n"
     "or $v1, $v1, $t1\n"
-    PUSH_LONG_ASM(v0, v1)
+    PUSH_LONG_ASM_NOSP(16, v0, v1)
+    ADJUST_JSP_ASM(8)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(ixor)
@@ -6289,11 +6378,11 @@ BYTECODE_IMPL_ASM(lshl)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(lxor)
-    POP_LONG_ASM(t0, t1)
-    POP_LONG_ASM(v0,v1)
+    POP_LONG_2_ASM_NOSP(t0, t1, v0, v1)
     "xor $v0, $v0, $t0\n"
     "xor $v1, $v1, $t1\n"
-    PUSH_LONG_ASM(v0, v1)
+    PUSH_LONG_ASM_NOSP(16, v0, v1)
+    ADJUST_JSP_ASM(8)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL_ASM(iinc)
@@ -6396,6 +6485,28 @@ BYTECODE_IMPL_ASM(lshl)
     "lh $v0, 0($"REG_JSP")\n"
     "sw $v0, 0($"REG_JSP")\n"
     BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
+/*
+  BYTECODE_IMPL_ASM(lcmp)
+    POP_LONG_2_ASM_NOSP(a2, a3, a0, a1)
+    ".set noreorder\n"
+    "beq $a1, $a3, 2f\n"
+    "nop\n"
+    "bgt $a1, $a3, 1f\n"
+    "li $t1, 1\n"
+    "j 1f\n"
+    "li $t1, -1\n"
+    "2:\n"
+    "bltu $a0, $a2, 1f\n"
+    "li $t1, -1\n"
+    "bgtu $a0, $a2, 1f\n"
+    "li $t1, 1\n"
+    "li $t1, 0\n"
+    ".set reorder\n"
+    "1:\n"
+    PUSH_INT_ASM_NOSP(16, t1)
+    ADJUST_JSP_ASM(12)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
+*/
 
   BYTECODE_IMPL(lcmp)
     jlong val2 = LONG_POP();
@@ -6752,18 +6863,34 @@ BYTECODE_IMPL_ASM(lshl)
 #endif
   BYTECODE_IMPL_END
 
-  BYTECODE_IMPL(fast_1_ldc)
-    fast_ldc(T_INT, false);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_1_ldc)
+    GET_BYTE_ASM(0, t0)
+    GET_FRAME_ASM(t1, -8)
+    "sll $t0, $t0, 2\n"
+    "addu $t0, $t1\n"
+    "lw $v0, 0($t0)\n"
+    PUSH_INT_ASM(v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(2)
 
-  BYTECODE_IMPL(fast_1_ldc_w)
-    fast_ldc(T_INT, true);
-  BYTECODE_IMPL_END
+  BYTECODE_IMPL_ASM(fast_1_ldc_w)
+    GET_SHORT_ASM(0, t0)
+    GET_FRAME_ASM(t1, -8)
+    "sll $t0, $t0, 2\n"
+    "addu $t0, $t1\n"
+    "lw $v0, 0($t0)\n"
+    PUSH_INT_ASM(v0)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
 
-  BYTECODE_IMPL(fast_2_ldc_w)
-    fast_ldc(T_LONG, true);
-  BYTECODE_IMPL_END
-
+  BYTECODE_IMPL_ASM(fast_2_ldc_w)
+    GET_SHORT_ASM(0, t0)
+    GET_FRAME_ASM(t1, -8)
+    "sll $t0, $t0, 2\n"
+    "addu $t0, $t1\n"
+    "lw $v0, 0($t0)\n"
+    "lw $v1, 4($t0)\n"
+    PUSH_LONG_ASM(v0, v1)
+  BYTECODE_IMPL_END_AND_ADVANCE_ASM(3)
+  
   BYTECODE_IMPL(fast_1_putstatic)
     address addr = get_static_field_offset();
     if (addr != NULL) {
