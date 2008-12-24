@@ -1,12 +1,13 @@
 package javax.microedition.lcdui;
 
 class IMCandidateBar {
-    static CNLib cnlib;
-    static Image IMimage;
-    String pinyin = "";
+    static CNLib cnlib=new CNLib();
+	static Associational ass=new Associational();
+	final static int MAX_CHARS_NUM=6;
+    String pinyin = null;
     int cur_pos = 0;
     int cur_sel = 0;
-    char[] cur_candidates = new char[5];
+    char[] cur_candidates = new char[MAX_CHARS_NUM];
 
     public IMCandidateBar(int width, int height) {
     }
@@ -14,7 +15,7 @@ class IMCandidateBar {
     private int getCandidateChars(String py, int pos , int num) {
     	int n = 0;
     	char[] cnchars;
-    	
+    	System.out.println("getCandidateChars py="+py);
     	int total = cnlib.getNumOfChineseCharacters(py);
     	if (total <= pos) {
     		return 0;
@@ -31,6 +32,7 @@ class IMCandidateBar {
     	        cur_candidates[i] = cnchars[i];
     	        n++;
     	    }
+	    System.out.println("getCandidateChars cur_candidates[i]="+cur_candidates[i]);
     	}
     	
     	return n;
@@ -38,7 +40,7 @@ class IMCandidateBar {
     
     public boolean keyPressed(char c) {
     	if (c >= 'a' && c <= 'z' && pinyin.length() < 6) {
-    	    getCandidateChars(pinyin + c, 0, 5);
+    	    getCandidateChars(pinyin + c, 0, MAX_CHARS_NUM);
     	    pinyin = pinyin + c;
            cur_pos = 0;
            cur_sel = 0;
@@ -47,67 +49,61 @@ class IMCandidateBar {
     	    return false;
     	}
     }
-
+    public char[] findCandidateHZ(String py) {
+		if(py!=null&&py.length()>0){
+			pinyin=py;
+			getCandidateChars(pinyin, 0, MAX_CHARS_NUM);
+			cur_pos = 0;
+			cur_sel = 0;
+		}
+		return cur_candidates;
+    }
     public void backspace() {
     	int len = pinyin.length();
     	if (len > 0) {
     	    pinyin = pinyin.substring(0, len - 1);
-    	    getCandidateChars(pinyin, 0, 5);    	    
+    	    getCandidateChars(pinyin, 0, MAX_CHARS_NUM);    	    
            cur_pos = 0;
            cur_sel = 0;
     	}
     }
 
     public void paint(Graphics g, int width, int height) {
-    	int offset = (width - 90) / 5;
-    	int x = 80;
-    	g.drawImage(IMimage, 0, 5, Graphics.TOP+Graphics.LEFT);
-    	g.drawString(pinyin, 20, 0, Graphics.TOP+Graphics.LEFT);
-    	for (int pos = 0; pos < 5; pos++) {
-    	    if (cur_candidates[pos] == 0) break;
-    	    if (pos == cur_sel) {
-    	    	g.setColor(0x88, 0x88, 0);
-    	    } else {
-    	       g.setColor(0x6699ff);
-    	    }    	    
-    	    g.fillRect(x, 0, 20, 25);
-    	    g.setColor(0x0);
-    	    g.drawChar(cur_candidates[pos], x, 0, Graphics.TOP+Graphics.LEFT);
-    	    x+=offset;
-    	}
     }
 
-    public void prevPage() {
-    	cur_pos -= 5;
+    public char[] prevPage() {
+    	cur_pos -= MAX_CHARS_NUM;
     	if (cur_pos < 0) cur_pos = 0;
-    	getCandidateChars(pinyin, cur_pos, 5);
+    	getCandidateChars(pinyin, cur_pos, MAX_CHARS_NUM);
+		return cur_candidates;
     }
 
-    public void nextPage() {
-    	cur_pos += 5;
-    	if (getCandidateChars(pinyin, cur_pos, 5) <= 0) cur_pos -= 5;
+    public char[] nextPage() {
+    	cur_pos += MAX_CHARS_NUM;
+    	if (getCandidateChars(pinyin, cur_pos, MAX_CHARS_NUM) <= 0) cur_pos -= MAX_CHARS_NUM;
     	if (cur_candidates[cur_sel] == 0) cur_sel = 0;
+		return cur_candidates;
     }
 
     public void prevChar() {
     	cur_sel --;
     	if (cur_sel < 0) {
-    		cur_pos -= 5;
+    		cur_pos -= MAX_CHARS_NUM;
     		if (cur_pos < 0) cur_pos = 0;
-    		cur_sel = 4;
-    		getCandidateChars(pinyin, cur_pos, 5);
+    		cur_sel = (MAX_CHARS_NUM-1);
+    		getCandidateChars(pinyin, cur_pos, MAX_CHARS_NUM);
     	}
     }
 
     public void nextChar() {
     	cur_sel ++;
-    	if (cur_sel > 4) {
-    		cur_pos += 5;
-    		if (getCandidateChars(pinyin, cur_pos, 5) > 0) {
+    	if (cur_sel > (MAX_CHARS_NUM-1)) {
+    		cur_pos += MAX_CHARS_NUM;
+    		if (getCandidateChars(pinyin, cur_pos, MAX_CHARS_NUM) > 0) {
     			cur_sel = 0;
     		} else {
-    			cur_pos -= 5;
-    			cur_sel = 4;
+    			cur_pos -= MAX_CHARS_NUM;
+    			cur_sel = (MAX_CHARS_NUM-1);
     		}    		
     	} else if (cur_candidates[cur_sel] == 0) {
     	    cur_sel --;
@@ -121,33 +117,33 @@ class IMCandidateBar {
     public void reset() {
     	cur_pos = 0;
     	cur_sel = 0;
-    	pinyin = ""; 	
-    	for (int i = 0; i < 5; i++) {
+    	pinyin = null; 	
+    	for (int i = 0; i < MAX_CHARS_NUM; i++) {
     		cur_candidates[i] = 0;
     	}
     }
+//Æ´ÒôÏà¹Ø²Ù×÷
 
-    private static byte[] cn = {    (byte)0x89, 
-    (byte)0x50, (byte)0x4e, (byte)0x47, (byte)0x0d, (byte)0x0a, (byte)0x1a, (byte)0x0a, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0d, (byte)0x49, 
-    (byte)0x48, (byte)0x44, (byte)0x52, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0d, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0d, (byte)0x08, 
-    (byte)0x02, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0xfd, (byte)0x89, (byte)0x73, (byte)0x2b, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01, 
-    (byte)0x73, (byte)0x52, (byte)0x47, (byte)0x42, (byte)0x00, (byte)0xae, (byte)0xce, (byte)0x1c, (byte)0xe9, (byte)0x00, (byte)0x00, (byte)0x00, 
-    (byte)0x04, (byte)0x67, (byte)0x41, (byte)0x4d, (byte)0x41, (byte)0x00, (byte)0x00, (byte)0xb1, (byte)0x8f, (byte)0x0b, (byte)0xfc, (byte)0x61, 
-    (byte)0x05, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x20, (byte)0x63, (byte)0x48, (byte)0x52, (byte)0x4d, (byte)0x00, (byte)0x00, (byte)0x7a, 
-    (byte)0x26, (byte)0x00, (byte)0x00, (byte)0x80, (byte)0x84, (byte)0x00, (byte)0x00, (byte)0xfa, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x80, 
-    (byte)0xe8, (byte)0x00, (byte)0x00, (byte)0x75, (byte)0x30, (byte)0x00, (byte)0x00, (byte)0xea, (byte)0x60, (byte)0x00, (byte)0x00, (byte)0x3a, 
-    (byte)0x98, (byte)0x00, (byte)0x00, (byte)0x17, (byte)0x70, (byte)0x9c, (byte)0xba, (byte)0x51, (byte)0x3c, (byte)0x00, (byte)0x00, (byte)0x00, 
-    (byte)0x33, (byte)0x49, (byte)0x44, (byte)0x41, (byte)0x54, (byte)0x28, (byte)0x53, (byte)0x63, (byte)0xfc, (byte)0xff, (byte)0xff, (byte)0x3f, 
-    (byte)0x03, (byte)0x31, (byte)0x00, (byte)0xa8, (byte)0x0e, (byte)0x0d, (byte)0x00, (byte)0x75, (byte)0x61, (byte)0x11, (byte)0x24, (byte)0x4d, 
-    (byte)0x1d, (byte)0x1e, (byte)0x9b, (byte)0x21, (byte)0x06, (byte)0x41, (byte)0xad, (byte)0x40, (byte)0xb6, (byte)0x0b, (byte)0x2b, (byte)0x7b, 
-    (byte)0xe0, (byte)0xd5, (byte)0xe1, (byte)0xf2, (byte)0x0a, (byte)0x8a, (byte)0x3f, (byte)0x90, (byte)0x43, (byte)0x87, (byte)0x1a, (byte)0xe1, 
-    (byte)0x47, (byte)0x35, (byte)0xf3, (byte)0x00, (byte)0x1d, (byte)0x23, (byte)0x69, (byte)0xa6, (byte)0xf7, (byte)0x74, (byte)0x7d, (byte)0x20, 
-    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x49, (byte)0x45, (byte)0x4e, (byte)0x44, (byte)0xae, (byte)0x42, (byte)0x60, (byte)0x82};
-    
-    static {
-    	cnlib = new CNLib();
-    	IMimage = Image.createImage(cn,0,cn.length);
+ public String[] findCandidatePY(String keyNum) {
+		 if(keyNum!=null){
+		 	System.out.println("findCandidatePY="+keyNum);
+			if(keyNum.length()>0&&keyNum.length()<=6){
+				return cnlib.getPinYin(keyNum);
+			}
+	 	}
+		return null;
     }
 
-
+ public char[] findCandidateAssociational(char ch) {
+	 	char [] assCh=ass.getAssociatioalByChar(ch);
+		for(int j=0;j<MAX_CHARS_NUM;j++){
+			if(assCh!=null && j< (assCh.length-1)){
+				cur_candidates[j] = assCh[j+1];
+			}else{
+				cur_candidates[j]=0;
+			}
+		}
+		return cur_candidates;
+ 	}
 }
+
