@@ -42,11 +42,10 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         //backupstring is set to original text before the kbd was used
         backupString = tfContext.tf.getString();
         if (vk==null) {
-            prepareKeyMapTextField(getAvailableWidth(), getAvailableHeight());
-            vk = new VirtualKeyboard(keys, this, true, neededColumns, neededRows);
+            vk = new VirtualKeyboard(0, this,getAvailableWidth(),getAvailableHeight());
         }
 
-	setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
+		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
 	
         //candidateBar = new IMCandidateBar(vk.kbWidth, 25);
 
@@ -69,7 +68,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         cvContext = canvas;
         if (vk==null) {
             prepareKeyMapCanvas();
-            vk = new VirtualKeyboard(keys, this, false, 0, 0);
+            vk = new VirtualKeyboard(keys, this, 0, 0);
         }
 
         //System.out.println("vk.kbX:"+vk.kbX+",vk.kbY:"+vk.kbY+",vk.kbWidth:"+vk.kbWidth+",vk.kbHeight:"+vk.kbHeight);
@@ -99,6 +98,36 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
     public static final int LOWERCASE = 1;
     public static final int UPPERCASE = 2;
     public static final int SYMBOL = 3;
+	public static final int PINYIN = 4;
+
+	public static final int KEYBOARD_INPUT_NUMERIC = 0;  //NUMERIC only
+    public static final int KEYBOARD_INPUT_ASCII = 1;    //ascii only 
+    public static final int KEYBOARD_INPUT_ANY = 2;    //any
+
+    private static final boolean[][] isMap = {
+     // |NUMERIC|LOWERCASE|UPPERCASE|SYMBOL|PINYIN
+        { true,   false,   false,    false, false }, // KEYBOARD_INPUT_NUMERIC
+        { true,   true,    true,     false, false }, // KEYBOARD_INPUT_ASCII
+        { true,   true,    true,     true,  true } // KEYBOARD_INPUT_ANY 
+
+    };
+
+	public int inputState=0;
+	public void getNextKeyBoard()
+	{
+		if(vk!=null){
+			int maxInputMode=1;
+			if(getState()!=-1){
+				maxInputMode=isMap[inputState].length;
+				for(int i=vk.currentKeyboard+1;i<=maxInputMode;i++){
+					if(isMap[inputState][i%maxInputMode]==true){
+						vk.currentKeyboard=i%maxInputMode;
+						break;
+					}
+				}
+			}
+		}
+	}
 
     /**
      * Sets the state of the keyboard: NUMERIC or ANY
@@ -112,19 +141,29 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      * @param state the state of the keyboard.
      */
     public void setState(int state) {
-        if (vk != null && 
-            (state == NUMERIC || 
-             state == LOWERCASE ||
-             state == UPPERCASE)) {
-            vk.currentKeyboard = state;
+    		System.out.println("setState->"+state);
+			inputState = state;
+        if (vk != null) {
+			switch(state){
+				case KEYBOARD_INPUT_NUMERIC:
+					vk.currentKeyboard=NUMERIC;
+					break;
+				case KEYBOARD_INPUT_ASCII:
+					vk.currentKeyboard=LOWERCASE;
+					break;
+				case KEYBOARD_INPUT_ANY:
+					vk.currentKeyboard=PINYIN;
+					break;
+				default:
+					vk.currentKeyboard=NUMERIC;
+					break;
+			}
+			vk.prepareKeyMap();
         }
     }
 
-    public int getState() {
-        if (vk != null) {            
-            return vk.currentKeyboard;
-        }
-        return -1;
+    public int getState() {           
+            return inputState;
     }
 
     public String getIMName() {
@@ -139,6 +178,8 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
                     return "ABCD";
                 case KeyboardLayer.SYMBOL:
                     return "Symbol";
+				case KeyboardLayer.PINYIN:	
+					return "Pinyin";
             }
         }
         return null;
@@ -222,7 +263,15 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
              type == EventConstants.REPEATED) && 
             (tfContext != null || 
              cvContext != null)) {
-            vk.traverse(type,code);
+             try{
+	            vk.traverse(type,code);
+         	}catch(IllegalArgumentException e){
+		         System.out.println(e);	
+		 	}catch(NullPointerException e){
+			 	System.out.println(e);	
+	 		}catch(StringIndexOutOfBoundsException e){
+		 		System.out.println(e);	
+ 			}	 		
         }
         return true;
     }
@@ -277,330 +326,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 
     /** the list of available keys */
     char[][] keys = null;
-
-
-    private void prepareKeyMapTextFieldFull() {
-    	 System.out.println("prepareKeyMapTextFieldFull");
-        keys = new char[4][];
-
-        // numerals
-        keys[0] = new char[23]; // numerals
-        for (char i=0; i<10; i++) {  // 0..9
-            keys[0][i] = (char)(i+48);
-        }
-        keys[0][10] = '=';
-        keys[0][11] = '+';
-        keys[0][12] = '-';
-        keys[0][13] = '*';
-        keys[0][14] = '/';
-        keys[0][15] = '.';
-        keys[0][16] = ',';
-        keys[0][17] = '$';
-        keys[0][18] = '%';
-        keys[0][19] = '^';
-        keys[0][20] = '#';
-        keys[0][21] = '_';
-        keys[0][22] = ' ';
-
-        // Roman, lower case
-        keys[1] = new char[51]; // numerals
-        keys[1][0] = 'q';
-        keys[1][1] = 'w';
-        keys[1][2] = 'e';
-        keys[1][3] = 'r';
-        keys[1][4] = 't';
-        keys[1][5] = 'y';
-        keys[1][6] = 'u';
-        keys[1][7] = 'i';
-        keys[1][8] = 'o';
-        keys[1][9] = 'p';
-        keys[1][10] = '1';
-        keys[1][11] = '2';
-        keys[1][12] = '3';
-        keys[1][13] = '0';
-        keys[1][14] = '!';
-        keys[1][15] = '@';
-        keys[1][16] = '#';
-        keys[1][17] = 'a';
-        keys[1][18] = 's';
-        keys[1][19] = 'd';
-        keys[1][20] = 'f';
-        keys[1][21] = 'g';
-        keys[1][22] = 'h';
-        keys[1][23] = 'j';
-        keys[1][24] = 'k';
-        keys[1][25] = 'l';
-        keys[1][26] = ';';
-        keys[1][27] = '4';
-        keys[1][28] = '5';
-        keys[1][29] = '6';
-        keys[1][30] = '_';
-        keys[1][31] = '$';
-        keys[1][32] = '%';
-        keys[1][33] = '^';
-        keys[1][34] = 'z';
-        keys[1][35] = 'x';
-        keys[1][36] = 'c';
-        keys[1][37] = 'v';
-        keys[1][38] = 'b';
-        keys[1][39] = 'n';
-        keys[1][40] = 'm';
-        keys[1][41] = ',';
-        keys[1][42] = '.';
-        keys[1][43] = ' ';// space
-        keys[1][44] = '7';
-        keys[1][45] = '8';
-        keys[1][46] = '9';
-        keys[1][47] = '?';
-        keys[1][48] = '&';
-        keys[1][49] = '*';
-        keys[1][50] = '/';
-        
-        // Roman, upper case
-        keys[2] = new char[51]; // numerals
-        keys[2][0] = 'Q';
-        keys[2][1] = 'W';
-        keys[2][2] = 'E';
-        keys[2][3] = 'R';
-        keys[2][4] = 'T';
-        keys[2][5] = 'Y';
-        keys[2][6] = 'U';
-        keys[2][7] = 'I';
-        keys[2][8] = 'O';
-        keys[2][9] = 'P';
-        keys[2][10] = '1';
-        keys[2][11] = '2';
-        keys[2][12] = '3';
-        keys[2][13] = '0';
-        keys[2][14] = '!';
-        keys[2][15] = '@';
-        keys[2][16] = '#';
-        keys[2][17] = 'A';
-        keys[2][18] = 'S';
-        keys[2][19] = 'D';
-        keys[2][20] = 'F';
-        keys[2][21] = 'G';
-        keys[2][22] = 'H';
-        keys[2][23] = 'J';
-        keys[2][24] = 'K';
-        keys[2][25] = 'L';
-        keys[2][26] = ';';
-        keys[2][27] = '4';
-        keys[2][28] = '5';
-        keys[2][29] = '6';
-        keys[2][30] = '_';
-        keys[2][31] = '$';
-        keys[2][32] = '%';
-        keys[2][33] = '^';
-        keys[2][34] = 'Z';
-        keys[2][35] = 'X';
-        keys[2][36] = 'C';
-        keys[2][37] = 'V';
-        keys[2][38] = 'B';
-        keys[2][39] = 'N';
-        keys[2][40] = 'M';
-        keys[2][41] = ',';
-        keys[2][42] = '.';
-        keys[2][43] = ' ';// space
-        keys[2][44] = '7';
-        keys[2][45] = '8';
-        keys[2][46] = '9';
-        keys[2][47] = '?';
-        keys[2][48] = '&';
-        keys[2][49] = '*';
-        keys[2][50] = '/';
-
-        // Symbol
-        keys[3] = new char[25]; // numerals
-        for (char i=0; i<15; i++) {  // !../
-            keys[3][i] = (char)(i+33);
-        }
-        for (char i=0; i<7; i++) {  // :..@
-            keys[3][i+15] = (char)(i+58);
-        }
-        keys[3][22] = '~'; // space
-        keys[3][23] = '^'; // space
-        keys[3][24] = ' '; // space
-
-        neededColumns = 17;
-        neededRows = 3;
-    }
-
-
-    private void prepareKeyMapTextFieldMed() {
-    	System.out.println("prepareKeyMapTextFieldMed");
-        keys = new char[4][];
-
-        // numerals
-        keys[0] = new char[23]; // numerals
-        for (char i=0; i<10; i++) {  // 0..9
-            keys[0][i] = (char)(i+48);
-        }
-        keys[0][10] = '=';
-        keys[0][11] = '+';
-        keys[0][12] = '-';
-        keys[0][13] = '*';
-        keys[0][14] = '/';
-        keys[0][15] = '.';
-        keys[0][16] = ',';
-        keys[0][17] = '$';
-        keys[0][18] = '%';
-        keys[0][19] = '^';
-        keys[0][20] = '#';
-        keys[0][21] = '_';
-        keys[0][22] = ' ';
-
-        // Roman, lower case
-        keys[1] = new char[30]; // numerals
-        keys[1][0] = 'q';
-        keys[1][1] = 'w';
-        keys[1][2] = 'e';
-        keys[1][3] = 'r';
-        keys[1][4] = 't';
-        keys[1][5] = 'y';
-        keys[1][6] = 'u';
-        keys[1][7] = 'i';
-        keys[1][8] = 'o';
-        keys[1][9] = 'p';
-        keys[1][10] = 'a';
-        keys[1][11] = 's';
-        keys[1][12] = 'd';
-        keys[1][13] = 'f';
-        keys[1][14] = 'g';
-        keys[1][15] = 'h';
-        keys[1][16] = 'j';
-        keys[1][17] = 'k';
-        keys[1][18] = 'l';
-        keys[1][19] = ';';
-        keys[1][20] = 'z';
-        keys[1][21] = 'x';
-        keys[1][22] = 'c';
-        keys[1][23] = 'v';
-        keys[1][24] = 'b';
-        keys[1][25] = 'n';
-        keys[1][26] = 'm';
-        keys[1][27] = ',';
-        keys[1][28] = '.';
-        keys[1][29] = ' '; // space
-
-        // Roman, upper case
-        keys[2] = new char[30]; // numerals
-        keys[2][0] = 'Q';
-        keys[2][1] = 'W';
-        keys[2][2] = 'E';
-        keys[2][3] = 'R';
-        keys[2][4] = 'T';
-        keys[2][5] = 'Y';
-        keys[2][6] = 'U';
-        keys[2][7] = 'I';
-        keys[2][8] = 'O';
-        keys[2][9] = 'P';
-        keys[2][10] = 'A';
-        keys[2][11] = 'S';
-        keys[2][12] = 'D';
-        keys[2][13] = 'F';
-        keys[2][14] = 'G';
-        keys[2][15] = 'H';
-        keys[2][16] = 'J';
-        keys[2][17] = 'K';
-        keys[2][18] = 'L';
-        keys[2][19] = ';';
-        keys[2][20] = 'Z';
-        keys[2][21] = 'X';
-        keys[2][22] = 'C';
-        keys[2][23] = 'V';
-        keys[2][24] = 'B';
-        keys[2][25] = 'N';
-        keys[2][26] = 'M';
-        keys[2][27] = ',';
-        keys[2][28] = '.';
-        keys[2][29] = ' '; // space
-
-        // Symbol
-        keys[3] = new char[25]; // numerals
-        for (char i=0; i<15; i++) {  // !../
-            keys[3][i] = (char)(i+33);
-        }
-        for (char i=0; i<7; i++) {  // :..@
-            keys[3][i+15] = (char)(i+58);
-        }
-        keys[3][22] = '~'; // space
-        keys[3][23] = '^'; // space
-        keys[3][24] = ' '; // space
-
-        neededColumns = 10;
-        neededRows = 3;
-    }
-
     
-    private void prepareKeyMapTextFieldSmall() {
-    	System.out.println("prepareKeyMapTextFieldSmall");
-        keys = new char[4][];
-
-        // numerals
-        keys[0] = new char[23]; // numerals
-        for (char i=0; i<10; i++) {  // 0..9
-            keys[0][i] = (char)(i+48);
-        }
-        keys[0][10] = '=';
-        keys[0][11] = '+';
-        keys[0][12] = '-';
-        keys[0][13] = '*';
-        keys[0][14] = '/';
-        keys[0][15] = '.';
-        keys[0][16] = ',';
-        keys[0][17] = '$';
-        keys[0][18] = '%';
-        keys[0][19] = '^';
-        keys[0][20] = '#';
-        keys[0][21] = '_';
-        keys[0][22] = ' ';
-
-        // Roman, lower case
-        keys[1] = new char[27]; // numerals
-        for (char i=0; i<26; i++) {  // a..z
-            keys[1][i] = (char)(i+97);
-        }
-        keys[1][26] = ' '; // space
-
-        // Roman, upper case
-        keys[2] = new char[27]; // numerals
-        for (char i=0; i<26; i++) {  // A..Z
-            keys[2][i] = (char)(i+65);
-        }
-        keys[2][26] = ' '; // space
-
-        // Symbol
-        keys[3] = new char[25]; // numerals
-        for (char i=0; i<15; i++) {  // !../
-            keys[3][i] = (char)(i+33);
-        }
-        for (char i=0; i<7; i++) {  // :..@
-            keys[3][i+15] = (char)(i+58);
-        }
-        keys[3][22] = '~'; // space
-        keys[3][23] = '^'; // space
-        keys[3][24] = ' '; // space
-
-        neededColumns = 0;
-        neededRows = 0;
-    }
-    
-    /**
-     * Prepare key map
-     */
-    private void prepareKeyMapTextField(int w, int h) throws VirtualKeyboardException{
-        System.out.println("prepareKeyMapTextField:"+w+","+h);
-        if (w >= 470) {
-        	prepareKeyMapTextFieldFull();
-        } else if (w >= 230) {
-        	prepareKeyMapTextFieldMed();
-        } else if (w >= 166) {
-        	prepareKeyMapTextFieldSmall();
-        } else {
-        	throw new VirtualKeyboardException("Screen's too small to display virtual keyboard");
-        }
-    }
 
     /**
      * Prepare key map for Canvas keypad.
@@ -656,8 +382,6 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         // 
         int key = c;
 
-
-
         if (c == 0) {
             Display disp = null;
 
@@ -677,25 +401,8 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
             justOpened = false;
             return;
         }
-
-        
-            
-        if (tfContext != null) {	    
-            if (type != EventConstants.RELEASED) {
-            	boolean processed = false;
-            	if (candidateBar != null) {
-            	    processed = candidateBar.keyPressed(c);
-            	}
-
-            	if (!processed) {
-                  tfContext.uCallKeyPressed(c);
-                  tfContext.tf.getString();
-                  return;
-              }
-              repaintVK();
-            }              
-        } else if (cvContext != null) {
-
+       
+		if (cvContext != null) {
             switch (c) {
                 case 'A': key = '1'; break;
                 case 'B': key = '3'; break;
@@ -747,78 +454,51 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         } else {
             return;
         }
-
-
-        if (tfContext != null && candidateBar != null) {
-            switch (metaKey) {
-                  case VirtualKeyboard.CNINPUT_SELECT_META_KEY:
-            	      int pos = tfContext.tf.getCaretPosition();
-            	      tfContext.tf.insert(candidateBar.getSelected(), pos);
-            	      tfContext.tf.getString();
-            	      candidateBar.reset();
-            	      break;
-            	    case VirtualKeyboard.CURSOR_UP_META_KEY:
-            	      candidateBar.prevPage();
-            	    break;
-            	    case VirtualKeyboard.CURSOR_LEFT_META_KEY:
-            	      candidateBar.prevChar();
-            	      break;
-            	    case VirtualKeyboard.CURSOR_RIGHT_META_KEY:
-            	      candidateBar.nextChar();
-            	      break;
-            	    case VirtualKeyboard.CURSOR_DOWN_META_KEY:
-            	      candidateBar.nextPage();
-            	      break;
-             }
-             repaintVK();
-        } else if (tfContext != null) {
-            switch (metaKey) {
-            	    case VirtualKeyboard.CURSOR_LEFT_META_KEY:
-            	      tfContext.moveCursor(Canvas.LEFT);
-            	      break;
-            	    case VirtualKeyboard.CURSOR_RIGHT_META_KEY:
-            	      tfContext.moveCursor(Canvas.RIGHT);
-            	      break;
-             }
-             repaintVK();
-        }
-
-        if (metaKey == vk.OK_META_KEY) {
-            // ok   
-            disp.hidePopup(this);
-            open = false;
-
-        } else if (metaKey == vk.CANCEL_META_KEY) {
-            // cancel
-            if (tfContext != null) {
-                tfContext.tf.setString(backupString);
-            }
-            disp.hidePopup(this);
-            open = false;
-
-        } else if (metaKey == vk.BACKSPACE_META_KEY) {
-            if (candidateBar != null) {
-            	  candidateBar.backspace();
-            } else if (tfContext != null) {
-                tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-            }
-        } else if (metaKey == vk.IM_CHANGED_KEY) {
-            if (tfContext != null) {
-                 tfContext.notifyModeChanged();
-            }
-        } else if (metaKey == vk.CNINPUT_META_KEY) {
-            if (candidateBar == null) {
-            	candidateBar = new IMCandidateBar(vk.kbWidth, 25);
-            	vk.candidateFieldHeight = 25;
-            	setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
-            	disp.requestScreenRepaint();
-            } else {
-              candidateBar = null;
-              vk.candidateFieldHeight = 0;
-              setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight);
-              disp.requestScreenRepaint();
-            }
-        }
+		if (tfContext != null) {
+			System.out.println("virtualMetaKeyEntered="+metaKey);
+			switch (metaKey) {
+				case VirtualKeyboard.OK_COMMAND:
+					disp.hidePopup(this);
+		            open = false;
+					break;
+				case VirtualKeyboard.CANCEL_COMMAND:
+					if (tfContext != null) {
+		                tfContext.tf.setString(backupString);
+		            }
+		            disp.hidePopup(this);
+		            open = false;
+					break;
+				case VirtualKeyboard.INSERT_CHAR_COMMAND:
+					int pos = tfContext.tf.getCaretPosition();
+					String str=vk.getSelect();
+					if(str!=null&&str.length()>0){
+						tfContext.tf.insert(str, pos);
+						tfContext.tf.getString();
+					}
+					break;
+				case VirtualKeyboard.DEL_CHAR_COMMAND:
+					tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
+					break;
+				case VirtualKeyboard.NODIFY_IM_CHANGE_COMMAND:
+					getNextKeyBoard();
+					tfContext.notifyModeChanged();
+					break;
+				case VirtualKeyboard.CURSOR_UP_COMMAND:
+					tfContext.moveCursor(Canvas.UP);
+					break;
+			    case VirtualKeyboard.CURSOR_DOWN_COMMAND:
+					tfContext.moveCursor(Canvas.DOWN);
+					break;
+			    case VirtualKeyboard.CURSOR_LEFT_COMMAND:
+					tfContext.moveCursor(Canvas.LEFT);
+					break;
+			    case VirtualKeyboard.CURSOR_RIGHT_COMMAND:
+					tfContext.moveCursor(Canvas.RIGHT);
+					break;
+				default:
+					break;
+			}
+		}
         // comment - customer may want backspace event also for Canvas.
         // in this case, we should handle this case here (else.. cvContext.keyPress(..))
     }
@@ -834,12 +514,6 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         if (tfContext != null) {
             tfContext.lPaintContent(g, width, height);
         }        
-    }
-
-    public void paintCandidateBar(Graphics g, int width, int height) {
-        if (candidateBar != null) {
-            candidateBar.paint(g, width, height);
-        }
     }
     /**
      * get available width

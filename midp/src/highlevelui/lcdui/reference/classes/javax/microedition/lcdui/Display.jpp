@@ -2371,7 +2371,7 @@ public class Display {
     public void initKeyboardInputMode()
     {
         /* Initial InputMode */
-        int initInputMode = KeyboardLayer.LOWERCASE;
+        int initInputMode = KeyboardLayer.KEYBOARD_INPUT_ANY;
 
 
         // MUST regarding second screen.
@@ -2393,12 +2393,16 @@ public class Display {
                 } catch (VirtualKeyboardException e) {
                     keyboardLayer = null;
                 }
+				//if password can only input ascii
+			    if ((textLFImpl.getConstraints() & TextField.PASSWORD) == TextField.PASSWORD){
+				   	initInputMode = KeyboardLayer.KEYBOARD_INPUT_ASCII;
+			   	}
 
                 switch (textLFImpl.getConstraints()) {
                     case TextField.DECIMAL:
                     case TextField.NUMERIC:
                     case TextField.PHONENUMBER:
-                        initInputMode = KeyboardLayer.NUMERIC;
+                        initInputMode = KeyboardLayer.KEYBOARD_INPUT_NUMERIC;
                     break;
                     default:
                         break;

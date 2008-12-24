@@ -33,7 +33,6 @@ interface VirtualKeyboardListener {
      */
     public void paintTextOnly(Graphics g, int width, int height);
 
-    public void paintCandidateBar(Graphics g, int width, int height);
     
     /**
      * should return the width of the owner Displayable
@@ -51,6 +50,6 @@ interface VirtualKeyboardListener {
      */
     public void repaintVK();
      
-
+	public String getIMName();
 }
 
