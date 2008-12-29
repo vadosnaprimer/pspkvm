@@ -6262,7 +6262,7 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
   BYTECODE_IMPL_ASM(fneg)
     POP_FLOAT_ASM_NOSP(0, f12)
     "neg.s	$f0,$f12\n"
-    PUSH_FLOAT_ASM_NOSP(0, f0)
+    PUSH_FLOAT_ASM_NOSP(4, f0)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
   BYTECODE_IMPL(dneg)
