@@ -293,8 +293,9 @@ public class MVMManager extends MIDlet
 
         try {
             int dev = GraphicalInstaller.getGameDevSetting(suiteInfo.suiteId);
+            int speed = GraphicalInstaller.getPrefferedCPUSpeed(suiteInfo.suiteId);
             int[] keymap = GraphicalInstaller.getKeymap(suiteInfo.suiteId);
-            GraphicalInstaller.setDeviceToRun(dev, keymap);
+            GraphicalInstaller.setDeviceToRun(dev, speed, keymap);
             // Create an instance of the MIDlet class
             // All other initialization happens in MIDlet constructor
             MIDletSuiteUtils.execute(suiteInfo.suiteId, midletToRun, null);
@@ -346,8 +347,9 @@ public class MVMManager extends MIDlet
 
             if (suiteInfo != null) {
             	  int dev = GraphicalInstaller.getGameDevSetting(suiteInfo.suiteId);
+            	  int speed = GraphicalInstaller.getPrefferedCPUSpeed(suiteInfo.suiteId);
             	  int[] keymap = GraphicalInstaller.getKeymap(suiteInfo.suiteId);
-                GraphicalInstaller.setDeviceToRun(dev, keymap);
+                GraphicalInstaller.setDeviceToRun(dev, speed, keymap);
             	  midletProxyList.setForegroundMIDlet(suiteInfo.proxy);
             }
 
