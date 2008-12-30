@@ -686,6 +686,10 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     }
 
     public static Exception saveDeviceSettings(int deviceID, int curMidlet) {
+        return saveDeviceSettings(deviceID, 222, curMidlet);
+    }
+    
+    public static Exception saveDeviceSettings(int deviceID, int cpuSpeed, int curMidlet) {
         Exception ret = null;
         RecordStore settings = null;
         
@@ -705,6 +709,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
 
             dos.writeInt(curMidlet);
             dos.writeInt(deviceID);
+            dos.writeInt(cpuSpeed);
             data = bas.toByteArray();
             
             settings = RecordStore.openRecordStore(DEV_SETTINGS_STORE, true);
@@ -785,6 +790,31 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                  DataInputStream dis = new DataInputStream(bis);
                  dis.readInt(); //midlet id
                  ret = dis.readInt(); //return device id
+             }
+         } finally {
+             settings.closeRecordStore();
+         }
+     } catch (Exception e) {
+         
+     }
+     
+     return ret;
+ }
+
+ public static int getPrefferedCPUSpeed (int midlet) {
+     int ret = 222;
+     RecordStore settings = null;
+     
+     try {
+         settings = RecordStore.openRecordStore(DEV_SETTINGS_STORE, false, 0, true);
+         try {
+             int rid = findGameDevSetting(settings, midlet);
+             if (rid > 0) {
+                 ByteArrayInputStream bis = new ByteArrayInputStream(settings.getRecord(rid));
+                 DataInputStream dis = new DataInputStream(bis);
+                 dis.readInt(); //midlet id
+                 dis.readInt(); //device id
+                 ret = dis.readInt();
              }
          } finally {
              settings.closeRecordStore();
@@ -886,10 +916,15 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
      return ret;
  }
  
- public static void setDeviceToRun (int deviceId, int[] keymap) {     
-     System.out.println("setDeviceToRun:"+deviceId);
+ public static void setDeviceToRun (int deviceId, int[] keymap) {
+     setDeviceToRun(deviceId, 222, keymap);
+ }
+ 
+ public static void setDeviceToRun (int deviceId, int cpuSpeed, int[] keymap) {
+     System.out.println("setDeviceToRun:"+deviceId+"  cpu speed:"+cpuSpeed);
      DeviceDesc.setCurrentDevice(deviceId);
      DeviceDesc.setCurrentKeymap(keymap);
+     DeviceDesc.setCurrentCPUSpeed(cpuSpeed);
      DisplayDeviceAccess.setDeviceScreenSize(getDeviceWidth(deviceId), getDeviceHeight(deviceId));
  }
 

@@ -62,6 +62,7 @@ public class DeviceSetting extends Form
     private Display display;
     private Displayable nextScreen;
     private int selectedDevice;
+    private int selectedCPUSpeed;
     
     private final static String[] keys = {
     		"---", "UP", "DOWN", "LEFT", "RIGHT", "SQUARE", "TRIANGLE", "CROSS", "CIRCLE", "SELECT", "START",
@@ -78,7 +79,9 @@ public class DeviceSetting extends Form
     		"SPACE", "BACKSPACE"
     };
     	
-
+    private final static String CPU_SPEED_SELECTOR_LABEL = "Select preferred CPU freq.";
+    private final static String DEVICE_SELECTOR_LABEL = "Select preferred device";
+    
     public DeviceSetting(int suiteId, Display display, Displayable nextScreen) {
     	 super("Device Setting");
         this.suiteId = suiteId;
@@ -91,6 +94,9 @@ public class DeviceSetting extends Form
         }
         
         append(createDeviceSelector());        
+
+        selectedCPUSpeed = GraphicalInstaller.getPrefferedCPUSpeed(suiteId);
+        append(createCPUSpeedSelector());
         
         int[] keymap = GraphicalInstaller.getKeymap(suiteId);
         if (keymap == null) {
@@ -122,7 +128,7 @@ public class DeviceSetting extends Form
     
     public void commandAction(Command c, Displayable s) {
         if (c == okCmd) {
-            GraphicalInstaller.saveDeviceSettings(selectedDevice, suiteId);
+            GraphicalInstaller.saveDeviceSettings(selectedDevice, selectedCPUSpeed, suiteId);
             GraphicalInstaller.saveKeymap(getKeymap(), suiteId);
             display.setCurrent(nextScreen);
         } else if ( c == cancelCmd) {
@@ -143,12 +149,23 @@ public class DeviceSetting extends Form
     	        }
     	    }
     	} else if (item instanceof ChoiceGroup) {
-    	    selectedDevice = DeviceDesc.dispIdToDevId(((ChoiceGroup)item).getSelectedIndex());
+    	    if (item.getLabel().equals(CPU_SPEED_SELECTOR_LABEL)) {
+    	        i = ((ChoiceGroup)item).getSelectedIndex();
+    	        if (i == 0) {
+    	            selectedCPUSpeed = 111;
+    	        } else if (i == 2) {
+    	            selectedCPUSpeed = 333;
+    	        } else {
+    	            selectedCPUSpeed = 222;
+    	        }
+    	    } else {
+    	        selectedDevice = DeviceDesc.dispIdToDevId(((ChoiceGroup)item).getSelectedIndex());
+    	    }
     	}
     }
 
     private ChoiceGroup createDeviceSelector() {
-        ChoiceGroup selector = new ChoiceGroup("Select preferred device", Choice.POPUP);
+        ChoiceGroup selector = new ChoiceGroup(DEVICE_SELECTOR_LABEL, Choice.POPUP);
         int dev = 0;
         String name;
 
@@ -168,13 +185,40 @@ public class DeviceSetting extends Form
         return selector;
     }
 
+    private ChoiceGroup createCPUSpeedSelector() {
+    	 int index;
+        ChoiceGroup selector = new ChoiceGroup(CPU_SPEED_SELECTOR_LABEL, Choice.POPUP);
+
+        selector.append("111MHz", null);
+        selector.append("222MHz", null);
+        selector.append("333MHz", null);
+
+        if (selectedCPUSpeed == 111) {
+        	index = 0;
+        } else if (selectedCPUSpeed == 333) {
+        	index = 2;
+        } else {
+        	index = 1;
+        }
+        
+        try {
+            selector.setSelectedIndex(index, true);
+        } catch (IndexOutOfBoundsException e) {
+            selector.setSelectedIndex(1, true);
+        }
+        selector.setLayout(Item.LAYOUT_NEWLINE_AFTER);
+
+        return selector;
+    }
+
+
     int[] getKeymap() {
     	 int i;
     	 int[] ret = new int[22];
     	 try {
-            for (i = 2; i < 24; i++) {
+            for (i = 3; i < 25; i++) {
         	  KeySettingItem tmpitem = (KeySettingItem)get(i);
-        	  ret[i-2] = tmpitem.getKeyValue();
+        	  ret[i-3] = tmpitem.getKeyValue();
             }
     	 } catch (IndexOutOfBoundsException e) {
     	     ret = null;

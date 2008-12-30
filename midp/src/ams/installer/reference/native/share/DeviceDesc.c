@@ -134,3 +134,12 @@ KNIDECL(com_sun_midp_installer_DeviceDesc_getDevicePropid0) {
     KNI_EndHandlesAndReturnObject(ret);
 }
 
+KNIEXPORT KNI_RETURNTYPE_VOID
+KNIDECL(com_sun_midp_installer_DeviceDesc_setCurrentCPUSpeed0) {
+    int speed;    
+    speed = KNI_GetParameterAsInt(1);
+
+    javacall_misc_set_cpu_speed(speed);
+    KNI_ReturnVoid();
+}
+
