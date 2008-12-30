@@ -6395,7 +6395,7 @@ BYTECODE_IMPL_ASM(lshl)
 
   BYTECODE_IMPL_ASM(iinc_wide)
     GET_SHORT_ASM(0, t0)
-    GET_SHORT_ASM(2, t1)
+    GET_SIGNED_SHORT_ASM(2, t1)
     GET_LOCAL_ASM(t0, t2)
     "addu $t1, $t1, $t2\n"
     SET_LOCAL_ASM(t0, t1)
