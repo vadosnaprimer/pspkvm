@@ -4913,7 +4913,7 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
 #define PUSH_INT_2_ASM_NOSP(offset, r1, r2)  "\n"); \
 	                                   __asm__ __volatile__( \
                                           " sw $"#r1", "#offset"-4($"REG_JSP") \n" \
-                                          " sw $"#r2", -8($"REG_JSP") \n" \
+                                          " sw $"#r2", "#offset"-8($"REG_JSP") \n" \
                                           :::#r1, #r2); \
                                           __asm__ __volatile__(
 
