@@ -54,6 +54,8 @@ extern "C" {
 //#define DEBUG_JAVACALL_NETWORK 1
 struct _DNSHandle;
 #define MAX_HOST_LENGTH 256
+#define MAX_IPBYTES_SIZE 32
+#define DNS_CACHE_SIZE 16
 
 #define PSP_CONSTATE_PROFILE_NAME       0   /*char [64] */ 
 #define PSP_CONSTATE_BSSID              1   /*u8 [6] */ 
@@ -83,12 +85,20 @@ typedef struct _DNSHandle{
 	SceUID res_thread_id;
 	int resolver_id;
 	javacall_handle monitor_handle;
-	char ip[32];
-	char hostname[1024];
+	char ip[MAX_IPBYTES_SIZE];
+	char hostname[MAX_HOST_LENGTH];
 } DNSHandle;
+
+typedef struct _DNS_CACHE{
+	char hostname[MAX_HOST_LENGTH];
+	char ipbytes[32];
+	int    len;
+	int    hit;
+} DNS_CACHE;
 
 static int network_initialized = 0;
 static DNSHandle* dnsqueue = NULL;
+static DNS_CACHE dns_cache[DNS_CACHE_SIZE]={0};
 
 extern int netDialog(int);
 
@@ -241,6 +251,58 @@ javacall_result javacall_network_finalize_finish(void)
     return JAVACALL_FAIL;
 }
 
+static javacall_result lookup_dns_cache(char *hostname,
+    /*OUT*/ unsigned char *pAddress, int maxLen, /*OUT*/ int *pLen) {
+    int i;
+    for (i = 0; i < DNS_CACHE_SIZE; i++) {
+        if (stricmp(dns_cache[i].hostname, hostname) == 0) {
+            if (dns_cache[i].len <= maxLen) {
+                memcpy(pAddress, dns_cache[i].ipbytes, dns_cache[i].len);
+                *pLen = dns_cache[i].len;
+                dns_cache[i].hit++;
+#ifdef DEBUG_JAVACALL_NETWORK    
+                javacall_printf("dns cache hit\n");
+#endif
+                return JAVACALL_OK;
+            }
+        }
+    }
+#ifdef DEBUG_JAVACALL_NETWORK    
+    javacall_printf("dns cache miss\n");
+#endif
+    return JAVACALL_FAIL;
+}
+
+static void add_dns_cache(char* hostname, unsigned char*ipbytes, int len) {
+    int i;
+    unsigned int mh = (unsigned int)-1;
+    int selected = 0;
+    
+    if (len > MAX_IPBYTES_SIZE) {
+    	javacall_printf("too long ipbytes that cannot add into dns cache\n");
+    	return;
+    }
+    
+    for (i = 0; i < DNS_CACHE_SIZE; i++) {
+        if (dns_cache[i].hostname[0] == '\0') {
+            selected = i;
+            break;
+        } else {
+            if (dns_cache[i].hit < mh) {
+                mh = dns_cache[i].hit;
+                selected = i;
+            }
+        }
+    }
+    
+    strncpy(dns_cache[selected].hostname, hostname, MAX_HOST_LENGTH);
+    memcpy(dns_cache[selected].ipbytes, ipbytes, len);
+    dns_cache[selected].len = len;
+#ifdef DEBUG_JAVACALL_NETWORK    
+    javacall_printf("add to dns cache %d\n", selected);
+#endif
+}
+
 void monitor_timeout(javacall_handle handle) {
 	DNSHandle* p;	
         for (p = dnsqueue; p != 0; p = p->next) {
@@ -318,6 +380,7 @@ int resolve_thread(SceSize args, void *argp) {
         		hdns->ip_len = len;
         		memcpy(hdns->ip, &addr.s_addr, len);
         		hdns->ok = 1;
+        		add_dns_cache(hdns->hostname, hdns->ip, hdns->ip_len);
         		javanotify_socket_event(JAVACALL_EVENT_NETWORK_GETHOSTBYNAME_COMPLETED,
         								hdns, JAVACALL_OK);
         		sceKernelExitDeleteThread(0);
@@ -339,7 +402,7 @@ int resolve_thread(SceSize args, void *argp) {
 static void* start_lookup_ip(char* hostname, int maxIpLen) {
 	//SceUID rid;
 	//static char buf[1024];
-	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x18, 64 * 1024, PSP_THREAD_ATTR_USER, NULL);	
+	SceUID thid = sceKernelCreateThread("resolver_thread", resolve_thread, 0x11, 16 * 1024, PSP_THREAD_ATTR_USER, NULL);	
 	if(thid < 0) {	
 		javacall_printf("Error, could not create thread\n");	
 		return NULL;	
@@ -450,12 +513,29 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
     javacall_printf("javacall_network_gethostbyname_start: %s\n", hostname);
 #endif
     if(sceNetInetInetAton(hostname, &addr) != 0) {
+#ifdef DEBUG_JAVACALL_NETWORK
+    	javacall_printf("sceNetInetInetAton ok\n");
+#endif
     	if (sizeof(addr) <= maxLen) {
            memcpy(pAddress, &addr.s_addr, sizeof(addr));
            *pLen = sizeof(addr);
     	    return JAVACALL_OK;
     	}
     }
+#ifdef DEBUG_JAVACALL_NETWORK
+        javacall_printf("sceNetInetInetAton fail\n");
+#endif
+    if (JAVACALL_OK == lookup_dns_cache(hostname, pAddress, maxLen, pLen)) {
+#ifdef DEBUG_JAVACALL_NETWORK
+    	 javacall_printf("dns cache hit\n");
+#endif
+        return JAVACALL_OK;
+    }
+    
+#ifdef DEBUG_JAVACALL_NETWORK    
+    javacall_printf("dns cache miss\n");
+#endif
+
     *pHandle = start_lookup_ip(hostname, maxLen);
     if (*pHandle) {
         return JAVACALL_WOULD_BLOCK;
@@ -482,10 +562,14 @@ javacall_result javacall_network_gethostbyname_finish(unsigned char *pAddress,
     int maxLen,int *pLen,void *handle,void *context) {
     
     if (end_lookup_ip(handle, pAddress, maxLen, pLen) == 0) {
-    printf("javacall_network_gethostbyname_finish ok\n");	
+#ifdef DEBUG_JAVACALL_NETWORK    
+        javacall_printf("javacall_network_gethostbyname_finish ok\n");	
+#endif
     	 return JAVACALL_OK;
     } else {
-    printf("javacall_network_gethostbyname_finish fail\n");
+#ifdef DEBUG_JAVACALL_NETWORK    
+        javacall_printf("javacall_network_gethostbyname_finish fail\n");
+#endif
         return JAVACALL_FAIL;     
     }
 }  
@@ -776,17 +860,21 @@ javacall_result /*OPTIONAL*/ javacall_network_get_http_proxy(/*OUT*/ char *pHttp
     u32 isUseProxy;
     u16 port;
     static char url[MAX_HOST_LENGTH];
-
+#ifdef DEBUG_JAVACALL_NETWORK    
     javacall_print("javacall_network_get_http_proxy\n");
-    
+#endif
     if (sceNetApctlGetInfo(PSP_CONSTATE_USEPROXY, &isUseProxy) || !isUseProxy) {
+#ifdef DEBUG_JAVACALL_NETWORK    
     	 javacall_print("javacall_network_get_http_proxy not set\n");
+#endif
         return JAVACALL_FAIL;
     }
 
     if (sceNetApctlGetInfo(PSP_CONSTATE_PROXYURL, url) ||
     	 sceNetApctlGetInfo(PSP_CONSTATE_PROXYPORT, &port)) {
+#ifdef DEBUG_JAVACALL_NETWORK    
     	 javacall_print("javacall_network_get_http_proxy failed to get url or port\n");
+#endif
         return JAVACALL_FAIL;
     }
 
@@ -799,8 +887,9 @@ javacall_result /*OPTIONAL*/ javacall_network_get_http_proxy(/*OUT*/ char *pHttp
     if (pHttpsProxy) {
     	return JAVACALL_FAIL;
     }
-
+#ifdef DEBUG_JAVACALL_NETWORK    
     javacall_print("javacall_network_get_http_proxy sucess\n");
+#endif
     return JAVACALL_OK;
 }
 
