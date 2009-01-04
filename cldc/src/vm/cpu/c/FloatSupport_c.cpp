@@ -326,7 +326,7 @@ extern "C" {
 #else
     if (F_JUST_NAN == *(jint*)&x ||
     	 F_JUST_NAN == *(jint*)&y) {
-    	 return 1;
+    	 return -1;
     }
     return  ((x > y) ? 1 : ( x == y) ? 0 : -1);
 #endif
