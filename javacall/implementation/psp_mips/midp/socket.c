@@ -183,7 +183,7 @@ javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
 
 	SceUID thid = sceKernelCreateThread("socket_open_thread", socket_open_thread, 0x11,  8*1024, PSP_THREAD_ATTR_USER, NULL);	
 	if(thid < 0) {	
-		javacall_printf("Error, could not create thread\n");	
+		javacall_printf("Error, could not create thread for open\n");	
 		close(sockfd);
 		free(param);
 		return JAVACALL_FAIL;	
@@ -206,14 +206,16 @@ javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
  * @retval JAVACALL_WOULD_BLOCK  if the caller must call the finish function again to complete the operation
  */
 javacall_result javacall_socket_open_finish(void *handle, void *context) {
+    javacall_result res = JAVACALL_OK;
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("javacall_socket_open_finish: result is %d\n", ((open_param*)context)->result);
 #endif
     if (((open_param*)context)->result) {
-    	 return JAVACALL_FAIL;
-    } else {
-        return JAVACALL_OK;
+    	 res = JAVACALL_FAIL;
     }
+
+    free(context);
+    return res;
 }
 
 //originally from pcsl_network_bsd (pcsl_socket.c)
@@ -298,9 +300,9 @@ fcntl(handle, F_SETFL, descriptorFlags & ~O_NONBLOCK);
     }
     param->bytesRead = 0;
 
-    SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x11, 64 *1024, PSP_THREAD_ATTR_USER, NULL);	
+    SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x11, 16 *1024, PSP_THREAD_ATTR_USER, NULL);	
     if(thid < 0) {	
-	javacall_printf("Error, could not create thread\n");	
+	javacall_printf("Error, could not create thread for read\n");	
 	free(param->pData);
 	free(param);
 	return JAVACALL_FAIL;	
