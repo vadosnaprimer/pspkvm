@@ -310,13 +310,18 @@ extern "C" {
 #if PROCESSOR_ARCHITECTURE_X86
     return JFP_lib_fcmpg_x86(x, y); 
 #else
-    if (F_JUST_NAN == *(jint*)&x ||
-    	 F_JUST_NAN == *(jint*)&y) {
-    	 return 1;
-    }
-    return  ((x > y)   ?  1   : 
-	     (x == y)  ?  0 : 
-	     (x < y)   ? -1 : 1);
+    //PSP
+    jint  rrawbits = float_bits(y);
+    jint  lrawbits = float_bits(x);
+  
+    if (((lrawbits >= F_L_POS_NAN) && (lrawbits <= F_H_POS_NAN)) ||
+	((lrawbits >= F_L_NEG_NAN) && (lrawbits <= F_H_NEG_NAN)) ||
+	((rrawbits >= F_L_POS_NAN) && (rrawbits <= F_H_POS_NAN)) ||
+	((rrawbits >= F_L_NEG_NAN) && (rrawbits <= F_H_NEG_NAN))) {
+      return 1;
+    } 
+  
+    return (x >  y) ?  1 : (x == y) ?  0 : (x <  y) ? -1 : 1;
 #endif
   }
 
@@ -324,11 +329,18 @@ extern "C" {
 #if PROCESSOR_ARCHITECTURE_X86
     return JFP_lib_fcmpl_x86(x, y); 
 #else
-    if (F_JUST_NAN == *(jint*)&x ||
-    	 F_JUST_NAN == *(jint*)&y) {
-    	 return -1;
-    }
-    return  ((x > y) ? 1 : ( x == y) ? 0 : -1);
+    //PSP
+    long  rrawbits = float_bits(y);
+    long  lrawbits = float_bits(x);
+
+    if (((lrawbits >= F_L_POS_NAN) && (lrawbits <= F_H_POS_NAN)) ||
+	((lrawbits >= F_L_NEG_NAN) && (lrawbits <= F_H_NEG_NAN)) ||
+	((rrawbits >= F_L_POS_NAN) && (rrawbits <= F_H_POS_NAN)) ||
+	((rrawbits >= F_L_NEG_NAN) && (rrawbits <= F_H_NEG_NAN))) {
+      return -1;
+    } 
+
+    return (x >  y) ?  1 : (x == y) ?  0 : -1;
 #endif
   }
 
