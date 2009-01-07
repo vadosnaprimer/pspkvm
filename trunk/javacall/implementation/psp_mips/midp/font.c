@@ -30,6 +30,7 @@ extern "C" {
     
     
 #include "javacall_font.h"
+#include "javacall_properties.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H    
 #include FT_GLYPH_H
@@ -114,6 +115,13 @@ static javacall_font* getFont( javacall_font_face face,
     char* facename;
     int facestyle, facesize;
     static int initialized = 0;
+    static int use_internal_font = -1;
+
+    if (use_internal_font < 0) {
+        if (JAVACALL_OK == javacall_get_property("com.pspkvm.font.internal", JAVACALL_INTERNAL_PROPERTY, &str)) {
+    	    if (str) smallsize = atoi(str);
+    	}
+    }
     
     switch(face) {
     	case JAVACALL_FONT_FACE_SYSTEM: iface = 0;
@@ -181,15 +189,33 @@ static javacall_font* getFont( javacall_font_face face,
     	default:
     	return NULL;
     }
-    switch(size) {
-    	case JAVACALL_FONT_SIZE_SMALL: facesize = 14;
+
+    {
+    	char* str;
+    	int smallsize = 0;
+    	int medsize = 0;
+    	int largesize = 0;
+    	
+    	if (JAVACALL_OK == javacall_get_property("com.pspkvm.fontsize.small", JAVACALL_INTERNAL_PROPERTY, &str)) {
+    	    if (str) smallsize = atoi(str);
+    	}
+    	if (JAVACALL_OK == javacall_get_property("com.pspkvm.fontsize.med", JAVACALL_INTERNAL_PROPERTY, &str)) {
+    	    if (str) medsize = atoi(str);
+    	}
+    	if (JAVACALL_OK == javacall_get_property("com.pspkvm.fontsize.large", JAVACALL_INTERNAL_PROPERTY, &str)) {
+    	    if (str) largesize = atoi(str);
+    	}
+    	
+       switch(size) {
+    	case JAVACALL_FONT_SIZE_SMALL: facesize = smallsize>0 ? smallsize:14;
     	break;
-    	case JAVACALL_FONT_SIZE_MEDIUM: facesize = 16;
+    	case JAVACALL_FONT_SIZE_MEDIUM: facesize = medsize>0 ? medsize:16;
     	break;
-    	case JAVACALL_FONT_SIZE_LARGE: facesize = 18;
+    	case JAVACALL_FONT_SIZE_LARGE: facesize = largesize>0 ? largesize:18;
     	break;
     	default:
     	return NULL;
+       }
     }
 
 
