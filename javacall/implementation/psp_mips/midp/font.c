@@ -114,13 +114,21 @@ static javacall_font* getFont( javacall_font_face face,
     int iface, istyle, isize;
     char* facename;
     int facestyle, facesize;
+    char* str;
     static int initialized = 0;
     static int use_internal_font = -1;
 
     if (use_internal_font < 0) {
+    	 use_internal_font = 0;
         if (JAVACALL_OK == javacall_get_property("com.pspkvm.font.internal", JAVACALL_INTERNAL_PROPERTY, &str)) {
-    	    if (str) smallsize = atoi(str);
+    	    if (str && !strcmp(str, "true")) {
+    	        use_internal_font = 1;
+    	    }
     	}
+    }
+    
+    if (use_internal_font == 1) {
+        return NULL;
     }
     
     switch(face) {
@@ -191,7 +199,6 @@ static javacall_font* getFont( javacall_font_face face,
     }
 
     {
-    	char* str;
     	int smallsize = 0;
     	int medsize = 0;
     	int largesize = 0;
