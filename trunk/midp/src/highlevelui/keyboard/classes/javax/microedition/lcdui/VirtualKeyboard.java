@@ -63,6 +63,8 @@ class VirtualKeyboard {
 
     Font f;
 
+	boolean isShowHelp=false;
+
 	int mainKeyOffsetX=5;
 	int mainKeyOffsetY=5;
 
@@ -261,18 +263,27 @@ class VirtualKeyboard {
     void traverse(int type, int keyCode) {
     
 	    System.out.println("VirtualK: keyCode="+keyCode);
+		if(isShowHelp){//任意键退出
+			if((keyCode!=EventConstants.SOFT_BUTTON1)
+				&&!(EventConstants.SOFT_BUTTON2==keyCode&&type==EventConstants.PRESSED)){
+				isShowHelp=false;
+				vkl.repaintVK();
+				return;
+			}
+		}
 		if(type==EventConstants.RELEASED){
 			switch(keyCode){
-				case EventConstants.SOFT_BUTTON2:
+				case EventConstants.SOFT_BUTTON2:	
 					vkl.virtualMetaKeyEntered(OK_COMMAND);
 					break;
 				case EventConstants.SOFT_BUTTON1:
-					vkl.virtualMetaKeyEntered(OK_COMMAND);
+					isShowHelp=!isShowHelp;
+					vkl.repaintVK();
 					break;
 				default:
 					break;
 				}	
-		}else if(EventConstants.PRESSED==type){
+		}else if(EventConstants.RELEASED!=type){
 			switch(keyCode){
 				case Constants.KEYCODE_RIGHT:
 				case Constants.KEYCODE_LEFT:
@@ -292,6 +303,7 @@ class VirtualKeyboard {
 				 case Canvas.KEY_NUM0:     //x
 				 	handleSelectKey(3);
 					break;
+				case Canvas.KEY_NUM5://add key7 change input mode
 				case Canvas.KEY_STAR://"*" KEY change input mode
 					{
 						int oldKb=currentKeyboard;
@@ -330,7 +342,7 @@ class VirtualKeyboard {
 		if(currentKeyboard==KeyboardLayer.PINYIN){
 			int cKM=VirtualKeyBoardMap.getActiveKeyMap();
 			if(key>=3){//clear
-				if((cKM==0||cKM==1)&&(kmap[0].getInputKey().length()>0)){
+				if(kmap[0].getInputKey().length()>0){
 					kmap[0].setInputKeyClearOne();
 					VirtualKeyBoardMap.setActiveKeyMap(0);
 					kmap[1].setKeyName(candidateBar.findCandidatePY(kmap[0].getInputKey()));
@@ -347,7 +359,9 @@ class VirtualKeyboard {
 						if(str!=null){
 							kmap[0].setInputKey();
 							kmap[1].setKeyName(str);
+							kmap[1].setActiveKey(0);
 							kmap[2].setKeyName(candidateBar.findCandidateHZ(kmap[1].getKeyName(0)));
+							kmap[2].setActiveKey(0);
 						}
 					}else{
 						//vkl.virtualMetaKeyEntered(NODIFY_IM_CHANGE_COMMAND);
@@ -361,7 +375,7 @@ class VirtualKeyboard {
 					kmap[2].setKeyName(candidateBar.findCandidateHZ(kmap[1].getKeyName()));
 					VirtualKeyBoardMap.setActiveKeyMap(2);
 					kmap[2].setActiveKey(0);
-				}else if(cKM==2){
+				}else if(cKM==2){//选中侯选择字，并查找联想字
 					vkl.virtualMetaKeyEntered(INSERT_CHAR_COMMAND);
 					kmap[0].resetInputKey();
 					kmap[1].resetKeyName();
@@ -370,19 +384,18 @@ class VirtualKeyboard {
 						char[] hz=candidateBar.findCandidateAssociational(getSelect().charAt(0));
 						if(hz!=null&&hz[0]!=0){
 							kmap[2].setKeyName(hz);
-							kmap[2].setActiveKey(0);
 						}else{
 							VirtualKeyBoardMap.setActiveKeyMap(0);
 						}
 					}
+					kmap[2].setActiveKey(0);
 				}
 			}
 		}
 		else{
-			kmap[1].setActiveKey(key);
-			if(kmap[1].getKeyName().equals("C")&&kmap[1].getActiveKey()==0){
-				vkl.virtualMetaKeyEntered(DEL_CHAR_COMMAND);
-			}else{
+			if(kmap[1].getKeyName(key)!=null&&kmap[1].getKeyName(key).length()!=0){
+				kmap[1].setActiveKey(key);
+				//kmap[0].setActiveKey(4);//主键盘处与中间位置
 				vkl.virtualMetaKeyEntered(INSERT_CHAR_COMMAND);
 			}
 		}
@@ -450,6 +463,7 @@ class VirtualKeyboard {
 					}else{
 						if(cAKM==2&&(kmap[1].getKeyName(0)!=null&&kmap[1].getKeyName(0).length()>0)){
 							kmap[cAKM].setKeyName(candidateBar.nextPage());
+							kmap[2].setActiveKey(0);
 						}else{
 						// do nothing 
 							if(cAKM==0&&curKname==null){
@@ -483,19 +497,33 @@ class VirtualKeyboard {
         }
 
         g.translate(0-g.getTranslateX(),0-g.getTranslateY());
-        //drawKeys(g);
-       // if(kmap)
-       if(currentKeyboard==KeyboardLayer.PINYIN){
-	       for(int i=0;i<3;i++){
-		       	if(kmap[i]!=null)
-	       		{
-			       kmap[i].drawKeyboardCN(g);
-	       		}
-	       	}
-       	}else{
-		   kmap[0].drawKeyboard(g);
-		   kmap[1].drawKeyboard(g);
-   		}
+		if(isShowHelp==true){
+			String helpStr[]={"  help:",
+				"1.(L 或 R)+O: 切换输入法. (Switch Input Method)",
+				"2.(L 或 R)+select: 功能同上. (Switch Input Method)",
+				"3.(L 或 R)+X: 删除输入. (Delete)",
+				"4. X: 拼音状态下删除输入. (Delete PinYin)",
+				"5.方向键或摇杆: 移动光标或切换键盘区域.",
+				"  Up/Down/Left/Right: Move cursor"};
+			g.setFont(f);
+			g.setColor(TEXT_COLOR);
+			for(int i=0;i<helpStr.length;i++)
+				g.drawString(helpStr[i],
+								5,textfieldHeight+10+i*fontH,
+								g.LEFT|g.TOP);
+		}else{
+	       if(currentKeyboard==KeyboardLayer.PINYIN){
+		       for(int i=0;i<3;i++){
+			       	if(kmap[i]!=null)
+		       		{
+				       kmap[i].drawKeyboardCN(g);
+		       		}
+		       	}
+	       	}else{
+			   kmap[0].drawKeyboard(g);
+			   kmap[1].drawKeyboard(g);
+	   		}
+		}
     }
 
     /**
@@ -670,15 +698,15 @@ class VirtualKeyboard {
 	//
 	private VirtualKeyBoardMap kmap[]=new VirtualKeyBoardMap[3];
 	String numericMap[]=
-		{"C1","2","3","4","50","6","7","8","9"};
+		{"1","2","3","4","50","6","7","8","9"};
 	String CnMap[]=
 		{"?","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
 	String abcMap[]=
-		{"C","abc.","def\n","ghi?","jkl,","mno!","pqrs","tuv ","wxyz"};
+		{"_@\\-","abc.","def\n","ghi?","jkl,","mno!","pqrs","tuv ","wxyz"};
 	String ABCMap[]=
-		{"C","ABC.","DEF\n","GHI?","JKL,","MNO!","PQRS","TUV ","WXYZ"};
+		{"_@\\-","ABC.","DEF\n","GHI?","JKL,","MNO!","PQRS","TUV ","WXYZ"};
 	String symbolMap[]=
-		{"C^[]","~@:#","<$>%","(_)+",",.?!","\"\\;'","{|}-","=/0`","& \n"};
+		{"[^]","~@:#","<$>%","(_)+",",.?!","\"\\;'","{|}-","=/0`","& \n"};
 	//{""",'","!@#%","&*><","_+=:","'?()","/\.{}","[]~^","$&#8364;&#163;-&#165;&#161;&#164;&#167;&#191;`|"};
 
 	void prepareKeyMap(){
@@ -1066,7 +1094,9 @@ class VirtualKeyBoardMap
 				}
 				if(keyName[i]!=null){
 					g.setColor(TEXT_COLOR);
-		            g.drawString(keyName[i],
+					String str=keyName[i].replace('\n',(char)0x2518);
+					//str=str.replace(' ' ,(char)0x2581);
+		            g.drawString(str,//(keyName[i],
 								(i%col)*(buttonW)+fontWCenter+keyMapX,
 								(i/col)*(buttonH)+buttonH+keyMapY-3,
 								g.HCENTER|g.BOTTOM);
@@ -1162,7 +1192,9 @@ class VirtualKeyBoardMap
 							g.LEFT|g.TOP);
 				}
 				g.setColor(TEXT_COLOR);
-				g.drawString(keyName[i],
+					String str=keyName[i].replace('\n',(char)0x2518);
+					//str=str.replace(' ' ,(char)0x2581);
+		            g.drawString(str,//(keyName[i]
 					pos[i][0] * (buttonW)  + fontWCenter+keyMapX,
 					pos[i][1] * (buttonH)  + buttonH+keyMapY-3,
 					g.HCENTER|g.BOTTOM);
