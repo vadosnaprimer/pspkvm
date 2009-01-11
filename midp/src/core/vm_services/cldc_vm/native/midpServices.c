@@ -247,3 +247,15 @@ char* isVKAutoOpen() {
     }
 }
 
+char* isVKUseDirection() {
+    char* value;
+    if (JAVACALL_OK == javacall_get_property("com.pspkvm.virtualkeyboard.direction", JAVACALL_INTERNAL_PROPERTY, &value)) {
+        return value;
+    } else {
+        return NULL;
+    }
+}
+
+
+
+
