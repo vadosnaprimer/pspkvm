@@ -222,6 +222,11 @@
 		Scope="internal"
 		Callout="isVKAutoOpen"
 		Comment="Getting system input method."/>
+  <property Key="com.pspkvm.virtualkeyboard.direction" 
+		Value="" 
+		Scope="internal"
+		Callout="isVKUseDirection"
+		Comment="Getting system input method."/>		
 		
 </properties>
 </configuration>

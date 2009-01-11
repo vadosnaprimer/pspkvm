@@ -224,7 +224,6 @@ class VirtualKeyboard {
     }
     int transfDirectionKeyCode(int keyCode){
 		int retKeyCode=keyCode;
-		if(keyCode==1){
 			switch(keyCode){
 					case Constants.KEYCODE_RIGHT:
 						retKeyCode=Canvas.KEY_NUM6;//<-
@@ -251,7 +250,6 @@ class VirtualKeyboard {
 						retKeyCode=Constants.KEYCODE_DOWN;
 						break;			
 				}
-			}
 		return retKeyCode;
 	}
     /**
@@ -284,6 +282,11 @@ class VirtualKeyboard {
 					break;
 				}	
 		}else if(EventConstants.RELEASED!=type){
+			if("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.direction"))){
+				//切换摇杆和方向键的作用
+				keyCode=transfDirectionKeyCode(keyCode);
+			}
+			
 			switch(keyCode){
 				case Constants.KEYCODE_RIGHT:
 				case Constants.KEYCODE_LEFT:
