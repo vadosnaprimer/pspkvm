@@ -13,6 +13,7 @@ import com.sun.midp.chameleon.skins.DateEditorSkin;
 import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
+import com.sun.midp.main.Configuration;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -49,8 +50,10 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 	
         //candidateBar = new IMCandidateBar(vk.kbWidth, 25);
 
-        Command keyboardClose = new Command("Close", Command.OK, 1);
-        setCommands(new Command[] { keyboardClose });
+		Command keyboardClose = new Command("OK", Command.OK, 1);
+		Command keyboardHelp = new Command("Help", Command.EXIT, 1);
+		Command commads[]={keyboardClose,keyboardHelp};
+		setCommands(commads);
     }       
 
     /**
@@ -151,8 +154,12 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 				case KEYBOARD_INPUT_ASCII:
 					vk.currentKeyboard=LOWERCASE;
 					break;
-				case KEYBOARD_INPUT_ANY:
-					vk.currentKeyboard=PINYIN;
+				case KEYBOARD_INPUT_ANY://根据PSPKVM.INI 配置决定默认输入法类型
+					if("vk-chinese".equals(Configuration.getProperty("com.pspkvm.inputmethod"))){
+						vk.currentKeyboard=PINYIN;
+					}else{
+						vk.currentKeyboard=LOWERCASE;
+					}
 					break;
 				default:
 					vk.currentKeyboard=NUMERIC;
