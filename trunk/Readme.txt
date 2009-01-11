@@ -1,5 +1,5 @@
-pspkvm v0.4.2
-20 Sep. 2008
+pspkvm v0.5.0
+11 Jan. 2009
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
@@ -12,12 +12,12 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- FreeType2 fonts support. (Please see "Running tips: Use FreeType2 font files")
-- Bug fixes:
-  1) Mess display bug of NokiaUI for some games, e.g American Army.
-  2) Fix PlatformRequest() issue of not launching Installer for Jad/Jar files.
-- Add missing character in Chinese Input Method. Now full GB2312 charset is supported.
-- Optimize alpha-blending of drawRGB() with VFPU instructions.
+- Completely new designed Virtual Keyboard (Great thanks to Anweifeng, who is the designer and coder of new Virtual Keyboard)
+- Support JSR226(SVG) and JSR172(Web Service)
+- Optimized interpreter loop of VM, JB2 score improves 25%
+- Bug fix and improvement in networking
+- Support user defined Truetype font size by pspkvm.ini
+- Add CPU speed setting in "Select device" menu
 
 --------------------------------
 General information
@@ -46,8 +46,10 @@ Fetures
 - JSR75(File Connection)
 - Virtual Keyboard Input
 - Chinese Input
-- JSR179
+- JSR179(GPS)
 - FreeType2 font support
+- JSR 226(SVG)
+- JSR 172(Web Service)
 
 --------------------------------
 TODO
@@ -60,23 +62,23 @@ TODO
 Bugs and known issues
 --------------------------------
 Known issues:
+- Not running on 5.02 Gen-A firmware
 - javacall_file_truncate doesn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
 - Multimedia temporary files may leave on your memory stick sometimes, especially after VM crash. They're usually not big, but if you wanna delete the by hands, just goto your PSP's /PSP/GAME/pspkvm/ directory, find the file whose name likes xxxxxxxx_tmp_mus.mid, delete them.
 - Fileconnection rmdir operation may fail for unknown reasons
 - LocationProvider.getState() will always returns AVAILABLE once after GPS initialized, so LocationListener.providerStateChanged() doesn't work as expected.
-- gmail 1.5.0 cannot login. Always get "Username and password do not match. You provided ()"
 
 --------------------------------
 Run from binary bundle
 --------------------------------
 1. Download correct binary bundle:
-- If you have a 1.50 kernel PSP and have installed pspkvm 0.3.2:
+- If you have a 1.50 kernel PSP and have installed pspkvm 0.4.2:
    Download pspkvm-bin-x.x.x-150-upgrade.zip
-- If you want to run pspkvm on 3.xx OE and have installed pspkvm 0.3.2:
+- If you want to run pspkvm on 3.xx OE and have installed pspkvm 0.4.2:
    Download pspkvm-bin-x.x.x-OE-upgrade.zip
-- If you have a 1.50 kernel PSP and haven't installed pspkvm 0.3.2:
+- If you have a 1.50 kernel PSP and haven't installed pspkvm 0.4.2:
    Download pspkvm-bin-x.x.x-150-allinone.zip
-- If you want to run pspkvm on 3.xx OE and haven't installed pspkvm 0.3.2:
+- If you want to run pspkvm on 3.xx OE and haven't installed pspkvm 0.4.2:
    Download pspkvm-bin-x.x.x-OE-allinone.zip
 2. Extract the zip to PSP's /PSP/GAME/ or /PSP/GAME150
 3. Here we go!
@@ -173,12 +175,12 @@ Running tips
 	However, you can change the default mapping in pspkvm.ini. Please open pspkvm.ini in PSPKVM's install directory, change the values in [jsr75] section. If the value is left blank, default value is applied.
 	
 - Virtual Keyboard and Chinese Input tips:
-	"#" (SHIFT+START by default)            -> Open/Close Chinese Input
-	"*" (SHIFT+SELECT by default)           -> Switch input methods
-	4/6 (LEFT/RIGHT by default)             -> Select candidate chinese chars / Move cursor
-	2/8 (UP/DOWN by default)                -> Prev/Next page of candidate chinese chars
-	5 (SHIFT+CIRCLE by default)             -> Confirm selected chinese char
+	Confirm key (SHIFT+CIRCLE by default)   -> Switch input methods
+	"*" (SHIFT+SELECT by default)           -> Switch input methods (same as above)
+	2/4/6/8 (UP/LEFT/RIGHT/DOWN by default) -> Move focus on Virtual Keyboard
+	Direction Keys (Analog stick by default)-> Move cursor
 	CLEAR (SHIFT+CROSS by default)          -> Backspace
+	0 (CROSS by default)                    -> Delete Pinyin (in Chinese input method)
 	
 - Use FreeType2 font files
 	You can have 3 type of fonts: System, Proportional and Monospace. Copy your .ttf files into ms0:/PSP/GAME/PSPKVM and rename them as below:
