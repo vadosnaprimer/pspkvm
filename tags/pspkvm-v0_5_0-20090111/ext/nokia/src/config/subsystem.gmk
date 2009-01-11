@@ -1,0 +1,63 @@
+######################################################################
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+######################################################################
+
+SUBSYSTEMS += nokia_ui
+
+NOKIA_UI_CONFIG_DIR = $(NOKIA_UI_DIR)/src/config/$(TARGET_PLATFORM)
+
+#-include $(NOKIA_UI_CONFIG_DIR)/config.gmk
+#include $(NOKIA_UI_DIR)/src/config/features.defs
+
+EXTRA_CFLAGS  += -DENABLE_NOKIA_UI=1
+JPP_DEFS      += -DENABLE_NOKIA_UI
+
+# Include NOKIA UI system properties in Configuration
+#SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+#        $(NOKIA_UI_CONFIG_DIR)/properties_nokia_ui.xml
+
+# Specify romizer configuration file for the Nokia UI
+# and path where the file is located
+#
+#ROMGEN_INCLUDE_PATHS += $(NOKIA_UI_DIR)/src/config
+#ROMGEN_CFG_FILES     += nokia_ui_rom.cfg
+
+
+SUBSYSTEM_NOKIA_UI_JAVA_FILES += \
+    $(NOKIA_UI_DIR)/src/classes/mid/sound/Sound.java \
+    $(NOKIA_UI_DIR)/src/classes/mid/sound/SoundListener.java \
+    $(NOKIA_UI_DIR)/src/classes/mid/ui/DeviceControl.java \
+    $(NOKIA_UI_DIR)/src/classes/mid/ui/DirectGraphics.java \
+    $(NOKIA_UI_DIR)/src/classes/mid/ui/DirectGraphicsImpl.java \
+    $(NOKIA_UI_DIR)/src/classes/mid/ui/DirectUtils.java \
+    $(NOKIA_UI_DIR)/src/classes/mid/ui/FullCanvas.java
+
+
+#
+# Native
+#
+
+vpath % $(NOKIA_UI_DIR)/src/native
+
+#
+# Native KNI files
+#
+
+SUBSYSTEM_NOKIA_UI_NATIVE_FILES += \
+    nokia_ui_kni.c
+    
+# Append Nokia UI source bundle creation to target
+source_bundle:: nokia_ui_source_bundle
+
+# Create Nokia UI source in subdir 'ext/nokia/'
+NOKIA_UI_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/ext/nokia
+
+# Copy and filter Nokia UI source in NOKIA_UI_SOURCE_OUTPUT_DIR
+nokia_ui_source_bundle: NOKIA_UI_DIR SOURCE_OUTPUT_DIR
+	@echo " ... Nokia UI source bundle" $(LOG)
+	@$(call re_src_filter,$(NOKIA_UI_DIR),$(NOKIA_UI_SOURCE_OUTPUT_DIR),src)
