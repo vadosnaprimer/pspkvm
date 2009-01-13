@@ -33,7 +33,7 @@
 
 /* OBJECTWRITER CODE STARTS HERE ======================================== */
 
-void SourceObjectWriter::start_block_comments(char *block_name) {
+void SourceObjectWriter::start_block_comments(const char *block_name) {
   _stream->cr();
   _stream->cr();
   _stream->print   ("/* ========================   ");
@@ -591,7 +591,7 @@ void SourceObjectWriter::put_method_symbolic(Method *method, int offset
 
 JvmExecutionEntry SourceObjectWriter::jvm_core_entries[] = {
   EXECUTION_ENTRIES_DO(ROM_DEFINE_ENTRY)
-  {(unsigned char*)NULL, (char*)NULL}
+  {(unsigned char*)NULL, (const char*)NULL}
 };
 
 void SourceObjectWriter::put_compiled_method_symbolic(CompiledMethod *cm,
@@ -744,8 +744,8 @@ const char* SourceObjectWriter::get_native_function_return_type(Method *method)
 
 void SourceObjectWriter::put_c_function(Method *method, address addr,
                                   Stream *output_stream JVM_TRAPS) {
-  char *name = NULL;
-  char *prefix = "";
+  const char *name = NULL;
+  const char *prefix = "";
   bool is_entry = (addr == method->execution_entry());
   TypeArray native_name;
 
@@ -847,8 +847,8 @@ bool SourceObjectWriter::is_kvm_native(Method *method) {
   return false;
 }
 
-void SourceObjectWriter::write_kvm_method_stub(Method *method, char *name) {
-  char *ret_type_string = NULL;
+void SourceObjectWriter::write_kvm_method_stub(Method *method, const char *name) {
+  const char *ret_type_string = NULL;
   Signature::Raw sig = method->signature();
   BasicType ret_type = sig().return_type();
 
@@ -984,7 +984,7 @@ void SourceObjectWriter::print_entry_declarations() {
 
 struct OopMapInfo {
   address addr;
-  char *  name;
+  const char *  name;
 };
 
 #define DEFINE_OOPMAP_INFO(x)  {(address)& oopmap_ ## x, STR(oopmap_ ## x)},

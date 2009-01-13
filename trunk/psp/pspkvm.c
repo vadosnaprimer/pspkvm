@@ -907,7 +907,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	osk.base.accessThread = 19;			
 	osk.base.fontThread = 18;
 	osk.base.soundThread = 16;
-	osk.unk_48 = 1;
+	osk.datacount = 1;
 	osk.data = &data;
 
 	int rc = sceUtilityOskInitStart(&osk);
@@ -955,13 +955,13 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 
 	for(i = 0; data.outtext[i]; i++);
 
-	if (data.rc == 1) {
+	if (data.result == 1) {
 	    //cancelled
 	    memcpy(out, in, inlen*2);
 	    i = inlen;
 	}
 
-	printf("end of osk: %d\n", data.rc);
+	printf("end of osk: %d\n", data.result);
 	sceKernelDelayThread(500000); 
 
 	suspend_key_input = 0;

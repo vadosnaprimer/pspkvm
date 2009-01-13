@@ -524,8 +524,8 @@ bool ROMOptimizer::parse_config(char *line, char**name, char **value) {
 
   char * p;
 
-  *name = "";
-  *value = "";
+  *name = (char*)"";
+  *value = (char*)"";
 
   for (p = line; *p && isspace(*p);) {
     p++;

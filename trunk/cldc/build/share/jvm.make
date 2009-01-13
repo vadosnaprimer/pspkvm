@@ -1461,7 +1461,7 @@ endif
 
 GCC_PREFIX_arm     = $(GNU_TOOLS_DIR)/bin/
 GCC_PREFIX_sh      = $(GNU_TOOLS_DIR)/bin/
-GCC_PREFIX_mips    = $(GNU_TOOLS_DIR)/bin/
+GCC_PREFIX_mips    = $(GNU_TOOLS_DIR)/../bin/psp-
 GCC_PREFIX_i386    =
 GCC_PREFIX_sparc   =
 GCC_PREFIX_powerpc =
