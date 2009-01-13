@@ -266,7 +266,7 @@ void SourceROMWriter::init_streams() {
 }
 
 void SourceROMWriter::write_copyright(Stream *stream, bool c_style_comments) {
-  char * header;
+  const char * header;
 
   if (c_style_comments) {
     header =
@@ -562,7 +562,7 @@ void SourceROMWriter::find_offsets(JVM_SINGLE_ARG_TRAPS) {
 }
 
 
-void SourceROMWriter::write_subtype_range(char *name, 
+void SourceROMWriter::write_subtype_range(const char *name, 
                                           int max_skip_header_words,
                                           int start, int end)
 {
@@ -788,7 +788,7 @@ void SourceROMWriter::visit_persistent_handles(JVM_SINGLE_ARG_TRAPS) {
   }
 }
 
-void SourceROMWriter::print_separator(char * section) {
+void SourceROMWriter::print_separator(const char * section) {
   main_stream()->print_cr("\n\n/* ==== %s starting ==== */", section);
 }
 

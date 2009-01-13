@@ -41,11 +41,11 @@ else
 endif
 
 GCC_VERSION	=
-
-CC		= $(GNU_TOOLS_BINDIR)gcc$(GCC_VERSION)
-CPP		= $(GNU_TOOLS_BINDIR)g++$(GCC_VERSION)
-LD		= $(GNU_TOOLS_BINDIR)g++$(GCC_VERSION)
-AR		= $(GNU_TOOLS_BINDIR)ar -rc
+#workaround: psptoolchain with gcc 4.3.2
+CC		= $(GNU_TOOLS_BINDIR)../../bin/psp-gcc$(GCC_VERSION)
+CPP		= $(GNU_TOOLS_BINDIR)../../bin/psp-g++$(GCC_VERSION)
+LD		= $(GNU_TOOLS_BINDIR)../../bin/psp-g++$(GCC_VERSION)
+AR		= $(GNU_TOOLS_BINDIR)../../bin/psp-ar -rc
 
 CC_OUTPUT=-o 
 AR_OUTPUT=

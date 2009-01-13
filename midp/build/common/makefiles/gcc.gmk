@@ -63,7 +63,7 @@
 #
 ######################################################################
 ifdef GNU_TOOLS_DIR
-    GNU_TOOLS_BINDIR?=$(GNU_TOOLS_DIR)/bin/
+    GNU_TOOLS_BINDIR?=$(GNU_TOOLS_DIR)/../bin/psp-
 else
     ifeq ($(TARGET_CPU), arm)
 	# Export GNU_TOOLS_DIR to VM makefile

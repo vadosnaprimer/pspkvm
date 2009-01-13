@@ -340,7 +340,7 @@ void Generator::generate_oopmaps() {
     }
 
     output->print("}\n\n");
-    generate_oopmap_checks("loopgen", output);
+    generate_oopmap_checks((char*)"loopgen", output);
 
     output->flush();
   }
@@ -352,9 +352,9 @@ void Generator::dump_entry(BasicType type, void* param, const char *name,
                     offset, byte_size_for(type), name);
 }
 
-void Generator::generate_oopmap_checks(char *c_function_prefix, Stream* stream)
+void Generator::generate_oopmap_checks(const char *c_function_prefix, Stream* stream)
 {
-  char * prefix = c_function_prefix;
+  const char * prefix = c_function_prefix;
   int i;
 
   _stream = stream;
