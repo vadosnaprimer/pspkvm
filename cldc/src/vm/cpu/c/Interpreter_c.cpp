@@ -4951,7 +4951,7 @@ unsigned char _dummy2[PROTECTED_PAGE_SIZE];
                                           " sw $"#r3", "#offset"-12($"REG_JSP") \n" \
                                           " sw $"#r4", "#offset"-16($"REG_JSP") \n" \
                                           " sw $"#r5", "#offset"-20($"REG_JSP") \n" \
-                                          " sw $"#r5", "#offset"-24($"REG_JSP") \n" \
+                                          " sw $"#r6", "#offset"-24($"REG_JSP") \n" \
                                           :::#r1, #r2, #r3, #r4, #r5, #r6); \
                                           __asm__ __volatile__(
                                           
