@@ -6248,7 +6248,7 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
 
   BYTECODE_IMPL_ASM(ineg)
     POP_INT_ASM_NOSP(0, t0)
-    "sub $t0, $zero, $t0\n"
+    "subu $t0, $zero, $t0\n"
     PUSH_INT_ASM_NOSP(4, t0)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
 
