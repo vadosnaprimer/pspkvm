@@ -704,13 +704,13 @@ gx_draw_rgb(const jshort *clip,
                         */
                         register unsigned short background = *pdst;
                     	   register unsigned char alpha1 = 0xff - alpha;
-                    	   register unsigned short r = alpha_table[(value & 0x00F80000) >> 19][alpha] + alpha_table[background >> 11][alpha1];
+                    	   register unsigned short r = alpha_table[(value & 0x00F80000) >> 19][alpha] + alpha_table[background & 0x1F][alpha1];
                     	   register unsigned short g = alpha_table[(value & 0x0000FC00) >> 10][alpha] + alpha_table[(background >> 5) & 0x3F][alpha1];
-                    	   register unsigned short b = alpha_table[(value & 0x000000F8) >> 3][alpha] + alpha_table[background & 0x1F][alpha1];
+                    	   register unsigned short b = alpha_table[(value & 0x000000F8) >> 3][alpha] + alpha_table[background >> 11][alpha1];
                         if (r > 0x1F) r = 0x1F;
                         if (g > 0x3F) g = 0x3F;
                         if (b > 0x1F) b = 0x1F;
-                    	   *pdst = (r << 11) | (g << 5) | b;                    
+                    	   *pdst = (b << 11) | (g << 5) | r;                    
                 }
                 pdst++;
             } /* loop by rgb data columns */
