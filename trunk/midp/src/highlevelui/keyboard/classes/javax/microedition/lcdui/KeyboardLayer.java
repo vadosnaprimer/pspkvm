@@ -110,7 +110,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
     private static final boolean[][] isMap = {
      // |NUMERIC|LOWERCASE|UPPERCASE|SYMBOL|PINYIN
         { true,   false,   false,    false, false }, // KEYBOARD_INPUT_NUMERIC
-        { true,   true,    true,     false, false }, // KEYBOARD_INPUT_ASCII
+        { true,   true,    true,     true, false }, // KEYBOARD_INPUT_ASCII
         { true,   true,    true,     true,  true } // KEYBOARD_INPUT_ANY 
 
     };
