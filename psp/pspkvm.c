@@ -869,14 +869,26 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	}
 
 	suspend_key_input = 1;
-	printf("oskDialog: inlen=%d\n", inlen);
+	//printf("oskDialog: inlen=%d\n", inlen);
 
 	if (inlen >= maxoutlen) {
 		inlen = maxoutlen - 1;
 	}
 
 	intext = malloc((inlen + 1) * 2);
+	if (!intext) {
+		printf("oskDialog: not enough memory\n");
+		memcpy(out, in, inlen*2);
+		return inlen;
+	}
+	
 	titletext = malloc((titlelen + 1) * 2);
+	if (!titletext) {
+		free(intext);
+		printf("oskDialog: not enough memory\n");
+		memcpy(out, in, inlen*2);
+		return inlen;
+	}
 
 	memset(out, 0, maxoutlen);
 	
@@ -966,6 +978,9 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 
 	suspend_key_input = 0;
 
+	free(intext);
+	free(titletext);
+	
 	return i;
 }
 

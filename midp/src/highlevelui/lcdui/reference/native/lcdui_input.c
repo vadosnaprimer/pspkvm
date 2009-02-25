@@ -160,7 +160,7 @@ KNIDECL(javax_microedition_lcdui_TextFieldLFImpl_launchNativeTextField0) {
     
     text = midpNewStringFromArray(bufferJCharArray, currentLength);
     title = midpNewString(titleJString);
-    output = midpMalloc(maxLength + 1);
+    output = midpMalloc((maxLength+1)*2);
     if (output) {
     	int textlen = text.len;
     	int titlelen = title.len;
