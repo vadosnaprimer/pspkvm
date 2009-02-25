@@ -1235,8 +1235,8 @@ class TextFieldLFImpl extends ItemLFImpl implements
             
 		commit("");
 
-       	System.out.println("uCallKeyPressed return: "+tf.getString());
-
+              lRequestPaint();
+              
        	return;
        	}
 	}
