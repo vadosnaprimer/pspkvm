@@ -269,7 +269,7 @@
 <localized_string Key="AMS_SUITES_TO_BE_DISABLED"
                 Value="This action will disable these applications:&#010;&#010;"/>
 <localized_string Key="AMS_MGR_TITLE"
-                  Value="Java MIDlets"/>
+                  Value="PSPKVM - http://www.pspkvm.org"/>
 <localized_string Key="AMS_MGR_SETTINGS"
                 Value="Settings"/>
 <localized_string Key="AMS_MGR_PREFERENCES"
