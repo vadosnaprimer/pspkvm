@@ -1,0 +1,171 @@
+#
+# Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+######################################################################
+
+# Add to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr_226
+
+# Three internal components of jsr_226
+# 1. jsr226  : Unchanged public API classes
+# 2. perseus : Modified public API classes and 
+# 3.           the Scalable Vector Graphics engine
+
+# Also depends on the pisces 2D renderer.
+
+# Directories for each internal workspace
+INTERNAL_JSR226_DIR_JSR226API=$(JSR_226_DIR)/jsr226-api
+INTERNAL_JSR226_DIR_PERSEUS=$(JSR_226_DIR)/perseus2
+
+# Javadoc source paths for the 3 components.
+# IMPL NOTE : fix duplicate files - in jsr226 api and perseus2 - for javadoc.
+
+# JSR 226 APIs in jsr226
+INTERNAL_JSR226_JAVA_FILES_JSR226API_SOURCEPATH=\
+$(INTERNAL_JSR226_DIR_JSR226API)/src/module
+
+# JSR 226 APIs in perseus
+INTERNAL_JSR226_JAVA_FILES_PERSEUS_JSR226API_SOURCEPATH=\
+$(INTERNAL_JSR226_DIR_PERSEUS)/engine/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.releases/midp20/src/module
+
+# Implementation APIs in perseus
+INTERNAL_JSR226_JAVA_FILES_PERSEUS_SOURCEPATH=\
+$(INTERNAL_JSR226_DIR_PERSEUS)/engine/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/messages/cldc11/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/io/cldc11/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/io/midp20.jwc/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/url/cldc11/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/math/cldc11/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/thread/cldc11/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d.image/midp20/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d/shared/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d/pisces.shared/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d/pisces.midp20/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/util/shared/src/module\
+$(PATHSEP)$(INTERNAL_JSR226_DIR_PERSEUS)/platform.releases/midp20/src/module
+
+# Javadoc source path
+# For the complete jsr_226 subsystem
+# 
+SUBSYSTEM_JSR226_SOURCEPATH=\
+$(INTERNAL_JSR226_JAVA_FILES_JSR226API_SOURCEPATH)\
+$(PATHSEP)$(INTERNAL_JSR226_JAVA_FILES_PERSEUS_JSR226API_SOURCEPATH)\
+$(PATHSEP)$(INTERNAL_JSR226_JAVA_FILES_PERSEUS_SOURCEPATH)
+
+SUBSYSTEM_JSR226_PACKAGES = \
+   com.sun.perseus.platform \
+   com.sun.perseus.j2d \
+   com.sun.perseus.util \
+   com.sun.perseus.builder \
+   com.sun.perseus.model \
+   com.sun.perseus.parser \
+   com.sun.perseus.midp \
+   javax.microedition.m2g \
+   org.w3c.dom \
+   org.w3c.dom.events \
+   org.w3c.dom.svg
+
+MIDP_JAVADOC_SOURCEPATH += $(SUBSYSTEM_JSR226_SOURCEPATH)
+MIDP_JAVADOC_PACKAGES +=  $(SUBSYSTEM_JSR226_PACKAGES)
+
+MIDP_JAVADOC_ALL += \
+	-group "JSR226 Scalable Vector Graphics" \
+	$(shell echo $(SUBSYSTEM_JSR226_PACKAGES) | tr ' ' $(PATHSEP))
+
+INTERNAL_JSR_226_CONFIG_DIR = \
+$(JSR_226_DIR)/perseus2/platform.releases/midp20/resources/build
+
+# Include JSR_226 system properties in Configuration
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+	$(INTERNAL_JSR_226_CONFIG_DIR)/properties_jsr226.xml
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(INTERNAL_JSR_226_CONFIG_DIR)
+ROMGEN_CFG_FILES     += jsr226_rom.cfg
+
+# Java files for the ( jsr_226 ) module
+#
+
+# jsr226-api
+INTERNAL_JSR226_JAVA_FILES_JSR226API_FILES := \
+	$(shell (find $(INTERNAL_JSR226_DIR_JSR226API)/src/module/org -name '*.java' | egrep -v 'SCCS')) \
+	$(INTERNAL_JSR226_DIR_JSR226API)/src/module/javax/microedition/m2g/ExternalResourceHandler.java \
+	$(INTERNAL_JSR226_DIR_JSR226API)/src/module/javax/microedition/m2g/SVGEventListener.java
+
+# perseus
+#
+# adding java files for perseus is somewhat ugly
+# because of the need to support building from the perseus CVS repository 
+# which has sources for CDC and CLDC in different subdirs.
+# But it is functional.
+#
+INTERNAL_JSR226_JAVA_FILES_PERSEUS_FILES := \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/engine/src/module/javax/microedition/m2g -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.releases/midp20/src/module/javax/microedition/m2g -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/engine/src/module/com/sun/perseus/builder -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/engine/src/module/com/sun/perseus/model -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/engine/src/module/com/sun/perseus/parser -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/messages/cldc11/src/module/com/sun/perseus/platform -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/io/cldc11/src/module/com/sun/perseus/platform -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/io/midp20.jwc/src/module/com/sun/perseus/platform -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/url/cldc11/src/module/com/sun/perseus/platform -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/math/cldc11/src/module/com/sun/perseus/platform -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/thread/cldc11/src/module/com/sun/perseus/platform -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d.image/midp20/src/module/com/sun/perseus/j2d -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d/shared/src/module/com/sun/perseus/j2d -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d/pisces.shared/src/module/com/sun/perseus/j2d -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/j2d/pisces.midp20/src/module/com/sun/perseus/j2d -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.features/util/shared/src/module/com/sun/perseus/util -name '*.java' | egrep -v 'SCCS')) \
+	$(shell (find $(INTERNAL_JSR226_DIR_PERSEUS)/platform.releases/midp20/src/module/com/sun/perseus/midp -name '*.java' | egrep -v 'SCCS'))
+
+# All of them together to provide to main makefile
+SUBSYSTEM_JSR_226_JAVA_FILES = \
+    $(INTERNAL_JSR226_JAVA_FILES_JSR226API_FILES) \
+    $(INTERNAL_JSR226_JAVA_FILES_PERSEUS_FILES)
+
+# Append JSR 226 source bundle creation to target
+source_bundle:: jsr_226_source_bundle
+
+# Create JSR 226 source in subdir 'jsr226_svg'
+JSR_226_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr226
+
+# Copy and filter JSR 226 source in JSR_226_SOURCE_OUTPUT_DIR
+jsr_226_source_bundle: JSR_226_DIR SOURCE_OUTPUT_DIR
+	@echo " ... JSR 226 source bundle" $(LOG)
+	@$(call re_src_filter,$(JSR_226_DIR),$(JSR_226_SOURCE_OUTPUT_DIR),jsr226-api)
+	@$(call re_src_filter,$(JSR_226_DIR),$(JSR_226_SOURCE_OUTPUT_DIR),perseus2)
+
+# Copy font resources to /lib at the end of MIDP build
+MIDP_DEPS += jsr_226_resources
+
+jsr_226_resources: $(LIBDIR)
+	@mkdir -p $(LIBDIR)
+	@cp -f $(INTERNAL_JSR226_DIR_PERSEUS)/platform.releases/midp20/resources/module/com/sun/perseus/render/resources/*.svg $(LIBDIR)/ $(LOG)

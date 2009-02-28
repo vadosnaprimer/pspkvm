@@ -1,0 +1,260 @@
+#
+#   
+#
+# Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License version
+# 2 only, as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License version 2 for more details (a copy is
+# included at /legal/license.txt).
+# 
+# You should have received a copy of the GNU General Public License
+# version 2 along with this work; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+# 
+# Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa
+# Clara, CA 95054 or visit www.sun.com if you need additional
+# information or have any questions.
+#
+######################################################################
+#
+# Module's Component Configuration file
+#
+# Remember: It is up to the module itself to impose rules of
+# how to compile the options. All the global Makefile needs
+# is the final def. of Java and native file lists and some
+# other def. (like VPATH)
+#
+######################################################################
+
+# Adds to global SUBSYSTEMS list
+#
+SUBSYSTEMS += jsr75
+
+# Generate doxygen for the following native sources
+#
+DOXYGEN_INPUT_LIST += \
+ $(JSR_75_DIR)/src/kvem/native/share/inc/midpNativeMounts.h \
+ $(JSR_75_DIR)/src/kvem/native/share/inc/jsr75_pim.h \
+ $(JSR_75_DIR)/src/kvem/native/share/inc/fcCleanup.h \
+ $(JSR_75_DIR)/src/kvem/native/share/midpSupportedDisks.h 
+
+# Javadoc source path
+JSR_75_SOURCEPATH=$(JSR_75_DIR)/src/core/classes$(PATHSEP)$(JSR_75_DIR)/src/kvem/classes/share
+
+JSR_75_PACKAGES = \
+    com.sun.midp.jsr075 \
+    com.sun.kvem.midp.pim \
+    com.sun.kvem.midp.pim.formats \
+    com.sun.midp.io.j2me.file \
+    javax.microedition.pim \
+    javax.microedition.io.file \
+
+JAVADOC_ALL_SOURCEPATH += $(JSR_75_SOURCEPATH)
+JAVADOC_ALL_PACKAGES +=  $(JSR_75_PACKAGES)
+
+GROUP_DOC_ALL += \
+        -group "JSR75 FileConnection and PIM" \
+	$(shell echo $(JSR_75_PACKAGES) | tr ' ' $(PATHSEP))
+
+# Include jsr 75 common properties in Configuration
+#
+SUBSYSTEM_CONFIGURATION_INPUT_FILES += \
+    $(JSR_75_DIR)/src/config/common/properties_jsr75.xml
+
+# Include jsr 75 common constants
+#    
+INT_XML_FILES += \
+    $(JSR_75_DIR)/src/config/common/constants_jsr75.xml
+
+# Platform definitions
+#
+include $(JSR_75_DIR)/src/config/$(TARGET_OS)/$(PLATFORM).gmk
+
+# Platform-independent definitions.
+# Include all supported PIM handler implementations.
+#
+include $(JSR_75_DIR)/src/config/common/config.gmk
+
+# Java files for the ( jsr75 ) module
+#
+MODULE_JSR_75_JAVAX_IO_JAVA_FILES = \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/io/file/ConnectionClosedException.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/io/file/FileConnection.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/io/file/FileSystemListener.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/io/file/FileSystemRegistry.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/io/file/IllegalModeException.java
+    
+MODULE_JSR_75_JAVAX_PIM_JAVA_FILES = \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/Contact.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/ContactList.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/Event.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/EventList.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/FieldEmptyException.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/FieldFullException.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/PIM.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/PIMException.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/PIMItem.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/PIMList.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/RepeatRule.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/ToDo.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/ToDoList.java \
+    $(JSR_75_DIR)/src/core/classes/javax/microedition/pim/UnsupportedFieldException.java
+
+MODULE_JSR_75_COM_PIM_JAVA_FILES = \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/AbstractPIMItem.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/AbstractPIMList.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/ContactImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/ContactListImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/EmptyPIMField.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/EventImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/EventListImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/KeySortUtility.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/LineReader.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/MarkableInputStream.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMField.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMFormat.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMHandler.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/ScalarPIMField.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/ToDoImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/ToDoListImpl.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/UnsupportedPIMFormatException.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/VectorPIMField.java
+
+MODULE_JSR_75_COM_PIM_FORMATS_JAVA_FILES = \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/Base64Encoding.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/EndMatcher.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/Extensions.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/FormatSupport.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/QuotedPrintableEncoding.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VCalendar10Format.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VCard21Format.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VCard30Format.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VCardFormat.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VCardSupport.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VEventSupport.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/formats/VToDoSupport.java
+
+MODULE_JSR_75_COM_IO_JAVA_FILES = \
+    $(JSR_75_DIR)/src/core/classes/com/sun/midp/io/j2me/file/Protocol.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/midp/io/j2me/file/RootCache.java
+
+MODULE_JSR_75_EXTRA_JAVA_FILES = \
+    $(JSR_75_DIR)/src/kvem/classes/share/javax/microedition/io/file/FileSystemEventHandlerBase.java \
+    $(JSR_75_DIR)/src/kvem/classes/share/com/sun/midp/io/j2me/file/BaseFileHandler.java \
+    $(JSR_75_DIR)/src/kvem/classes/share/com/sun/midp/io/j2me/file/DefaultFileHandler.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMFieldDescriptor.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/SupportedPIMFields.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/Contact.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/PIMItem.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/Event.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/kvem/midp/pim/ToDo.java \
+    $(JSR_75_DIR)/src/core/classes/com/sun/midp/jsr075/Initializer.java
+
+
+# I3test files for the ( JSR75 ) subsystem
+#
+# Note that the test case classes must be named to begin with 'Test'.
+ifeq ($(USE_I3_TEST), true)
+SUBSYSTEM_JSR_75_I3TEST_JAVA_FILES = \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/AbstractAttributesTestCase.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/TestAttributes.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/TestCreate.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/TestLineReader.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/TestMarkableInputStream.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/TestReportedBugs.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/TestStressMultiThread.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/formats/TestBase64Encoding.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/formats/TestFormatSupport.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/formats/TestQuotedPrintableEncoding.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/formats/TestVCalendar10.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/formats/TestVCard21.java \
+    $(JSR_75_DIR)/src/i3test/com/sun/kvem/midp/pim/formats/TestVCard30.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5007807.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5014161.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5016739.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5016759.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5016791.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5016792.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5017780.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5024201.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5051862.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5056166.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5056207.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5056277.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5062564.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5062626.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5066456.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5066511.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5066513.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5071542.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5073235.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/TestCaseBug5073286.java \
+    $(JSR_75_DIR)/src/i3test/regression/src/fc/TestCaseSetFileConnection.java
+endif
+    
+
+# Determines what option we have made and set it
+# to some variable that global makefile recognize
+#
+SUBSYSTEM_JSR_75_JAVA_FILES += \
+    $(MODULE_JSR_75_JAVAX_IO_JAVA_FILES) \
+    $(MODULE_JSR_75_JAVAX_PIM_JAVA_FILES) \
+    $(MODULE_JSR_75_COM_PIM_JAVA_FILES) \
+    $(MODULE_JSR_75_COM_PIM_FORMATS_JAVA_FILES) \
+    $(MODULE_JSR_75_COM_IO_JAVA_FILES) \
+    $(MODULE_JSR_75_EXTRA_JAVA_FILES)
+    
+#
+# Common native files for jsr 75 subsystem
+SUBSYSTEM_JSR_75_NATIVE_FILES += \
+    midpFileConnection.c \
+    fcCleanup.c \
+    fcNotifyIsolates.c \
+    jsr75_initializer_kni.c
+
+SUBSYSTEM_JSR_75_EXTRA_INCLUDES += \
+    -I$(JSR_75_DIR)/src/kvem/native/share/inc \
+    -I$(JSR_75_DIR)/src/kvem/native/share
+
+# vpath for ( jsr75 ) module
+#
+vpath % $(JSR_75_DIR)/src/core/native
+
+# Specify romizer configuration file for the jsr
+# and path where the file is located
+#
+ROMGEN_INCLUDE_PATHS += $(JSR_75_DIR)/src/config/common
+ROMGEN_CFG_FILES     += jsr75_rom.cfg
+
+# Append JSR 75 source bundle creation to target
+source_bundle:: jsr_75_source_bundle
+
+# Create JSR 75 source in subdir 'jsr75/'
+JSR_75_SOURCE_OUTPUT_DIR=$(SOURCE_OUTPUT_DIR)/jsr75
+
+# Copy and filter JSR 75 source in JSR_75_SOURCE_OUTPUT_DIR
+jsr_75_source_bundle: JSR_75_DIR SOURCE_OUTPUT_DIR
+	@echo " ... JSR 75 source bundle" $(LOG)
+	@$(call re_src_filter,$(JSR_75_DIR),$(JSR_75_SOURCE_OUTPUT_DIR),src)
+
+all:: jsr_75_all
+
+# We have to create 'pimdb' directory because it is used as file root by PIM.
+# We also create 'storage' directory that can be useful as storage that 
+# always exists. Moreover we create a directory that stores all private 
+# work directories of MIDlet suites.
+jsr_75_all:
+	@mkdir -p $(MIDP_OUTPUT_DIR)/appdb/pimdb
+	@mkdir -p $(MIDP_OUTPUT_DIR)/appdb/storage
+	@mkdir -p $(MIDP_OUTPUT_DIR)/appdb/private
+
+EXTRA_CFLAGS += -DENABLE_JSR_75=1
