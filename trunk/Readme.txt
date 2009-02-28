@@ -1,5 +1,5 @@
-pspkvm v0.5.0
-11 Jan. 2009
+pspkvm v0.5.1
+28 Feb. 2009
 Author: Sleepper, M@x
 Email: pspkvm@gmail.com
 Project website: 
@@ -12,12 +12,10 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- Completely new designed Virtual Keyboard (Great thanks to Anweifeng, who is the designer and coder of new Virtual Keyboard)
-- Support JSR226(SVG) and JSR172(Web Service)
-- Optimized interpreter loop of VM, JB2 score improves 25%
-- Bug fix and improvement in networking
-- Support user defined Truetype font size by pspkvm.ini
-- Add CPU speed setting in "Select device" menu
+- Enable input symbol in password textfield
+- Fix OSK bug
+- Fix drawRGB alpha blending bug
+- Fix a couple of bug inside VM interpreter
 
 --------------------------------
 General information
