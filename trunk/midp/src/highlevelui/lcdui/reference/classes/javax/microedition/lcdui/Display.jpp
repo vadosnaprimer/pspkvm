@@ -83,9 +83,9 @@ import com.sun.me.gci.windowsystem.GCIScreenWidget;
 // #endif
 
 // #ifdef ENABLE_KEYBOARD
-import javax.microedition.lcdui.KeyboardLayer.*;
-import javax.microedition.lcdui.VirtualKeyboard.*;
-import javax.microedition.lcdui.VirtualKeyboardListener.*;
+import javax.microedition.lcdui.AbstractKeyboardLayer;
+import javax.microedition.lcdui.VirtualKeyboardInterface;
+import javax.microedition.lcdui.VirtualKeyboardListener;
 // #endif
 
 /**
@@ -524,7 +524,7 @@ public class Display {
     private static Command textFieldKeyboardCommand;
 
     /** keyboard layer */
-    KeyboardLayer keyboardLayer = null; 
+    AbstractKeyboardLayer keyboardLayer = null; 
     // #endif ]
 
     /** Device <code>Graphics</code> associated with this Display. */
@@ -2371,7 +2371,7 @@ public class Display {
     public void initKeyboardInputMode()
     {
         /* Initial InputMode */
-        int initInputMode = KeyboardLayer.KEYBOARD_INPUT_ANY;
+        int initInputMode = AbstractKeyboardLayer.KEYBOARD_INPUT_ANY;
 
 
         // MUST regarding second screen.
@@ -2389,20 +2389,20 @@ public class Display {
                 TextFieldLF textLF =  ((TextField)item).textFieldLF;
                 TextFieldLFImpl textLFImpl = (TextFieldLFImpl)textLF;
                 try {
-                    keyboardLayer = KeyboardLayer.getInstance(textLFImpl);
+                    keyboardLayer = AbstractKeyboardLayer.getVKInstance(textLFImpl);
                 } catch (VirtualKeyboardException e) {
                     keyboardLayer = null;
                 }
 				//if password can only input ascii
 			    if ((textLFImpl.getConstraints() & TextField.PASSWORD) == TextField.PASSWORD){
-				   	initInputMode = KeyboardLayer.KEYBOARD_INPUT_ASCII;
+				   	initInputMode = AbstractKeyboardLayer.KEYBOARD_INPUT_ASCII;
 			   	}
 
                 switch (textLFImpl.getConstraints()) {
                     case TextField.DECIMAL:
                     case TextField.NUMERIC:
                     case TextField.PHONENUMBER:
-                        initInputMode = KeyboardLayer.KEYBOARD_INPUT_NUMERIC;
+                        initInputMode = AbstractKeyboardLayer.KEYBOARD_INPUT_NUMERIC;
                     break;
                     default:
                         break;
@@ -2438,7 +2438,7 @@ public class Display {
                 return false;
             }
             try {
-                keyboardLayer = KeyboardLayer.getInstance((CanvasLFImpl)workDisplayLF);
+                keyboardLayer = AbstractKeyboardLayer.getVKInstance((CanvasLFImpl)workDisplayLF);
             } catch (VirtualKeyboardException e) {
                 keyboardLayer = null;
             }
@@ -2463,7 +2463,7 @@ public class Display {
                 InputMode[] modes = textLFImpl.getInputSession().getAvailableModes();
                 textLFImpl.getInputSession().setCurrentInputMode(modes[0]);
                 try {                    
-                	keyboardLayer = KeyboardLayer.getInstance(textLFImpl);
+                	keyboardLayer = AbstractKeyboardLayer.getVKInstance(textLFImpl);
                 } catch (VirtualKeyboardException e) {
                     keyboardLayer = null;
                 }
@@ -2506,17 +2506,17 @@ public class Display {
     }
     public boolean isKeyboardEnabled()
     {
-        return VirtualKeyboard.isKeyboardEnabled();
+        return VirtualKeyboardInterface.isKeyboardEnabled();
     }
 
     public boolean isKeypadEnabled()
     {
-        return VirtualKeyboard.isKeypadEnabled();
+        return VirtualKeyboardInterface.isKeypadEnabled();
     }
 
     public boolean isKeyboardAutoOpen()
     {
-        return isKeyboardEnabled() && VirtualKeyboard.isAutoOpen();
+        return isKeyboardEnabled() && VirtualKeyboardInterface.isAutoOpen();
     }
     // #endif ]
 

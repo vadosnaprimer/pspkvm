@@ -62,7 +62,8 @@ SUBSYSTEM_I18N_JAVA_FILES = \
     $(I18N_MAIN_DIR)/reference/classes/com/sun/$(J2ME_CONFIGURATION)/i18n/j2me/UTF_16LE_Writer.java \
     $(I18N_MAIN_DIR)/reference/classes/com/sun/midp/i18n/Resource.java \
     $(I18N_MAIN_DIR)/classes/com/sun/midp/i18n/ResourceBundle.java \
-    $(I18N_MAIN_DIR)/reference/classes/com/sun/midp/l10n/LocalizedStrings.java
+    $(I18N_MAIN_DIR)/reference/classes/com/sun/midp/l10n/LocalizedStrings.java \
+    $(I18N_MAIN_DIR)/reference/classes/com/sun/midp/l10n/LocalizedStringszhCN.java
 
 # Native files for module ( common )
 #
@@ -74,7 +75,8 @@ SUBSYSTEM_I18N_NATIVE_FILES += \
 endif
 
 SUBSYSTEM_I18N_NATIVE_FILES += \
-    LocalizedStringsBase.c
+    LocalizedStringsBase.c \
+    LocalizedStringsBasezhCN.c
 
 
 SUBSYSTEM_I18N_EXTRA_INCLUDES += \
@@ -94,6 +96,11 @@ $(OBJ_DIR)/LocalizedStringsBase.o: $(L10N_OUTPUT_DIR)/LocalizedStringsBase.c
 		$(LOG_ONLY)
 	@$(CC) $(CFLAGS) -c $(CC_OUTPUT)$@ `$(call fixcygpath, $<)` $(LOG)
 
+$(OBJ_DIR)/LocalizedStringsBasezhCN.o: $(L10N_OUTPUT_DIR)/LocalizedStringsBasezhCN.c
+	@echo " ... $@" $(LOG)
+	@echo +++ $(CC) $(CFLAGS) -c $(CC_OUTPUT)$@ `$(call fixcygpath, $<)` \
+		$(LOG_ONLY)
+	@$(CC) $(CFLAGS) -c $(CC_OUTPUT)$@ `$(call fixcygpath, $<)` $(LOG)
 
 # To add support for more locales, add a rule
 # here that's similar to $(OBJ_DIR)/LocalizedStringsBase.o

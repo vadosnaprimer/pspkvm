@@ -45,5 +45,7 @@ endif
 
 PSP_EBOOT_ICON=icon_kk_2.png
 
+PSP_LARGE_MEMORY=1
+
 PSPSDK=$(shell psp-config --pspsdk-path)
 include build.mak

@@ -62,7 +62,7 @@
 #include <pcsl_memory.h>
 #include <pcsl_print.h>
 #include <pcsl_memory_port.h>
-#define PCSL_MEMORY_USE_STATIC 1
+//#define PCSL_MEMORY_USE_STATIC 1
 #ifdef PCSL_DEBUG
 /* 
  * define debug macros and function which use pcsl_print() for output 

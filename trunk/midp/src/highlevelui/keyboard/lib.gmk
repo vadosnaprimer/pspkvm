@@ -35,14 +35,21 @@ LIB_SET += $(KEYBOARD_DIR)
 # Java files for the library
 #
 SUBSYSTEM_KEYBOARD_JAVA_FILES = \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboardException.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/AbstractKeyboardLayer.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboardListener.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/KeyboardLayer.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/IMCandidateBar.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/CNLib.java\
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Associational.java\
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Associational1.java\
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Associational2.java
-
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_qwert.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_awf.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboardInterface.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/KeyboardLayer_qwert.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/KeyboardLayer_awf.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/IMCandidateBar.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/CNLib.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational1.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational2.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/qwert/IMCandidateBar.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/qwert/CNLib.java\
+    
 # Define Jpp
 #JPP_DEFS += 

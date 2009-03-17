@@ -26,10 +26,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
-    
+
+#include "stdio.h"
+#include "javacall_defs.h"    
 #include "javacall_memory.h"
 #include "malloc.h"
+
+static int max_heap_size = 0;
 
 /** 
  * Allocates large memory heap
@@ -40,9 +43,19 @@ extern "C" {
  * @param    outSize actual size of memory allocated
  * @return	  a pointer to the newly allocated memory, or <tt>0</tt> if not available
  */
-void* javacall_memory_heap_allocate(long size, /*OUT*/ long* outSize) {
-    *outSize = size;
-    return malloc(size);
+void* javacall_memory_heap_allocate(int size, /*OUT*/ int* outSize) {
+	int sz=64*1024*1024;
+	char* tmpp=NULL;
+       while(sz > size) {
+		if ((tmpp=malloc(sz))!=NULL) {
+			javacall_printf("MAX HEAP:%d\n",sz);
+			*outSize = sz;
+			max_heap_size = sz;
+			return tmpp;
+		}
+		sz -= 200*1024;
+	}
+       return NULL;
 }
     
 /** 
@@ -88,6 +101,10 @@ void* /*OPTIONAL*/  javacall_realloc(void* ptr, unsigned int size) {
  */
 void  /*OPTIONAL*/ javacall_free(void* ptr) {
     free(ptr);
+}
+
+int javacall_total_heap_size() {
+    return max_heap_size;
 }
     
 #ifdef __cplusplus

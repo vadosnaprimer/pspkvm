@@ -83,8 +83,6 @@ extern "C" {
  */
 int
 midpInitializeMemory(int size) {
-    int tmp = size;
-    tmp++; /* avoid compile warning for unused variable */
     return pcsl_mem_initialize(NULL, size);
 }
 
