@@ -12,23 +12,14 @@ import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.*;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.main.Configuration;
-
+import com.pspkvm.midp.lcdui.vk.awf.IMCandidateBar;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author Amir Uval
  */
 
-class VirtualKeyboard {
-
-    /** indicates whether the virtual keyboard is enabled */
-    public static boolean USE_VIRTUAL_KEYBOARD = true;
-
-    /** indicates whether the virtual keypad is enabled */
-    public static final boolean USE_VIRTUAL_KEYPAD = false;
-
-    /** indicates whether the virtual keyboard is opened automatically */
-    public static boolean USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
+class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 
     /** instance of the virtual keyboard listener */
     VirtualKeyboardListener vkl;
@@ -80,7 +71,7 @@ class VirtualKeyboard {
      * @param vkl the virtual keyboard listener
      * @param displayTextArea flag to indicate whether to display the text area
      */
-    public VirtualKeyboard(char[][] keys, 
+    public VirtualKeyboard_awf(char[][] keys, 
                            VirtualKeyboardListener vkl,
                            int neededColumns, int neededRows) throws VirtualKeyboardException {
        if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
@@ -161,7 +152,7 @@ class VirtualKeyboard {
 
      }
 
-  public VirtualKeyboard(int keyboradTpye,
+  public VirtualKeyboard_awf(int keyboradTpye,
 		  	VirtualKeyboardListener vkl,
 		  	int w,
 		  	int h) throws VirtualKeyboardException {
@@ -196,32 +187,6 @@ class VirtualKeyboard {
 		
      }
 
-    /**
-     * Checks if the virtual keyboard is enabled.
-     * @return <code>true</code> if the virtual keyboard is enabled,
-     *         <code>false</code> otherwise.
-     */
-    static boolean isKeyboardEnabled(){
-        return USE_VIRTUAL_KEYBOARD;
-    }
-
-    /**
-     * Checks if the virtual keyboard is enabled.
-     * @return <code>true</code> if the virtual keyboard is enabled,
-     *         <code>false</code> otherwise.
-     */
-    static boolean isKeypadEnabled(){
-        return USE_VIRTUAL_KEYPAD;
-    }
-
-    /**
-     * Checks if the virtual keyboard is opened automatically.
-     * @return <code>true</code> if the virtual keyboard is opened automatically,
-     *         <code>false</code> otherwise.
-     */
-    static boolean isAutoOpen(){
-        return USE_VIRTUAL_KEYBOARD_OPEN_AUTO;
-    }
     int transfDirectionKeyCode(int keyCode){
 		int retKeyCode=keyCode;
 			switch(keyCode){
@@ -342,7 +307,7 @@ class VirtualKeyboard {
 
    void handleSelectKey(int key){
 	   	System.out.println("handleSelectKey->key="+key);
-		if(currentKeyboard==KeyboardLayer.PINYIN){
+		if(currentKeyboard==AbstractKeyboardLayer.PINYIN){
 			int cKM=VirtualKeyBoardMap.getActiveKeyMap();
 			if(key>=3){//clear
 				if(kmap[0].getInputKey().length()>0){
@@ -405,7 +370,7 @@ class VirtualKeyboard {
 }
    void handleDirectionKey(int type, int keyCode){
 	   	 	System.out.println("handleDirectionKey-key="+keyCode);
-		if(currentKeyboard==KeyboardLayer.PINYIN){	
+		if(currentKeyboard==AbstractKeyboardLayer.PINYIN){	
 			int cAKM=VirtualKeyBoardMap.getActiveKeyMap();
 			int curAK=kmap[cAKM].getActiveKey();
 			switch(keyCode){
@@ -515,7 +480,7 @@ class VirtualKeyboard {
 								5,textfieldHeight+10+i*fontH,
 								g.LEFT|g.TOP);
 		}else{
-	       if(currentKeyboard==KeyboardLayer.PINYIN){
+	       if(currentKeyboard==AbstractKeyboardLayer.PINYIN){
 		       for(int i=0;i<3;i++){
 			       	if(kmap[i]!=null)
 		       		{
@@ -781,35 +746,13 @@ class VirtualKeyboard {
 	}
 
 	String getSelect(){
-		if(currentKeyboard==KeyboardLayer.PINYIN){
+		if(currentKeyboard==AbstractKeyboardLayer.PINYIN){
 			return kmap[2].getKeyName();
 		}else{
 			return kmap[1].getKeyName();
 		}
 	}
 
-}
-
-class VirtualKeyboardException extends Exception {
-    /**
-     * Constructs an <code>IOException</code> with <code>null</code>
-     * as its error detail message.
-     */
-    public VirtualKeyboardException() {
-    super();
-    }
-
-    /**
-     * Constructs an <code>IOException</code> with the specified detail
-     * message. The error message string <code>s</code> can later be
-     * retrieved by the <code>{@link java.lang.Throwable#getMessage}</code>
-     * method of class <code>java.lang.Throwable</code>.
-     *
-     * @param   s   the detail message.
-     */
-    public VirtualKeyboardException(String s) {
-    super(s);
-    }
 }
 
 class VirtualKeyBoardMap

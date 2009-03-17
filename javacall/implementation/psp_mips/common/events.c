@@ -157,7 +157,7 @@ javacall_result javacall_events_init(void) {
     return JAVACALL_OK;
 }
 
-javacall_result javacall_events_destroy(void) {
+javacall_result javacall_events_finalize(void) {
     int i;
     for (i = 0; i < NUM_MBX; i++) {
         sceKernelDeleteMbx(_psp_mailboxID[i]);

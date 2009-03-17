@@ -72,27 +72,25 @@ abstract public class Resource {
              */
             int hyphen;
 	    if ((hyphen = loc.indexOf('-')) != -1) {
-                StringBuffer tmploc = new StringBuffer(loc);
-                tmploc.setCharAt(hyphen, '_');
-                loc = tmploc.toString();
+                loc = loc.substring(0, hyphen) + loc.substring(hyphen+1);
 	    }
 	    
-            while (true) {
+            //while (true) {
                 try {
-                    Class c = Class.forName(cls + "_" + loc);
+                    Class c = Class.forName(cls + loc);
                     res = (ResourceBundle) c.newInstance();
                 } catch (Throwable t) {}
-                if (res == null) {
-                    int pos = loc.lastIndexOf('_');
-                    if (pos != -1) {
-                        loc = loc.substring(0, pos);
-                    } else {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
+            //    if (res == null) {
+            //        int pos = loc.lastIndexOf('_');
+            //        if (pos != -1) {
+            //            loc = loc.substring(0, pos);
+            //        } else {
+            //            break;
+            //        }
+            //    } else {
+            //        break;
+            //    }
+            //}
         }
 
 	if (res == null) {

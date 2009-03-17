@@ -28,7 +28,7 @@ FIXUP    = psp-fixup-imports
 
 # Add in PSPSDK includes and libraries.
 INCDIR   := $(INCDIR) . $(PSPSDK)/include
-LIBDIR   := $(LIBDIR) . $(PSPSDK)/lib /usr/local/pspdev/psp/lib
+LIBDIR   := $(LIBDIR) . $(PSPSDK)/lib
 
 CFLAGS   := $(addprefix -I,$(INCDIR)) $(CFLAGS)
 CXXFLAGS := $(CFLAGS) $(CXXFLAGS)
@@ -168,7 +168,7 @@ SCEkxploit: $(TARGET).elf $(PSP_EBOOT_SFO)
 		$(PSP_EBOOT_SND0) NULL $(PSP_EBOOT_PSAR)
 
 $(TARGET).elf: $(OBJS) $(EXPORT_OBJ)
-	$(LD) $(LDFLAGS) $^ $(LIBS) --verbose -o $@
+	$(LINK.c) $^ $(LIBS) -Wl,-Map pspkvm.map -o $@
 	$(FIXUP) $@
 
 $(TARGET_LIB): $(OBJS)

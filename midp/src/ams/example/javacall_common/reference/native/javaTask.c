@@ -65,10 +65,11 @@ void JavaTask(void) {
     long timeTowaitInMillisec = -1;
     int binaryBufferMaxLen = BINARY_BUFFER_MAX_LEN;
     int outEventLen;
+    int heapsize;
 
     REPORT_CRIT(LC_CORE,"JavaTask() >>\n");
 
-    if (midpInitializeMemory(-1) != 0) {
+    if (midpInitializeMemory(8*1280*1024+1024*1024) != 0) {
         REPORT_CRIT(LC_CORE,"JavaTask() >> midpInitializeMemory()  Not enough memory.\n");
         return;
     }
@@ -81,6 +82,14 @@ void JavaTask(void) {
     //javacall_global_init();
     javacall_events_init();
     javacall_keymap_init();
+
+    /* Set Java heap size according to system heap size */
+    heapsize = javacall_total_heap_size();
+    heapsize -= 3*1024*1024;
+    printf("set heap size to %d\n", heapsize);
+    JVM_SetConfig(JVM_CONFIG_HEAP_CAPACITY, heapsize);
+    JVM_SetConfig(JVM_CONFIG_HEAP_MINIMUM, heapsize);
+    REPORT_INFO1(LC_CORE,"JavaTask() >> Java heap set to %d bytes.\n", heapsize);
 
     /* Outer Event Loop */
     while (JavaTaskIsGoOn) {        
@@ -150,6 +159,7 @@ void JavaTask(void) {
 
     }   /* end of while 'JavaTaskIsGoOn' */
 
+    javacall_events_finalize();
     javacall_finalize_configurations();
 
     REPORT_CRIT(LC_CORE,"JavaTask() <<\n");

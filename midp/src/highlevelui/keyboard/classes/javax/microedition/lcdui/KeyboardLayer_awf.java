@@ -19,12 +19,12 @@ import com.sun.midp.main.Configuration;
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author Amir Uval
  */
-class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
+class KeyboardLayer_awf extends AbstractKeyboardLayer {
     private int neededColumns = 0;
     private int neededRows = 0;
 
     /** the instance of the virtual keyboard */
-    VirtualKeyboard vk = null;
+    VirtualKeyboard_awf vk = null;
 
     String layerID = null;
 
@@ -35,7 +35,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      *
      * @param tf The TextEditor that triggered this popup layer.
      */
-    private KeyboardLayer(TextFieldLFImpl tf) throws VirtualKeyboardException {
+    private KeyboardLayer_awf(TextFieldLFImpl tf) throws VirtualKeyboardException {
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
@@ -43,13 +43,11 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         //backupstring is set to original text before the kbd was used
         backupString = tfContext.tf.getString();
         if (vk==null) {
-            vk = new VirtualKeyboard(0, this,getAvailableWidth(),getAvailableHeight());
+            vk = new VirtualKeyboard_awf(0, this,getAvailableWidth(),getAvailableHeight());
         }
 
 		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
 	
-        //candidateBar = new IMCandidateBar(vk.kbWidth, 25);
-
 		Command keyboardClose = new Command("OK", Command.OK, 1);
 		Command keyboardHelp = new Command("Help", Command.EXIT, 1);
 		Command commads[]={keyboardClose,keyboardHelp};
@@ -63,7 +61,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      *
      * @param canvas The Canvas that triggered this popup layer.
      */
-    private KeyboardLayer(CanvasLFImpl canvas) throws VirtualKeyboardException {
+    private KeyboardLayer_awf(CanvasLFImpl canvas) throws VirtualKeyboardException {
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
@@ -71,7 +69,7 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         cvContext = canvas;
         if (vk==null) {
             prepareKeyMapCanvas();
-            vk = new VirtualKeyboard(keys, this, 0, 0);
+            vk = new VirtualKeyboard_awf(keys, this, 0, 0);
         }
 
         //System.out.println("vk.kbX:"+vk.kbX+",vk.kbY:"+vk.kbY+",vk.kbWidth:"+vk.kbWidth+",vk.kbHeight:"+vk.kbHeight);
@@ -83,29 +81,16 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
     /**
      * Singleton
      */
-    private static KeyboardLayer instanceTF = null;
+    private static KeyboardLayer_awf instanceTF = null;
     // Save the Y position for the virtual keyboard.
     // For some reason, failing to set the bound again ( in each getInstance )
     // Causes the Y position to change. 
     private static int instanceTF_Y= 0;
-    private static KeyboardLayer instanceCV = null;
+    private static KeyboardLayer_awf instanceCV = null;
 
     /**
      * Command to dismiss the keypad without selection.
      */ 
-
-    /**
-     * constants for setState()
-     */
-    public static final int NUMERIC = 0;
-    public static final int LOWERCASE = 1;
-    public static final int UPPERCASE = 2;
-    public static final int SYMBOL = 3;
-	public static final int PINYIN = 4;
-
-	public static final int KEYBOARD_INPUT_NUMERIC = 0;  //NUMERIC only
-    public static final int KEYBOARD_INPUT_ASCII = 1;    //ascii only 
-    public static final int KEYBOARD_INPUT_ANY = 2;    //any
 
     private static final boolean[][] isMap = {
      // |NUMERIC|LOWERCASE|UPPERCASE|SYMBOL|PINYIN
@@ -177,16 +162,16 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
         if (vk != null) {
             switch(vk.currentKeyboard)
             {
-                case KeyboardLayer.NUMERIC:
+                case AbstractKeyboardLayer.NUMERIC:
                     return "1234";
-                case KeyboardLayer.LOWERCASE:
+                case AbstractKeyboardLayer.LOWERCASE:
                     return "abcd";
-                case KeyboardLayer.UPPERCASE:
+                case AbstractKeyboardLayer.UPPERCASE:
                     return "ABCD";
-                case KeyboardLayer.SYMBOL:
+                case AbstractKeyboardLayer.SYMBOL:
                     return "Symbol";
-				case KeyboardLayer.PINYIN:	
-					return "Pinyin";
+		  case AbstractKeyboardLayer.PINYIN:	
+		      return "Pinyin";
             }
         }
         return null;
@@ -198,10 +183,10 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      * @param tf TextField look/feel instance for the keyboard layer
      * @return a KeyboardLayer instance.
      */
-    static KeyboardLayer getInstance(TextFieldLFImpl tf)  
+    static KeyboardLayer_awf getInstance(TextFieldLFImpl tf)  
                                                            throws VirtualKeyboardException {
         if ((instanceTF == null) || (instanceTF.tfContext != tf)) {
-            instanceTF = new KeyboardLayer(tf);
+            instanceTF = new KeyboardLayer_awf(tf);
             instanceTF_Y = instanceTF.bounds[Y];
             instanceCV = null;
             
@@ -219,10 +204,10 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
      * @param canvas Canvas look/feel instance for the keypad layer
      * @return a KeyboardLayer instance.
      */
-    static KeyboardLayer getInstance(CanvasLFImpl canvas) 
+    static KeyboardLayer_awf getInstance(CanvasLFImpl canvas) 
                                                            throws VirtualKeyboardException {
         if ((instanceCV == null) || (instanceCV.cvContext != canvas)) {
-            instanceCV = new KeyboardLayer(canvas);
+            instanceCV = new KeyboardLayer_awf(canvas);
             instanceTF = null;
         }
 
@@ -316,17 +301,6 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 
     /** Canvas look/feel context */
     CanvasLFImpl cvContext = null;
-
-    /** Candidate bar */
-    IMCandidateBar candidateBar = null;
-
-    /** Indicates if this popup layer is shown (true) or hidden (false). */
-    boolean open = false;
-
-    /** 
-     * Indicates if the Keyboard layer was just opened or if it is already open.
-     */
-    boolean justOpened = false;
 
     /** the original text field string in case the user cancels */
     String backupString;
@@ -464,18 +438,18 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 		if (tfContext != null) {
 			System.out.println("virtualMetaKeyEntered="+metaKey);
 			switch (metaKey) {
-				case VirtualKeyboard.OK_COMMAND:
+				case VirtualKeyboard_awf.OK_COMMAND:
 					disp.hidePopup(this);
 		            open = false;
 					break;
-				case VirtualKeyboard.CANCEL_COMMAND:
+				case VirtualKeyboard_awf.CANCEL_COMMAND:
 					if (tfContext != null) {
 		                tfContext.tf.setString(backupString);
 		            }
 		            disp.hidePopup(this);
 		            open = false;
 					break;
-				case VirtualKeyboard.INSERT_CHAR_COMMAND:
+				case VirtualKeyboard_awf.INSERT_CHAR_COMMAND:
 					int pos = tfContext.tf.getCaretPosition();
 					String str=vk.getSelect();
 					if(str!=null&&str.length()>0){
@@ -483,23 +457,23 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 						tfContext.tf.getString();
 					}
 					break;
-				case VirtualKeyboard.DEL_CHAR_COMMAND:
+				case VirtualKeyboard_awf.DEL_CHAR_COMMAND:
 					tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
 					break;
-				case VirtualKeyboard.NODIFY_IM_CHANGE_COMMAND:
+				case VirtualKeyboard_awf.NODIFY_IM_CHANGE_COMMAND:
 					getNextKeyBoard();
 					tfContext.notifyModeChanged();
 					break;
-				case VirtualKeyboard.CURSOR_UP_COMMAND:
+				case VirtualKeyboard_awf.CURSOR_UP_COMMAND:
 					tfContext.moveCursor(Canvas.UP);
 					break;
-			    case VirtualKeyboard.CURSOR_DOWN_COMMAND:
+			    case VirtualKeyboard_awf.CURSOR_DOWN_COMMAND:
 					tfContext.moveCursor(Canvas.DOWN);
 					break;
-			    case VirtualKeyboard.CURSOR_LEFT_COMMAND:
+			    case VirtualKeyboard_awf.CURSOR_LEFT_COMMAND:
 					tfContext.moveCursor(Canvas.LEFT);
 					break;
-			    case VirtualKeyboard.CURSOR_RIGHT_COMMAND:
+			    case VirtualKeyboard_awf.CURSOR_RIGHT_COMMAND:
 					tfContext.moveCursor(Canvas.RIGHT);
 					break;
 				default:
@@ -522,6 +496,11 @@ class KeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
             tfContext.lPaintContent(g, width, height);
         }        
     }
+
+    public void paintCandidateBar(Graphics g, int width, int height) {
+        /** Nothing but a stub */
+    }
+    
     /**
      * get available width
      * 

@@ -48,14 +48,14 @@ PSP_MODULE_INFO("pspkvm", 0x1000, 1, 1);
 PSP_MAIN_THREAD_ATTR(0);
 #endif
 
-PSP_HEAP_SIZE_KB(4144);
+PSP_HEAP_SIZE_KB(-4096);
 
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
 
 /* Define printf, just to make typing easier */
-//#define printf	pspDebugScreenPrintf
+#define printf	pspDebugScreenPrintf
 //#define printf(x)
 
 int done = 0;
@@ -96,7 +96,7 @@ int SetupCallbacks(void)
 	return thid;
 }
 
-SceUInt alarm_handler(void *common)
+static SceUInt alarm_handler(void *common)
 {
 	//printf("javanotify_start...\n");
 	javanotify_start();
@@ -622,8 +622,6 @@ int java_main(void)
 {
 	SceUID id;
 
-	//pspDebugScreenInit();
-	
 	SetupCallbacks();
 #if 1
 //#if ENABLE_GPS
@@ -645,9 +643,10 @@ int java_main(void)
 				     0x11, 0xFA0, PSP_THREAD_ATTR_USER, 0);
 	if(thid >= 0)
 	{
-	       printf("Wait..\n");
-	
+		test_mem("JavaTask");
+
 		sceKernelStartThread(thid, 0, 0);
+		
 		JavaTask();
 		done = 1;
 		sceKernelWaitThreadEndCB(thid, NULL);
@@ -990,12 +989,13 @@ int main(void)
 	SceUID thid;
 	int res = 0;
 	int ret_val = 0;
+
 	pspDebugScreenInit();
 
+test_mem("Before setup GU");
        printf("Setup GU\n");
 	setup_gu();       
-
-
+test_mem("After setup GU");
 
 	printf("Loading network modules\n");
 #if _PSP_FW_VERSION >= 200
@@ -1054,6 +1054,7 @@ int main(void)
 
 	// start user thread, then wait for it to do everything else
 	sceKernelStartThread(thid, 0, 0);
+	test_mem("java thread started");
 	printf("sceKernelWaitThreadEnd...\n");
 	sceKernelWaitThreadEnd(thid, NULL);
 	printf("sceKernelWaitThreadEnd OK\n");
@@ -1093,4 +1094,20 @@ int rm_dir(const char* dir)
 {
     	return sceIoRmdir(dir);
 }
+
+void test_mem(const char* msg) {
+	int ii=64*1024*1024;
+	char* tmpp=NULL;
+	       printf("Wait..\n");
+	       printf("Sys memory free:%d(total), %d(max)\n", sceKernelTotalFreeMemSize(), sceKernelMaxFreeMemSize());
+		while(ii-=1024*1024) {
+			if ((tmpp=malloc(ii))!=NULL) {
+				
+				free(tmpp);
+				break;
+			}
+		}
+		printf("[%s]MAX HEAP:%d\n",msg);
+}
+
 

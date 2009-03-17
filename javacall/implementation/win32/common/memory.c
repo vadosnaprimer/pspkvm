@@ -32,10 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #include "javacall_memory.h"
 
-
+static int max_heap_size = 0;
 
 /**
  * Allocates large memory heap
@@ -47,17 +46,19 @@
  * @return  a pointer to the newly allocated memory,
  *          or <tt>NULL</tt> if not available
  */
-void* javacall_memory_heap_allocate(long size, long* outSize) {
-
-    void *ptr = NULL;
-
-    ptr = malloc(size);
-    if (ptr == NULL){
-        *outSize = 0;
-    } else {
-        *outSize = size;
-    }
-    return ptr;
+void* javacall_memory_heap_allocate(int size, int* outSize) {
+	int sz=64*1024*1024;
+	char* tmpp=NULL;
+       while(sz > size) {
+		if ((tmpp=malloc(sz))!=NULL) {
+			printf("MAX HEAP:%d\n",sz);
+			*outSize = sz;
+			max_heap_size = sz;
+			return tmpp;
+		}
+		sz -= 200*1024;
+	}
+       return NULL;
 }
 
 /**
@@ -105,3 +106,8 @@ void* javacall_realloc(void* ptr, unsigned int size) {
 void  javacall_free(void* ptr) {
     free(ptr);
 }
+
+int javacall_total_heap_size() {
+    return max_heap_size;
+}
+

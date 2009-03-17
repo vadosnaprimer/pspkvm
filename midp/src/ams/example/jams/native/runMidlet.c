@@ -121,13 +121,13 @@ runMidlet(int argc, char** commandlineArgs) {
     JVM_Initialize(); /* It's OK to call this more than once */
 
 
-    midp_heap_requirement = getHeapRequirement();
+    //midp_heap_requirement = getHeapRequirement();
 
 
     /*
      * Set Java heap capacity now so it can been overridden from command line.
      */
-    JVM_SetConfig(JVM_CONFIG_HEAP_CAPACITY, midp_heap_requirement);
+    //JVM_SetConfig(JVM_CONFIG_HEAP_CAPACITY, midp_heap_requirement);
 
     /*
      * Parse options for the VM. This is desirable on a 'development' platform
