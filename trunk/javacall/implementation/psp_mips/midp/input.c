@@ -28,6 +28,7 @@ extern "C" {
 #endif
     
 #include "javacall_input.h"
+#include "psputility_sysparam.h"
 
 /**
  * Returns currently set input locale.
@@ -58,6 +59,18 @@ extern "C" {
  *         <tt>JAVACALL_FAIL</tt> if locale is not supported
  */
 javacall_result javacall_input_get_locale(/*OUT*/ char locale[6]) {
+    int lang;
+    if (0 == sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &lang)) {
+        if (lang == PSP_SYSTEMPARAM_LANGUAGE_CHINESE_SIMPLIFIED) {
+            locale[0]='z';
+            locale[1]='h';
+            locale[2]='-';
+            locale[3]='C';
+            locale[4]='N';
+            locale[5]='\0';
+            return JAVACALL_OK;
+        }
+    }
     //set to "en-US"
     locale[0]='e';
     locale[1]='n';

@@ -169,8 +169,9 @@
 		Scope="system"
 		Comment="Profile information."/>
   <property Key="microedition.locale" 
-		Value="zh-CN"
+		Value=""
 		Scope="system"
+		Callout="midpMicroeditionLocale"
 		Comment="System locale."/>
   <property Key="microedition.platform" 
 		Value="" 
