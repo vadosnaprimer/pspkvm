@@ -188,6 +188,7 @@ char* javacall_time_get_local_timezone(void){
 
 static void set_time_offset() {
     javacall_int64 lt;
+    int daylightsaving = PSP_SYSTEMPARAM_DAYLIGHTSAVINGS_STD;
     int ret = sceRtcGetCurrentTick(&lt);    
     if (ret == 0) {
     	 javacall_int64 base = sceKernelGetSystemTimeLow() / 1000L;
@@ -196,6 +197,10 @@ static void set_time_offset() {
         lt -= 62135596800LL;
         time_offset = lt * 1000LL;
         time_offset -= base;
+        sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_DAYLIGHTSAVINGS, &daylightsaving);
+        if (PSP_SYSTEMPARAM_DAYLIGHTSAVINGS_SAVING == daylightsaving) {
+            time_offset += 3600000LL;
+        }
     }
 }
 
