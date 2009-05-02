@@ -218,6 +218,15 @@ char* midpMicroeditionPlatform() {
     return "NokiaN73";
 }
 
+char* midpMicroeditionLocale() {
+    static char locale[6];
+    if (JAVACALL_OK == javacall_input_get_locale(locale)) {
+    	return locale;
+    } else {
+        return "en-US";
+    }
+}
+
 #define MAX_HOST_LENGTH 256
 char* midpGetHTTPProxy() {
     static char proxy[MAX_HOST_LENGTH+7];
