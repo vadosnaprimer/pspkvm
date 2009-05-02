@@ -45,7 +45,9 @@ static int max_heap_size = 0;
  */
 void* javacall_memory_heap_allocate(int size, /*OUT*/ int* outSize) {
 	int sz=64*1024*1024;
+	const static int reserved_heap = 512*1024;
 	char* tmpp=NULL;
+	size += reserved_heap;
        while(sz > size) {
 		if ((tmpp=malloc(sz))!=NULL) {
 			javacall_printf("MAX HEAP:%d\n",sz);
