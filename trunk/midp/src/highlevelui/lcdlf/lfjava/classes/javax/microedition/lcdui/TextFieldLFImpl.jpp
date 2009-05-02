@@ -1235,7 +1235,9 @@ class TextFieldLFImpl extends ItemLFImpl implements
             
 		commit("");
 
-              lRequestPaint();
+		synchronized (Display.LCDUILock) {
+       		lRequestPaint();
+       	} // synchronized
               
        	return;
        	}
