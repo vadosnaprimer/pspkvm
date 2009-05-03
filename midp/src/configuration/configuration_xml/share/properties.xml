@@ -228,6 +228,11 @@
 		Scope="internal"
 		Callout="isVKUseDirection"
 		Comment="Getting system input method."/>		
+  <property Key="com.pspkvm.setting.defaultspeed" 
+		Value="" 
+		Scope="internal"
+		Callout="getDefaultCPUSpeed"
+		Comment="Getting system default CPU speed."/>		
 		
 </properties>
 </configuration>

@@ -64,6 +64,7 @@ import com.sun.midp.util.ResourceHandler;
 
 import java.util.Hashtable;
 import com.sun.midp.lcdui.DisplayDeviceAccess;
+import com.sun.midp.main.Configuration;
 
 /**
  * The Graphical MIDlet suite installer.
@@ -804,7 +805,14 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
  public static int getPrefferedCPUSpeed (int midlet) {
      int ret = 222;
      RecordStore settings = null;
-     
+     String defaultSpeed = Configuration.getPropertyDefault("com.pspkvm.setting.defaultspeed", "222");
+
+     try {
+         ret = Integer.parseInt(defaultSpeed);
+     } catch (NumberFormatException nfe) {
+         //ignore
+     }
+
      try {
          settings = RecordStore.openRecordStore(DEV_SETTINGS_STORE, false, 0, true);
          try {
@@ -1844,7 +1852,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
         int dev = 0;
         String name;
 
-        while ((name = getDeviceName(dev++)) != null) {        	
+        while ((name = getDeviceName(DeviceDesc.dispIdToDevId(dev++))) != null) {        	
             selector.append(name, null);
         }
         selector.setCommandListener(
