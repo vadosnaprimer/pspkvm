@@ -265,6 +265,14 @@ char* isVKUseDirection() {
     }
 }
 
+char* getDefaultCPUSpeed() {
+     char* value;
+    if (JAVACALL_OK == javacall_get_property("com.pspkvm.setting.defaultspeed", JAVACALL_INTERNAL_PROPERTY, &value)) {
+        return value;
+    } else {
+        return NULL;
+    }
+}
 
 
 
