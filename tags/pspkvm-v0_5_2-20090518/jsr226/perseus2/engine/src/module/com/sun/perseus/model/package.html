@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+  <head>
+    <!--
+
+    Copyright  2007  Sun Microsystems, Inc. All rights reserved.
+
+    -->
+    <title>Perseus Model Package</title>
+  </head>
+
+  <body>
+    <p>The Perseus Model package (<code>com.sun.perseus.model</code>) contains 
+    interfaces and classes used to describe an SVG Tiny document
+    as a tree of <code>ModelNodes</code> objects with properties. Note that this 
+    is different from the DOM (Document Object Model) in a number 
+    of ways (e.g, there are not <code>Attr</code> nodes). The Perseus model
+    is not generic like the DOM is. Instead, the Perseus model is very specific
+    to the needs of SVG Tiny and contains all that is needed for SVG Tiny and 
+    no more.</p>
+    <p>The key interfaces in the model package are:</p>
+    <ul>
+        <li><code>ModelNode</code>. All classes that represent an
+        SVG Tiny element implement that interface. It contains methods
+        for child navigation and supports getting and setting of common 
+        XML attributes (such as the 'id' attribute.</li>
+        <li><code>DecoratedNode</code>. All nodes that have properties
+        (e.g., graphical properties or text properties) implement
+        this interface.</li>
+        <li><code>GraphicsNode</code>. All nodes that have graphical
+        properties (such as 'fill', 'stroke' or 'stroke-width') implement
+        that interface to allow getting and setting of the properties as 
+        well as management of their inheritance and relative value (e.g. for
+        handling the 'currentColor' value on 'fill').</li>
+        <li><code>TextNode</code>. All nodes that have text
+        properties (such as 'font-size', 'text-anchor' or 'font-weight) must implement
+        that interface to allow getting and setting of the properties as 
+        well as management of their inheritance.</li>
+        <li><code>Transformable</code>. All nodes which have a 
+        an attribute mapping to an <code>AffineTransform</code> implement
+        that interface.</li>
+    </ul>
+
+    <p>The classes in the model package are:</p>
+    <ul>
+        <li><code>AbstractShapeNode</code>. All nodes which represent
+        shapes (basic or arbitrary shapes) are represented by descendants
+        of this class.</li>
+        <li><code>CompositeGraphicsNode</code>. All nodes wich can 
+        have children and can have graphical properties are represented
+        by descendant of this class.</li>
+        <li><code>CompositeNode</code>. All node that may have a children
+        is represented by a descendant of this class. It provides methods
+        for managing children.</li>
+        <li><code>ConditionalProcessing</code>. This is a helper class
+        used to compute conditional processing on model nodes.</li>
+        <li><code>Defs</code>. Represents an SVG Tiny <code>&lt;defs&gt;</code>
+        element.</li>
+        <li><code>Ellipse</code>. Represents an SVG Tiny <code>&lt;ellipse&gt;</code>
+        element.</li>
+        <li><code>Font</code>. Represents an SVG Tiny <code>&lt;font&gt;</code> 
+        element.</li>
+        <li><code>FontFace</code>. Represents an SVG Tiny <code>&lt;font-face&gt;</code> 
+        element.</li>
+        <li><code>Glyph</code>. Represents an SVG Tiny <code>&lt;glyph&gt;</code> 
+        and <code>&lt;missing-glyph&gt;</code> elements.</li>
+        <li><code>Group</code>. Represents an SVG Tiny <code>&lt;g&gt;</code> 
+        element.</li>
+        <li><code>ImageNode</code>. Represents an SVG Tiny <code>&lt;image&gt;</code> 
+        element.</li>
+        <li><code>Line</code>. Represents an SVG Tiny <code>&lt;line&gt;</code> 
+        element.</li>
+        <li><code>ModelNodeProxy</code>. Used to model expanded content in <code>Use</code>
+        and <code>Glyph</code>. A <code>ModelNodeProxy</code> manages the <code>RenderContext</code>
+        but delegates rendering to the node it proxies.</li>
+        <li><code>Rect</code>. Represents an SVG Tiny <code>&lt;rect&gt;</code> 
+        element.</li>
+        <li><code>ShapeNode</code>. Represents an SVG Tiny <code>&lt;path&gt;</code>, 
+        <code>&lt;polygon&gt;</code> and <code>&lt;polylines&gt;</code> elements.</li>
+        <li><code>StructureNode</code>. Base class for all the nodes representing
+        structure in SVG Tiny, such as images, defs, use or svg.</li>
+        <li><code>SVG</code>. Represents an SVG Tiny <code>&lt;svg&gt;</code> 
+        element.</li>
+        <li><code>Switch</code>. Represents an SVG Tiny <code>&lt;switch&gt;</code> 
+        element.</li>
+        <li><code>Text</code>. Represents an SVG Tiny <code>&lt;text&gt;</code> 
+        element.</li>
+        <li><code>Use</code>. Represents an SVG Tiny <code>&lt;use&gt;</code> 
+        element.</li>
+        <li><code>Viewport</code>. Represents an SVT Tiny's <code>&lt;svg&gt;</code> 
+        element's viewport.</li>
+    </ul>
+  </body>
+</html>
