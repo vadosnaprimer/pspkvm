@@ -6189,14 +6189,21 @@ ASM_SUBCALL_DECL(interpreter_throw_ArrayIndexOutOfBoundsException_asm,
     LONG_PUSH(val1 / val2);
     ADVANCE(1);
   BYTECODE_IMPL_END
-
+/*
   BYTECODE_IMPL_ASM(fdiv)
     POP_FLOAT_2_ASM_NOSP(0, f13, f12)
     "div.s	$f0,$f12,$f13\n"
     PUSH_FLOAT_ASM_NOSP(8, f0)
     ADJUST_JSP_ASM(4)
   BYTECODE_IMPL_END_AND_ADVANCE_ASM(1)
-
+*/
+  BYTECODE_IMPL(fdiv)
+    jfloat val2 = FLOAT_POP();
+    jfloat val1 = FLOAT_POP();
+    FLOAT_PUSH(jvm_fdiv(val1, val2));
+    ADVANCE(1);
+  BYTECODE_IMPL_END
+  	
   BYTECODE_IMPL(ddiv)
     jdouble val2 = DOUBLE_POP();
     jdouble val1 = DOUBLE_POP();
