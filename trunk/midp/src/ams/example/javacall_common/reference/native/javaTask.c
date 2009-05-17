@@ -85,7 +85,7 @@ void JavaTask(void) {
 
     /* Set Java heap size according to system heap size */
     heapsize = javacall_total_heap_size();
-    heapsize -= 3*1024*1024;
+    heapsize -= 2*1024*1024;
     printf("set heap size to %d\n", heapsize);
     JVM_SetConfig(JVM_CONFIG_HEAP_CAPACITY, heapsize);
     JVM_SetConfig(JVM_CONFIG_HEAP_MINIMUM, heapsize);
