@@ -32,6 +32,8 @@
  * @brief Javacall interfaces for key press
  */
 
+#include <javacall_defs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -171,7 +173,12 @@ typedef enum {
  *             by platform during the duration that the key was held
  */
 void javanotify_key_event(javacall_key key, javacall_keypress_type type);
-    
+
+
+javacall_result javacall_key_init();
+
+javacall_result javacall_key_finalize();
+
 /** @} */    
     
 #ifdef __cplusplus
