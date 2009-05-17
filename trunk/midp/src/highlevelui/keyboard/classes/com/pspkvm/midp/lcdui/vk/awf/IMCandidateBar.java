@@ -5,11 +5,14 @@ import javax.microedition.lcdui.Graphics;
 public class IMCandidateBar {
     static CNLib cnlib=new CNLib();
 	static Associational ass=new Associational();
+	static strokeLib slib=new strokeLib();
 	final static int MAX_CHARS_NUM=6;
+	final static int MAX_STROKE_CHARS_NUM=9;
     String pinyin = null;
     int cur_pos = 0;
     int cur_sel = 0;
     char[] cur_candidates = new char[MAX_CHARS_NUM];
+	char []cur_stroke= new char[MAX_STROKE_CHARS_NUM];
 
     public IMCandidateBar(int width, int height) {
     }
@@ -147,5 +150,21 @@ public class IMCandidateBar {
 		}
 		return cur_candidates;
  	}
+
+ public char[] findCandidateStorkHZ(String stroke) {
+ 	//stroke="1";
+		if(stroke!=null){
+			char temHZ[]= slib.getHzByStrokeString(stroke);
+			if(temHZ==null) return null;
+			for (int i = 0; i < MAX_STROKE_CHARS_NUM; i++) {
+	    	    if (i < temHZ.length) {
+	    	        cur_stroke[i] = temHZ[i];
+	    	    } else {
+	    	        cur_stroke[i] = 0;
+	    	    }
+			}
+		}
+		return cur_stroke;
+    }
 }
 

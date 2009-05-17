@@ -13,6 +13,7 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
     public static final int UPPERCASE = 2;
     public static final int SYMBOL = 3;
 	public static final int PINYIN = 4;
+	public static final int STROKE = 5;
 
 	public static final int KEYBOARD_INPUT_NUMERIC = 0;  //NUMERIC only
     public static final int KEYBOARD_INPUT_ASCII = 1;    //ascii only 

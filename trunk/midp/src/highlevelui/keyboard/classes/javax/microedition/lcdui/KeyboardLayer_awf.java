@@ -19,9 +19,13 @@ import com.sun.midp.main.Configuration;
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author Amir Uval
  */
-class KeyboardLayer_awf extends AbstractKeyboardLayer {
+class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener {
     private int neededColumns = 0;
     private int neededRows = 0;
+
+	private Command keyboardClose;
+	private Command keyboardHelp;
+	private Command keyboardaBack;
 
     /** the instance of the virtual keyboard */
     VirtualKeyboard_awf vk = null;
@@ -48,11 +52,30 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer {
 
 		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
 	
-		Command keyboardClose = new Command("OK", Command.OK, 1);
-		Command keyboardHelp = new Command("Help", Command.EXIT, 1);
-		Command commads[]={keyboardClose,keyboardHelp};
+		keyboardClose = new Command("OK", Command.SCREEN, 1);
+		keyboardHelp = new Command("Back", Command.SCREEN, 1);
+		keyboardaBack = new Command("Help", Command.EXIT, 1);
+		Command commads[]={keyboardClose,keyboardHelp,keyboardaBack};
+		setCommandListener(this);
 		setCommands(commads);
     }       
+	/**
+     * Handle a command action.
+     *
+     * @param cmd The Command to handle
+     * @param s   The Displayable with the Command
+     */
+    public void commandAction(Command cmd, Displayable s) {
+    System.out.println("commandAction="+cmd);
+        if (cmd == keyboardClose) {
+			virtualMetaKeyEntered(VirtualKeyboard_awf.CANCEL_COMMAND);
+    	}else if (cmd == keyboardHelp) {
+	    	virtualMetaKeyEntered(VirtualKeyboard_awf.OK_COMMAND);
+    	}else if (cmd == keyboardaBack) {
+	    	System.out.println("commandAction="+cmd);
+			virtualMetaKeyEntered(VirtualKeyboard_awf.CURSOR_UP_COMMAND);
+    	}
+	}
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -93,10 +116,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer {
      */ 
 
     private static final boolean[][] isMap = {
-     // |NUMERIC|LOWERCASE|UPPERCASE|SYMBOL|PINYIN
-        { true,   false,   false,    false, false }, // KEYBOARD_INPUT_NUMERIC
-        { true,   true,    true,     true, false }, // KEYBOARD_INPUT_ASCII
-        { true,   true,    true,     true,  true } // KEYBOARD_INPUT_ANY 
+     // |NUMERIC|LOWERCASE|UPPERCASE|SYMBOL|PINYIN|STROK
+        { true,   false,   false,    false, false , false}, // KEYBOARD_INPUT_NUMERIC
+        { true,   true,    true,     true, false , false}, // KEYBOARD_INPUT_ASCII
+        { true,   true,    true,     true,  true , true} // KEYBOARD_INPUT_ANY 
 
     };
 
@@ -170,8 +193,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer {
                     return "ABCD";
                 case AbstractKeyboardLayer.SYMBOL:
                     return "Symbol";
-		  case AbstractKeyboardLayer.PINYIN:	
-		      return "Pinyin";
+				case AbstractKeyboardLayer.PINYIN:	
+					return "Pinyin";
+				case AbstractKeyboardLayer.STROKE:	
+					return "strok";	
             }
         }
         return null;
@@ -249,7 +274,6 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer {
      * @return true always, since popupLayers swallow all key events
      */
     public boolean keyInput(int type, int code) {
-
         if ((type == EventConstants.PRESSED ||
              type == EventConstants.RELEASED ||
              type == EventConstants.REPEATED) && 

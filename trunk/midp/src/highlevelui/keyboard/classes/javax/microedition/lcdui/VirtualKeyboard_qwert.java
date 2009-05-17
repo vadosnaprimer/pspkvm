@@ -19,17 +19,7 @@ import com.sun.midp.main.Configuration;
  * @author Amir Uval
  */
 
-class VirtualKeyboard_qwert {
-
-    /** indicates whether the virtual keyboard is enabled */
-    public static boolean USE_VIRTUAL_KEYBOARD = true;
-
-    /** indicates whether the virtual keypad is enabled */
-    public static final boolean USE_VIRTUAL_KEYPAD = false;
-
-    /** indicates whether the virtual keyboard is opened automatically */
-    public static boolean USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
-
+class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
     /** instance of the virtual keyboard listener */
     VirtualKeyboardListener vkl;
     
@@ -196,33 +186,7 @@ class VirtualKeyboard_qwert {
         }
      }
 
-    /**
-     * Checks if the virtual keyboard is enabled.
-     * @return <code>true</code> if the virtual keyboard is enabled,
-     *         <code>false</code> otherwise.
-     */
-    static boolean isKeyboardEnabled(){
-        return USE_VIRTUAL_KEYBOARD;
-    }
-
-    /**
-     * Checks if the virtual keyboard is enabled.
-     * @return <code>true</code> if the virtual keyboard is enabled,
-     *         <code>false</code> otherwise.
-     */
-    static boolean isKeypadEnabled(){
-        return USE_VIRTUAL_KEYPAD;
-    }
-
-    /**
-     * Checks if the virtual keyboard is opened automatically.
-     * @return <code>true</code> if the virtual keyboard is opened automatically,
-     *         <code>false</code> otherwise.
-     */
-    static boolean isAutoOpen(){
-        return USE_VIRTUAL_KEYBOARD_OPEN_AUTO;
-    }
-
+    
     /**
      * traverse the virtual keyboard according to key pressed.
      * 
