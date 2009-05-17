@@ -69,15 +69,15 @@ void JavaTask(void) {
 
     REPORT_CRIT(LC_CORE,"JavaTask() >>\n");
 
-    if (midpInitializeMemory(8*1280*1024+1024*1024) != 0) {
+    if (JAVACALL_OK != javacall_initialize_configurations()) {
+        REPORT_WARN(LC_CORE,"JavaTask() >> configuration initialize failed.\n");
+    }
+    
+    if (midpInitializeMemory(1*1280*1024+1024*1024) != 0) {
         REPORT_CRIT(LC_CORE,"JavaTask() >> midpInitializeMemory()  Not enough memory.\n");
         return;
     }
     REPORT_INFO(LC_CORE,"JavaTask() >> memory initialized.\n");
-
-    if (JAVACALL_OK != javacall_initialize_configurations()) {
-        REPORT_WARN(LC_CORE,"JavaTask() >> configuration initialize failed.\n");
-    }
 
     //javacall_global_init();
     javacall_events_init();

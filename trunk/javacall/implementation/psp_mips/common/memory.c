@@ -28,8 +28,10 @@ extern "C" {
 #endif
 
 #include "stdio.h"
+#include "stdlib.h"
 #include "javacall_defs.h"    
 #include "javacall_memory.h"
+#include "javacall_properties.h"
 #include "malloc.h"
 
 static int max_heap_size = 0;
@@ -45,18 +47,37 @@ static int max_heap_size = 0;
  */
 void* javacall_memory_heap_allocate(int size, /*OUT*/ int* outSize) {
 	int sz=64*1024*1024;
-	const static int reserved_heap = 512*1024;
+	int reserved_heap = 512*1024;
 	char* tmpp=NULL;
-	size += reserved_heap;
+	char* resv=NULL;
+	char* pSize=NULL;
+
+	if ((JAVACALL_OK == javacall_get_property("com.pspkvm.setting.reservedCHeapSize", 
+		JAVACALL_INTERNAL_PROPERTY, &pSize)) &&
+		(pSize != NULL)) {
+		int configSize = atoi(pSize) * 1024;
+		if (configSize > reserved_heap) {
+			reserved_heap = configSize;
+		}
+	}
+
+	javacall_printf("Reserved C heap size:%d\n", reserved_heap);
+	if (NULL == (resv = malloc(reserved_heap))) {
+		return NULL;
+	}
+	
        while(sz > size) {
 		if ((tmpp=malloc(sz))!=NULL) {
 			javacall_printf("MAX HEAP:%d\n",sz);
 			*outSize = sz;
 			max_heap_size = sz;
+			free(resv);
 			return tmpp;
 		}
 		sz -= 200*1024;
 	}
+
+       free(resv);
        return NULL;
 }
     
