@@ -90,6 +90,12 @@ int jcapp_init() {
     }    
 
     jcapp_reset_screen_buffer();
+
+    if (JAVACALL_OK != javacall_key_init()) {
+        REPORT_ERROR(LC_LOWUI, "Cannot initialize key!");
+        return -3;
+    }
+    
     return 0;
 }
 
