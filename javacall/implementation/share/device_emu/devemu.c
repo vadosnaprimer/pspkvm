@@ -191,6 +191,22 @@ static DEVICE_INFO _devices[] = {
 	240, 320, -1, -2, -3, -4, -5, -6, -7, -8, 90, 63, "se-generic"},
 	{"SonyEricsson (480*272, CW90)",
 	272, 480, -1, -2, -3, -4, -5, -6, -7, -8, 90, 64, "se-generic"},
+	{"J2ME Standard(352*416)",
+	352, 416, -1, -2, -3, -4, -5, 21, 22, STD_KEY_CLEAR, 0, 65, "j2me-generic"},
+	{"J2ME Standard(352*416, CW90)",
+	352, 416, -1, -2, -3, -4, -5, 21, 22, STD_KEY_CLEAR, 90, 66, "j2me-generic"},
+	{"Nokia(352*416)",
+	352, 416, -1, -2, -3, -4, -5, -6, -7, -8, 0, 67, "nokia-generic"},
+	{"Nokia(352*416, CW90)",
+	352, 416, -1, -2, -3, -4, -5, -6, -7, -8, 90, 68, "nokia-generic"},
+	{"Motorola(352*416)",
+	352, 416, -1, -6, -2, -5, -20, -21, -22, -9, 0, 69, "motorola-generic"},
+	{"Motorola(352*416, CW90)",
+	352, 416, -1, -6, -2, -5, -20, -21, -22, -9, 90, 70, "motorola-generic"},
+	{"SonyEricsson (352*416)",
+	352, 416, -1, -2, -3, -4, -5, -6, -7, -8, 0, 71, "se-generic"},
+	{"SonyEricsson (352*416, CW90)",
+	352, 416, -1, -2, -3, -4, -5, -6, -7, -8, 90, 72, "se-generic"},
 };
 
 static int DEVICE_COUNT = sizeof(_devices)/sizeof(DEVICE_INFO);
