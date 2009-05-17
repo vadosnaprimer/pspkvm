@@ -48,7 +48,12 @@ SUBSYSTEM_KEYBOARD_JAVA_FILES = \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational.java\
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational1.java\
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational2.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/qwert/IMCandidateBar.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/strokeLib.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/strokeLib1.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/strokeLib2.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/strokeNode.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/strokeNode1.java\
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/qwert/IMCandidateBar.java\
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/qwert/CNLib.java\
     
 # Define Jpp

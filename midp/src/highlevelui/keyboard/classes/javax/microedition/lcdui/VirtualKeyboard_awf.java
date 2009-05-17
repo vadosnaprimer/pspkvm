@@ -359,8 +359,47 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 					kmap[2].setActiveKey(0);
 				}
 			}
-		}
-		else{
+		}else if(currentKeyboard==AbstractKeyboardLayer.STROKE){
+			int cKM=VirtualKeyBoardMap.getActiveKeyMap();
+			if(key>=3){//clear
+				if(kmap[0].getInputKey().length()>0){
+					kmap[0].setInputKeyClearOne();
+					VirtualKeyBoardMap.setActiveKeyMap(0);
+					kmap[1].setKeyName(candidateBar.findCandidateStorkHZ(kmap[0].getInputKey()));
+				}else{
+					vkl.virtualMetaKeyEntered(DEL_CHAR_COMMAND);
+				}
+			}else{
+				int ck=kmap[cKM].getActiveKey();
+				kmap[cKM].setActiveKey(ck/3*3+key);
+				if(cKM==0){
+					if(kmap[cKM].getActiveKey()!=5){
+						char str[]=candidateBar.findCandidateStorkHZ(kmap[0].getInputKey()+(kmap[0].getActiveKey()+1));
+						if(str!=null && str[0]!= 0){//找到笔画了
+							kmap[0].setInputKey();
+							kmap[1].setKeyName(str);
+							kmap[1].setActiveKey(0);
+						}
+					}else{
+						VirtualKeyBoardMap.setActiveKeyMap(1);
+						kmap[1].setActiveKey(0);
+						kmap[1].setKeyName(new String("，。? !\n"));
+					}
+				}else if(cKM==1){//选中侯选择字，并查找联想字
+					vkl.virtualMetaKeyEntered(INSERT_CHAR_COMMAND);
+					kmap[0].resetInputKey();
+					if(getSelect()!=null&&getSelect().length()>0){
+						char[] hz=candidateBar.findCandidateAssociational(getSelect().charAt(0));
+						if(hz!=null&&hz[0]!=0){
+							kmap[1].setKeyName(hz);
+						}else{
+							VirtualKeyBoardMap.setActiveKeyMap(0);
+						}
+					}
+					kmap[1].setActiveKey(0);
+				}
+			}
+		}else{
 			if(kmap[1].getKeyName(key)!=null&&kmap[1].getKeyName(key).length()!=0){
 				kmap[1].setActiveKey(key);
 				//kmap[0].setActiveKey(4);//主键盘处与中间位置
@@ -443,7 +482,56 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 				default:
 					break;
 			}
-		}else{
+		}else if(currentKeyboard==AbstractKeyboardLayer.STROKE){	
+			int cAKM=VirtualKeyBoardMap.getActiveKeyMap();
+			int curAK=kmap[cAKM].getActiveKey();
+			switch(keyCode){
+				case Constants.KEYCODE_RIGHT:
+				case Constants.KEYCODE_LEFT:
+					{
+						String tmpKname;
+						if(cAKM==0){
+								tmpKname=kmap[1].getKeyName(0);
+								if(tmpKname!=null&&tmpKname.length()>0&&tmpKname.charAt(0)!=0){
+									VirtualKeyBoardMap.setActiveKeyMap(1);
+								}
+						}else{
+							VirtualKeyBoardMap.setActiveKeyMap(0);
+						}
+					}
+					break;
+				case Constants.KEYCODE_UP:	
+					if(curAK/3==0){//cur keymap top
+						if(cAKM==1){
+							if(kmap[1].getKeyName(6)!=null&&kmap[1].getKeyName(6).length()>0&&kmap[1].getKeyName(6).charAt(0)!=0){//focus pinyin keymap
+								kmap[cAKM].setActiveKey(6);
+							}
+							else{
+								if(kmap[1].getKeyName(3)!=null&&kmap[1].getKeyName(3).length()>0&&kmap[1].getKeyName(3).charAt(0)!=0){//focus pinyin keymap
+									kmap[cAKM].setActiveKey(3);
+								}
+							}
+						}else if(cAKM==0){
+							kmap[cAKM].setActiveKey(3);
+						}
+					}else{
+						kmap[cAKM].setActiveKey(curAK-3);
+					}
+					break;
+				case Constants.KEYCODE_DOWN:
+				    String curKname=kmap[cAKM].getKeyName(curAK/3*3+3);
+					System.out.println("handleDirectionKey"+curKname);
+					if(curKname!=null&&curKname.length()>0&&curKname.charAt(0)!=0){
+						kmap[cAKM].setActiveKey(curAK+3);
+					}else{
+						kmap[cAKM].setActiveKey(0);
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		else{
 			kmap[0].handleKeyPressedMsg(type, keyCode);
 			kmap[1].setKeyName(kmap[0].getKeyName());
    		}
@@ -484,10 +572,14 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 		       for(int i=0;i<3;i++){
 			       	if(kmap[i]!=null)
 		       		{
-				       kmap[i].drawKeyboardCN(g);
+				       kmap[i].drawKeyboardCN(g,true);
 		       		}
 		       	}
-	       	}else{
+	       	}else if(currentKeyboard==AbstractKeyboardLayer.STROKE){
+		       	kmap[0].drawKeyboardCN(g,false);
+				kmap[1].drawKeyboardCN(g,false);
+       		}
+	       	else{
 			   kmap[0].drawKeyboard(g);
 			   kmap[1].drawKeyboard(g);
 	   		}
@@ -670,12 +762,14 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 	String CnMap[]=
 		{"?","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
 	String abcMap[]=
-		{"_@\\-","abc.","def\n","ghi?","jkl,","mno!","pqrs","tuv ","wxyz"};
+		{"_@/-","abc.","def\n","ghi?","jkl,","mno!","pqrs","tuv ","wxyz"};
 	String ABCMap[]=
-		{"_@\\-","ABC.","DEF\n","GHI?","JKL,","MNO!","PQRS","TUV ","WXYZ"};
+		{"_@/-","ABC.","DEF\n","GHI?","JKL,","MNO!","PQRS","TUV ","WXYZ"};
 	String symbolMap[]=
 		{"[^]","~@:#","<$>%","(_)+",",.?!","\"\\;'","{|}-","=/0`","& \n"};
 	//{""",'","!@#%","&*><","_+=:","'?()","/\.{}","[]~^","$&#8364;&#163;-&#165;&#161;&#164;&#167;&#191;`|"};
+	String strokeMap[]=
+		{"一","丨","丿","丶","フ","?"};
 
 	void prepareKeyMap(){
 	
@@ -740,6 +834,16 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 				kmap[1].setKeyName(kmap[0].getKeyName());
 				kmap[2]=null;
 				break;
+			case 5://笔画
+				kmap[0]=new VirtualKeyBoardMap(kmapW,kmpaH,
+											mainKeyOffsetX,mainKeyOffsetY+kmpaH/3,
+											VirtualKeyBoardMap.KEYMAP_LAOUT_TYPE_3,0);
+				kmap[0].setKeyName(strokeMap);
+				kmap[1]=new VirtualKeyBoardMap(kmapW,kmpaH,
+										mainKeyOffsetX+kmapW,mainKeyOffsetY,
+										VirtualKeyBoardMap.KEYMAP_LAOUT_TYPE_3,1);
+				break;
+				
 			default:
 				break;
 		}
@@ -854,6 +958,9 @@ class VirtualKeyBoardMap
 
 	public void setKeyName(char name[]){
 		if(name!=null){
+			for(int i=0;i<keyName.length;i++){
+				keyName[i]="";
+			}
 			for(int i=0;i<name.length;i++){
 				if(name[i]!=0){
 					keyName[i]=new String(new char[]{name[i]});
@@ -1013,7 +1120,7 @@ class VirtualKeyBoardMap
         g.drawLine(x,y,x,y+h-1);
 
     }
-	public void drawKeyboardCN(Graphics g) {
+	public void drawKeyboardCN(Graphics g,boolean isPY) {
 		System.out.println("drawKeyboardCN");
 		int col=3;
 		if(keyName==null){
@@ -1048,19 +1155,38 @@ class VirtualKeyBoardMap
 								g.HCENTER|g.BOTTOM);
 				}
 			}
-		}
-		
+		}	
 		if(keyIndex==0){
-			drawBeveledButton(g,keyMapX+buttonW*3+buttonW/3,
-							keyMapY,
-							buttonW*2, buttonH/2);
-			g.setColor(COLOR_RED);
-			if(inputKey!=null){
-	            g.drawString("in: "+inputKey,
-							 keyMapX+buttonW*4,
-							 keyMapY+buttonH/8,
-							g.LEFT|g.TOP);
+			if(isPY){
+				drawBeveledButton(g,keyMapX+buttonW*3+buttonW/3,
+								keyMapY,
+								buttonW*2, buttonH/2);
+				g.setColor(COLOR_RED);
+				if(inputKey!=null){
+		            g.drawString("in: "+inputKey,
+								 keyMapX+buttonW*4,
+								 keyMapY+buttonH/8,
+								g.LEFT|g.TOP);
 				}
+			}else{
+				drawBeveledButton(g,keyMapX+buttonW/3,
+								keyMapY-buttonH,
+								buttonW*2, buttonH/2);
+				g.setColor(COLOR_RED);
+				if(inputKey!=null){
+					int begin=(inputKey.length()>6)?(inputKey.length()-6):0;
+					String strokeStr=inputKey.substring(begin);
+					strokeStr=strokeStr.replace('1', '一');
+					strokeStr=strokeStr.replace('2', '丨');
+					strokeStr=strokeStr.replace('3', '丿');
+					strokeStr=strokeStr.replace('4', '丶');
+					strokeStr=strokeStr.replace('5', 'フ');
+		            g.drawString("in: "+strokeStr,
+								 keyMapX+buttonW/2,
+								 keyMapY+buttonH/8-buttonH,
+								g.LEFT|g.TOP);
+				}
+			}
 		}
 	} 
 
