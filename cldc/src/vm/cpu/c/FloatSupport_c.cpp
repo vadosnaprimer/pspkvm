@@ -160,7 +160,19 @@ extern "C" {
 
   jfloat jvm_fmul(jfloat x, jfloat y)            { return x * y; }
 
-  jfloat jvm_fdiv(jfloat x, jfloat y)            { return x / y; }
+  jfloat jvm_fdiv(jfloat x, jfloat y)            { 
+  	if (y == 0) {
+  		if (x == 0) {
+  			return F_JUST_NAN;
+  		} else if (x > 0) {
+  			return F_POS_INFINITY;
+  		} else {
+  			return F_NEG_INFINITY;
+  		}
+  	} else {
+  		return x / y;
+  	} 
+  }
 
   jfloat jvm_frem(jfloat x, jfloat y)            { 
 #if PROCESSOR_ARCHITECTURE_X86
