@@ -1,8 +1,9 @@
-pspkvm v0.5.1
+pspkvm v0.5.2
 28 Feb. 2009
-Author: Sleepper, M@x
+Author: Sleepper, M@x, Anweifeng
 Email: pspkvm@gmail.com
 Project website: 
+	http://www.pspkvm.org
 	http://www.pspkvm.com 
 	http://www.pspkvm.cn
 Project home on SF:
@@ -12,10 +13,14 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
-- Enable input symbol in password textfield
-- Fix OSK bug
-- Fix drawRGB alpha blending bug
-- Fix a couple of bug inside VM interpreter
+- Large memory support
+- New Chinese Input Method: Stroke IM
+- Chinese localized menu
+- Some bug fixes
+- New screen resolution: 352x416
+- Default CPU speed is configuable by pspkvm.ini
+- Support daylight-saving time
+- Old QWERTY virtual keyboard is supported again, configuable by pspkvm.ini
 
 --------------------------------
 General information
@@ -43,7 +48,7 @@ Fetures
 - Change default key assignment for specific application.
 - JSR75(File Connection)
 - Virtual Keyboard Input
-- Chinese Input
+- Chinese Input(Pinyin, Stroke)
 - JSR179(GPS)
 - FreeType2 font support
 - JSR 226(SVG)
