@@ -1,0 +1,25 @@
+#
+# @(#)armsd_arm_ads.gmk	1.4  06/04/12
+#
+# Copyright 2006 Sun Microsystems, Inc. All rights reserved.
+# SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+#
+######################################################################
+#
+# To be included for linux_arm_gcc platforms
+#
+######################################################################
+
+PCSL_OS=javacall
+PCSL_CPU=mips
+
+FILE_MODULE=javacall
+NETWORK_MODULE=javacall
+MEMORY_PORT_MODULE=javacall
+MEMORY_MODULE=heap
+PRINT_MODULE=javacall
+
+include $(PCSL_DIR)/makefiles/share/gcc.gmk
+
+# must be included after compiler definition
+include $(PCSL_DIR)/makefiles/share/javacall.gmk
