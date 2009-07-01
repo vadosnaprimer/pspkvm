@@ -52,10 +52,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 
 		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
 	
-		keyboardClose = new Command("OK", Command.SCREEN, 1);
+		keyboardClose = new Command("OK", Command.SCREEN, 2);
 		keyboardHelp = new Command("Back", Command.SCREEN, 1);
 		keyboardaBack = new Command("Help", Command.EXIT, 1);
-		Command commads[]={keyboardClose,keyboardHelp,keyboardaBack};
+		Command commads[]={keyboardClose,keyboardHelp/*,keyboardaBack*/};
 		setCommandListener(this);
 		setCommands(commads);
     }       
