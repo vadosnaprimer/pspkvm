@@ -240,9 +240,8 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 					vkl.virtualMetaKeyEntered(OK_COMMAND);
 					break;
 				case EventConstants.SOFT_BUTTON1:
-					//isShowHelp=!isShowHelp;
-					//vkl.repaintVK();
-					vkl.virtualMetaKeyEntered(CANCEL_COMMAND);
+					isShowHelp=!isShowHelp;
+					vkl.repaintVK();
 					break;
 				default:
 					break;
