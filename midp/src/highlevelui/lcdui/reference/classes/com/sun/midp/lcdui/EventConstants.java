@@ -55,6 +55,11 @@ public final class EventConstants {
     public static final int IME      = 4;
 
     /**
+     * Minor ID indicating a raw key event transmittal (internal).
+     */
+    public static final int RAWKEYSTATE = 5;
+
+    /**
      * Minor ID indicating a pointer drag.
      */
     public static final int DRAGGED  = 3;  // pen

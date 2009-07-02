@@ -28,6 +28,7 @@ package com.sun.midp.chameleon;
 
 import com.sun.midp.chameleon.skins.ScreenSkin;
 import com.sun.midp.chameleon.layers.BackgroundLayer;
+import com.sun.midp.lcdui.EventConstants;
 import javax.microedition.lcdui.*;
 
 /**
@@ -235,10 +236,13 @@ public abstract class CWindow {
             for (CLayerElement le = layers.getTop();
                     le != null; le = le.getLower()) {
                 layer = le.getLayer();
-                if (layer.supportsInput &&
-                        layer.keyInput(type, keyCode))
-                {
-                    return true;
+                if (layer.supportsInput) {
+                	if ((type == EventConstants.RAWKEYSTATE) &&
+									(!layer.supportsRawKeyInput())) {
+                		// Layer won't know what to do with this.
+                		continue; }
+                  if (layer.keyInput(type, keyCode)) {
+                  	return true; }
                 }
             }
         } // sync
