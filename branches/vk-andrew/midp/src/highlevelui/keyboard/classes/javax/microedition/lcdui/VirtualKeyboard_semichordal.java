@@ -37,14 +37,13 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		private final static int NO_DISP = 0;
 		private final static int SM_DISP = 1;
 		private final static int LG_DISP = 2;
-		
 		 
 		// Keyboard state--may not need
     int currentKeyboard = 1; // abc
     
     // The board images
     Image c_lock_off_img, c_lock_on_img, key_bg_img, key_bg_img_on;
-    // The soft font
+    // The soft fonts
     SFont sfont_red, sfont_blue;
 
     /**
@@ -87,6 +86,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		SFontInit_blue.initFont(sfont_blue.imgs);
 		SFontInit_red.initFont(sfont_red.imgs); }
 
+	// Initialize the various display variables--called at construction
 	void initDisplayVars() {
 		chordal_offset=0;
 		display_chords_mode=SM_DISP;
@@ -159,7 +159,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param x the x coordinate
 		 * @param y the y coordinate
 		 * @param o the offset into the key array		 		 		 		 		 		 		 
-		 */		
+		 */
 		void paintKeyStacked(Graphics g, SFont f, int x, int y, int o) {
 			if (SC_Keys.ls_matched_meta[o]) {
 				if (rs_set) {
@@ -190,7 +190,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param x the x coordinate
 		 * @param y the y coordinate
 		 * @param offset the base offset of the chord
-		 */		 		 		 		 		 		 		
+		 */
 		void paintChordStacked(Graphics g, SFont f, int x, int y, int offset) {
 			x+= 28;
 			y+= 10;
@@ -397,10 +397,5 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     private final static int WHITE = 0xffffff;
     private final static int BLK = 0x000000;
 
-		// FIXME/TODO: Still present because of routing of commands in keyboard layer--
-		// See notes there re legacy cleanup.
-    final static int OK_COMMAND= 0;  //update all input and close vk
-    final static int CANCEL_COMMAND= 1;//cancel all inout and close vk
-		final static int CURSOR_UP_COMMAND = 7;
 }
 

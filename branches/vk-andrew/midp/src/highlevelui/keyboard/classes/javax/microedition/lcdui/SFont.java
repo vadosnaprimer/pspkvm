@@ -4,6 +4,14 @@ import javax.microedition.lcdui.Image;
 import java.util.Hashtable;
 import javax.microedition.lcdui.Graphics;
 
+/**
+ * A soft font implementation -- stores fonts as predrawn images, hashed on
+ * character values. Note that currently the height and space width are
+ * hard-coded, and it does not do kerning. It's (so far) just used for
+ * fast displays. You need to init the hash, too (see SFontInit_.. classes
+ * in this package for examples).  
+*/
+
 public class SFont {
 	public Hashtable imgs;
 	private final static int SPCWDTH=5;
