@@ -1,6 +1,6 @@
 /*
  * /AJ Milne--custom semichordal version for PSP platform
- * Helper for turning arrays of 16 byte longs to byte arrays, for processing
+ * Helper for turning arrays of 64 bit longs to byte arrays, for processing
  * images stored in these arrays -- we use longs because it's more compact in storage
  * than bytes or ints, and also allows larger images without segmenting.
  */

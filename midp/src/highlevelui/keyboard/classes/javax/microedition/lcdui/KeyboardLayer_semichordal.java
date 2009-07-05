@@ -10,6 +10,7 @@ import com.sun.midp.chameleon.skins.DateEditorSkin;
 import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
+import com.sun.midp.chameleon.MIDPWindow;
 import com.sun.midp.main.Configuration;
 
 /**
@@ -21,9 +22,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
   int symbolDownLast = 0;
 	int chordDownLast = 0;
   boolean c_lock = false;
-	private Command keyboardClose;
-	private Command keyboardHelp;
-	private Command keyboardBack;
+	private Command cmdOK, cmdCancel, cmdToggleDisplay;
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
@@ -38,16 +37,16 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      * @param tf The TextEditor that triggered this popup layer.
      */
     private KeyboardLayer_semichordal(TextFieldLFImpl tf) throws VirtualKeyboardException {
-        super((Image)null, -1); // don't draw a background  
-
-        this.layerID  = "KeyboardLayer";
-        tfContext = tf;
-        //backupstring is set to original text before the kbd was used
-        backupString = tfContext.tf.getString();
-        if (vk==null) {
-            vk = new VirtualKeyboard_semichordal(0,
-						this,getAvailableWidth(),getAvailableHeight()); }
-
+	    super((Image)null, -1); // don't draw a background  
+	
+	    this.layerID  = "KeyboardLayer";
+	    tfContext = tf;
+	    //backupstring is set to original text before the kbd was used
+	    backupString = tfContext.tf.getString();
+	    if (vk==null) {
+	      vk = new VirtualKeyboard_semichordal(0,
+				this,getAvailableWidth(),getAvailableHeight()); }
+			
 		setBounds();
 		setupCommands(); }
 		
@@ -56,10 +55,10 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      *
      */
 	void setupCommands() {
-		keyboardClose = new Command("OK", Command.SCREEN, 1);
-		keyboardHelp = new Command("Back", Command.SCREEN, 1);
-		keyboardBack = new Command("Cancel", Command.EXIT, 1);
-		Command commands[]={keyboardClose,/*keyboardHelp,*/keyboardBack};
+		cmdOK = new Command("OK", Command.OK, 1);
+		cmdCancel = new Command("Cancel", Command.CANCEL, 2);
+		cmdToggleDisplay = new Command("Toggle Display", Command.HELP, 3);
+		Command commands[]={cmdOK,cmdCancel,cmdToggleDisplay};
 		setCommandListener(this);
 		setCommands(commands); }
 		       
@@ -70,16 +69,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      * @param s   The Displayable with the Command
      */
     public void commandAction(Command cmd, Displayable s) {
-    System.out.println("commandAction="+cmd);
-        if (cmd == keyboardClose) {
-			virtualMetaKeyEntered(VirtualKeyboard_semichordal.CANCEL_COMMAND);
-    	}else if (cmd == keyboardHelp) {
-	    	virtualMetaKeyEntered(VirtualKeyboard_semichordal.OK_COMMAND);
-    	}else if (cmd == keyboardBack) {
-	    	System.out.println("commandAction="+cmd);
-			virtualMetaKeyEntered(VirtualKeyboard_semichordal.CURSOR_UP_COMMAND);
-    	}
-	}
+    	System.out.println("commandAction="+cmd);
+      if (cmd == cmdOK) {
+				closeKeyEntered(true);
+				return; }
+      if (cmd == cmdCancel) {
+				closeKeyEntered(false);
+				return; }
+      if (cmd == cmdToggleDisplay) {
+				virtualChordalMetaEntered(SC_Keys.DSP); } }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -237,28 +235,22 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      *
      * @param type - The type of this key event (pressed, released)
      * @param code - The code of this key event
-     * @return true always, since popupLayers swallow all key events
+     * @return true except for keys heading for the menus (Soft 1 and 2)     
      */
     public boolean keyInput(int type, int code) {
 
     	if ((tfContext == null) && (cvContext == null)) {
 				return true; }
       if (type == EventConstants.RAWKEYSTATE) {
-      	processRawStroke(code);
-      	return true; }
-      if ((type == EventConstants.PRESSED ||
-				type == EventConstants.RELEASED ||
-				type == EventConstants.REPEATED)) {
-				handleStandardKeyEvent(type, code); }
-			return true; }
-        
-    // We do handle a very few standard key events using the
-    // standard events. Not many.
-		void handleStandardKeyEvent(int type, int code) {
-		  if (type == EventConstants.RELEASED && code == EventConstants.SOFT_BUTTON2) {
-		  	// Means close the keyboard.
-        closeKeyEntered(true); } }
-    
+      		processRawStroke(code);
+					return true; }
+      // The two soft buttons go to the menus. Let them.
+      if (code == EventConstants.SOFT_BUTTON1) {
+				return false; }
+      if (code == EventConstants.SOFT_BUTTON2) {
+				return false; }
+      return true; }
+
 		// Translate the DPAD state into a table offset
     int getDPadOffset(int p) {
 			// Mask out everything but the dpad
@@ -284,6 +276,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		// Process a raw event into a keystroke--masking for upstrokes,
 		// chordal shifts sans strikes
 		void processRawStroke(int p) {
+			if (((MIDPWindow)owner).systemMenuUp()) {
+				// Annoyingly, these arrive even when the system menu is up. Ignore them.
+				return; }
+			if (tfContext == null) {
+				return; }
 			updateChordMap(p);
 			int chordDownNow = p & PSPCtrlCodes.CHORDAL_KEYS;
 			int symbolDownNow = p & PSPCtrlCodes.SYMBOLS;
@@ -351,10 +348,38 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				case SC_Keys.DSP:
 					setVisible(vk.toggleDisplayChords());
 					disp.requestScreenRepaint();
-					return;   
+					return;
+				case SC_Keys.GRV:
+				case SC_Keys.ACU:
+				case SC_Keys.CIR:
+				case SC_Keys.TIL:
+				case SC_Keys.DIA:
+				case SC_Keys.RIN:
+				case SC_Keys.CED:
+					addDiacritical(m);
+					return;
         default:
         	return; } }
-	  
+        	
+		// Called to add a diacritical to the character before the
+		// selection, when the diacritical modifier metakeys are struck.
+		void addDiacritical(int d) {
+			if (tfContext == null) {
+				return; }
+			int p = tfContext.tf.getCaretPosition();
+			if (p==0) {
+				// You have to be pointed just after 
+				// the character you're going to decorate
+				return; }
+			char a = tfContext.tf.getString().charAt(p-1);
+			// Annoyingly, to use insert, you need either a String or a char[]...
+			// so far as I can see.
+			char[] aa = new char[1];
+			aa[0] = Diacriticals.getDiacritical(a, d);
+			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
+			tfContext.tf.insert(aa, 0, 1, tfContext.tf.getCaretPosition());
+			tfContext.tf.getString(); }
+
 	 // Called to close the thing
 	 void closeKeyEntered(boolean ok_sent) {
       Display disp = null;
@@ -446,47 +471,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     public void virtualKeyEntered(int type, char c) { /* STUB */ }
 
     /**
-     * VirtualKeyboardListener interface
-     * NOTE: Only still present because the command listener routes through it.
-     * TODO/FIXME: Remove/stubify; integrate into command listener.		      
-     * 
-     * @param metaKey special keys: 0=ok; 1=cancel
-     *
+     * VirtualKeyboardListener interface (stub)     
      */
-    public void virtualMetaKeyEntered(int metaKey) {
-        Display disp;
-
-        if (tfContext != null) {
-            disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
-        } else if (cvContext != null) {
-            disp = cvContext.currentDisplay;
-        } else {
-            return;
-        }
-		if (tfContext == null) {
-			return; }
-		System.out.println("virtualMetaKeyEntered="+metaKey);
-		switch (metaKey) {
-			case VirtualKeyboard_semichordal.OK_COMMAND:
-				disp.hidePopup(this);
-	            open = false;
-				break;
-			case VirtualKeyboard_semichordal.CANCEL_COMMAND:
-				if (tfContext != null) {
-	                tfContext.tf.setString(backupString);
-	            }
-	            disp.hidePopup(this);
-	            open = false;
-				break;
-			case VirtualKeyboard_semichordal.CURSOR_UP_COMMAND:
-				tfContext.moveCursor(Canvas.UP);
-				break;
-			default:
-				break;
-		}
-      // comment - customer may want backspace event also for Canvas.
-      // in this case, we should handle this case here (else.. cvContext.keyPress(..))
-    }
+    public void virtualMetaKeyEntered(int metaKey) { /* STUB */ }
 
     /**
      * paint text only
