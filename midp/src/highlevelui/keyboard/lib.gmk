@@ -42,6 +42,7 @@ SUBSYSTEM_KEYBOARD_JAVA_FILES = \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_qwert.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_awf.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_semichordal.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Diacriticals.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/LongArrayHandler.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Imgs_misc.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFont.java \
