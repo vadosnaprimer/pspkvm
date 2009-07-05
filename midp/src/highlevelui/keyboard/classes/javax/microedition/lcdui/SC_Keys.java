@@ -36,6 +36,17 @@ public class SC_Keys {
 	public static final int CLK=17;
 	public static final int CTL=18;
 	public static final int DSP=19;
+	// Modifier metakeys -- add diacriticals
+	// to preceding letters
+	public static final int GRV=100;
+	public static final int ACU=101;
+	public static final int CIR=102;
+	public static final int TIL=103;
+	public static final int DIA=104;
+	public static final int RIN=105;
+	public static final int CED=106;
+	
+	
 	
   // The map of non-meta characters. Note that where there are 
   // valid meta characters, space is set, but these are just 
@@ -87,7 +98,7 @@ public class SC_Keys {
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, NUL, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			NUL, NUL, NUL, NUL, NUL, NUL, NUL, NUL,
+			GRV, ACU, CIR, TIL, DIA, RIN, CED, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, NUL, CHR, CHR, CHR, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, NUL, NUL,
@@ -102,7 +113,7 @@ public class SC_Keys {
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
-			 true,  true,  true,  true, false, false, false, false,
+			true,  true,  true,  true,  false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
@@ -114,9 +125,9 @@ public class SC_Keys {
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
-			 true,  true,  true,  true, false, false, false, false,
+			true,  true,  true,  true,  false, false, false, false,
 			false, false, false, false, false, false, false, false,
-			false,  true,  true,  true, false, false, false, false };
+			false, true,  true,  true,  false, false, false, false };
 			
 	// Helper for drawing -- opposite for above--metakeys
 	// that are high, but matched below.
@@ -124,7 +135,7 @@ public class SC_Keys {
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
-			false, false, false, false,  true,  true,  true,  true,
+			false, false, false, false, true,  true,  true,  true,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
@@ -136,14 +147,16 @@ public class SC_Keys {
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false,
-			false, false, false, false,  true,  true,  true,  true,
+			false, false, false, false, true,  true,  true,  true,
 			false, false, false, false, false, false, false, false,
-			false, false, false, false, false,  true,  true,  true };
+			false, false, false, false, false, true,  true,  true };
 
     // The display map--used just to give the user some idea
     // what this chordal combination will do for them. *Not*
     // used in triggering/processing strokes -- see the 
     // SC_Keys.chordal_map_meta and chordal_map_char arrays.
+    // The diacritical keys all display 'representative' characters--
+    // these are the unicode escapes in 12th line of array.
     public static final String[] chordal_map_d = {
 			"SPC", "e", "t", "s", "ENT", "E", "T", "S",
 			"INS", "BSP", "DEL", "ESC", " ", " ", " ", " ",
@@ -156,7 +169,7 @@ public class SC_Keys {
 			"f", "g", "c", "r", "F", "G", "C", "R",
 			"+", "=", "*", "!", " ", "@", "&", "\\",
 			"b", "j", "y", "k", "B", "J", "Y", "K",
-			" ", " ", " ", " ", " ", " ", " ", " ",
+			"\u00e9", "\u00e8", "\u00ea", "\u00f1", "\u00eb", "\u00e5", "\u00e7", " ",
 			"z", "x", "0", "1", "Z", "X", "%", "|",
 			"<", "`", "$", " ", ">", "#", "~", " ",
 			"6", "7", "8", "9", "(", ")", " ", " ",
