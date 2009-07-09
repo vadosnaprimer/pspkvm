@@ -135,12 +135,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				case KEYBOARD_INPUT_ASCII:
 					vk.currentKeyboard=LOWERCASE;
 					break;
-				case KEYBOARD_INPUT_ANY://根据PSPKVM.INI 配置决定默认输入法类型
-					if("vk-chinese".equals(Configuration.getProperty("com.pspkvm.inputmethod"))){
-						vk.currentKeyboard=PINYIN;
-					}else{
+				case KEYBOARD_INPUT_ANY:
 						vk.currentKeyboard=LOWERCASE;
-					}
 					break;
 				default:
 					vk.currentKeyboard=NUMERIC;
