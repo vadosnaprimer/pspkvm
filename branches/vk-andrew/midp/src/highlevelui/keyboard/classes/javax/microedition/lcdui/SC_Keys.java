@@ -36,8 +36,12 @@ public class SC_Keys {
 	public static final int CLK=17;
 	public static final int CTL=18;
 	public static final int DSP=19;
-	// Modifier metakeys -- add diacriticals
-	// to preceding letters
+	
+	// Modifier/deadkey metakeys -- add
+	// diacriticals to preceding letters
+	
+	// Grave, acute, circumflex, tilde, 
+	// diaeresis, ring, cedille/a:
 	public static final int GRV=100;
 	public static final int ACU=101;
 	public static final int CIR=102;
@@ -46,7 +50,15 @@ public class SC_Keys {
 	public static final int RIN=105;
 	public static final int CED=106;
 	
-	
+	// Breve, macron, stroke, caron,
+	// ogonek middle dot, upper dot
+	public static final int BRV=107;
+	public static final int MCR=108;
+	public static final int STR=109;
+	public static final int CAR=110;
+	public static final int OGO=111;
+	public static final int MDT=112;
+	public static final int UDT=113;
 	
   // The map of non-meta characters. Note that where there are 
   // valid meta characters, space is set, but these are just 
@@ -98,7 +110,7 @@ public class SC_Keys {
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, NUL, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			GRV, ACU, CIR, TIL, DIA, RIN, CED, NUL,
+			GRV, ACU, CED, TIL, DIA, RIN, CIR, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, NUL, CHR, CHR, CHR, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, NUL, NUL,
@@ -169,7 +181,7 @@ public class SC_Keys {
 			"f", "g", "c", "r", "F", "G", "C", "R",
 			"+", "=", "*", "!", " ", "@", "&", "\\",
 			"b", "j", "y", "k", "B", "J", "Y", "K",
-			"\u00e8", "\u00e9", "\u00ea", "\u00f1", "\u00eb", "\u00e5", "\u00e7", " ",
+			"\ue003", "\ue004", "\ue005", "\ue006", "\ue001", "\ue000", "\ue002", " ",
 			"z", "x", "0", "1", "Z", "X", "%", "|",
 			"<", "`", "$", " ", ">", "#", "~", " ",
 			"6", "7", "8", "9", "(", ")", " ", " ",
