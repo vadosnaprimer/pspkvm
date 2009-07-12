@@ -29,7 +29,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     // Chordal display state
     int chordal_offset;
     int display_chords_mode;
-    boolean caps_lock_set;
+    boolean caps_lock_set, select_on;
 		boolean ls_set, rs_set;
 		int live_dpad;
 		// Display mode enum (for display_chords_mode)
@@ -92,6 +92,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		display_chords_mode=SM_DISP;
 		ls_set=false;
 		rs_set=false;
+		select_on=false;
 		caps_lock_set=false;
 		live_dpad=0;
 		constructImages(); }
@@ -146,7 +147,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					keypad_posn_x[idx], keypad_posn_y[idx]-9, offsets[idx]+ls_offset+4); }
 			g.setColor(BLK);
 			g.drawRect(0, 0, lg_dim_width, lg_dim_height);
-			paintCapsLockState(g); }
+			paintMiscState(g); }
 
 		/**
 		 *	Method called to paint a key in a 'stacked' array--in the large graphics context
@@ -220,7 +221,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		protected void paint(Graphics g) {
 			switch(display_chords_mode) {
 				case NO_DISP: return;
-				case SM_DISP: paintCurrentChord(g); paintCapsLockState(g); return;
+				case SM_DISP: paintCurrentChord(g); paintMiscState(g); return;
 				case LG_DISP: 
 					paintLgDisplay(g);
 					return;
@@ -256,6 +257,27 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				getWidth()-c_lock_on_img.getWidth()-1,
 				getHeight()-c_lock_on_img.getHeight()-1,
 				g.LEFT|g.TOP); }
+				
+		/**
+		 * Display the selection state
+		 * @param g the graphics object passed into the paint method
+		 */
+		void paintSelectionState(Graphics g) {
+			if (!select_on) {
+				return; }
+			// TODO: Neater version, w/ graphic
+			sfont_red.drawChar(g, 
+				getWidth()-sfont_red.charWidth('S')-1,
+				getHeight()-c_lock_on_img.getHeight()-sfont_red.getHeight()-1,
+				'S'); }
+
+		/**
+		 * Display misc state info
+		 * @param g the graphics object passed into the paint method
+		 */
+		void paintMiscState(Graphics g) {
+			paintCapsLockState(g);
+			paintSelectionState(g); }		 		
 
 		// TODO: Allow them to toggle it up to TL
 		
@@ -353,6 +375,9 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			rs_set=lc_rs_set;
 			live_dpad=lc_live_dpad;
 			return paint_req; }
+			
+		protected void setSelectState(boolean s) {
+			select_on = s; }
 
 		/**
 		 * Set the caps lock display state
