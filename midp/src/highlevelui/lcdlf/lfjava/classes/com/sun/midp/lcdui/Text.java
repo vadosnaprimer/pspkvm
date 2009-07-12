@@ -390,6 +390,70 @@ public class Text {
     }    
 
 
+	/**
+	 * Helper for paintText (below)
+	 * Paints a line of text 'intelligently', providing selection
+	 * highlighting
+	 */
+	 static void paintLineWSelection(char[] text, Graphics g,
+	 	Font font, int fgColor, int fgHColor,
+		int x, int y,
+		int line_st, int line_len,
+		int sel_st, int sel_end) {
+			int line_end = line_st + line_len;
+			boolean selection_on_at_start = (sel_st <= line_st) && (sel_end>line_st);
+			// boolean selection_on_at_end = (sel_st < line_end) && (sel_end >= line_end);
+			boolean selection_starts_in_middle = (sel_st > line_st) && (sel_st < line_end);
+			boolean selection_ends_in_middle = (sel_end > line_st) && (sel_end < line_end);
+			if ((!selection_starts_in_middle) && (!selection_ends_in_middle)) {
+				// Easiest case. Draw one segment, get out
+				if (selection_on_at_start) {
+					// Draw the highlight box
+					g.setColor(fgColor);
+					g.fillRect(x, y-font.getHeight(),
+						font.charsWidth(text, line_st, line_len), font.getHeight()); }
+				g.setColor(selection_on_at_start ? fgHColor : fgColor);
+				g.drawChars(text, line_st, line_len, x, y, 
+					Graphics.BOTTOM | Graphics.LEFT);
+				return; }
+			if (selection_starts_in_middle && selection_ends_in_middle) {
+				// Hardest case. Draw three segments.
+				g.setColor(fgColor);
+				g.drawChars(text, line_st, sel_st-line_st, x, y, 
+					Graphics.BOTTOM | Graphics.LEFT);
+				x+=font.charsWidth(text, line_st, sel_st-line_st);
+				int swidth = font.charsWidth(text, sel_st, sel_end-sel_st);
+				// Draw the highlight box
+				g.fillRect(x, y-font.getHeight(), swidth, font.getHeight());
+				g.setColor(fgHColor);
+				g.drawChars(text, sel_st, sel_end-sel_st, x, y, 
+					Graphics.BOTTOM | Graphics.LEFT);
+				x+=swidth;
+				g.setColor(fgColor);
+				g.drawChars(text, sel_end, line_end-sel_end, x, y, 
+					Graphics.BOTTOM | Graphics.LEFT);
+				return; }
+			// Last case. The selection either starts or ends in the middle.
+			int brkchar = selection_starts_in_middle ? sel_st : sel_end;
+			int fswidth = font.charsWidth(text, line_st, brkchar-line_st);
+			if (selection_on_at_start) {
+					// Draw the highlight box
+					g.setColor(fgColor);
+					g.fillRect(x, y-font.getHeight(),
+						fswidth, font.getHeight()); }
+			g.setColor(selection_on_at_start ? fgHColor : fgColor);
+			g.drawChars(text, line_st, brkchar-line_st, x, y, 
+					Graphics.BOTTOM | Graphics.LEFT);
+			x+=fswidth;
+			if (!selection_on_at_start) {
+					// Draw the highlight box
+					g.setColor(fgColor);
+					g.fillRect(x, y-font.getHeight(),
+						font.charsWidth(text, brkchar, line_end-brkchar), font.getHeight()); }
+			g.setColor(selection_on_at_start ? fgColor : fgHColor);
+			g.drawChars(text, brkchar, line_end-brkchar, x, y, 
+					Graphics.BOTTOM | Graphics.LEFT); }
+
     /**
      * Paints text from a TextInfo structure.
      *
@@ -412,7 +476,7 @@ public class Text {
 	
 	// NOTE paint not called if TextInfo struct fails
 	g.setFont(font);
-        g.setColor(fgColor);
+  g.setColor(fgColor);
 	
         char[] text = str.toCharArray();
         int fontHeight = font.getHeight();
@@ -425,14 +489,27 @@ public class Text {
 	int height = currentLine * fontHeight;
 	int y = 0;
 	
+	int sel_a=0;
+	int sel_b=0;
+	boolean paint_sel = (info.selectionLength!=0);
+	if (paint_sel) {
+		sel_a = info.getSelectionPtA();
+		sel_b= info.getSelectionPtB(); }
+	
 	while (currentLine < (info.topVis + info.visLines)) {
 	    height += fontHeight;
 	    y += fontHeight;
 	    
-	    g.drawChars(text, info.lineStart[currentLine], 
-			info.lineEnd[currentLine] - info.lineStart[currentLine],
-			offset, y,
-			Graphics.BOTTOM | Graphics.LEFT);
+	    if (paint_sel) {
+				paintLineWSelection(text, g, font, fgColor, 0xffffff-fgColor,
+					offset, y, info.lineStart[currentLine],
+					info.lineEnd[currentLine] - info.lineStart[currentLine],
+					sel_a, sel_b); }
+			else {
+		    g.drawChars(text, info.lineStart[currentLine], 
+					info.lineEnd[currentLine] - info.lineStart[currentLine],
+					offset, y,
+					Graphics.BOTTOM | Graphics.LEFT); }
 	    
 	    // draw the vertical cursor indicator if needed
 	    // update the cursor.x and cursor.y info

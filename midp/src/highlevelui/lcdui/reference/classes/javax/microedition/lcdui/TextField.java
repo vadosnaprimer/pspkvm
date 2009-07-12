@@ -574,6 +574,8 @@ public class TextField extends Item {
      * <code>CONSTRAINT_MASK</code>.</P>
      */
     public final static int CONSTRAINT_MASK = 0xFFFF;
+    
+    int selectionStart, selectionLength;
 
     /**
      * Creates a new <code>TextField</code> object with the given label, initial
@@ -608,6 +610,8 @@ public class TextField extends Item {
                      int constraints) {
 
         super(label);
+        selectionStart=0;
+        selectionLength=0;
 
         synchronized (Display.LCDUILock) {
 
@@ -738,6 +742,7 @@ public class TextField extends Item {
             setCharsImpl(data, offset, length);
         }
     }
+    
 
     /**
      * Inserts a string into the contents of the
@@ -1231,5 +1236,103 @@ public class TextField extends Item {
 
     /** the initial input mode for when the text field gets focus */
     String initialInputMode = null; 
+
+    /**
+     *	sets the selection start position, clears the selection end position
+     *	@param i the selection start position
+     */		 		     
+    public void setSelectionStart(int i) {
+    	if (i<0) {
+				// Silent fail
+				return; }
+    	if (i>buffer.length()) {
+				// Silent fail
+				return; }
+			selectionStart=i;
+			selectionLength=0; }
+
+		/**
+		 *	clears the current selection
+		 */		 		
+		public void clearSelection() {
+			selectionStart=0;
+			selectionLength=0; }
+		
+		/**
+		 *	Sets the current selection end
+		 *	@param i the selection end
+		 */		 		 		
+		public void setSelectionEnd(int i) {
+    	if (i<0) {
+				// Silent fail
+				return; }
+    	if (i>buffer.length()) {
+				// Silent fail
+				return; }
+			selectionLength = i-selectionStart; }
+			
+		/**
+		 *	Synchronize the selection end position
+		 *	to the current caret position
+		 */		 		 		
+		public void synchSelectionEnd() {
+			setSelectionEnd(getCaretPosition()); }
+
+		/**
+		 *	Set the selection start position
+		 *	to the current caret position
+		 */		 		 		
+		public void synchSelectionStart() {
+			setSelectionStart(getCaretPosition()); }
+			
+		/**
+		 * Get the string value of the current selection
+		 */
+		public String getSelection() {
+			if (selectionLength==0) {
+				return ""; }
+      synchronized (Display.LCDUILock) {
+	    	textFieldLF.lUpdateContents();
+        String s = buffer.toString();
+        int s_idx = selectionLength < 0 ? selectionStart+selectionLength : selectionStart;
+        int e_idx = selectionLength < 0 ? selectionStart : selectionStart+selectionLength;
+        return s.substring(s_idx, e_idx); }
+    }
+    
+  	/**
+  	 *	Remove the current selection from the content
+  	 */
+		public void deleteSelection() {
+			if (selectionLength==0) {
+				return; }
+      synchronized (Display.LCDUILock) {
+	    	textFieldLF.lUpdateContents();
+        String s = buffer.toString();
+        int s_idx = selectionLength < 0 ? selectionStart+selectionLength : selectionStart;
+        int e_idx = selectionLength < 0 ? selectionStart : selectionStart+selectionLength;
+        selectionLength=0;
+        if ((s_idx==0) && (e_idx==s.length())) {
+        	setCharsImpl(null, 0, 0); }
+        StringBuffer r = new StringBuffer(s.substring(0, s_idx));
+        r.append(s.substring(e_idx));
+        setCharsImpl(r.toString().toCharArray(), 0, r.length()); } }
+        
+    /**
+     *	Accessor for selection length
+     */		     
+  	public int getSelectionLength() {
+			return selectionLength; }
+
+    /**
+     *	Accessor for selection position--returns first point always
+     */		     
+		public int getSelectionLow() {
+			return selectionLength < 0 ? selectionStart + selectionLength : selectionStart; }
+
+    /**
+     *	Accessor for selection position--returns last point always
+     */		     
+		public int getSelectionHigh() {
+			return selectionLength < 0 ? selectionStart : selectionStart + selectionLength ; }
+
 }
- 

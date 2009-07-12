@@ -1,5 +1,5 @@
 /**
- * @file clipboard.c
+ * @file clipboard_kni.c
  *
  * PSPKVM clipboard implementation -- native backend
  */

@@ -36,6 +36,8 @@ public class SC_Keys {
 	public static final int CLK=17;
 	public static final int CTL=18;
 	public static final int DSP=19;
+	public static final int CPY=20;
+	public static final int PST=21;
 	
 	// Modifier/deadkey metakeys -- add
 	// diacriticals to preceding letters
@@ -112,7 +114,7 @@ public class SC_Keys {
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			GRV, ACU, CED, TIL, DIA, RIN, CIR, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			CHR, CHR, CHR, NUL, CHR, CHR, CHR, NUL,
+			CHR, CHR, CHR, CPY, CHR, CHR, CHR, PST,
 			CHR, CHR, CHR, CHR, CHR, CHR, NUL, NUL,
 			PUP, HME, PDN, END, PUP, HME, PDN, END,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
@@ -183,7 +185,7 @@ public class SC_Keys {
 			"b", "j", "y", "k", "B", "J", "Y", "K",
 			"\ue003", "\ue004", "\ue005", "\ue006", "\ue001", "\ue000", "\ue002", " ",
 			"z", "x", "0", "1", "Z", "X", "%", "|",
-			"<", "`", "$", " ", ">", "#", "~", " ",
+			"<", "`", "$", "CPY", ">", "#", "~", "PST",
 			"6", "7", "8", "9", "(", ")", " ", " ",
 			"PUP", "HME", "PDN", "END", "PUP", "HME", "PDN", "END",
 			"2", "3", "4", "5", "[", "]", "{", "}",

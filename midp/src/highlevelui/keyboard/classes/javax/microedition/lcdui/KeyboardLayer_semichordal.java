@@ -5,13 +5,11 @@
 package javax.microedition.lcdui;
 
 import com.sun.midp.lcdui.*;
-import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.DateEditorSkin;
 import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.MIDPWindow;
-import com.sun.midp.main.Configuration;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -23,6 +21,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	int chordDownLast = 0;
   boolean c_lock = false;
 	private Command cmdOK, cmdCancel, cmdToggleDisplay;
+	boolean select_on = false;
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
@@ -46,9 +45,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	    if (vk==null) {
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
+				
+			select_on=false;
 			
-		setBounds();
-		setupCommands(); }
+			setBounds();
+			setupCommands(); }
 		
 	/**
      * Setup as a command listener for external events.
@@ -296,11 +297,41 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			// Meaningful stroke. Process it.
 			int offset = getCharOffset(p);
 			if (SC_Keys.isChar(offset)) {
+				eraseSelection();
 				tfContext.uCallKeyPressed(SC_Keys.chordal_map_chars[offset]);
         tfContext.tf.getString();
 				return; }
 			if (SC_Keys.isMeta(offset)) {
 				virtualChordalMetaEntered(SC_Keys.chordal_map_meta[offset]); } }
+				
+		/**
+		 *	Helper for various actions that move the cursor
+		 *	without changing the select state
+		 */		 		 		
+		void synchSelectEnd(TextField tf) {
+			if (!select_on) {
+				return; }
+			tf.synchSelectionEnd(); }
+
+		/**
+		 *	Helper for various actions that erase the current selection
+		 */
+		void eraseSelection() {
+			if (!select_on) {
+				return; }
+			if (tfContext==null) {
+				return; }
+			select_on=false;
+			vk.setSelectState(select_on);
+			repaintVK();
+			if (tfContext.tf.getSelectionLength()==0) {
+				// Nothing to do
+				return; }
+			// Do the delete
+			int a = tfContext.tf.getSelectionLow();
+			int b = tfContext.tf.getSelectionHigh();
+			tfContext.tf.deleteSelection();
+			tfContext.lDelete(a, b-a); }
 
 		// Process metakeys
 		void virtualChordalMetaEntered(int m) {
@@ -308,12 +339,22 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return; }
 			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
 			switch(m) {
+				// Test interface ... see if copy/paste works between midlet instances
+				case SC_Keys.CPY:
+					Clipboard.set(tfContext.tf.getSelection());
+					return;
+				case SC_Keys.PST:
+					eraseSelection();
+					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
+					tfContext.tf.getString();
+					return;
 				case SC_Keys.ESC: 
           closeKeyEntered(false);
           return;
 				case SC_Keys.ENT: 
 					// TODO/FIXME--if this is a one line textfield, it would 
 					// be nice to call closeKeyEntered(true) here instead.
+					eraseSelection();
 					tfContext.tf.insert("\n", tfContext.tf.getCaretPosition());
 	      	tfContext.tf.getString();
 					return;
@@ -324,25 +365,43 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           return;
         case SC_Keys.CLF:
           tfContext.moveCursor(Canvas.LEFT);
+          synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CRT:
 					tfContext.moveCursor(Canvas.RIGHT);
+          synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CDN:
 					tfContext.moveCursor(Canvas.DOWN);
+          synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CUP:
 					tfContext.moveCursor(Canvas.UP);
+          synchSelectEnd(tfContext.tf);
           return;
-        case SC_Keys.BSP:
+        case SC_Keys.BSP: {
+        	boolean del_more = !select_on;
+					eraseSelection();
+					if (!del_more) {
+						return; }
           tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-					return;
-        case SC_Keys.DEL:
+					return; }
+        case SC_Keys.DEL: {
+        	boolean del_more = !select_on;
+					eraseSelection();
+					if (!del_more) {
+						return; }
 					tfContext.moveCursor(Canvas.RIGHT);
           tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-					return;
+					return; }
 				case SC_Keys.DSP:
 					setVisible(vk.toggleDisplayChords());
+					disp.requestScreenRepaint();
+					return;
+				case SC_Keys.SEL:
+					tfContext.tf.synchSelectionStart();
+					select_on = !select_on;
+					vk.setSelectState(select_on);
 					disp.requestScreenRepaint();
 					return;
 				case SC_Keys.GRV:
@@ -355,7 +414,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					addDiacritical(m);
 					return;
         default:
-        	return; } }
+        	return; } }        	
         	
 		// Called to add a diacritical to the character before the
 		// selection, when the diacritical modifier metakeys are struck.
