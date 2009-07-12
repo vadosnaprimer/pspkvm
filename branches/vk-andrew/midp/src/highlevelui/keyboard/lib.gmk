@@ -27,10 +27,11 @@ LIB_SET += $(KEYBOARD_DIR)
 # SUBSYSTEM_LCDLF_EXTRA_INCLUDES +=
 
 # Native files for the library
-# SUBSYSTEM_KEYBOARD_NATIVE_FILES +=
+SUBSYSTEM_KEYBOARD_NATIVE_FILES += \
+	clipboard_kni.c
 
 # Source code path for the library
-# vpath $(KEYBOARD_DIR)/native
+vpath % $(KEYBOARD_DIR)/native
 
 # Java files for the library
 #
@@ -45,6 +46,7 @@ SUBSYSTEM_KEYBOARD_JAVA_FILES = \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Diacriticals.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/LongArrayHandler.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Imgs_misc.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Clipboard.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFont.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFontInit_blue.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFontInit_red.java \
