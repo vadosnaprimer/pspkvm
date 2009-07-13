@@ -42,7 +42,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     int currentKeyboard = 1; // abc
     
     // The board images
-    Image c_lock_off_img, c_lock_on_img, key_bg_img, key_bg_img_on;
+    Image c_lock_img, key_bg_img, key_bg_img_on, sel_img;
     // The soft fonts
     SFont sfont_red, sfont_blue;
 
@@ -73,10 +73,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	 *	Construct images, soft fonts from the bitstreams in the aux classes
 	 */	 	
 	void constructImages() {
-		c_lock_on_img = LongArrayHandler.createImage(Imgs_misc.c_lock_on_seg,
-			Imgs_misc.c_lock_on_segpad);
-		c_lock_off_img = LongArrayHandler.createImage(Imgs_misc.c_lock_off_seg,
-			Imgs_misc.c_lock_off_segpad);
+		c_lock_img = LongArrayHandler.createImage(Imgs_misc.c_lock_seg,
+			Imgs_misc.c_lock_segpad);
+		sel_img = LongArrayHandler.createImage(Imgs_misc.sel_seg,
+			Imgs_misc.sel_segpad);
 		key_bg_img = LongArrayHandler.createImage(Imgs_misc.psp_keys_off_seg,
 			Imgs_misc.psp_keys_off_segpad);
 		key_bg_img_on = LongArrayHandler.createImage(Imgs_misc.psp_keys_on_seg,
@@ -253,9 +253,11 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param g the graphics object passed into the paint method
 		 */		 		 		
 		void paintCapsLockState(Graphics g) {
-			g.drawImage(caps_lock_set ? c_lock_on_img : c_lock_off_img,
-				getWidth()-c_lock_on_img.getWidth()-1,
-				getHeight()-c_lock_on_img.getHeight()-1,
+			if (!caps_lock_set) {
+				return; }
+			g.drawImage(c_lock_img ,
+				getWidth()-c_lock_img.getWidth()-1,
+				getHeight()-c_lock_img.getHeight()-1,
 				g.LEFT|g.TOP); }
 				
 		/**
@@ -265,11 +267,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		void paintSelectionState(Graphics g) {
 			if (!select_on) {
 				return; }
-			// TODO: Neater version, w/ graphic
-			sfont_red.drawChar(g, 
-				getWidth()-sfont_red.charWidth('S')-1,
-				getHeight()-c_lock_on_img.getHeight()-sfont_red.getHeight()-1,
-				'S'); }
+			g.drawImage(sel_img,
+				getWidth()-c_lock_img.getWidth()-sel_img.getWidth()-1,
+				getHeight()-sel_img.getHeight()-1,
+				g.LEFT|g.TOP); }
 
 		/**
 		 * Display misc state info
@@ -297,7 +298,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
      * 
      */
     protected void paintCurrentChord(Graphics g) {
-    	int h = key_bg_img.getHeight()+4+IMGPAD+c_lock_on_img.getHeight();
+    	int h = key_bg_img.getHeight()+4+IMGPAD+c_lock_img.getHeight();
     	int y = getHeight()-h-1;
     	int w = key_bg_img.getWidth()+8;
     	int x = getWidth()-w-1;
