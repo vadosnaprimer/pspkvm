@@ -402,7 +402,6 @@ public class Text {
 		int sel_st, int sel_end) {
 			int line_end = line_st + line_len;
 			boolean selection_on_at_start = (sel_st <= line_st) && (sel_end>line_st);
-			// boolean selection_on_at_end = (sel_st < line_end) && (sel_end >= line_end);
 			boolean selection_starts_in_middle = (sel_st > line_st) && (sel_st < line_end);
 			boolean selection_ends_in_middle = (sel_end > line_st) && (sel_end < line_end);
 			if ((!selection_starts_in_middle) && (!selection_ends_in_middle)) {
@@ -501,7 +500,7 @@ public class Text {
 	    y += fontHeight;
 	    
 	    if (paint_sel) {
-				paintLineWSelection(text, g, font, fgColor, 0xffffff-fgColor,
+				paintLineWSelection(text, g, font, fgColor, fgHColor,
 					offset, y, info.lineStart[currentLine],
 					info.lineEnd[currentLine] - info.lineStart[currentLine],
 					sel_a, sel_b); }
