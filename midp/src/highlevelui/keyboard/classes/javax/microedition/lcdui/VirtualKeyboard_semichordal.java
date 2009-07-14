@@ -170,20 +170,26 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				if (!rs_set) {
 					return; }
 				y+=5; }
-			else if (SC_Keys.isLCAlpha(o)) {
-				if (rs_set) {
+			else if (SC_Keys.isLCAlpha(caps_lock_set, o)) {
+				if (rs_set ^ caps_lock_set) {
 					return; }
-				// !rs_set. UC won't be printed
-				y-=4; }
-			else if (SC_Keys.isUCAlpha(o)) {
-				if (!rs_set) {
+				// !(rs_set ^ caps_lock_set). UC won't be printed.
+				if (caps_lock_set) {
+					y+=5; }
+				else {
+					y-=4; } }
+			else if (SC_Keys.isUCAlpha(caps_lock_set, o)) {
+				if (!(rs_set ^ caps_lock_set)) {
 					return; }
-				// rs_set. LC won't be printed
-				y+=5; }
-			String s=SC_Keys.chordal_map_d[o];
+				// (rs_set ^ caps_lock_set). LC won't be printed.
+				if (caps_lock_set) {
+					y-=4; }
+				else {
+					y+=5; } }
+			String s=SC_Keys.getChordalMapDisplay(caps_lock_set)[o];
 			int offset = sfont_blue.stringWidth(s)/2;
 			f.drawString(g, x-offset, y, s); }
-		
+			
 		/** Paint the 'stacked' chord displays in the large graphics context
 		 * Most of the logic is in paintKeyStacked
 		 * @param g the graphics context
@@ -244,7 +250,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	   * @param o The offset into the chord of the key
 	   */
 		void paintKey(Graphics g, SFont f, int x, int y, int o) {
-			String s=SC_Keys.chordal_map_d[o];
+			String s=SC_Keys.getChordalMapDisplay(caps_lock_set)[o];
 			int offset = sfont_blue.stringWidth(s)/2;
 			f.drawString(g, x-offset, y, s); }
 		
@@ -365,8 +371,6 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		protected boolean setDisplayState(int lc_ch_offset, int p, boolean lc_caps_lock_set) {
 			boolean lc_ls_set = (p & PSPCtrlCodes.LTRIGGER)!=0;
 			boolean lc_rs_set = (p & PSPCtrlCodes.RTRIGGER)!=0;
-			if (lc_caps_lock_set) {
-				lc_rs_set = !lc_rs_set; }
 			int lc_live_dpad = getLiveDPAD(p);
 			boolean paint_req = detectPaintReq(lc_ch_offset, lc_ls_set, lc_rs_set,
 				lc_live_dpad, lc_caps_lock_set);
@@ -386,38 +390,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 */
 		void setCapsLockState(boolean c) {
 			caps_lock_set = c; }
-		
-   
-    /**
-     * Helper function to determine the itemIndex at the x,y position
-     *
-     * @param x,y   pointer coordinates in menuLayer's space (0,0 means left-top
-     *      corner) both value can be negative as menuLayer handles the pointer
-     *      event outside its bounds
-     * @return menuItem's index since 0, or PRESS_OUT_OF_BOUNDS, PRESS_ON_TITLE
-     *
-     */
-    private boolean isKeyAtPointerPosition(int x, int y) {
-        return false;
-    }
-
-    /**
-     * Handle input from a pen tap. Parameters describe
-     * the type of pen event and the x,y location in the
-     * layer at which the event occurred. Important : the
-     * x,y location of the pen tap will already be translated
-     * into the coordinate space of the layer.
-     *
-     * @param type the type of pen event
-     * @param x the x coordinate of the event
-     * @param y the y coordinate of the event
-     */
-    public boolean pointerInput(int type, int x, int y) {
-        // return true always as menuLayer will capture all of the pointer inputs
-        return true;  
-    }
-
-    
+			    
     // ********* attributes ********* //
 
     private final static int WHITE = 0xffffff;
