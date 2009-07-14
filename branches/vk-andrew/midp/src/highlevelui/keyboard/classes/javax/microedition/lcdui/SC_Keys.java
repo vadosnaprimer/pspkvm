@@ -85,19 +85,50 @@ public class SC_Keys {
 		'2', '3', '4', '5', '[', ']', '{', '}',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 
-	static boolean isLCAlpha(int x) {
-		if (!isChar(x)) {
-			return false; }
-		if (chordal_map_chars[x] > 'z') {
-			return false; }
-		return (chordal_map_chars[x] >= 'a'); }
+  // The map of non-meta characters, w/ caps lock
+  // selected. Same as above otherwise
+	static final char[] chordal_map_chars_caps_lock = {
+		' ', 'E', 'T', 'S', ' ', 'e', 't', 's',
+		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+		'O', 'A', 'U', 'I', 'o', 'a', 'u', 'i',
+		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+		'N', 'P', 'D', 'H', 'n', 'p', 'd', 'h',
+		'\'', ';', '_', '/', '"', ':', '^', '?',
+		'L', 'W', 'V', 'M', 'l', 'w', 'v', 'm',
+		',', 'Q', '.', '-', '?', 'q', ' ', ' ',
+		'F', 'G', 'C', 'R', 'f', 'g', 'c', 'r',
+		'+', '=', '*', '!', ' ', '@', '&', '\\',
+		'B', 'J', 'Y', 'K', 'b', 'j', 'y', 'k',
+		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+		'Z', 'X', '0', '1', 'z', 'x', '%', '|',
+		'<', '`', '$', ' ', '>', '#', '~', ' ',
+		'6', '7', '8', '9', '(', ')', ' ', ' ',
+		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+		'2', '3', '4', '5', '[', ']', '{', '}',
+		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+		
+	/**
+	 *	 Interface pulling back the character map according to whether
+	 *	 or not caps lock is set
+	 *	 @param caps_lock set true if caps lock is active
+	 *	 @return the appropriate character map	 	 
+	 */	 
+	static char[] getChordalMapChars(boolean caps_lock) {
+		return caps_lock ? chordal_map_chars_caps_lock : chordal_map_chars; }
 
-	static boolean isUCAlpha(int x) {
+	static boolean isLCAlpha(boolean caps_lock, int x) {
 		if (!isChar(x)) {
 			return false; }
-		if (chordal_map_chars[x] > 'Z') {
+		if (getChordalMapChars(caps_lock)[x] > 'z') {
 			return false; }
-		return (chordal_map_chars[x] >= 'A'); }
+		return (getChordalMapChars(caps_lock)[x] >= 'a'); }
+
+	static boolean isUCAlpha(boolean caps_lock, int x) {
+		if (!isChar(x)) {
+			return false; }
+		if (getChordalMapChars(caps_lock)[x] > 'Z') {
+			return false; }
+		return (getChordalMapChars(caps_lock)[x] >= 'A'); }
 
 	// The metakey mapping to the chordal keyboard
 	public static final int[] chordal_map_meta = {
@@ -190,6 +221,35 @@ public class SC_Keys {
 			"PUP", "HME", "PDN", "END", "PUP", "HME", "PDN", "END",
 			"2", "3", "4", "5", "[", "]", "{", "}",
 			"ALT", "SEL", "CLK", "DSP", "CTL", "SEL", "CLK", "DSP" };
+
+   public static final String[] chordal_map_d_caps_lock = {
+			"SPC", "E", "T", "S", "ENT", "e", "t", "s",
+			"INS", "BSP", "DEL", "ESC", " ", " ", " ", " ",
+			"O", "A", "U", "I", "o", "a", "u", "i",
+			"\u2191", "\u2190", "\u2193", "\u2192", "\u2191", "\u2190", "\u2193", "\u2192",
+			"N", "P", "D", "H", "n", "p", "d", "h",
+			"'", ";", "_", "/", "\"", ":", "^", "?",
+			"L", "W", "V", "M", "l", "w", "v", "m",
+			",", "Q", ".", "-", "?", "q", " ", "TAB",
+			"F", "G", "C", "R", "f", "g", "c", "r",
+			"+", "=", "*", "!", " ", "@", "&", "\\",
+			"B", "J", "Y", "K", "b", "j", "y", "k",
+			"\ue003", "\ue004", "\ue005", "\ue006", "\ue001", "\ue000", "\ue002", " ",
+			"Z", "X", "0", "1", "z", "x", "%", "|",
+			"<", "`", "$", "CPY", ">", "#", "~", "PST",
+			"6", "7", "8", "9", "(", ")", " ", " ",
+			"PUP", "HME", "PDN", "END", "PUP", "HME", "PDN", "END",
+			"2", "3", "4", "5", "[", "]", "{", "}",
+			"ALT", "SEL", "CLK", "DSP", "CTL", "SEL", "CLK", "DSP" };
+	
+	/**
+	 *	 Interface pulling back the display map according to whether
+	 *	 or not caps lock is set
+	 *	 @param caps_lock set true if caps lock is active
+	 *	 @return the appropriate display map	 	 
+	 */	 
+	public static String[] getChordalMapDisplay(boolean caps_lock) {
+		return caps_lock ? chordal_map_d_caps_lock : chordal_map_d; }
 
 	public static boolean isChar(int p) {
 		return (chordal_map_meta[p]==CHR); }

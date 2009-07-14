@@ -114,6 +114,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     private static KeyboardLayer_semichordal instanceCV = null;
 
 		public int inputState=0;
+
     /**
      * Sets the state of the keyboard: NUMERIC or ANY
      * Current implementation will set this as the "default" state
@@ -298,7 +299,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			int offset = getCharOffset(p);
 			if (SC_Keys.isChar(offset)) {
 				eraseSelection();
-				tfContext.uCallKeyPressed(SC_Keys.chordal_map_chars[offset]);
+				tfContext.uCallKeyPressed(SC_Keys.getChordalMapChars(c_lock)[offset]);
         tfContext.tf.getString();
 				return; }
 			if (SC_Keys.isMeta(offset)) {
@@ -333,13 +334,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			tfContext.tf.deleteSelection();
 			tfContext.lDelete(a, b-a); }
 
-		// Process metakeys
+		/**
+		 * Process incoming metakeys
+		 * @param m the metakey pressed
+		 */		 		 		
 		void virtualChordalMetaEntered(int m) {
 			if (tfContext == null) {
 				return; }
 			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
 			switch(m) {
-				// Test interface ... see if copy/paste works between midlet instances
 				case SC_Keys.CPY:
 					Clipboard.set(tfContext.tf.getSelection());
 					return;
@@ -416,8 +419,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         default:
         	return; } }        	
         	
-		// Called to add a diacritical to the character before the
-		// selection, when the diacritical modifier metakeys are struck.
+		/**
+		 * Called to add a diacritical to the character before the
+		 * 		 selection, when the diacritical modifier metakeys are struck.
+		 * @param d the diacritical key pressed (from SC_Keys ... GRV et al)
+		 */		 		 
 		void addDiacritical(int d) {
 			if (tfContext == null) {
 				return; }
@@ -455,8 +461,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     void updateChordMap(int p) {
 			int r = getChordOffset(p);
 			boolean shift_set = ((p & PSPCtrlCodes.RTRIGGER)!=0);
-			if (c_lock) {
-				shift_set = !shift_set; }
 			if (shift_set) {
 				r += 4; }
 			if (vk.setDisplayState(r, p, c_lock)) {
@@ -466,8 +470,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		int getCharOffset(int p) {
 			int r = getChordOffset(p);
 			boolean shift_set = ((p & PSPCtrlCodes.RTRIGGER)!=0);
-			if (c_lock) {
-				shift_set = !shift_set; }
 			if (shift_set) {
 				r += 4; }
 			if ((p & PSPCtrlCodes.TRIANGLE)!=0) {
@@ -477,21 +479,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			if ((p & PSPCtrlCodes.CROSS)!=0) {
 				return r+2; }
 			return r+3; }
-
-    /**
-     * Handle input from a pen tap. Parameters describe
-     * the type of pen event and the x,y location in the
-     * layer at which the event occurred. Important : the
-     * x,y location of the pen tap will already be translated
-     * into the coordinate space of the layer.
-     *
-     * @param type the type of pen event
-     * @param x the x coordinate of the event
-     * @param y the y coordinate of the event
-     */
-    public boolean pointerInput(int type, int x, int y) {
-        return vk.pointerInput(type,x,y);  
-    }
 
     /**
      * Paints the body of the popup layer.
