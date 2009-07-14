@@ -6,19 +6,22 @@ package javax.microedition.lcdui;
 
 import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
-import com.sun.midp.chameleon.skins.*;
-import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.main.Configuration;
 
 /**
- * This is a popup layer that handles a sub-popup within the text tfContext
- * @author AJ Milne (based on Amir Uval's original)
- * Note that due to the nature of the semichordal board (it's not a visual thing,
- * you don't point to stuff in this layer to pick keys), very little of the mapping
- * logic lives in this class. See the KeyboardLayer_semichordal class, where most
- * of the work is done. This class mostly just paints the helper display,
- * and routes a few of the commands through (back to the KeyboardLayer_semichordal class),
- * for legacy reasons.  
+ * Semichordal virtual keyboard, specific to PSP platform, for PSPKVM.
+ * @author AJ Milne.
+ *  
+ * NOTE: The semichordal board is dependant on being able to receive raw key
+ * events specific to the PSPKVM virtual machine. Midlet implementations
+ * creating and calling this class directly must subclass CLayer and must
+ * return true to supportsRawKeyInput() within that subclass in order to
+ * receive the raw events in their keyInput(...) method, and should then send
+ * raw events to the semichordal board's processRawStroke(...) method. Doing
+ * this will result in calls being returned to the virtual keyboard listener's
+ * virtualKeyEntered(...) and virtualMetaKeyEntered(...) methods, as with
+ * 'reference' virtual boards. See KeyboardLayer_semichordal.java for a
+ * typical implementation of this nature. 
  */
 
 class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
@@ -26,12 +29,15 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     /** instance of the virtual keyboard listener */
     VirtualKeyboardListener vkl;
     
-    // Chordal display state
-    int chordal_offset;
+    // Chordal display state, transient entry state
     int display_chords_mode;
     boolean caps_lock_set, select_on;
 		boolean ls_set, rs_set;
+    int chordal_offset;
 		int live_dpad;
+		int symbolDownLast = 0;
+		int chordDownLast = 0;
+
 		// Display mode enum (for display_chords_mode)
     private final static int last_display_chords_mode = 2;
 		private final static int NO_DISP = 0;
@@ -342,7 +348,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 */		 		 
 		protected boolean detectPaintReq(int lc_ch_offset,
 			boolean lc_ls_set, boolean lc_rs_set,
-			int lc_live_dpad, boolean lc_caps_lock_set) {
+			int lc_live_dpad) {
 			switch(display_chords_mode) {
 				case NO_DISP: 
 					return false;
@@ -353,9 +359,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 						return true; }
 					if (lc_rs_set != rs_set) {
 						return true; }
-					if (lc_live_dpad != live_dpad) {
-						return true; }
-					return (lc_caps_lock_set != caps_lock_set);
+					return (lc_live_dpad != live_dpad);
 				default:
 					return false; } }
 
@@ -368,33 +372,102 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
      * 		      
      * @return true if requires a repaint 
      */
-		protected boolean setDisplayState(int lc_ch_offset, int p, boolean lc_caps_lock_set) {
+		protected boolean setDisplayState(int lc_ch_offset, int p) {
 			boolean lc_ls_set = (p & PSPCtrlCodes.LTRIGGER)!=0;
 			boolean lc_rs_set = (p & PSPCtrlCodes.RTRIGGER)!=0;
 			int lc_live_dpad = getLiveDPAD(p);
 			boolean paint_req = detectPaintReq(lc_ch_offset, lc_ls_set, lc_rs_set,
-				lc_live_dpad, lc_caps_lock_set);
-			caps_lock_set = lc_caps_lock_set;
+				lc_live_dpad);
 			chordal_offset=lc_ch_offset;
 			ls_set=lc_ls_set;
 			rs_set=lc_rs_set;
 			live_dpad=lc_live_dpad;
 			return paint_req; }
-			
-		protected void setSelectState(boolean s) {
-			select_on = s; }
 
-		/**
-		 * Set the caps lock display state
-		 *
-		 */
-		void setCapsLockState(boolean c) {
-			caps_lock_set = c; }
-			    
     // ********* attributes ********* //
 
     private final static int WHITE = 0xffffff;
     private final static int BLK = 0x000000;
+    
+	/**
+	 *
+	 * Call this with the incoming raw stroke--board will process and return
+	 * (if appropriate) the processed stroke in its listener's
+	 * virtualKeyEntered(...) or virtualMetaKeyEntered(...)
+	 * 
+	 * @param p a raw stroke received in a keyInput(...) method	 	 
+	 */
+    public void processRawStroke(int p) {
+			updateChordMap(p);
+			int chordDownNow = p & PSPCtrlCodes.CHORDAL_KEYS;
+			int symbolDownNow = p & PSPCtrlCodes.SYMBOLS;
+			boolean process_stroke = true;
+			if ((chordDownNow != chordDownLast) && (symbolDownNow == symbolDownLast)) {
+				// They're just shifting on the chordal keys. Ignore.
+				process_stroke = false; }
+			if (symbolDownNow == 0) {
+				// Upstroke
+				process_stroke = false; }
+			// Reset previous state
+			chordDownLast = chordDownNow;
+			symbolDownLast = symbolDownNow;
+			if (!process_stroke) {
+				// Nothing to process.
+				return; }
+			// Meaningful stroke. Process it.
+			int offset = getCharOffset(p);
+			if (SC_Keys.isChar(offset)) {
+				vkl.virtualKeyEntered(EventConstants.PRESSED,
+					SC_Keys.getChordalMapChars(caps_lock_set)[offset]);
+				return; }
+			if (SC_Keys.isMeta(offset)) {
+				vkl.virtualMetaKeyEntered(SC_Keys.chordal_map_meta[offset]); } }
+
+    /**
+     * Update the chord map displayed
+     */     
+    void updateChordMap(int p) {
+			int r = getChordOffset(p);
+			boolean shift_set = ((p & PSPCtrlCodes.RTRIGGER)!=0);
+			if (shift_set) {
+				r += 4; }
+			if (setDisplayState(r, p)) {
+				vkl.repaintVK(); } }
+
+		// Translate chordal downstroke to key
+		int getCharOffset(int p) {
+			int r = getChordOffset(p);
+			boolean shift_set = ((p & PSPCtrlCodes.RTRIGGER)!=0);
+			if (shift_set) {
+				r += 4; }
+			if ((p & PSPCtrlCodes.TRIANGLE)!=0) {
+				return r; }
+			if ((p & PSPCtrlCodes.SQUARE)!=0) {
+				return r+1; }
+			if ((p & PSPCtrlCodes.CROSS)!=0) {
+				return r+2; }
+			return r+3; }
+			
+		// Translate the DPAD state into a table offset
+    int getDPadOffset(int p) {
+			// Mask out everything but the dpad
+			p = p & PSPCtrlCodes.DPAD_MASK;
+			switch (p) {
+				case 0 : return 0;
+				case (PSPCtrlCodes.DOWN | PSPCtrlCodes.LEFT): return 112;
+				case (PSPCtrlCodes.UP | PSPCtrlCodes.RIGHT): return 128;
+				case PSPCtrlCodes.LEFT: return 16;
+				case PSPCtrlCodes.UP: return 32;
+				case PSPCtrlCodes.RIGHT: return 48;
+				case PSPCtrlCodes.DOWN: return 64;
+				case (PSPCtrlCodes.UP | PSPCtrlCodes.LEFT): return 80;
+				case (PSPCtrlCodes.DOWN | PSPCtrlCodes.RIGHT): return 96;
+				default: return 0; } }
+				
+		// Get the current left-hand chord offset value
+		int getChordOffset(int p) {
+			int r = getDPadOffset(p);
+			if ((p & PSPCtrlCodes.LTRIGGER)!=0) { r+= 8; }
+			return r; }
 
 }
-

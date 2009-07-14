@@ -1,13 +1,21 @@
-/*
- * /AJ Milne--custom semichordal version for PSP platform
+/**
+ * /AJ Milne--custom semichordal virtual keyboard implementation for the PSP platform.
+ *  
+ * USAGE NOTE: This layer wraps a Virtualkeyboard_semichordal instance
+ * and controls a TextField instance in this context. Midlets wishing to instantiate
+ * and use the board directly, especially for use within a Canvas class, do not need
+ * to create it through this layer--see notes within the Virtualkeyboard_semichordal
+ * re doing this correctly. 
+ * 
+ * NOTE ALSO that the TextField, TextFieldLFImpl and TextBoxLFImpl classes within
+ * the VM provided within the PSPKVM implement supersets of the standard interfaces,
+ * in order to provide selection handling within text fields, and this layer
+ * depends on these additions to the interface.     
  */
 
 package javax.microedition.lcdui;
 
 import com.sun.midp.lcdui.*;
-import com.sun.midp.chameleon.skins.DateEditorSkin;
-import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
-import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.MIDPWindow;
 
@@ -17,11 +25,8 @@ import com.sun.midp.chameleon.MIDPWindow;
  */
 class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements CommandListener {
 
-  int symbolDownLast = 0;
-	int chordDownLast = 0;
-  boolean c_lock = false;
-	private Command cmdOK, cmdCancel, cmdToggleDisplay;
-	boolean select_on = false;
+	// Commands handled in the menu bar
+  private Command cmdOK, cmdCancel, cmdToggleDisplay;
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
@@ -46,8 +51,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
 				
-			select_on=false;
-			
 			setBounds();
 			setupCommands(); }
 		
@@ -78,7 +81,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				closeKeyEntered(false);
 				return; }
       if (cmd == cmdToggleDisplay) {
-				virtualChordalMetaEntered(SC_Keys.DSP); } }
+				virtualMetaKeyEntered(SC_Keys.DSP); } }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -142,10 +145,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					break;
 				default:
 					vk.currentKeyboard=NUMERIC;
-					break;
-			}
-        }
-    }
+					break; } } }
 
     public int getState() {           
 			return inputState; }
@@ -249,28 +249,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return false; }
       return true; }
 
-		// Translate the DPAD state into a table offset
-    int getDPadOffset(int p) {
-			// Mask out everything but the dpad
-			p = p & PSPCtrlCodes.DPAD_MASK;
-			switch (p) {
-				case 0 : return 0;
-				case (PSPCtrlCodes.DOWN | PSPCtrlCodes.LEFT): return 112;
-				case (PSPCtrlCodes.UP | PSPCtrlCodes.RIGHT): return 128;
-				case PSPCtrlCodes.LEFT: return 16;
-				case PSPCtrlCodes.UP: return 32;
-				case PSPCtrlCodes.RIGHT: return 48;
-				case PSPCtrlCodes.DOWN: return 64;
-				case (PSPCtrlCodes.UP | PSPCtrlCodes.LEFT): return 80;
-				case (PSPCtrlCodes.DOWN | PSPCtrlCodes.RIGHT): return 96;
-				default: return 0; } }
-				
-		// Get the current left-hand chord offset value
-		int getChordOffset(int p) {
-			int r = getDPadOffset(p);
-			if ((p & PSPCtrlCodes.LTRIGGER)!=0) { r+= 8; }
-			return r; }
-			
 		// Process a raw event into a keystroke--masking for upstrokes,
 		// chordal shifts sans strikes
 		void processRawStroke(int p) {
@@ -279,38 +257,14 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return; }
 			if (tfContext == null) {
 				return; }
-			updateChordMap(p);
-			int chordDownNow = p & PSPCtrlCodes.CHORDAL_KEYS;
-			int symbolDownNow = p & PSPCtrlCodes.SYMBOLS;
-			boolean process_stroke = true;
-			if ((chordDownNow != chordDownLast) && (symbolDownNow == symbolDownLast)) {
-				// They're just shifting on the chordal keys. Ignore.
-				process_stroke = false; }
-			if (symbolDownNow == 0) {
-				// Upstroke
-				process_stroke = false; }
-			// Reset previous state
-			chordDownLast = chordDownNow;
-			symbolDownLast = symbolDownNow;
-			if (!process_stroke) {
-				// Nothing to process.
-				return; }
-			// Meaningful stroke. Process it.
-			int offset = getCharOffset(p);
-			if (SC_Keys.isChar(offset)) {
-				eraseSelection();
-				tfContext.uCallKeyPressed(SC_Keys.getChordalMapChars(c_lock)[offset]);
-        tfContext.tf.getString();
-				return; }
-			if (SC_Keys.isMeta(offset)) {
-				virtualChordalMetaEntered(SC_Keys.chordal_map_meta[offset]); } }
+			vk.processRawStroke(p); }
 				
 		/**
 		 *	Helper for various actions that move the cursor
 		 *	without changing the select state
 		 */		 		 		
 		void synchSelectEnd(TextField tf) {
-			if (!select_on) {
+			if (!vk.select_on) {
 				return; }
 			tf.synchSelectionEnd(); }
 
@@ -318,12 +272,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		 *	Helper for various actions that erase the current selection
 		 */
 		void eraseSelection() {
-			if (!select_on) {
+			if (!vk.select_on) {
 				return; }
 			if (tfContext==null) {
 				return; }
-			select_on=false;
-			vk.setSelectState(select_on);
+			vk.select_on=false;
 			repaintVK();
 			if (tfContext.tf.getSelectionLength()==0) {
 				// Nothing to do
@@ -335,10 +288,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			tfContext.lDelete(a, b-a); }
 
 		/**
+		 * VirtualKeyboardListener interface		
 		 * Process incoming metakeys
 		 * @param m the metakey pressed
 		 */		 		 		
-		void virtualChordalMetaEntered(int m) {
+		public void virtualMetaKeyEntered(int m) {
 			if (tfContext == null) {
 				return; }
 			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
@@ -362,8 +316,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	      	tfContext.tf.getString();
 					return;
         case SC_Keys.CLK:
-          c_lock = ! c_lock;
-          vk.setCapsLockState(c_lock);
+          vk.caps_lock_set = ! vk.caps_lock_set;
           repaintVK();
           return;
         case SC_Keys.CLF:
@@ -383,14 +336,14 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.BSP: {
-        	boolean del_more = !select_on;
+        	boolean del_more = !vk.select_on;
 					eraseSelection();
 					if (!del_more) {
 						return; }
           tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
 					return; }
         case SC_Keys.DEL: {
-        	boolean del_more = !select_on;
+        	boolean del_more = !vk.select_on;
 					eraseSelection();
 					if (!del_more) {
 						return; }
@@ -403,8 +356,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					return;
 				case SC_Keys.SEL:
 					tfContext.tf.synchSelectionStart();
-					select_on = !select_on;
-					vk.setSelectState(select_on);
+					vk.select_on = !vk.select_on;
 					disp.requestScreenRepaint();
 					return;
 				case SC_Keys.GRV:
@@ -457,29 +409,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
       open = false;
       justOpened = false; }
       
-    // Update the chord map
-    void updateChordMap(int p) {
-			int r = getChordOffset(p);
-			boolean shift_set = ((p & PSPCtrlCodes.RTRIGGER)!=0);
-			if (shift_set) {
-				r += 4; }
-			if (vk.setDisplayState(r, p, c_lock)) {
-				repaintVK(); } }
-
-		// Translate chordal downstroke to key
-		int getCharOffset(int p) {
-			int r = getChordOffset(p);
-			boolean shift_set = ((p & PSPCtrlCodes.RTRIGGER)!=0);
-			if (shift_set) {
-				r += 4; }
-			if ((p & PSPCtrlCodes.TRIANGLE)!=0) {
-				return r; }
-			if ((p & PSPCtrlCodes.SQUARE)!=0) {
-				return r+1; }
-			if ((p & PSPCtrlCodes.CROSS)!=0) {
-				return r+2; }
-			return r+3; }
-
     /**
      * Paints the body of the popup layer.
      *
@@ -510,12 +439,10 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      * @param c char selected by the user from the virtual keyboard
      *
      */
-    public void virtualKeyEntered(int type, char c) { /* STUB */ }
-
-    /**
-     * VirtualKeyboardListener interface (stub)     
-     */
-    public void virtualMetaKeyEntered(int metaKey) { /* STUB */ }
+    public void virtualKeyEntered(int type, char c) {
+    	eraseSelection();
+			tfContext.uCallKeyPressed(c);
+      tfContext.tf.getString(); }
 
     /**
      * paint text only
@@ -531,7 +458,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     }
 
     public void paintCandidateBar(Graphics g, int width, int height) {
-        /** Stub */
+        /** Stub. TODO/FIXME: should we just paint the minimal selection? */
     }
     
     /**
