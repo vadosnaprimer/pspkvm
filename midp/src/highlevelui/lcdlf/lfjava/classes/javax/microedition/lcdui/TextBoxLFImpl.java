@@ -689,6 +689,13 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
         return EventConstants.SYSTEM_KEY_SELECT ==
             KeyConverter.getSystemKey(keyCode);
     }
+    
+    /**
+     * Returns true to indicate this field accepts enter characters.
+     * Overridden to return true in TextBoxLFImpl.java
+     */
+		public boolean isMultiLine() {
+			return true; }
 
 
 
