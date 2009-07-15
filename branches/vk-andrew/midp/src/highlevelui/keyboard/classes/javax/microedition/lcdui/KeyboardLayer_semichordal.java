@@ -311,6 +311,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				case SC_Keys.ENT: 
 					// TODO/FIXME--if this is a one line textfield, it would 
 					// be nice to call closeKeyEntered(true) here instead.
+					if (!tfContext.isMultiLine()) {
+						return; }
 					eraseSelection();
 					tfContext.tf.insert("\n", tfContext.tf.getCaretPosition());
 	      	tfContext.tf.getString();
@@ -322,10 +324,16 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         case SC_Keys.CLF:
           tfContext.moveCursor(Canvas.LEFT);
           synchSelectEnd(tfContext.tf);
+          // Annoyingly, one-line displays don't update
+          // properly, doing these...
+          disp.requestScreenRepaint();
           return;
         case SC_Keys.CRT:
 					tfContext.moveCursor(Canvas.RIGHT);
           synchSelectEnd(tfContext.tf);
+          // Annoyingly, one-line displays don't update
+          // properly, doing these...
+          disp.requestScreenRepaint();
           return;
         case SC_Keys.CDN:
 					tfContext.moveCursor(Canvas.DOWN);

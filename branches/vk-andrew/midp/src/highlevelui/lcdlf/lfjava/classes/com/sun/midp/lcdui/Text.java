@@ -153,8 +153,35 @@ public class Text {
      * @param offset the pixel offset of the text (possibly negative)
      * @return the current scroll offset
      */
-    public static int paintLine(Graphics g, String str, Font font, int fgColor, 
+    	public static int paintLine(Graphics g, String str, Font font, int fgColor, 
 				int w, int h, TextCursor cursor, int offset) {
+				return paintLine(g, str, font, fgColor, w, h, cursor, offset, 0, 0); }
+
+    /**
+     * Paints the text in a single line, scrolling left or right as 
+     * necessary to keep the cursor visible within the available
+     * width for the text.  The offset of the text after the 
+     * paintLine call, whether modified or not, is returned.
+     * <p>
+     * If the cursor is null, signifying an uneditable TextField is
+     * being painted, the text will not be scrolled left or right, and
+     * the returned value will always equal the <code>offset</code>
+     * argument passed in to this method.
+     *
+     * @param g the Graphics object to paint in
+     * @param str the String to paint
+     * @param font the font to use
+     * @param fgColor foreground color
+     * @param w the available width for the text
+     * @param h the available height for the text
+     * @param cursor TextCursor object to use for cursor placement
+     * @param offset the pixel offset of the text (possibly negative)
+     * @param sel_a the first character in the selection
+     * @param sel_b the last character in the selection (if sel_a == sel_b, no selection)		      
+     * @return the current scroll offset
+     */
+    	public static int paintLine(Graphics g, String str, Font font, int fgColor, 
+				int w, int h, TextCursor cursor, int offset, int sel_a, int sel_b) {
         if (w <= 0 || 
             (cursor == null && (str == null || str.length() == 0))) {
             return 0;
@@ -207,14 +234,21 @@ public class Text {
 	    cursor.paint(g);
 	    cursor = null;
 	}
-	g.drawChars(text, 0, text.length,  offset, h, 
-		    Graphics.BOTTOM | Graphics.LEFT);
+
+	boolean paint_sel = (sel_a != sel_b);
+	
+  if (paint_sel) {
+		paintLineWSelection(text, g, font, fgColor, 0xffffff-fgColor,
+			offset, h, 0, text.length, sel_a, sel_b); }
+	else {
+		g.drawChars(text, 0, text.length,  offset, h, 
+		    Graphics.BOTTOM | Graphics.LEFT); }
 	
 	return offset;
     }
 
     /**
-     * Creates a current TextInfo struct, linewraping text
+     * Creates a current TextInfo struct, linewrapping text
      * when necessary.  TextInfo struct is updated when
      * <code>str</code> changes, or when scrolling happens.
      * This method does not do any painting, but updates
