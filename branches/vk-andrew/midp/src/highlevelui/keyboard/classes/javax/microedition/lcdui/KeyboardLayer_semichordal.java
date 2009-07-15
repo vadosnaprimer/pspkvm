@@ -283,9 +283,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return; }
 			// Do the delete
 			int a = tfContext.tf.getSelectionLow();
-			int b = tfContext.tf.getSelectionHigh();
 			tfContext.tf.deleteSelection();
-			tfContext.lDelete(a, b-a); }
+			tfContext.setCaretPosition(a);
+			tfContext.lRequestPaint(); }
 
 		/**
 		 * VirtualKeyboardListener interface		
@@ -337,6 +337,16 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					tfContext.moveCursor(Canvas.UP);
           synchSelectEnd(tfContext.tf);
           return;
+        case SC_Keys.HME:
+        	tfContext.setCaretPosition(0);
+        	tfContext.lRequestPaint();
+        	synchSelectEnd(tfContext.tf);
+        	return;
+        case SC_Keys.END:
+        	tfContext.setCaretPosition(tfContext.tf.buffer.length());
+        	tfContext.lRequestPaint();
+        	synchSelectEnd(tfContext.tf);
+        	return;
         case SC_Keys.BSP: {
         	boolean del_more = !vk.select_on;
 					eraseSelection();
