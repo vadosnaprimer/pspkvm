@@ -84,9 +84,9 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8);
 	  // Whatever else is going on here, we can confirm that this operation DOES NOT WORK
 	  // for many characters in 0x0080 - 0x00ff -- and an easy fix is not to do it
-	  // for the entire Unicode page. Note also that it's probably bad news for the first
-	  // several pages ... I know these; they shouldn't need such a transform.
-	  if ((c0 & 0xff00) == 0) {
+	  // for Unicode pages 0 and 1. Note also that it's probably bad news for 
+	  // several pages beyond these... I know these; they shouldn't need such a transform.
+	  if (((c0 & 0xff00)>>8) < 2) {
 			CJK = c0; }
     unsigned char const * fontbitmap =
         selectFontBitmap(CJK,pfonts) + FONT_DATA;
