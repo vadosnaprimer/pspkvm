@@ -137,7 +137,7 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 }
 
 
-#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<256?1:3][FONT_WIDTH])
+#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<512?1:3][FONT_WIDTH])
 	
 /*
  * Draws the first n characters specified using the current font,
