@@ -453,8 +453,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      */
     public void virtualKeyEntered(int type, char c) {
     	eraseSelection();
-			tfContext.uCallKeyPressed(c);
-      tfContext.tf.getString(); }
+    	if (tfContext != null) {
+				tfContext.uCallKeyPressed(c);
+      	tfContext.tf.getString(); }
+      if (cvContext != null) {
+				cvContext.uCallKeyPressed(c); } }
 
     /**
      * paint text only
