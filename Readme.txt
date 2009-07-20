@@ -46,7 +46,7 @@ PSPKVM is a PSP port of Sun's open-source JavaME implementation phoneMEFeature. 
 	
 The phoneME website is here: https://phoneme.dev.java.net/
 
-The goal of the pspkvm project is to port the phoneMEFeature project to the Sony PSP game console. If you're seeking a honeMEAdvanced port for the PSP, please see the project here: https://sourceforge.net/projects/pspme
+The goal of the pspkvm project is to port the phoneMEFeature project to the Sony PSP game console. If you're seeking a phoneMEAdvanced port for the PSP, please see the project here: https://sourceforge.net/projects/pspme
 
 
 --------------------------------
