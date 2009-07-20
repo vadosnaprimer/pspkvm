@@ -66,8 +66,8 @@ Bugs and known issues
 --------------------------------
 Known issues:
 - Not running on 5.02 Gen-A firmware
-- javacall_file_truncate doesn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
-- Multimedia temporary files may leave on your memory stick sometimes, especially after VM crash. They're usually not big, but if you want to delete them manually, just go to your PSP's /PSP/GAME/pspkvm/ directory, find the files whose names llok like xxxxxxxx_tmp_mus.mid, delete them.
+- javacall_file_truncate isn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
+- Multimedia temporary files may be left on your memory stick sometimes, especially after VM crash. They're usually not big, but if you want to delete them manually, just go to your PSP's /PSP/GAME/pspkvm/ directory, find the files whose names look like xxxxxxxx_tmp_mus.mid, delete them.
 - Fileconnection rmdir operation may fail for unknown reasons.
 - LocationProvider.getState() will always return AVAILABLE once the GPS is initialized, so LocationListener.providerStateChanged() doesn't work as expected.
 
@@ -90,10 +90,10 @@ Run from binary bundle
 Building instructions
 --------------------------------
 For those interested in the source code:
-0. You have to prepare the building environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup
+0. You have to prepare the build environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup
 
-Now assuming you have installed the building environment by following the above instruction. In Cygwin:
-1. Grab the source code from svn to a local directory
+Now assuming you have installed the build environment by following the above instruction. In Cygwin:
+1. Retrieve the source code via svn to a local directory*
 2. cd ${your_source_dir}
 3. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
 4. ./build-psp-cldc.sh
@@ -108,6 +108,8 @@ Now you should see the success message following the building of the phoneME lib
     You should get EBOOT.PBP in this directory, copy it to your PSP's /PSP/GAME/pspkvm directory
 7. Copy "lib" and "appdb" directory from ${your_source_dir}/midp/build/javacall_psp/output/ into PSP's /PSP/GAME/pspkvm
 8. unzip midi_res.zip to PSP's /PSP/GAME/pspkvm (If you need MIDI support)
+
+*Note: you may have difficulty building the port with certain directory arrangements, due to Windows-based Java code failing properly to parse Posix-style cygwin file paths. To avoid/correct this, place your pspkvm installation in a high or root directory, and mount it in cygwin in such a fashion that the Posix and DOS paths wind up being the same thing. For example, place the pspkvm directory in the root of the C: drive (as in, in C:\pspkvm), then mount it on /pspkvm in cygwin, with a command such as mount c:/pspkvm /pspkvm .
 
 Requirements:
     SDL_mixer
