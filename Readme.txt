@@ -25,7 +25,7 @@ Change log
 --------------------------------
 General information
 --------------------------------
-This software is a PSP porting of SUN open-source JavaME implementation: phoneMEFeature. The words below is copied from phoneME's website to describe the project:
+This software is a PSP porting of SUN open-source JavaME implementation: phoneMEFeature. The project description below s copied from phoneME's website:
 
 	The objective of the phoneME project is to further expand the usage of Java? Platform, Micro Edition (Java ME platform) technology in the mobile handset market. The project scope includes a focus on the mainstream feature phone segment with phoneME Feature software, and the emerging advanced phone segment with phoneME Advanced software. Our goal in making these technologies available to the Mobile & Embedded Community is to reduce implementation variation, increase the rate of innovation and enable new devices to leverage the power of the Java ME platform.
 	
@@ -89,10 +89,10 @@ Run from binary bundle
 --------------------------------
 Building instructions
 --------------------------------
-For the ones who are interested in our source code:
-0. You have to prepare the building enviroment for phoneME at first. Please refer the document from here: https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup
+For those interested in the source code:
+0. You have to prepare the building environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup
 
-Now assume you have installed the building environment by following the above instruction. In Cygwin:
+Now assuming you have installed the building environment by following the above instruction. In Cygwin:
 1. Grab the source code from svn to a local directory
 2. cd ${your_source_dir}
 3. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
@@ -152,8 +152,8 @@ Running tips
 	Left Trigger + Right Trigger + Cross:    Exit current running MIDlet
 	
 - Multi tasking
-	In and application, press Left Trigger+Right Trigger+Triangle will put current running MIDlet to background, and AMS screen will be shown. The background running MIDlet is shown in high-lighted, and you can choose another MIDlet to run without stop the previous MIDlet. To bring a background running MIDlet to foreground, just click the MIDlet item from AMS is ok.
-	Note that currently we only enable run 2 MIDlet to run at same time, will allow more in future.
+	In an application, pressing Left Trigger+Right Trigger+Triangle will send the currently running MIDlet to the background, and the AMS screen will be shown. The background running MIDlet is shown high-lighted, and you can choose another MIDlet to run without stopping the previous MIDlet. To bring a midlet running in the background to the foreground, just click the MIDlet item from AMS.
+	Note that currently we only enable run two MIDlets to run at same time, will allow more in future.
 	
 - Connect to network
 	Before a Java MIDlet wants to use network, you need to connect your PSP to network at first. To setup this connection, please select "Network Setup" in AMS(the 2nd item in AMS MIDlets list), then all the wifi connections you've setup in PSP will be listed. Select one and until an alert popup to tell you if it's succeeded. Once it says "Successfully connected by profile xxx", that means your network is setup, and back to AMS and run you MIDlet which uses network.
