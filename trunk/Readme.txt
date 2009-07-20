@@ -31,7 +31,7 @@ This software is a PSP porting of SUN open-source JavaME implementation: phoneME
 	
 You can also refer to the original website from here: https://phoneme.dev.java.net/
 
-The goal of pspkvm is porting phoneMEFeature to Sony PSP game console. If you're seeking for phoneMEAdvanced porting on PSP, please take a look at the other project here: https://sourceforge.net/projects/pspme
+The goal of the pspkvm project is to port the phoneMEFeature project to the Sony PSP game console. If you're seeking a honeMEAdvanced port for the PSP, please take a look at the project here: https://sourceforge.net/projects/pspme
 
 --------------------------------
 Features
@@ -66,8 +66,8 @@ Bugs and known issues
 --------------------------------
 Known issues:
 - Not running on 5.02 Gen-A firmware
-- javacall_file_truncate isn't ported, so some file truncating operation, such as some RMS operations, may not work as expected
-- Multimedia temporary files may be left on your memory stick sometimes, especially after VM crash. They're usually not big, but if you want to delete them manually, just go to your PSP's /PSP/GAME/pspkvm/ directory, find the files whose names look like xxxxxxxx_tmp_mus.mid, delete them.
+- javacall_file_truncate isn't ported, so some file truncating operations, such as some RMS operations, may not work as expected
+- Multimedia temporary files may be left on your memory stick sometimes, especially after a VM crash. They're usually not big, but if you want to delete them manually, just go to your PSP's /PSP/GAME/pspkvm/ directory, find the files whose names look like xxxxxxxx_tmp_mus.mid, and delete them.
 - Fileconnection rmdir operation may fail for unknown reasons.
 - LocationProvider.getState() will always return AVAILABLE once the GPS is initialized, so LocationListener.providerStateChanged() doesn't work as expected.
 
@@ -100,10 +100,10 @@ Now assuming you have installed the build environment by following the above ins
 5. cd psp
 Now you should see the success message following the building of the phoneME libs.
 6. Make the executable:
-- If build on 1.50 kernel:
+- If build for the 1.50 kernel:
     make kxploit
     You should get pspkvm and pspkvm% directories in this directory, just copy them to your PSP's /PSP/GAME or /PSP/GAME150 directory.
-- If build on 3.xx OE:
+- If build for 3.xx OE:
     make BUILD_SLIM=true
     You should get EBOOT.PBP in this directory, copy it to your PSP's /PSP/GAME/pspkvm directory
 7. Copy "lib" and "appdb" directory from ${your_source_dir}/midp/build/javacall_psp/output/ into PSP's /PSP/GAME/pspkvm
@@ -120,11 +120,11 @@ Requirements:
 --------------------------------
 Running tips
 --------------------------------
-- Run MIDlet from memory stick:
-	1) Select "Find Application" item in AMS (the item on the top)
+- To run a MIDlet from the memory stick:
+	1) Select "Find Application" in the AMS (the item on the top)
 	2) Select "Install from memory stick (ms0:/)"
-	3) Browse the file system of your memory stick now, and select jad or jar to run
-	4) After selected, the jad/jar will be automatically installed and run. You can choose the installed application from AMS next time you want to run.
+	3) Browse the file system of your memory stick, and select the jad or jar to run
+	4) After it's been selected, the jad/jar will be automatically installed and run. You can choose the installed application from the AMS the next time you want to run it.
 	
 - Input text:
 	The PSP lacks a standard keyboard, but there are other input methods available. In any text input context, you can popup the menu by pressing Right Soft-button, and change to another input method. I'd suggest to use "abc" to input alphabetics, just like you've done on your phone, input English characters by 0~9,#,* keypad.
@@ -152,13 +152,16 @@ Running tips
 	
 	Left Trigger + Right Trigger + Triangle: Multi-tasking key (Click to return AMS and put MIDlet to background)
 	Left Trigger + Right Trigger + Cross:    Exit current running MIDlet
+
+	In addition, most MIDlets will invoke your selected 'virtual keyboard' for involved text entry tasks. See notes on virtual keyboards below.
 	
-- Multi tasking
-	In an application, pressing Left Trigger+Right Trigger+Triangle will send the currently running MIDlet to the background, and the AMS screen will be shown. The backgrounded MIDlet is shown highlighted, and you can choose another MIDlet to run without stopping the previous MIDlet. To bring a midlet running in the background to the foreground, just click the MIDlet item from AMS.
-	Note that currently we only enable run two MIDlets to run at the same time, will allow more in the future.
+- Multitasking
+	In any application, pressing Left Trigger+Right Trigger+Triangle will send the currently running MIDlet to the background, and the AMS screen will be shown. The backgrounded MIDlet is shown highlighted, and you can choose another MIDlet to run without stopping the previous MIDlet. To bring a midlet running in the background to the foreground, just click the MIDlet item from AMS.
+iy
+	Note that currently we only allow two MIDlets to run at the same time; more will be allowed in the future.
 	
 - Connect to network
-	Before a Java MIDlet can use the network, you need to connect your PSP to a WiFi hub. To set up this connection, select "Network Setup" in AMS (the 2nd item in the AMS MIDlets list), then all the wifi connections you've set up on your PSP will be listed. Select one and wait for an alert popup telling you if it's succeeded. Once it says "Successfully connected by profile xxx", that means your network is ready, and you can go back to the AMS and run MIDlets that use the network.
+	Before a Java MIDlet can use the network, you need to connect your PSP to a WiFi hub. To do this, select "Network Setup" in AMS (the second item in the AMS MIDlets list), then all the WiFi connections you've set up on your PSP will be listed. Select one and wait for an alert popup telling you it's succeeded. Once it says "Successfully connected by profile xxx", your network is ready, and you can go back to the AMS and run MIDlets that use the network.
 	*Tips for 3.xx OE users: you don't have to set up network in the "Network Setup" menu. When the first MIDlet want to access the network, a PSP network setup dialog will popup and prompt you to start a connection. And also, you can press "L+R+Square" at any time to call up the network setup dialog.
 	
 - Select device to emulate
@@ -186,7 +189,7 @@ Running tips
 	Direction Keys (Analog stick by default)-> Move cursor
 	CLEAR (SHIFT+CROSS by default)          -> Backspace
 	0 (CROSS by default)                    -> Delete Pinyin (in Chinese input method)
-	SEL, CPY, and PST (Select, copy, and paste) may be found in the 'Edit' key grouping.
+	SEL, CPY, and PST (Select, copy, and paste) may be found in the 'Edit' key grouping. Select behaviour is 'latching'--press select once to begin a selection, move the cursor to shape it; the selection will be between wherever you were when you first pressed select and the current position of the cursor. Press SEL again to cancel the selection without editing it/overwriting it/deleting it, etc.
 	
 - Semichordal virtual keyboard input tips
 
