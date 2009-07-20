@@ -13,6 +13,7 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
+- Bugfix for 'Default CPU speed setting doesn't work' (2812036)
 - Bugfix for Sony Ericsson 480x272 profile bug (2812032)
 - Bugfix for 'QWERTY board opens allcaps' (2806367)
 - Bugfix makes available missing top half of Unicode page 0 in builtin font
