@@ -13,6 +13,18 @@ Project home on SF:
 --------------------------------
 Change log
 --------------------------------
+- Bugfix for Sony Ericsson 480x272 profile bug (2812032)
+- Bugfix for 'QWERTY board opens allcaps' (2806367)
+- Bugfix makes available missing top half of Unicode page 0 in builtin font
+	(Adds common accents incl. acute, grave, circumflex, umlaut)
+- Added most of Unicode page 1 (Latin Extended 1) to builtin font
+	(Adds less common accents and characters for European languages using Roman alphabets)
+- Added clipboard support to virtual keyboards
+- Added semichordal virtual keyboard implementation
+
+--------------------------------
+Changes in previous release
+--------------------------------
 - Large memory support
 - New Chinese Input Method: Stroke IM
 - Chinese localized menu
