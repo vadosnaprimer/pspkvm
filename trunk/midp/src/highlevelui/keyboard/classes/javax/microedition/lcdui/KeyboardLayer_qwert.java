@@ -1,5 +1,5 @@
 /*
- * $LastChangedDate: 2006-03-06 01:36:46 +0900 (ì›? 06 3 2006) $  
+ * $LastChangedDate: 2006-03-06 01:36:46 +0900 (8›? 06 3 2006) $  
  *
  * Copyright  1990-2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -679,6 +679,7 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
             	}
 
             	if (!processed) {
+            			eraseSelection();
                   tfContext.uCallKeyPressed(c);
                   tfContext.tf.getString();
                   return;
@@ -721,6 +722,34 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
             }   
         }
     }
+    
+  /**
+	 *	Helper for various actions that move the cursor
+	 *	without changing the select state
+	 */		 		 		
+		void synchSelectEnd(TextField tf) {
+			if (!vk.select_active) {
+				return; }
+			tf.synchSelectionEnd(); }
+
+		/**
+		 *	Helper for various actions that erase the current selection
+		 */
+		void eraseSelection() {
+			if (!vk.select_active) {
+				return; }
+			if (tfContext==null) {
+				return; }
+			vk.select_active=false;
+			repaintVK();
+			if (tfContext.tf.getSelectionLength()==0) {
+				// Nothing to do
+				return; }
+			// Do the delete
+			int a = tfContext.tf.getSelectionLow();
+			tfContext.tf.deleteSelection();
+			tfContext.setCaretPosition(a);
+			tfContext.lRequestPaint(); }
 
     /**
      * VirtualKeyboardListener interface
@@ -766,9 +795,13 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
             switch (metaKey) {
             	    case VirtualKeyboard_qwert.CURSOR_LEFT_META_KEY:
             	      tfContext.moveCursor(Canvas.LEFT);
+            	      synchSelectEnd(tfContext.tf);
+            	      disp.requestScreenRepaint();
             	      break;
             	    case VirtualKeyboard_qwert.CURSOR_RIGHT_META_KEY:
             	      tfContext.moveCursor(Canvas.RIGHT);
+            	      synchSelectEnd(tfContext.tf);
+            	      disp.requestScreenRepaint();
             	      break;
              }
              repaintVK();
@@ -788,11 +821,30 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
             open = false;
 
         } else if (metaKey == vk.BACKSPACE_META_KEY) {
+        		
             if (candidateBar != null) {
             	  candidateBar.backspace();
             } else if (tfContext != null) {
-                tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
+            		boolean del_more = !vk.select_active;
+            		eraseSelection();
+                if (del_more) { 
+									tfContext.keyClicked(InputMode.KEYCODE_CLEAR); }
             }
+        } else if (metaKey == vk.SEL_META_KEY) {
+        	if (tfContext != null) {
+        		tfContext.tf.synchSelectionStart();
+        		vk.select_active = !vk.select_active; }
+
+        } else if (metaKey == vk.CPY_META_KEY) {
+        	if (tfContext != null) {
+        		Clipboard.set(tfContext.tf.getSelection()); }
+        		
+        } else if (metaKey == vk.PST_META_KEY) {
+        	if (tfContext != null) {
+        		eraseSelection();
+						tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
+						tfContext.tf.getString(); }
+
         } else if (metaKey == vk.IM_CHANGED_KEY) {
             if (tfContext != null) {
                  tfContext.notifyModeChanged();

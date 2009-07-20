@@ -1,5 +1,5 @@
 /*
- * $LastChangedDate: 2005-11-21 02:11:20 +0900 (鞗? 21 11 2005) $  
+ * $LastChangedDate: 2005-11-21 02:11:20 +0900 (\u9797? 21 11 2005) $  
  *
  * Copyright  1990-2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -59,6 +59,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 	int mainKeyOffsetX=5;
 	int mainKeyOffsetY=5;
 
+	boolean select_on;
 
 	/** Candidate bar */
     IMCandidateBar candidateBar = new IMCandidateBar(20,25);
@@ -84,6 +85,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return;
 	}
+		select_on=false;
         
 		{
               PADDING = 2;
@@ -166,6 +168,8 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return;
 	}
+	
+		select_on=false;
         
 
 	 f = Font.getFont(Font.FACE_SYSTEM, // or SYSTEM
@@ -226,7 +230,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
     void traverse(int type, int keyCode) {
     
 	    System.out.println("VirtualK: keyCode="+keyCode);
-		if(isShowHelp){//任意键退出
+		if(isShowHelp){//\u4efb\u610f\u952e\u9000\u51fa
 			if((keyCode!=EventConstants.SOFT_BUTTON1)
 				&&!(EventConstants.SOFT_BUTTON2==keyCode&&type==EventConstants.PRESSED)){
 				isShowHelp=false;
@@ -249,7 +253,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 				}	
 		}else if(EventConstants.RELEASED!=type){
 			if("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.direction"))){
-				//切换摇杆和方向键的作用
+				//\u5207\u6362\u6447\u6746\u548c\u65b9\u5411\u952e\u7684\u4f5c\u7528
 				keyCode=transfDirectionKeyCode(keyCode);
 			}
 			
@@ -295,7 +299,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 					vkl.virtualMetaKeyEntered(CURSOR_DOWN_COMMAND);
 					break;
 				default:
-					if (EventConstants.SYSTEM_KEY_CLEAR ==//for c KEY 增加删除快捷键
+					if (EventConstants.SYSTEM_KEY_CLEAR ==//for c KEY \u589e\u52a0\u5220\u9664\u5feb\u6377\u952e
 							KeyConverter.getSystemKey(keyCode)) {
 						vkl.virtualMetaKeyEntered(DEL_CHAR_COMMAND);
 					}
@@ -337,14 +341,14 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 						//prepareKeyMap();
 						VirtualKeyBoardMap.setActiveKeyMap(2);
 						kmap[2].setActiveKey(0);
-						kmap[2].setKeyName(new String("，。? !\n"));
+						kmap[2].setKeyName(new String("\uff0c\u3002? !\n"));
 					    
 					}
 				}else if(cKM==1){
 					kmap[2].setKeyName(candidateBar.findCandidateHZ(kmap[1].getKeyName()));
 					VirtualKeyBoardMap.setActiveKeyMap(2);
 					kmap[2].setActiveKey(0);
-				}else if(cKM==2){//选中侯选择字，并查找联想字
+				}else if(cKM==2){//\u9009\u4e2d\u4faf\u9009\u62e9\u5b57\uff0c\u5e76\u67e5\u627e\u8054\u60f3\u5b57
 					vkl.virtualMetaKeyEntered(INSERT_CHAR_COMMAND);
 					kmap[0].resetInputKey();
 					kmap[1].resetKeyName();
@@ -376,7 +380,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 				if(cKM==0){
 					if(kmap[cKM].getActiveKey()!=5){
 						char str[]=candidateBar.findCandidateStorkHZ(kmap[0].getInputKey()+(kmap[0].getActiveKey()+1));
-						if(str!=null && str[0]!= 0){//找到笔画了
+						if(str!=null && str[0]!= 0){//\u627e\u5230\u7b14\u753b\u4e86
 							kmap[0].setInputKey();
 							kmap[1].setKeyName(str);
 							kmap[1].setActiveKey(0);
@@ -384,9 +388,9 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 					}else{
 						VirtualKeyBoardMap.setActiveKeyMap(1);
 						kmap[1].setActiveKey(0);
-						kmap[1].setKeyName(new String("，。? !\n"));
+						kmap[1].setKeyName(new String("\uff0c\u3002? !\n"));
 					}
-				}else if(cKM==1){//选中侯选择字，并查找联想字
+				}else if(cKM==1){//\u9009\u4e2d\u4faf\u9009\u62e9\u5b57\uff0c\u5e76\u67e5\u627e\u8054\u60f3\u5b57
 					vkl.virtualMetaKeyEntered(INSERT_CHAR_COMMAND);
 					kmap[0].resetInputKey();
 					if(getSelect()!=null&&getSelect().length()>0){
@@ -401,13 +405,26 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 				}
 			}
 		}else{
+			// Non-Chinese-specific boards: PSP symbol key pressed -- emit character
 			if(kmap[1].getKeyName(key)!=null&&kmap[1].getKeyName(key).length()!=0){
+				if (kmap[1].getKeyName(key).length()==3) {
+					handleEditCommand(key);
+					return; }
 				kmap[1].setActiveKey(key);
-				//kmap[0].setActiveKey(4);//主键盘处与中间位置
+				//kmap[0].setActiveKey(4);//\u4e3b\u952e\u76d8\u5904\u4e0e\u4e2d\u95f4\u4f4d\u7f6e
 				vkl.virtualMetaKeyEntered(INSERT_CHAR_COMMAND);
 			}
 		}
 }
+
+	// Breakout handling for edit commands
+	void handleEditCommand(int k) {
+		switch(k) {
+			case 0: vkl.virtualMetaKeyEntered(CUT_COMMAND); break;
+			case 1: vkl.virtualMetaKeyEntered(CPY_COMMAND); break;
+			case 2: vkl.virtualMetaKeyEntered(PST_COMMAND); break;
+			case 3: vkl.virtualMetaKeyEntered(SEL_COMMAND); } }
+
    void handleDirectionKey(int type, int keyCode){
 	   	 	System.out.println("handleDirectionKey-key="+keyCode);
 		if(currentKeyboard==AbstractKeyboardLayer.PINYIN){	
@@ -556,11 +573,11 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
         g.translate(0-g.getTranslateX(),0-g.getTranslateY());
 		if(isShowHelp==true){
 			String helpStr[]={"  help:",
-				"1.(L 或 R)+O: 切换输入法. (Switch Input Method)",
-				"2.(L 或 R)+select: 功能同上. (Switch Input Method)",
-				"3.(L 或 R)+X: 删除输入. (Delete)",
-				"4. X: 拼音状态下删除输入. (Delete PinYin)",
-				"5.方向键或摇杆: 移动光标或切换键盘区域.",
+				"1.(L \u6216 R)+O: \u5207\u6362\u8f93\u5165\u6cd5. (Switch Input Method)",
+				"2.(L \u6216 R)+select: \u529f\u80fd\u540c\u4e0a. (Switch Input Method)",
+				"3.(L \u6216 R)+X: \u5220\u9664\u8f93\u5165. (Delete)",
+				"4. X: \u62fc\u97f3\u72b6\u6001\u4e0b\u5220\u9664\u8f93\u5165. (Delete PinYin)",
+				"5.\u65b9\u5411\u952e\u6216\u6447\u6746: \u79fb\u52a8\u5149\u6807\u6216\u5207\u6362\u952e\u76d8\u533a\u57df.",
 				"  Up/Down/Left/Right: Move cursor"};
 			g.setFont(f);
 			g.setColor(TEXT_COLOR);
@@ -755,22 +772,28 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
     final static int CURSOR_DOWN_COMMAND = 8;
     final static int CURSOR_LEFT_COMMAND = 9;
     final static int CURSOR_RIGHT_COMMAND = 10;
+    
+    // Editing commands
+    final static int CPY_COMMAND = 11;
+    final static int PST_COMMAND = 12;
+    final static int SEL_COMMAND = 13;
+    final static int CUT_COMMAND = 14;
 
 	//
 	private VirtualKeyBoardMap kmap[]=new VirtualKeyBoardMap[3];
 	String numericMap[]=
-		{"1","2","3","4","50","6","7","8","9"};
+		{"1","2","3","4","50","6","7","8","9", "Edit"};
 	String CnMap[]=
 		{"?","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
 	String abcMap[]=
-		{"_@/-","abc.","def\n","ghi?","jkl,","mno!","pqrs","tuv ","wxyz"};
+		{"_@/-","abc.","def\n","ghi?","jkl,","mno!","pqrs","tuv ","wxyz", "Edit"};
 	String ABCMap[]=
-		{"_@/-","ABC.","DEF\n","GHI?","JKL,","MNO!","PQRS","TUV ","WXYZ"};
+		{"_@/-","ABC.","DEF\n","GHI?","JKL,","MNO!","PQRS","TUV ","WXYZ", "Edit"};
 	String symbolMap[]=
-		{"[^]","~@:#","<$>%","(_)+",",.?!","\"\\;'","{|}-","=/0`","& \n"};
+		{"[^]","~@:#","<$>%","(_)+",",.?!","\"\\;'","{|}-","=/0`","& \n", "Edit"};
 	//{""",'","!@#%","&*><","_+=:","'?()","/\.{}","[]~^","$&#8364;&#163;-&#165;&#161;&#164;&#167;&#191;`|"};
 	String strokeMap[]=
-		{"一","丨","丿","丶","フ","?"};
+		{"\u4e00","\u4e28","\u4e3f","\u4e36","\u30d5","?"};
 
 	void prepareKeyMap(){
 	
@@ -817,7 +840,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 			case 1:
 			case 2:
 			case 3:
-				kmap[0]=new VirtualKeyBoardMap(kmapW,kmpaH,mainKeyOffsetX,mainKeyOffsetY,VirtualKeyBoardMap.KEYMAP_LAOUT_TYPE_9,0);
+				kmap[0]=new VirtualKeyBoardMap(kmapW,kmpaH,mainKeyOffsetX,mainKeyOffsetY,VirtualKeyBoardMap.KEYMAP_LAOUT_TYPE_10,0);
 				if(currentKeyboard==0){
 					kmap[0].setKeyName(numericMap);
 				}else if(currentKeyboard==1){
@@ -835,7 +858,7 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 				kmap[1].setKeyName(kmap[0].getKeyName());
 				kmap[2]=null;
 				break;
-			case 5://笔画
+			case 5://\u7b14\u753b
 				kmap[0]=new VirtualKeyBoardMap(kmapW,kmpaH,
 											mainKeyOffsetX,mainKeyOffsetY+kmpaH/3,
 											VirtualKeyBoardMap.KEYMAP_LAOUT_TYPE_3,0);
@@ -868,15 +891,15 @@ class VirtualKeyBoardMap
 	*add by an for 
 	*fixed virtual keyboard 
 	*
-	*目前可能有三个虚拟区域 1。主键盘区。 2。候选区域_1 3.候选区域_2
+	*\u76ee\u524d\u53ef\u80fd\u6709\u4e09\u4e2a\u865a\u62df\u533a\u57df 1\u3002\u4e3b\u952e\u76d8\u533a\u3002 2\u3002\u5019\u9009\u533a\u57df_1 3.\u5019\u9009\u533a\u57df_2
 	*
-	*键盘的layout有两种形式 1.九宫格 2。类似PSP右面键盘布局
+	*\u952e\u76d8\u7684layout\u6709\u4e24\u79cd\u5f62\u5f0f 1.\u4e5d\u5bab\u683c 2\u3002\u7c7b\u4f3cPSP\u53f3\u9762\u952e\u76d8\u5e03\u5c40
 	*
 	*/
-	final static int KEYMAP_LAOUT_TYPE_9 = 0;//九宫格
-	final static int KEYMAP_LAOUT_TYPE_L = 1;//列表形式
-	final static int KEYMAP_LAOUT_TYPE_4 = 2; //4键形式
-	final static int KEYMAP_LAOUT_TYPE_3 = 3;//九宫格形式但是整行移动
+	final static int KEYMAP_LAOUT_TYPE_10 = 0;//\u4e5d\u5bab\u683c
+	final static int KEYMAP_LAOUT_TYPE_L = 1;//\u5217\u8868\u5f62\u5f0f
+	final static int KEYMAP_LAOUT_TYPE_4 = 2; //4\u952e\u5f62\u5f0f
+	final static int KEYMAP_LAOUT_TYPE_3 = 3;//\u4e5d\u5bab\u683c\u5f62\u5f0f\u4f46\u662f\u6574\u884c\u79fb\u52a8
 
 	  // ********* attributes ********* //
     private final static int WHITE = 0xffffff;
@@ -911,7 +934,7 @@ class VirtualKeyBoardMap
 		
 
 	String inputKey=new String();
-	String keyName[]=new String[9];
+	String keyName[]=new String[10];
 	static int curActiveKeymap;
 	int curActiveKey;
 
@@ -925,6 +948,8 @@ class VirtualKeyBoardMap
 
 		buttonW=(keyMapW-6)/3;
 		buttonH=(keyMapH-4)/3;
+		if (Type==KEYMAP_LAOUT_TYPE_10) {
+			buttonH=(keyMapH-4)/4; }
 		
 		fontWCenter=buttonW/2;
 		fontHTop=buttonH/2;
@@ -948,7 +973,7 @@ class VirtualKeyBoardMap
 	}
 	public void setKeyName(String name[]){
 		if(name!=null){
-			for(int i=0;i<9&&i<name.length;i++)
+			for(int i=0;i<10&&i<name.length;i++)
 				keyName[i]=name[i];
 		}else{
 			for(int i=0;i<keyName.length;i++){
@@ -976,13 +1001,20 @@ class VirtualKeyBoardMap
 			for(int i=0;i<keyName.length;i++){
 				keyName[i]="";
 			}
+			if (name.compareTo("Edit")==0) {
+				keyName[0]="CUT";
+				keyName[1]="CPY";
+				keyName[2]="PST";
+				keyName[3]="SEL";
+				return; }
 			for(int i=0;i<name.length();i++){
 				keyName[i]=name.substring(i,i+1);
 			}
 		}
 	}
 	public String getKeyName(int index){
-		if(keyName!=null&&index<9){
+		if(keyName!=null&&index<9)
+{
 			return keyName[index];
 		}
 		return null;
@@ -1177,11 +1209,11 @@ class VirtualKeyBoardMap
 				if(inputKey!=null){
 					int begin=(inputKey.length()>6)?(inputKey.length()-6):0;
 					String strokeStr=inputKey.substring(begin);
-					strokeStr=strokeStr.replace('1', '一');
-					strokeStr=strokeStr.replace('2', '丨');
-					strokeStr=strokeStr.replace('3', '丿');
-					strokeStr=strokeStr.replace('4', '丶');
-					strokeStr=strokeStr.replace('5', 'フ');
+					strokeStr=strokeStr.replace('1', '\u4e00');
+					strokeStr=strokeStr.replace('2', '\u4e28');
+					strokeStr=strokeStr.replace('3', '\u4e3f');
+					strokeStr=strokeStr.replace('4', '\u4e36');
+					strokeStr=strokeStr.replace('5', '\u30d5');
 		            g.drawString("in: "+strokeStr,
 								 keyMapX+buttonW/2,
 								 keyMapY+buttonH/8-buttonH,
@@ -1196,13 +1228,17 @@ class VirtualKeyBoardMap
 		if(keyName==null){
 			return;
 		}
-		int btNum=0;
 		int pos[][];
 		//keymap layout
 		int pos9[][]={
 				{0,0},{1,0},{2,0},
 				{0,1},{1,1},{2,1},
 				{0,2},{1,2},{2,2}};
+		int pos10[][]={
+				{0,0},{1,0},{2,0},
+				{0,1},{1,1},{2,1},
+				{0,2},{1,2},{2,2},
+				      {1,3}};
 		int pos4[][]={
 					{0,1},	{1,0},  {2,1},
 					        {1,2}};
@@ -1218,34 +1254,30 @@ class VirtualKeyBoardMap
 			  {0,1},{1,1},{2,1},
 					{1,2}};
 	 	switch(keyMapType){
-			case KEYMAP_LAOUT_TYPE_9:  // = 0;//九宫格
+			case KEYMAP_LAOUT_TYPE_10:  // = 0;//\u4e5d\u5bab\u683c
 				{
-					btNum=9;
-					pos=pos9;
+					pos=pos10;
 				}
 				break;
-			case KEYMAP_LAOUT_TYPE_L: //= 1;//列表形式
+			case KEYMAP_LAOUT_TYPE_L: //= 1;//\u5217\u8868\u5f62\u5f0f
 				{
-					btNum=6;
 					pos=pos6;
 				}
 				break;
-			case KEYMAP_LAOUT_TYPE_4: //= 2; //4键形式
+			case KEYMAP_LAOUT_TYPE_4: //= 2; //4\u952e\u5f62\u5f0f
 				{
-					btNum=4;
 					pos=pos4;
 				}
 				break;
 			default:
 				{
 					pos=pos9;
-					btNum=0;
 				}
 			break;
 		}
 		for (int i=0; i<keyName.length; i++) {
 			if(keyName[i]!=null&&(!keyName[i].equals(""))){
-				if(KEYMAP_LAOUT_TYPE_9==keyMapType){
+				if(KEYMAP_LAOUT_TYPE_10==keyMapType){
 					if(i==curActiveKey){
 						drawPressedButton(g,pos[i][0] *(buttonW)+keyMapX,
 										pos[i][1] * (buttonH)+keyMapY,
@@ -1271,7 +1303,7 @@ class VirtualKeyBoardMap
 					pos[i][0] * (buttonW)  + fontWCenter+keyMapX,
 					pos[i][1] * (buttonH)  + buttonH+keyMapY-3,
 					g.HCENTER|g.BOTTOM);
-				if(KEYMAP_LAOUT_TYPE_4==keyMapType){//刷按键指示图标
+				if(KEYMAP_LAOUT_TYPE_4==keyMapType){//\u5237\u6309\u952e\u6307\u793a\u56fe\u6807
 			            g.drawImage(keyGuidImage[i%4],
 									pos[i][0] * (buttonW)+keyMapX+3,
 									pos[i][1] * (buttonH)+keyMapY+3,
@@ -1303,7 +1335,9 @@ class VirtualKeyBoardMap
 
 	private  void handleKeyMsgR(){
 		switch(keyMapType){
-			case KEYMAP_LAOUT_TYPE_9:
+			case KEYMAP_LAOUT_TYPE_10:
+					if (curActiveKey==9) {
+						return; }
 					if((curActiveKey+1)%3==0){
 						curActiveKey-=2;
 					}else{
@@ -1326,7 +1360,9 @@ class VirtualKeyBoardMap
 	}
  private  void handleKeyMsgL(){
 		switch(keyMapType){
-			case KEYMAP_LAOUT_TYPE_9:
+			case KEYMAP_LAOUT_TYPE_10:
+					if (curActiveKey==9) {
+						return; }
 					if((curActiveKey)%3==0){
 						curActiveKey+=2;
 					}else{
@@ -1346,10 +1382,9 @@ class VirtualKeyBoardMap
  private void handleKeyMsgD(){
 		switch(keyMapType){
 			case KEYMAP_LAOUT_TYPE_3:
-			case KEYMAP_LAOUT_TYPE_9:
-				curActiveKey+=3;
-				curActiveKey=(curActiveKey+9)%9;
-				break;
+			case KEYMAP_LAOUT_TYPE_10:
+				handleKeyMsgD_10Pad();
+				return;
 			case KEYMAP_LAOUT_TYPE_L:
 				if(curActiveKey!=6&&keyName!=null){
 					if(keyName[curActiveKey]!=null){
@@ -1362,16 +1397,56 @@ class VirtualKeyBoardMap
 				break;
 		}
 	}
- private void handleKeyMsgU(){
+	
+	// Specific handler for the 10-key pad; it's
+	// a bit more involved
+	private void handleKeyMsgD_10Pad() {
+		switch (curActiveKey) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+				curActiveKey+=3;
+				return;
+			case 6:
+			case 7:
+			case 8:
+				curActiveKey=9;
+				return;
+			case 9:
+				curActiveKey=1; } }
+				
+	// Specific handler for the 10-key pad; it's
+	// a bit more involved
+	private void handleKeyMsgU_10Pad() {
+		switch(curActiveKey) {
+			case 0:
+			case 1:
+			case 2:
+				curActiveKey=9;
+				return;
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+				curActiveKey-=3;
+				return; 
+			case 9:
+				curActiveKey=7; } }
+
+ private void handleKeyMsgU() {
 		switch(keyMapType){
 			case KEYMAP_LAOUT_TYPE_3:
 				curActiveKey-=3;
 				curActiveKey=(curActiveKey+9)%9;
 				break;
-			case KEYMAP_LAOUT_TYPE_9:
-				curActiveKey-=3;
-				curActiveKey=(curActiveKey+9)%9;
-				break;
+			case KEYMAP_LAOUT_TYPE_10:
+				handleKeyMsgU_10Pad();
+				return;
 			case KEYMAP_LAOUT_TYPE_L:
 				if(curActiveKey!=0){
 					curActiveKey--;

@@ -14,8 +14,12 @@ static int done = 0;
 #define PSP_CTRL_ANALOG_UP 		0x40000000
 #define PSP_CTRL_ANALOG_DOWN 	0x80000000
 
-#if 0
+// Modifications adding RAW_KEY_STATUS send /AJM
+// See also higher JVM modifications filtering these from clients that 
+// won't recognize them (see CLayer, CWindow).
 
+#if 0
+/*
 u32 oldAnalogKeys = 0;
 u32 oldDigitalKeys = 0;
 void processKey(javacall_keypress_type type, int pspkey) {
@@ -187,7 +191,7 @@ int KeyThread(SceSize args, void *argp)
 		UpdateEvents();
 	}
 }
-
+*/
 #else
 
 #define MULTITASK_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_TRIANGLE)
@@ -203,10 +207,10 @@ int KeyThread(SceSize args, void *argp)
 static int KeyThread(SceSize args, void *argp)
 {
 	SceCtrlData pad;
-	unsigned int pspKey = 0, lastPspKey = 0;
+	unsigned int pspKey = 0, lastPspKey = 0, lastRawPspKey=0;
 	int lx, ly;
-	static int hold = 0;
-	static int repeat_threshold = REPEAT_THRESHOLD;
+	static int hold = 0, raw_hold = 0;
+	static int repeat_threshold = REPEAT_THRESHOLD, raw_repeat_threshold = REPEAT_THRESHOLD;
 	static javacall_key lastPressedJavakey = 0;
 	
 	sceCtrlSetSamplingCycle(25);
@@ -215,11 +219,26 @@ static int KeyThread(SceSize args, void *argp)
 		
 		//pspDebugScreenSetXY(0, 2);
 
-    		sceCtrlReadBufferPositive(&pad, 3);
+    sceCtrlReadBufferPositive(&pad, 3);
 		if (suspend_key_input) {
 			continue;
 		}
 		
+    // Emit the raw key event--if it's changed since the last sample.
+    if ((lastRawPspKey != pad.Buttons) ||
+				((raw_hold == raw_repeat_threshold)&&(pad.Buttons != 0))) {
+			javanotify_key_event(pad.Buttons, JAVACALL_RAW_KEY_STATUS);
+			raw_hold = 0;
+			lastRawPspKey = pad.Buttons;
+			// Set threshold lower if this is a repeat press
+			if (raw_hold == raw_repeat_threshold) {
+				raw_repeat_threshold = REPEAT_THRESHOLD1; }
+			else {
+				raw_repeat_threshold = REPEAT_THRESHOLD; } }
+		else {
+			if (pad.Buttons != 0) {
+				raw_hold++; } }
+
 		pspKey = 0;
 		lx = pad.Lx;
 		ly = pad.Ly;
@@ -250,7 +269,7 @@ static int KeyThread(SceSize args, void *argp)
 		}
 		
 
-              pspKey |= pad.Buttons;
+    pspKey |= pad.Buttons;
               
 		if (pspKey != lastPspKey || hold == repeat_threshold){
 		    int i;
@@ -302,6 +321,7 @@ static int KeyThread(SceSize args, void *argp)
 
 		    if (pspKey == NETWORK_KEY) {
 		    	javanotify_network_connect();
+		    	lastRawPspKey = pad.Buttons;
 		    	lastPspKey = pspKey;
 		    	continue;
 		    }
@@ -309,23 +329,25 @@ static int KeyThread(SceSize args, void *argp)
 		    if (pspKey == DEBUG_TRACE_KEY) {
 		    	javanotify_key_event(JAVACALL_KEY_DEBUG_TRACE, JAVACALL_KEYPRESSED);
 		    	//display_log(1);
-		    	
+		    	lastRawPspKey = pad.Buttons;
 		    	lastPspKey = pspKey;
 		    	continue;
 		    }
 
 		    if (pspKey == EXIT_KEY) {
 		    	javanotify_shutdown_current();
+		    	lastRawPspKey = pad.Buttons;
 		    	lastPspKey = pspKey;
 		    	continue;
 		    }		    
 
 		    if (pspKey == MULTITASK_KEY) {
 		    	javanotify_switch_to_ams();
+		    	lastRawPspKey = pad.Buttons;
 		    	lastPspKey = pspKey;
 		    	continue;
 		    }
-
+		    
 		    keymap = javacall_keymap_current();
 		    keys = javacall_keymap_size();
 		    shift = pspKey & (SHIFT_KEY1 | SHIFT_KEY2);

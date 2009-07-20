@@ -52,10 +52,10 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
                                                            throws VirtualKeyboardException {
         String im = Configuration.getProperty("com.pspkvm.inputmethod");
         if(im != null && im.equals("vk-qwert")){
-            return KeyboardLayer_qwert.getInstance(tf);
-        } else {
-            return KeyboardLayer_awf.getInstance(tf);
-        }
+            return KeyboardLayer_qwert.getInstance(tf); }
+        if(im != null && im.equals("vk-semichordal")){
+            return KeyboardLayer_semichordal.getInstance(tf); }
+				return KeyboardLayer_awf.getInstance(tf);
     }
 
     /**
@@ -68,9 +68,9 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
                                                            throws VirtualKeyboardException {
         String im = Configuration.getProperty("com.pspkvm.inputmethod");
         if(im != null && im.equals("vk-qwert")){
-            return KeyboardLayer_qwert.getInstance(canvas);
-        } else {
-            return KeyboardLayer_awf.getInstance(canvas);
-        }
+            return KeyboardLayer_qwert.getInstance(canvas); }
+        if(im != null && im.equals("vk-semichordal")){
+            return KeyboardLayer_semichordal.getInstance(canvas); }
+				return KeyboardLayer_awf.getInstance(canvas);
     }
 }

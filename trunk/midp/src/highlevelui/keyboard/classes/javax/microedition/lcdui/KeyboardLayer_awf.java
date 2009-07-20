@@ -1,5 +1,5 @@
 /*
- * $LastChangedDate: 2006-03-06 01:36:46 +0900 (ì›? 06 3 2006) $  
+ * $LastChangedDate: 2006-03-06 01:36:46 +0900 (8›? 06 3 2006) $  
  *
  * Copyright  1990-2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -162,7 +162,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 				case KEYBOARD_INPUT_ASCII:
 					vk.currentKeyboard=LOWERCASE;
 					break;
-				case KEYBOARD_INPUT_ANY://¸ù¾ÝPSPKVM.INI ÅäÖÃ¾ö¶¨Ä¬ÈÏÊäÈë·¨ÀàÐÍ
+				case KEYBOARD_INPUT_ANY://+ú+ÝPSPKVM.INI +S+++öÝ¨-¬+--S+d+¨+a--
 					if("vk-chinese".equals(Configuration.getProperty("com.pspkvm.inputmethod"))){
 						vk.currentKeyboard=PINYIN;
 					}else{
@@ -442,6 +442,35 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
             }   
         }
     }
+    
+    /**
+		 *	Helper for various actions that move the cursor
+		 *	without changing the select state
+		 */		 		 		
+		void synchSelectEnd(TextField tf) {
+			if (!vk.select_on) {
+				return; }
+			tf.synchSelectionEnd(); }
+			
+		/**
+		 *	Helper for various actions that erase the current selection
+		 */
+		void eraseSelection() {
+			if (!vk.select_on) {
+				return; }
+			if (tfContext==null) {
+				return; }
+			vk.select_on=false;
+			repaintVK();
+			if (tfContext.tf.getSelectionLength()==0) {
+				// Nothing to do
+				return; }
+			// Do the delete
+			int a = tfContext.tf.getSelectionLow();
+			tfContext.tf.deleteSelection();
+			tfContext.setCaretPosition(a);
+			tfContext.lRequestPaint(); }
+
 
     /**
      * VirtualKeyboardListener interface
@@ -462,6 +491,11 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 		if (tfContext != null) {
 			System.out.println("virtualMetaKeyEntered="+metaKey);
 			switch (metaKey) {
+				case VirtualKeyboard_awf.SEL_COMMAND:
+					tfContext.tf.synchSelectionStart();
+					vk.select_on = !vk.select_on;
+					disp.requestScreenRepaint();
+					return;
 				case VirtualKeyboard_awf.OK_COMMAND:
 					disp.hidePopup(this);
 		            open = false;
@@ -474,6 +508,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 		            open = false;
 					break;
 				case VirtualKeyboard_awf.INSERT_CHAR_COMMAND:
+					eraseSelection();
 					int pos = tfContext.tf.getCaretPosition();
 					String str=vk.getSelect();
 					if(str!=null&&str.length()>0){
@@ -482,7 +517,22 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 					}
 					break;
 				case VirtualKeyboard_awf.DEL_CHAR_COMMAND:
-					tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
+					boolean del_more = !vk.select_on;
+					eraseSelection();
+					if (del_more) {
+						tfContext.keyClicked(InputMode.KEYCODE_CLEAR); }
+					break;
+				case VirtualKeyboard_awf.CPY_COMMAND:
+					Clipboard.set(tfContext.tf.getSelection());
+					break;
+				case VirtualKeyboard_awf.CUT_COMMAND:
+					Clipboard.set(tfContext.tf.getSelection());
+					eraseSelection();
+					break;
+				case VirtualKeyboard_awf.PST_COMMAND:
+					eraseSelection();
+					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
+					tfContext.tf.getString();
 					break;
 				case VirtualKeyboard_awf.NODIFY_IM_CHANGE_COMMAND:
 					getNextKeyBoard();
@@ -490,15 +540,19 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 					break;
 				case VirtualKeyboard_awf.CURSOR_UP_COMMAND:
 					tfContext.moveCursor(Canvas.UP);
+					synchSelectEnd(tfContext.tf);
 					break;
 			    case VirtualKeyboard_awf.CURSOR_DOWN_COMMAND:
 					tfContext.moveCursor(Canvas.DOWN);
+					synchSelectEnd(tfContext.tf);
 					break;
 			    case VirtualKeyboard_awf.CURSOR_LEFT_COMMAND:
 					tfContext.moveCursor(Canvas.LEFT);
+					synchSelectEnd(tfContext.tf);
 					break;
 			    case VirtualKeyboard_awf.CURSOR_RIGHT_COMMAND:
 					tfContext.moveCursor(Canvas.RIGHT);
+					synchSelectEnd(tfContext.tf);
 					break;
 				default:
 					break;

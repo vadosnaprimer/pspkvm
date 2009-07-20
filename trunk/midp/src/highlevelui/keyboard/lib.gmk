@@ -27,22 +27,35 @@ LIB_SET += $(KEYBOARD_DIR)
 # SUBSYSTEM_LCDLF_EXTRA_INCLUDES +=
 
 # Native files for the library
-# SUBSYSTEM_KEYBOARD_NATIVE_FILES +=
+SUBSYSTEM_KEYBOARD_NATIVE_FILES += \
+	clipboard_kni.c
 
 # Source code path for the library
-# vpath $(KEYBOARD_DIR)/native
+vpath % $(KEYBOARD_DIR)/native
 
 # Java files for the library
 #
 SUBSYSTEM_KEYBOARD_JAVA_FILES = \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboardException.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/PSPCtrlCodes.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/AbstractKeyboardLayer.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboardListener.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_qwert.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_awf.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboard_semichordal.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Diacriticals.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/LongArrayHandler.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Imgs_misc.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Clipboard.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFont.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFontInit_blue.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFontInit_red.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SC_Keys.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/VirtualKeyboardInterface.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/KeyboardLayer_qwert.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Imgs_qw_clip.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/KeyboardLayer_awf.java \
+    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/KeyboardLayer_semichordal.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/IMCandidateBar.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/CNLib.java\
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/com/pspkvm/midp/lcdui/vk/awf/Associational.java\

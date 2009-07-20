@@ -266,6 +266,8 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
                       TextCursor cursor,
                       TextInfo info) 
     {
+				 
+    
         if (opChar != 0) {
             cursor = new TextCursor(cursor);
             info.isModified = true;            
@@ -276,11 +278,15 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
         info.isModified |= !bufferedTheSameAsDisplayed(tf.constraints);
         
         Text.updateTextInfo(str, font, w, h, offset, options, cursor, info);
+        // Update the selection info
+        info.selectionStart=tf.selectionStart;
+        info.selectionLength=tf.selectionLength;
+
 
         Text.paintText(info, g, str, font, fgColor, 0xffffff - fgColor,
                        w, h, offset, options, cursor);
         
-        // just correct cursor index if the charracter has
+        // just correct cursor index if the character has
         // been already committed 
         if (str != null && str.length() > 0) {
             getBufferString(new DynamicCharacterArray(str),
@@ -339,7 +345,7 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
         height -= ((2 * TextFieldSkin.BOX_MARGIN) +     
                    (inputModeIndicator.getDisplayMode() != null ?
                     Font.getDefaultFont().getHeight() : 0));
-
+                    
         if (editable) {
             if (TextFieldSkin.IMAGE_BG != null) {
                 CGraphicsUtil.draw9pcsBackground(g, 0, 0, width, height,
@@ -683,6 +689,13 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
         return EventConstants.SYSTEM_KEY_SELECT ==
             KeyConverter.getSystemKey(keyCode);
     }
+    
+    /**
+     * Returns true to indicate this field accepts enter characters.
+     * Overridden to return true in TextBoxLFImpl.java
+     */
+		public boolean isMultiLine() {
+			return true; }
 
 
 

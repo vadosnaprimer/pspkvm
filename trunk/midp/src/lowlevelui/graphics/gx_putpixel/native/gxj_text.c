@@ -79,9 +79,12 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndex;
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
-    unsigned short CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
+    unsigned short CJK = c0;
+    if (c0 >= 0x0200) {
+    	// Transform doesn't work for Unicode page 0
+    	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 		                     ((short*)UNI_CJK)[c0]:
-	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8);
+	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
 	  // Whatever else is going on here, we can confirm that this operation DOES NOT WORK
 	  // for many characters in 0x0080 - 0x00ff -- and an easy fix is not to do it
 	  // for the entire Unicode page. Note also that it's probably bad news for the first
@@ -140,7 +143,7 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 }
 
 
-#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<256?1:2][FONT_WIDTH])
+#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<512?1:3][FONT_WIDTH])
 	
 /*
  * Draws the first n characters specified using the current font,
