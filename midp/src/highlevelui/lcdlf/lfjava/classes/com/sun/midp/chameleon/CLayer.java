@@ -409,6 +409,15 @@ public class CLayer {
     }
 
     /**
+     * Determine if this layer supports raw key input events
+     *
+     * @return true if this layer supports handling raw key input events
+     */
+    public boolean supportsRawKeyInput() {
+        return false;
+    }
+
+    /**
      * Toggle the ability of this layer to receive input.
      *
      * @param support If true, this layer will receive user input events

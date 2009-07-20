@@ -934,7 +934,9 @@ class TextFieldLFImpl extends ItemLFImpl implements
 
         if (hasFocus) {
             newXOffset = Text.paintLine(g, str, font, fgColor,
-                                        w, h, cursor, offset);
+                                        w, h, cursor, offset,
+																				tf.getSelectionLow(),
+																				tf.getSelectionHigh());
         } else {
             Text.drawTruncString(g, str, font, fgColor, w);
             newXOffset = 0;
@@ -1517,7 +1519,7 @@ class TextFieldLFImpl extends ItemLFImpl implements
         default:
             break;
         }
-        
+        lRequestPaint();
         return keyUsed;
     }
 
@@ -2070,6 +2072,13 @@ class TextFieldLFImpl extends ItemLFImpl implements
         }
         return ret;
     }
+    
+    /**
+     * Returns true to indicate this field accepts enter characters.
+     * Overridden to return true in TextBoxLFImpl.java
+     */
+		public boolean isMultiLine() {
+			return false; }		 		     
 
     
 } // TextFieldLFImpl

@@ -74,7 +74,9 @@ typedef enum {
    /** Key repeated */
    JAVACALL_KEYREPEATED = 3,
    /** Key typed - for internal use */
-   JAVACALL_KEYTYPED = 4
+   JAVACALL_KEYTYPED = 4,
+   /** Raw key status -- for internal use */
+   JAVACALL_RAW_KEY_STATUS = 5
 } javacall_keypress_type;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * $LastChangedDate: 2005-11-21 02:11:20 +0900 (ì›? 21 11 2005) $  
+ * $LastChangedDate: 2005-11-21 02:11:20 +0900 (8›? 21 11 2005) $  
  *
  * Copyright  1990-2006 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -58,6 +58,8 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
     Image[] metaKeys = null;
     boolean textKbd = false;
     Font f;
+    
+    boolean select_active=false;
 
     /**
      * Virtual Keyboard constructor.
@@ -79,6 +81,7 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return;
 	}
+				select_active=false;
         
         textKbd = displayTextArea;
         if(textKbd){
@@ -175,7 +178,7 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
         fullColumns = keys[currentKeyboard].length / maxColumns;
         //need not be displayed in the canvas mode
         if(displayTextArea){  //hk
-            metaKeys = new Image[7];
+            metaKeys = new Image[10];
             metaKeys[OK_META_KEY] = Image.createImage(ok,0,ok.length);
             metaKeys[CANCEL_META_KEY] = Image.createImage(cancel,0,cancel.length);
             metaKeys[BACKSPACE_META_KEY] = Image.createImage(backspace,0,backspace.length);
@@ -183,6 +186,12 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
             metaKeys[CAPS_META_KEY] = Image.createImage(caps,0,caps.length);
             metaKeys[MODE_META_KEY] = Image.createImage(mode,0,mode.length);
             metaKeys[CNINPUT_META_KEY] = Image.createImage(cn,0,cn.length);
+            metaKeys[CPY_META_KEY] = LongArrayHandler.createImage(Imgs_qw_clip.cpy_seg,
+							Imgs_qw_clip.cpy_segpad);
+            metaKeys[PST_META_KEY] = LongArrayHandler.createImage(Imgs_qw_clip.pst_seg,
+							Imgs_qw_clip.pst_segpad);
+            metaKeys[SEL_META_KEY] = LongArrayHandler.createImage(Imgs_qw_clip.sel_seg,
+							Imgs_qw_clip.sel_segpad);
         }
      }
 
@@ -317,6 +326,12 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
 		    case CNINPUT_META_KEY: //"cn_input"
 		       vkl.virtualMetaKeyEntered(CNINPUT_META_KEY);
 		       break;
+		    case SEL_META_KEY:
+		    case CPY_META_KEY:
+		    case PST_META_KEY:
+		       vkl.virtualMetaKeyEntered(currentMeta);
+		       break;
+
 		    }
 		}
             }
@@ -1214,11 +1229,14 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
     final static int SHIFT_META_KEY = 4;
     final static int CAPS_META_KEY = 5;
     final static int CNINPUT_META_KEY = 6;
-    final static int CURSOR_UP_META_KEY = 7;
-    final static int CURSOR_DOWN_META_KEY = 8;
-    final static int CURSOR_LEFT_META_KEY = 9;
-    final static int CURSOR_RIGHT_META_KEY = 10;
-    final static int CNINPUT_SELECT_META_KEY = 11;
+    final static int CPY_META_KEY = 7;
+    final static int PST_META_KEY = 8;
+    final static int SEL_META_KEY = 9;
+    final static int CURSOR_UP_META_KEY = 10;
+    final static int CURSOR_DOWN_META_KEY = 11;
+    final static int CURSOR_LEFT_META_KEY = 12;
+    final static int CURSOR_RIGHT_META_KEY = 13;
+    final static int CNINPUT_SELECT_META_KEY = 14;
 
     //When input method is changed, process this key to update UI 
     final static int IM_CHANGED_KEY = 99;

@@ -64,6 +64,12 @@ public class TextInfo {
 
     /** the height of the block of text described by this object */
     public int height;
+    
+    /** the start of the selection */
+    public int selectionStart;
+    
+    /** the length of the selection */
+    public int selectionLength;
 
     /** scroll up */
     public final static int BACK = 1;
@@ -84,6 +90,8 @@ public class TextInfo {
 	scrollX = true;
 	lineStart = new int[size];
 	lineEnd = new int[size];
+	selectionStart=0;
+	selectionLength=0;
     }
 
     /**
@@ -210,6 +218,18 @@ public class TextInfo {
             return (visLines * 100) / numLines;
         }
     }
+    
+    /** Guaranteed to return the earliest selection point */
+    public int getSelectionPtA() {
+    	if (selectionLength<0) {
+				return selectionStart+selectionLength; }
+			return selectionStart; }
+			
+		/** Guaranteed to return the latest selection point */
+		public int getSelectionPtB() {
+			if (selectionLength<0) {
+				return selectionStart; }
+			return selectionStart+selectionLength; }
 }    
 
 
