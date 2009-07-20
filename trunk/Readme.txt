@@ -184,8 +184,20 @@ Running tips
 	Direction Keys (Analog stick by default)-> Move cursor
 	CLEAR (SHIFT+CROSS by default)          -> Backspace
 	0 (CROSS by default)                    -> Delete Pinyin (in Chinese input method)
+	SEL, CPY, and PST (Select, copy, and paste) may be found in the 'Edit' key grouping.
 	
-- Use FreeType2 font files
+- Semichordal virtual keyboard input tips
+
+  Set com.pspkvm.inputmethod = vk-semichordal in pspkvm.ini to enable the semichordal board.
+  D-pad (arrow) and left shoulder buttons set the 'live' chord; right-pad (triangle, square, circle, and cross keys) enter characters/execute other functions. For alphabetic characters, the right shoulder acts as a shift key.
+	Characters are generally grouped according to their frequency of usage, with the more commonly used ones (using English character frequencies) in the easier positions.
+  'Toggle display mode' in the right hand menu, and the 'DSP' key (Left-shoulder, up-right DPAD, square) toggle between display modes, two of which offer instant help on which keys are currently 'live'. The 'full' display shows half the board at once (the half corresponding to the current position of the left shoulder button), and highlights your live chord. The 'partial' display just shows the currently live chord. The hidden display shows nothing, and is useful if you really know the board well enough. Feedback in all the displays is instant--as you shift on the chordal keys, the display will change to show you what's live.
+  'SEL' (select) is latching. Press once to turn select mode on; the selection will be between the current cursor and where you where when you pressed it. Pres it a second time to kill the selection without doing anything with it. Editing 'on top' of a selection (copying into it, or entering text with the selection live, or hitting delete or backspace) will also kill the selection, as in normal word processing usage.
+  DEL deletes to the right of the cursor, BSP to the left, as in normal word processing usage.
+  For accents and other diacritical marks, enter the base character, and then the diacritical. As in, for e accent ague, enter an e, and then press the accent ague diacritical key--this is the key (on Left-shoulder-top-left-dpad-square) with the accent over an 'x'. All the diacritical keys are currently in this area.
+  The clipboard is also supported in the semichordal board--see CPY and PST (copy and paste).
+
+	- Use FreeType2 font files
 	You can have 3 type of fonts: System, Proportional and Monospace. Copy your .ttf files into ms0:/PSP/GAME/PSPKVM and rename them as below:
 	System font: sys.ttf
 	Proportional font: pro.ttf
