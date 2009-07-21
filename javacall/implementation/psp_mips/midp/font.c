@@ -82,6 +82,7 @@ static FT_Library  library = NULL;
 //static FTC_ImageCache image_cache;
 //static FTC_SBitCache sbit_cache;
 
+// This is the old alpha blend--it's not used anymore; can be dyked out in next checkin
 #define ALPHA_BLEND_OLD \
 *point = *fontpoint>128?color:(*fontpoint>1?(javacall_pixel)((((unsigned long) color + (unsigned long) *point) ^  \
     	                                                    (unsigned long)((color ^ *point) & 0x0821))  \
@@ -90,6 +91,11 @@ static FT_Library  library = NULL;
  *** BEGIN new ALPHA_BLEND system
  *** NB: Call ALPHA_BLEND_PREP first, then ALPHA_BLEND repeatedly -- see
  *** draw_bitmap(...) calls.
+ ***
+ *** Comparative: old one was 1 addition, two xors, 1 and, 1 shift (per pixel),
+ *** new one is 6 multiplications, 6 shifts, 6 ands, 3 ors, 3 additions, 1 subtraction.
+ *** All operations are integer. Seems to run fast enough for dense text, anyway. 
+ *** Did testing at default CPU speeds.
  ***  
  *** This is a true 'per-component' blend, doing all the multiplies as integers,
  *** and using approximate shifts in place of the divisions--see blend_component(...).
@@ -103,7 +109,7 @@ const javacall_pixel redmask = 0xf800;
 const javacall_pixel greenmask = 0x7e0;
 const javacall_pixel bluemask = 0x1f;
 
-// Blend a single component--needs the alpha intensity (0-255), a premasked 
+// Blend a single component--needs the alpha intensity (0-255), 255-this value, a premasked 
 // color component (see ALPHA_BLEND_PREP), the tgt pixel (prezeroed), a copy of the tgt
 // pixel (with source colour values intact) and the mask for this color component.
 
@@ -112,6 +118,7 @@ const javacall_pixel bluemask = 0x1f;
 // intensities) are done short circuit, we still do get true colours at either end of
 // the blend--just miss a few values just beneath full intensity. Should be imperceptible.
 inline void blend_component(unsigned char alpha_intensity,
+	unsigned char n_alpha_intensity,
 	javacall_pixel color_c,
 	javacall_pixel tgt_cpy,
 	javacall_pixel* tgt,
@@ -119,7 +126,7 @@ inline void blend_component(unsigned char alpha_intensity,
 		// We don't shift to zero prior to the multiply because it appears these are done
 		// 32-bit on the PSP anyway, so there's room at the top of the bitfield for the product
 		// even for the red component. 
-		javacall_pixel c2 = (((tgt_cpy) & cmask) * (255-alpha_intensity)) >> 8;
+		javacall_pixel c2 = ((tgt_cpy & cmask) * n_alpha_intensity) >> 8;
 		javacall_pixel c1 = (color_c * alpha_intensity) >> 8;
 		javacall_pixel blend = c1+c2;
 		blend &= cmask;
@@ -133,7 +140,8 @@ inline void blend_component(unsigned char alpha_intensity,
 		javacall_pixel color_b = color & bluemask;
 
 // Drop-in-replacement macro for the legacy alpha blend
-// Short-circuits around pure intensities/simple copies    	                                                     
+// Short-circuits around pure intensities/simple copies,
+// and then calls alpha_blend_smooth(...)    	                                                     
 #define ALPHA_BLEND \
 	if (*fontpoint != 0) { \ 
 		if (*fontpoint == 255) { \
@@ -152,10 +160,11 @@ void alpha_blend_smooth(unsigned char alpha_intensity,
 	javacall_pixel* tgt) {
 		javacall_pixel tgt_cpy = * tgt;
 		*tgt = 0;
+		unsigned char n_alpha = 255-alpha_intensity;		
 		// This is about as prettily as it can be done.
-		blend_component(alpha_intensity, color_r, tgt_cpy, tgt, redmask);
-		blend_component(alpha_intensity, color_g, tgt_cpy, tgt, greenmask);
-		blend_component(alpha_intensity, color_b, tgt_cpy, tgt, bluemask); }
+		blend_component(alpha_intensity, n_alpha, color_r, tgt_cpy, tgt, redmask);
+		blend_component(alpha_intensity, n_alpha, color_g, tgt_cpy, tgt, greenmask);
+		blend_component(alpha_intensity, n_alpha, color_b, tgt_cpy, tgt, bluemask); }
 
 /*
  *** END new ALPHA_BLEND system
