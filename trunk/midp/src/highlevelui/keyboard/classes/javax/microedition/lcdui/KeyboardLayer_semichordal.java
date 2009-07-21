@@ -50,9 +50,14 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	    if (vk==null) {
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
-				
 			setBounds();
-			setupCommands(); }
+			setupCommands();
+			if (tfContext.isMultiLine() &&
+				(getAvailableWidth()>=vk.getWidth()) &&
+				(getAvailableHeight()>=vk.getHeight())) {
+					// If it's a multiline text field, and if there's room,
+					// start with the large display.
+				vk.setLargeDisplay(); } }
 		
 	/**
      * Setup as a command listener for external events.
@@ -247,6 +252,12 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return false; }
       if (code == EventConstants.SOFT_BUTTON2) {
 				return false; }
+			// Remaining keypress events go through the vk's standard
+			// event handler
+			if (((MIDPWindow)owner).systemMenuUp()) {
+				// Annoyingly, these arrive even when the system menu is up. Ignore them.
+				return true; }
+			vk.processStandardKeyEvent(type, code);
       return true; }
 
 		// Process a raw event into a keystroke--masking for upstrokes,
