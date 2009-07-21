@@ -3,7 +3,7 @@ ROOT = ..
 endif
 
 TARGET = pspkvm
-OBJS = pspkvm.o vram.o sceUsbGps.o
+OBJS = pspkvm.o vram.o sceUsbGps.o pspkvm.map
 
 INCDIR = 
 CFLAGS = -G0 -Wall -fno-strict-aliasing -I$(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/inc
@@ -30,7 +30,7 @@ LIBDIR = /usr/local/pspdev/psp/lib $(ROOT)/midp/build/javacall_psp/output/bin/mi
 LIBS := -lSDL -lSDL_mixer -lpsphprm -lvorbis -lvorbisfile -logg -lpspaudiolib -lpspaudio -lpsppower -lpspgu -lpspusb -lpsprtc -lfreetype -lm -Wl,--end-group 
 LIBS := -Wl,--start-group -lmidp$(g) -lcldc_vm$(cg) -lpcsl_file -lpcsl_print -lpcsl_memory -lpcsl_string -lpcsl_network -ljavacall$(g) $(LIBS) 
 
-EXTRA_TARGETS = EBOOT.PBP
+EXTRA_TARGETS = EBOOT.PBP 
 ifeq ($(BUILD_SLIM), true)
 PSP_EBOOT_TITLE = pspkvm v0.5.2 OE
 #PSP_EBOOT_ICON = java-duke-guitar.png
@@ -49,3 +49,11 @@ PSP_LARGE_MEMORY=1
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include build.mak
+
+# Hack to make sure the map gets generated so build doesn't get hung up
+pspkvm.map :
+	touch pspkvm.map
+
+.phony all : EBOOT.PBP
+
+
