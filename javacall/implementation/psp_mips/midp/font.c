@@ -89,45 +89,48 @@ static FT_Library  library = NULL;
 /*
  *** BEGIN new ALPHA_BLEND system
  *** NB: Call ALPHA_BLEND_PREP first, then ALPHA_BLEND repeatedly -- see
- *** draw_bitmap(...) calls 
+ *** draw_bitmap(...) calls.
+ ***  
+ *** This is a true 'per-component' blend, doing all the multiplies as integers,
+ *** and using approximate shifts in place of the divisions--see blend_component(...).
+ *** The visual result on LCD is more than good enough even for delicate typefaces.
+ ***     
  *** /AJM 
  */   
     	                                                     
-// Channel masks and shifts for component blends
+// Channel masks for component blends
 const javacall_pixel redmask = 0xf800;
-const int redshift = 11;
 const javacall_pixel greenmask = 0x7e0;
-const int greenshift = 5;
 const javacall_pixel bluemask = 0x1f;
-const int blueshift = 0;
 
-// Blend a single component--needs the alpha intensity (0-255), a premasked and shifted
+// Blend a single component--needs the alpha intensity (0-255), a premasked 
 // color component (see ALPHA_BLEND_PREP), the tgt pixel (prezeroed), a copy of the tgt
-// pixel (with source colour values intact) and the shift to zero for this
-// color component (redshift, greenshift, or blueshift).
-// Note: This method cheats a bit -- does an 8-bit shift on each component instead of
-// dividing by 255, but this is much faster. Note also that since direct copies (for pure
+// pixel (with source colour values intact) and the mask for this color component.
+
+// Note: This method 'cheats' a bit -- does an 8-bit shift on each component instead of
+// dividing by 255, but the shift is faster. Note also that since direct copies (for pure
 // intensities) are done short circuit, we still do get true colours at either end of
-// the blend--just miss a few values right near the top. Should be imperceptible.
+// the blend--just miss a few values just beneath full intensity. Should be imperceptible.
 inline void blend_component(unsigned char alpha_intensity,
 	javacall_pixel color_c,
 	javacall_pixel tgt_cpy,
 	javacall_pixel* tgt,
-	javacall_pixel cmask,
-	int cshift) {
-		javacall_pixel c2 = ((((tgt_cpy) & cmask) >> cshift) * (255-alpha_intensity)) >> 8;
+	javacall_pixel cmask) {
+		// We don't shift to zero prior to the multiply because it appears these are done
+		// 32-bit on the PSP anyway, so there's room at the top of the bitfield for the product
+		// even for the red component. 
+		javacall_pixel c2 = (((tgt_cpy) & cmask) * (255-alpha_intensity)) >> 8;
 		javacall_pixel c1 = (color_c * alpha_intensity) >> 8;
 		javacall_pixel blend = c1+c2;
-		blend <<= cshift;
 		blend &= cmask;
 		*tgt |= blend; }
 
-// Setup macro. We decompose and preshift the color components of the font color
+// Setup macro. We decompose the color components of the font color
 // per call to draw_bitmap(...). Saves a bit of work per pixel and component.
 #define ALPHA_BLEND_PREP \
-		javacall_pixel color_r = (color & redmask) >> redshift; \
-		javacall_pixel color_g = (color & greenmask) >> greenshift; \
-		javacall_pixel color_b = (color & bluemask);
+		javacall_pixel color_r = color & redmask; \
+		javacall_pixel color_g = color & greenmask; \
+		javacall_pixel color_b = color & bluemask;
 
 // Drop-in-replacement macro for the legacy alpha blend
 // Short-circuits around pure intensities/simple copies    	                                                     
@@ -149,10 +152,10 @@ void alpha_blend_smooth(unsigned char alpha_intensity,
 	javacall_pixel* tgt) {
 		javacall_pixel tgt_cpy = * tgt;
 		*tgt = 0;
-		// This is as prettily as it can be done. Might be too slow, tho'.
-		blend_component(alpha_intensity, color_r, tgt_cpy, tgt, redmask, redshift);
-		blend_component(alpha_intensity, color_g, tgt_cpy, tgt, greenmask, greenshift);
-		blend_component(alpha_intensity, color_b, tgt_cpy, tgt, bluemask, blueshift); }
+		// This is about as prettily as it can be done.
+		blend_component(alpha_intensity, color_r, tgt_cpy, tgt, redmask);
+		blend_component(alpha_intensity, color_g, tgt_cpy, tgt, greenmask);
+		blend_component(alpha_intensity, color_b, tgt_cpy, tgt, bluemask); }
 
 /*
  *** END new ALPHA_BLEND system
