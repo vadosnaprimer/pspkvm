@@ -155,10 +155,7 @@ void alpha_blend_smooth(unsigned char alpha_intensity,
 		blend_component(alpha_intensity, color_b, tgt_cpy, tgt, bluemask, blueshift); }
 
 /*
- *** BEGIN new ALPHA_BLEND system
- *** NB: Call ALPHA_BLEND_PREP first, then ALPHA_BLEND repeatedly -- see
- *** draw_bitmap(...) calls 
- *** /AJM 
+ *** END new ALPHA_BLEND system
  */   
 
 FT_CALLBACK_DEF( FT_Error )  
