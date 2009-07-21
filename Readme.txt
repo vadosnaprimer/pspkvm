@@ -1,5 +1,5 @@
 pspkvm v0.5.2+ (README edited since 0.5.2 release)
-20 July 2009
+21 July 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -13,15 +13,16 @@ Project home on SF:
 --------------------------------
 Change log (current source)
 --------------------------------
-- Bugfix for 'Default CPU speed setting doesn't work' (2812036)
-- Bugfix for Sony Ericsson 480x272 profile issue (2812032)
-- Bugfix for 'QWERTY board opens allcaps' (2806367)
+- Bugfix for 'Default CPU speed setting doesn't work' (tracker ID 2812036)
+- Bugfix for Sony Ericsson 480x272 profile issue (tracker ID 2812032)
+- Bugfix for 'QWERTY board opens allcaps' (tracker ID 2806367)
 - Bugfix makes available missing top half of Unicode page 0 in built-in font
 	(Adds common accents incl. acute, grave, circumflex, umlaut over Roman characters)
 - Added most of Unicode page 1 (Latin Extended 1) to built-in font
 	(Adds less common accents and characters for most languages using Roman alphabets)
 - Added clipboard/text selection support to the virtual keyboards
-- Added a semichordal virtual keyboard implementation (fast input, diacritics support)
+- Added interface so MIDlets can request and receive events signalling raw PSP control state
+- Added a semichordal virtual keyboard implementation (fast input, diacritics support). See notes below re use.
 
 
 -----------------------------------
@@ -40,11 +41,11 @@ Changes in previous release (0.5.2)
 --------------------------------
 General information
 --------------------------------
-PSPKVM is a PSP port of Sun's open-source JavaME implementation phoneMEFeature. The project description below is copied from the phoneME website:
+PSPKVM is a PSP port of Sun's open-source JavaME implementation phoneMEFeature. The project description below is as it appears on the phoneME website:
 
 	The objective of the phoneME project is to further expand the usage of Java Platform, Micro Edition (Java ME platform) technology in the mobile handset market. The project scope includes a focus on the mainstream feature phone segment with phoneME Feature software, and the emerging advanced phone segment with phoneME Advanced software. Our goal in making these technologies available to the Mobile & Embedded Community is to reduce implementation variation, increase the rate of innovation and enable new devices to leverage the power of the Java ME platform.
 	
-The phoneME website is here: https://phoneme.dev.java.net/
+The phoneME website is at: https://phoneme.dev.java.net/
 
 The goal of the pspkvm project is to port the phoneMEFeature project to the Sony PSP game console. If you're seeking a phoneMEAdvanced port for the PSP, please see the project here: https://sourceforge.net/projects/pspme
 
@@ -110,28 +111,31 @@ Run from binary bundle
 Building instructions
 --------------------------------
 For those interested in the source code:
-0. You have to prepare the build environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup
+
+1. You have to prepare the build environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup*
 
 Now assuming you have installed the build environment by following the above instructions, in Cygwin:
-1. Retrieve the source code via svn to a local directory*
-2. cd ${your_source_dir}
-3. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
-4. ./build-psp-cldc.sh
+2. Retrieve the source code via svn to a local directory**
+3. cd ${your_source_dir}
+4. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
+5. ./build-psp-cldc.sh
 Now you should see the success message following the building of the phoneME libs.
-5. cd psp
-6. Make the executable:**
+6. cd psp
+7. Make the executable:***
 - If building for the 1.50 kernel:
     make kxploit
     You should get pspkvm and pspkvm% directories in this directory, just copy them to your PSP's /PSP/GAME or /PSP/GAME150 directory.
 - If building for 3.xx OE:
     make BUILD_SLIM=true
-    You should get EBOOT.PBP in this directory, copy it to your PSP's /PSP/GAME/pspkvm directory
-7. Copy the "lib" and "appdb" directories from ${your_source_dir}/midp/build/javacall_psp/output/ into your PSP's /PSP/GAME/pspkvm directory
-8. unzip midi_res.zip to your PSP's /PSP/GAME/pspkvm directory (If you need MIDI support)
+    This will build an EBOOT.PBP binary in this directory. Copy it to your PSP's /PSP/GAME/pspkvm directory.
+8. Copy the "lib" and "appdb" directories from ${your_source_dir}/midp/build/javacall_psp/output/ into your PSP's /PSP/GAME/pspkvm directory
+9. unzip midi_res.zip to your PSP's /PSP/GAME/pspkvm directory (If you need MIDI support)
 
-* Note: you may have difficulty building the port with certain directory arrangements, due to Windows-based Java code failing properly to parse Posix-style Cygwin file paths. To avoid/correct this, place your pspkvm installation in a high or root directory, and mount it in Cygwin in such a fashion that the Posix and DOS paths wind up being the same thing. For example, place the pspkvm directory in the root of the C: drive (as in, in C:\pspkvm), then mount this directory on /pspkvm in Cygwin, with a command such as mount c:/pspkvm /pspkvm . Then run build-psp-cldc.sh from /pspkvm within Cywgin--the root directory should default to /pspkvm, and building should proceed correctly.
+* Note: you do not necessarily have to use the prepared Cygwin distribution suggested by these instructions, but this is probably the easiest approach if you do not already have a Cygwin distribution installed. If you wish to attempt to build the project with your current Cygwin installation, however, you will probably at least have to roll back your make binary to version 3.80 (assuming you have a more recent version), as make 3.81 and later do not handle DOS-style paths correctly in makefiles, and the phoneME build system requires a make that does.
 
-** Note: you will also need the PSP homebrew development toolchain and the pspsdk to build the binary for the PSP (step 6). As of this writing, both are available from http://ps2dev.org/psp/Tools/Toolchain/.
+** Note: you may have difficulty building the port with certain directory arrangements, due to Windows-based Java code failing properly to parse Posix-style Cygwin file paths. To avoid/correct this, place your pspkvm installation in a high or root directory, and mount it in Cygwin in such a fashion that the Posix and DOS paths wind up being the same thing. For example, place the pspkvm directory in the root of the C: drive (as in, in C:\pspkvm), then mount this directory on /pspkvm in Cygwin, with a command such as mount c:/pspkvm /pspkvm . Then run build-psp-cldc.sh from /pspkvm within Cywgin--the project root directory should default to /pspkvm, and building should proceed correctly.
+
+*** Note: you will also need the PSP homebrew development toolchain and the pspsdk to build the binary for the PSP (step 7). As of this writing, both are available from http://ps2dev.org/psp/Tools/Toolchain/.
 
 Requirements (pspsdk-specific libraries, also available from pspdev.org)
     SDL_mixer
