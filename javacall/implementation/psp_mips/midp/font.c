@@ -82,10 +82,62 @@ static FT_Library  library = NULL;
 //static FTC_ImageCache image_cache;
 //static FTC_SBitCache sbit_cache;
 
-#define ALPHA_BLEND \
+#define ALPHA_BLEND_OLD \
 *point = *fontpoint>128?color:(*fontpoint>1?(javacall_pixel)((((unsigned long) color + (unsigned long) *point) ^  \
     	                                                    (unsigned long)((color ^ *point) & 0x0821))  \
     	                                                     >> 1):*point);point++;fontpoint++;
+    	                                                     
+const javacall_pixel redmask = 0xf800;
+const int redshift = 11;
+const javacall_pixel greenmask = 0x7e0;
+const int greenshift = 5;
+const javacall_pixel bluemask = 0x1f;
+const int blueshift = 0;
+
+// Blend a single component--needs the alpha intensity (0-255), a premasked and shifted
+// color component (see ALPHA_BLEND_PREP), the tgt pixel and the shift to zero for this
+// color component (redshift, greenshift, or blueshift). Note: cheats a bit; does an
+// 8-bit shift on each component instead of dividing by 255; but is faster.
+inline void blend_component(unsigned char alpha_intensity,
+	javacall_pixel color_c,
+	javacall_pixel* tgt,
+	javacall_pixel cmask,
+	int cshift) {
+		javacall_pixel c2 = ((((*tgt) & cmask) >> cshift) * (255-alpha_intensity)) >> 8;
+		javacall_pixel c1 = (color_c * alpha_intensity) >> 8;
+		javacall_pixel blend = c1+c2;
+		blend <<= cshift;
+		blend &= cmask;
+		*tgt &= (0xffff ^ cmask);
+		*tgt |= blend; }
+
+// We decompose and preshift the color components per color; saves a bit of work
+#define ALPHA_BLEND_PREP \
+		javacall_pixel color_r = (color & redmask) >> redshift; \
+		javacall_pixel color_g = (color & greenmask) >> greenshift; \
+		javacall_pixel color_b = (color & bluemask);
+
+// Drop-in-replacement macro for the legacy alpha blend    	                                                     
+#define ALPHA_BLEND \
+	if (*fontpoint != 0) { \ 
+		if (*fontpoint == 255) { \
+			*point = color; } \
+		else { \
+				alpha_blend_smooth(*fontpoint, color_r, color_g, color_b, point); } } \
+		 point++; fontpoint++;
+
+// Blends preshifted/separated color in _r, _g, _b onto tgt according to
+// intensity (0 to 255). Note: do not call for 0 or 255; this is inefficient.
+// See the ALPHA_BLEND macro for filtering these out.
+void alpha_blend_smooth(unsigned char alpha_intensity,
+	javacall_pixel color_r,
+	javacall_pixel color_g,
+	javacall_pixel color_b,
+	javacall_pixel* tgt) {
+		// This is as prettily as it can be done. Might be too slow, tho'.
+		blend_component(alpha_intensity, color_r, tgt, redmask, redshift);
+		blend_component(alpha_intensity, color_g, tgt, greenmask, greenshift);
+		blend_component(alpha_intensity, color_b, tgt, bluemask, blueshift); }
 
 FT_CALLBACK_DEF( FT_Error )  
 my_face_requester( FTC_FaceID  face_id,
@@ -387,6 +439,7 @@ static void draw_bitmap( FT_Bitmap*  bitmap, javacall_pixel color,
     	     bitOffset += (pitch - xnum);
     	 }
     } else {
+    		ALPHA_BLEND_PREP
         unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width + xoffset;
     
         int block = xnum / 8;
