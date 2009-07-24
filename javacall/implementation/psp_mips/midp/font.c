@@ -35,6 +35,7 @@ extern "C" {
 #include FT_FREETYPE_H    
 #include FT_GLYPH_H
 #include FT_CACHE_H
+#include "alpha_blend.h"
 
 #define CACHE_SIZE 128
 #define CACHE2_SIZE 1024
@@ -82,10 +83,30 @@ static FT_Library  library = NULL;
 //static FTC_ImageCache image_cache;
 //static FTC_SBitCache sbit_cache;
 
+/** Local alpha blend macros
+ */
+	
+// Setup macro. We decompose the color components of the font color
+// per call to draw_bitmap(...). Saves a bit of work per pixel and component.
+#define ALPHA_BLEND_PREP \
+		javacall_pixel color_r = color & _sab_redmask; \
+		javacall_pixel color_g = color & _sab_greenmask; \
+		javacall_pixel color_b = color & _sab_bluemask;
+
+// Drop-in-replacement macro for the legacy alpha blend
+// Short-circuits around pure intensities/simple copies,
+// and then calls alpha_blend_smooth(...)    	                                                     
 #define ALPHA_BLEND \
-*point = *fontpoint>128?color:(*fontpoint>1?(javacall_pixel)((((unsigned long) color + (unsigned long) *point) ^  \
-    	                                                    (unsigned long)((color ^ *point) & 0x0821))  \
-    	                                                     >> 1):*point);point++;fontpoint++;
+	if (*fontpoint != 0) { \
+		if (*fontpoint == 255) { \
+			*point = color; } \
+		else { \
+				alpha_blend_smooth(*fontpoint, color_r, color_g, color_b, point); } } \
+		 point++; fontpoint++;
+
+/***
+ *** End alpha blending support
+ ***/
 
 FT_CALLBACK_DEF( FT_Error )  
 my_face_requester( FTC_FaceID  face_id,
@@ -388,6 +409,7 @@ static void draw_bitmap( FT_Bitmap*  bitmap, javacall_pixel color,
     	 }
     } else {
         unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width + xoffset;
+        ALPHA_BLEND_PREP
     
         int block = xnum / 8;
         int rem  = xnum % 8;
