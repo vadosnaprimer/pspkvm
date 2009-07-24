@@ -186,8 +186,7 @@ Running tips
 	
 - Multitasking
 	In any application, pressing Left Trigger+Right Trigger+Triangle will send the currently running MIDlet to the background, and the AMS screen will be shown. The backgrounded MIDlet is shown highlighted, and you can choose another MIDlet to run without stopping the previous MIDlet. To bring a midlet running in the background to the foreground, just click the MIDlet item from AMS.
-iy
-	Note that currently we only allow two MIDlets to run at the same time; more will be allowed in the future.
+
 	
 - Connect to network
 	Before a Java MIDlet can use the network, you need to connect your PSP to a WiFi hub. To do this, select "Network Setup" in the AMS (the second item in the AMS MIDlets list). All the WiFi connections you've set up on your PSP will be listed. Select one and wait for an alert popup telling you the connection attempt has been successful. Once the message "Successfully connected by profile xxx" appears, your network is ready, and you can go back to the AMS and run MIDlets that use the network.
