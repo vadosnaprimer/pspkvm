@@ -87,18 +87,11 @@ javacall_result javacall_font_set_font( javacall_font_face face,
  * @return <tt>JAVACALL_OK</tt> if font rendered successfully, 
  *         <tt>JAVACALL_FAIL</tt> or negative value on error or not supported
  */
-javacall_result javacall_font_draw(javacall_pixel   color, 
-                        int                         clipX1, 
-                        int                         clipY1, 
-                        int                         clipX2, 
-                        int                         clipY2,
-                        javacall_pixel*             destBuffer, 
-                        int                         destBufferHoriz, 
-                        int                         destBufferVert,
-                        int                         x, 
-                        int                         y, 
-                        const javacall_utf16*     text, 
-                        int                         textLen){
+javacall_result javacall_font_draw(javacall_pixel color, 
+                        int clipX1, int clipY1, int clipX2, int clipY2,
+                        javacall_pixel* destBuffer,
+												int destBufferHoriz, int destBufferVert,
+                        int x, int y, const javacall_utf16* text, int textLen){
     return ftc_javacall_font_draw(color, clipX1, clipY1, clipX2, clipY2,
 			destBuffer, destBufferHoriz, destBufferVert, x, y, text, textLen); }
     
@@ -146,11 +139,11 @@ javacall_result javacall_font_get_info( javacall_font_face  face,
  * @param charArraySize The number of character to be measured
  * @return total advance width in pixels (a non-negative value)
  */
-int javacall_font_get_width(javacall_font_face     face, 
-                            javacall_font_style    style, 
-                            javacall_font_size     size,
+int javacall_font_get_width(javacall_font_face face, 
+                            javacall_font_style style, 
+                            javacall_font_size size,
                             const javacall_utf16* charArray, 
-                            int                    charArraySize) {
+                            int charArraySize) {
 	int r = ftc_javacall_font_get_width(face, style, size, charArray, charArraySize);
   if (r==-1) {
 		return ftc_javacall_font_get_width(JAVACALL_FONT_FACE_SYSTEM,
