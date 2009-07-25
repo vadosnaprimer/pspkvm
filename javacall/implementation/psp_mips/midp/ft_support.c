@@ -155,9 +155,6 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
   if (current_ic.face_id==NULL) {
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
-	// NB: This assignment relies on the fact that we set height when we set the font.
-	// If anyone changes it to width, and leaves the height at zero, this code
-	// will break.
 	FTC_SBit irec;
   for(i=0; i<textLen; i++) {
 		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, current_ic.face_id, -1, text[i]);
