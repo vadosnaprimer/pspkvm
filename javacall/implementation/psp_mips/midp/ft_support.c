@@ -1,11 +1,12 @@
 #include "ft_support.h"
 #include "alpha_blend.h"
 /*
-	FreeType2 caching support layer for the javacall_font* implementations
+	FreeType2 caching support layer for the javacall_font implementations
 	for the PSP
 	(Vastly faster, less RAM-hungry than the legacy layer was/is, allows use of massive
 	 Unicode fonts like the FreeFont project sets, but seems less tolerant of odd metrics
-	 than was the old code--seems to have particular trouble with older TTF files.)
+	 than was the old code--seems to have particular trouble with older TTF
+	 files ... in progress.
 	AJ Milne for the PSPKVM project / 2009 07
 */
 
@@ -15,9 +16,9 @@ static FTC_Manager cache_manager;
 static FTC_CMapCache cmap_cache;
 static FTC_SBitCache sbit_cache;
 
-/* State: cache managers have been initialized */
+/* State: lib, cache managers have been initialized */
 static int _ftc_initialized=0;
-/* State: use internal font flag */
+/* State: use internal font flag (bypass freetype entirely) */
 static int _ftc_use_internal_font = 0;
 /* State: static font sizes */
 static int _ftc_small = 0;
@@ -27,24 +28,17 @@ static int _ftc_large = 0;
 /* State: current font settings */
 static FTC_ScalerRec current_ic;
 
-/***
- *** Predeclares to make this a bit easier to compile
-*/
 
-
-/* Retrieve the face ID corresponding to a face spec */
+// Predeclare--retrieve the face ID corresponding to a face spec
 FTC_FaceID get_face_id(javacall_font_face face,
 	javacall_font_style style);
-/** Library init */
+// Predeclare--lib/cache manager init routine
 FT_Error init_font_cache_subsystem();
-/** Rendering support **/
+// Predeclare--rendering support
 static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 	                             int clipX1, int clipY1, int clipX2, int clipY2,
 	                             javacall_pixel* destbuf, 
 	                             int w, int h, int x, int y, FT_Pixel_Mode mode);
-/***
- *** End predeclares
- */
 
 // Face pixel size request calculation layer
 
@@ -108,9 +102,9 @@ int ftc_get_size_to_req(javacall_font_face face,
 	face_pixel_size_cache[get_size_cache_slot(face, style, size)] = res;
 	return res; }
 
-// Metrics macros
+// Metrics macros/inlines/routines
 
-// Macro thing to set an FTC_ScalerRec structure consistently.  
+// Inline to set an FTC_ScalerRec structure consistently.  
 inline void set_scaler_rec(FTC_ScalerRec* r,
                      javacall_font_face face, 
                      javacall_font_style style, 
@@ -132,26 +126,25 @@ int size_param_to_pixels(javacall_font_size s) {
 		default:
 			return _ftc_medium; } }
 
-// Direct interface implementations
-			
 /** I have no idea where this number comes from -- was in the legacy source,
  ** appears to be necessary here, but then a lot of this rendering comes
  ** from there, too, and is a bit opaque
  */
  #define _MYSTERY_YPAD 12  
 			
+// Direct interface implementations
 javacall_result ftc_javacall_font_draw(javacall_pixel   color, 
-                        int                         clipX1, 
-                        int                         clipY1, 
-                        int                         clipX2, 
-                        int                         clipY2,
-                        javacall_pixel*             destBuffer, 
-                        int                         destBufferHoriz, 
-                        int                         destBufferVert,
-                        int                         x, 
-                        int                         y, 
-                        const javacall_utf16*				text, 
-                        int                         textLen){
+                        int clipX1, 
+                        int clipY1, 
+                        int clipX2, 
+                        int clipY2,
+                        javacall_pixel* destBuffer, 
+                        int destBufferHoriz, 
+                        int destBufferVert,
+                        int x, 
+                        int y, 
+                        const javacall_utf16* text, 
+                        int textLen){
 
   int i;
 	if (_ftc_use_internal_font) {
@@ -162,29 +155,22 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
   if (current_ic.face_id==NULL) {
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
-	// NB: This code relies on the fact that we set height when we set the font.
-	// If anyone changes it to width, and leaves the height at zero, this set
+	// NB: This assignment relies on the fact that we set height when we set the font.
+	// If anyone changes it to width, and leaves the height at zero, this code
 	// will break.
-	int spc_gap = current_ic.height / 3;
+	FTC_SBit irec;
   for(i=0; i<textLen; i++) {
-		FTC_SBit irec;
-		if (text[i]==0x0020) {
-			// Space. Add a third of an M-width (for now)
-			// TODO: Handle other whitespace codes
-			x+=spc_gap;
-			continue; }
 		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, current_ic.face_id, -1, text[i]);
 		if (!glyph_idx) {
-			continue; }
-		if (FTC_SBitCache_LookupScaler(sbit_cache, &current_ic, FT_LOAD_RENDER,
+			return JAVACALL_FAIL; }
+		if (FTC_SBitCache_LookupScaler(sbit_cache, &current_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
-			x+=spc_gap;
-			continue; }
+			return JAVACALL_FAIL; }
 		draw_small_bitmap(irec, color, clipX1, clipY1, clipX2, clipY2,
         	               destBuffer,
         	               destBufferHoriz, destBufferVert, x, 
         	               y - irec->top + _MYSTERY_YPAD, irec->format);
-		x += irec->width; }
+		x += irec->xadvance; }
 	return JAVACALL_OK; }
 
 #define _MIN_LEADING 2			
@@ -225,12 +211,11 @@ javacall_result ftc_javacall_font_set_font( javacall_font_face face,
 	set_scaler_rec(&current_ic, face, style, size);
 	return JAVACALL_OK; }
 
-
-int ftc_javacall_font_get_width(javacall_font_face     face, 
-                            javacall_font_style    style, 
-                            javacall_font_size     size,
+int ftc_javacall_font_get_width(javacall_font_face face, 
+                            javacall_font_style style, 
+                            javacall_font_size size,
                             const javacall_utf16* charArray, 
-                            int                    charArraySize) {
+                            int charArraySize) {
 	if (_ftc_use_internal_font) {
 		return -1; }
 	if (!_ftc_initialized) {
@@ -239,26 +224,30 @@ int ftc_javacall_font_get_width(javacall_font_face     face,
 
 	FTC_ScalerRec tmp_ic;
 	set_scaler_rec(&tmp_ic, face, style, size);
-	int spc_gap = tmp_ic.height / 3;
 	int i, res;
 	unsigned int glyph_idx;
 	res=0;
+	FTC_SBit irec;
 	for(i=0; i<charArraySize; i++) {
-		if (charArray[i]==0x0020) {
-			// Space. Add a third of an M-width (for now)
-			// TODO: Handle other whitespace codes
-			res+=spc_gap;
-			continue; }
-		FTC_SBit irec;
 		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, tmp_ic.face_id, -1, charArray[i]);
 		if (!glyph_idx) {
-			continue; }
-		if (FTC_SBitCache_LookupScaler(sbit_cache, &tmp_ic, FT_LOAD_RENDER,
+			return -1; }
+		if (FTC_SBitCache_LookupScaler(sbit_cache, &tmp_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
-			res += spc_gap;
-			continue; }
-		res += irec->width; }
+			return -1; }
+		res += irec->xadvance; }
 	return res; }
+
+// Read a font setting -- pass in the config name, and a fallback
+int ftc_pixsize_fr_config(const char* cfgname, int default_sz) {
+	char* cstr;
+	int r;
+	if (javacall_get_property(cfgname,
+		JAVACALL_INTERNAL_PROPERTY, &cstr)!=JAVACALL_OK) {
+			return default_sz; }
+	if (sscanf(cstr, "%i", &r)!=1) {
+		return default_sz; }
+	return r; }
 
 // Call to set the local static font sizes, use internal
 void init_from_config() {
@@ -270,27 +259,15 @@ void init_from_config() {
 	if (_ftc_use_internal_font) {
 		// Done
 		return; }
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.fontsize.small",
-			JAVACALL_INTERNAL_PROPERTY, &str)) {
-	  if (str) {
-			_ftc_small = atoi(str); } }
-  if (JAVACALL_OK == javacall_get_property("com.pspkvm.fontsize.med",
-		JAVACALL_INTERNAL_PROPERTY, &str)) {
-	  if (str) {
-			_ftc_medium = atoi(str); } }
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.fontsize.large",
-		JAVACALL_INTERNAL_PROPERTY, &str)) {
-		if (str) {
-			_ftc_large = atoi(str); } }
-	_ftc_small = (_ftc_small>0 ? _ftc_small : 14); 
-	_ftc_medium = (_ftc_medium>0 ? _ftc_medium : 16);
-	_ftc_large = (_ftc_large>0 ? _ftc_large : 18); }
+	_ftc_small = ftc_pixsize_fr_config("com.pspkvm.fontsize.small", 14);
+	_ftc_medium = ftc_pixsize_fr_config("com.pspkvm.fontsize.med", 16);
+	_ftc_large = ftc_pixsize_fr_config("com.pspkvm.fontsize.large", 18); }
 
 /***
  *** Top level manager support 
  ***/
 
-/** Face retrieval callback */
+/** Face retrieval callback used by top level cache manager */
 FT_CALLBACK_DEF( FT_Error )  
 fts_face_requester(
 	FTC_FaceID  face_id,
@@ -303,7 +280,7 @@ fts_face_requester(
 	FT_UNUSED( request_data );
 	return FT_New_Face(lib, (const char*)face_id, 0, aface); }
 
-/** Init call */
+/** Init call--initializes the lib and the various cache managers */
 FT_Error init_font_cache_subsystem() {
 	FT_Error err;
 	init_from_config();
@@ -314,16 +291,20 @@ FT_Error init_font_cache_subsystem() {
 	if (_ftc_use_internal_font) {
 		// Don't need all this cache stuff, in this case
 		return 1; }
+	// Lib
 	err = FT_Init_FreeType(&_ftc_library);
 	if (err) {
 		return err; }
+	// Top level cache manager
 	err = FTC_Manager_New(_ftc_library, 0, 0, 0,
 		fts_face_requester, (FT_Pointer)NULL, &cache_manager);
 	if (err) {
 		return err; }
+	// Small bitmap cache manager
  	err = FTC_SBitCache_New(cache_manager, &sbit_cache);
 	if (err) {
 		return err; }
+	// Glyph(char)map cache manager
 	err = FTC_CMapCache_New(cache_manager, &cmap_cache);
 	if (err==0) {
 		_ftc_initialized=1; }
@@ -431,8 +412,9 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 				point++; }
 			point += (w - xnum);
 			bitOffset += (pitch - xnum); }
+		// End mono rendering
 		return; }
-  // Handle rendering anti-aliased fonts
+  // Handle rendering anti-aliased bitmaps
 	ALPHA_BLEND_PREP
   unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width + xoffset;
 
@@ -449,14 +431,14 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 			ALPHA_BLEND
 			ALPHA_BLEND }
 	
-	switch (rem) {
-		case 7: ALPHA_BLEND
-		case 6: ALPHA_BLEND
-		case 5: ALPHA_BLEND
-		case 4: ALPHA_BLEND
-		case 3: ALPHA_BLEND
-		case 2: ALPHA_BLEND
-		case 1: ALPHA_BLEND }
+		switch (rem) {
+			case 7: ALPHA_BLEND
+			case 6: ALPHA_BLEND
+			case 5: ALPHA_BLEND
+			case 4: ALPHA_BLEND
+			case 3: ALPHA_BLEND
+			case 2: ALPHA_BLEND
+			case 1: ALPHA_BLEND }
 	
-	point += (w - xnum);
-	fontpoint += (bitmap->width - xnum); } }
+		point += (w - xnum);
+		fontpoint += (bitmap->width - xnum); } }
