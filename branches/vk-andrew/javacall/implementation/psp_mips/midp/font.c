@@ -148,8 +148,8 @@ int javacall_font_get_width(javacall_font_face face,
   if (r==-1) {
 		return ftc_javacall_font_get_width(JAVACALL_FONT_FACE_SYSTEM,
     		                 JAVACALL_FONT_STYLE_PLAIN,
-    		                 JAVACALL_FONT_SIZE_MEDIUM, charArray, charArraySize); } }
-
+    		                 JAVACALL_FONT_SIZE_MEDIUM, charArray, charArraySize); }
+	return r; }
     
 #ifdef __cplusplus
 } //extern "C"

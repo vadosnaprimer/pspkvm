@@ -281,10 +281,9 @@ fts_face_requester(
 FT_Error init_font_cache_subsystem() {
 	FT_Error err;
 	init_from_config();
-	current_ic.face_id=NULL;
-	current_ic.height=_ftc_medium;
-	current_ic.pixel=1;
-	current_ic.width=0;
+	set_scaler_rec(&current_ic, JAVACALL_FONT_FACE_SYSTEM,
+					JAVACALL_FONT_STYLE_PLAIN,
+					JAVACALL_FONT_SIZE_MEDIUM);
 	if (_ftc_use_internal_font) {
 		// Don't need all this cache stuff, in this case
 		return 1; }
