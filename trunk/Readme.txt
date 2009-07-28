@@ -1,5 +1,5 @@
 pspkvm v0.5.2+ (README edited since 0.5.2 release)
-21 July 2009
+28 July 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -23,6 +23,7 @@ Change log (current source)
 - Added clipboard/text selection support to the virtual keyboards
 - Added interface so MIDlets can request and receive events signalling raw PSP control state
 - Added a semichordal virtual keyboard implementation (fast input, diacritics support). See notes below re use.
+- Improved alpha blending for TrueType font rendering--smoother blends.
 
 
 -----------------------------------
