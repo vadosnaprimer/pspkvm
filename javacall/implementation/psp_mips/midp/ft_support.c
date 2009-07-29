@@ -1,5 +1,6 @@
 #include "ft_support.h"
 #include "alpha_blend.h"
+#include <unistd.h>
 /*
 	FreeType2 caching support layer for the javacall_font implementations
 	for the PSP
@@ -30,16 +31,55 @@ static FTC_ScalerRec current_ic;
 
 /** Face retrieval support */
 
-/* Local constant array--used by get_face_filename
-   these are the (constant, canonical) face IDs. */
+/* Local constant array--used by initialize_face_ids()
+	and assigned (if the corresponding file is present)
+	to ftc_faceids[x] slots, then returned by get_face_id(...)
+	on demand. These are the (constant, canonical) face IDs. */
 const char* _typeface_filenames[] = {
 	"sys.ttf", "prop.ttf", "mono.ttf",
 	"sys_i.ttf", "prop_i.ttf", "mono_i.ttf",
 	"sys_b.ttf", "prop_b.ttf", "mono_b.ttf",  
 	"sys_ib.ttf", "prop_ib.ttf", "mono_ib.ttf" };
+	
+/* Ptr aliases, after resolving for fallback due to absent files--
+	point to _typeface_filenames values, according to which
+	are actually there. */
+FTC_FaceID ftc_faceids[12];
+	
+// Support for initialize_face_ids() ... picks closest present font to i
+// using the fallback array.
+FTC_FaceID pick_closest_present_font(int i, int font_file_present[]) {
+	/* Fallback routing for each of the canonical faces--
+			each points to the next one to try from here.
+			When you route back to 0 (sys plain) and it's not
+			there either, you're done */
+	static const int ftc_filename_fallbacks[] = {
+		0, 0, 0,
+		0, 3, 2,
+		0, 6, 2,
+		3, 4, 5 };
+	if ((font_file_present[i])!=0) { 
+		return (FTC_FaceID)(_typeface_filenames[i]); }
+	if (i==0) {
+		// No fallback from here
+		return (FTC_FaceID)NULL; }
+	// Otherwise, recurse
+	return pick_closest_present_font(ftc_filename_fallbacks[i], font_file_present); }
 
-// Resolve face specs to a filename--the resulting
-// constant pointer is treated as an FTC_FaceID
+// Call to set up the face IDs--called from call initing caches--if they're
+// present, so is this lookup array.
+void initialize_face_ids() {
+	// Field for which font files are present--just do one quick lookup for each
+	int font_file_present[12];
+	int i;
+	for(i=0;i<12;i++) {
+		font_file_present[i]=(access((_typeface_filenames[i]), R_OK) == 0) ? 1 : 0; }
+	// Now, for each of the menmbers ftc_faceids, go through the fallback
+	// system, and pick the closest match (or NULL, if none)
+	for(i=0;i<12;i++) {
+		ftc_faceids[i]=pick_closest_present_font(i, font_file_present); } }
+
+// Resolve face specs to an FTC_FaceID
 // for requesting faces from the cache system.
 FTC_FaceID get_face_id(javacall_font_face face,
 	javacall_font_style style) {
@@ -51,7 +91,7 @@ FTC_FaceID get_face_id(javacall_font_face face,
 		idx+=3; }
   if ((style&JAVACALL_FONT_STYLE_BOLD)!=0) {
 		idx+=6; }
-	return (FTC_FaceID)(_typeface_filenames[idx]); }
+	return ftc_faceids[idx]; }
 
 // Read a font size setting -- pass in the config name, and a fallback
 int ftc_pixsize_fr_config(const char* cfgname, int default_sz) {
@@ -116,13 +156,14 @@ inline void set_scaler_rec(FTC_ScalerRec* r,
 FT_Error init_font_cache_subsystem() {
 	FT_Error err;
 	init_from_config();
-	set_scaler_rec(&current_ic, JAVACALL_FONT_FACE_SYSTEM,
-					JAVACALL_FONT_STYLE_PLAIN,
-					JAVACALL_FONT_SIZE_MEDIUM);
 	if (_ftc_use_internal_font) {
 		// Don't need all this cache stuff, in this case
 		return 1; }
-	// Lib
+	initialize_face_ids();
+	set_scaler_rec(&current_ic, JAVACALL_FONT_FACE_SYSTEM,
+					JAVACALL_FONT_STYLE_PLAIN,
+					JAVACALL_FONT_SIZE_MEDIUM);
+	// Lib inits
 	err = FT_Init_FreeType(&_ftc_library);
 	if (err) {
 		return err; }
@@ -274,7 +315,7 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
 	if (!_ftc_initialized) {
 		if (init_font_cache_subsystem()) {
 			return JAVACALL_FAIL; } }  
-  if (current_ic.face_id==NULL) {
+  if ((current_ic.face_id)==NULL) {
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
 	FTC_SBit irec;
@@ -309,14 +350,16 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
 			
 	FTC_ScalerRec r;
 	set_scaler_rec(&r, face, style, size);
+	if ((r.face_id)==NULL) {
+		return JAVACALL_FAIL; }
 	FT_Size sz;
 	if (FTC_Manager_LookupSize(cache_manager, &r, &sz)) {
 		return JAVACALL_FAIL; }
-	*descent= FT_MulFix( sz->metrics.descender, sz->metrics.y_scale ) / 64;
+	(*descent) = FT_MulFix( sz->metrics.descender, sz->metrics.y_scale ) / 64;
+	(*ascent) = FT_MulFix( sz->metrics.ascender, sz->metrics.y_scale) / 64;	
 	if ((*descent)<0) {
 		(*descent) *= -1; }
-	*ascent = FT_MulFix( sz->metrics.ascender, sz->metrics.y_scale) / 64;	
-	*leading=_MIN_LEADING;
+	(*leading)=_MIN_LEADING;
 	return JAVACALL_OK; }
 
 // Direct interface implementation
@@ -329,6 +372,8 @@ javacall_result ftc_javacall_font_set_font( javacall_font_face face,
 		if (init_font_cache_subsystem()) {
 			return JAVACALL_FAIL; } }
 	set_scaler_rec(&current_ic, face, style, size);
+	if ((current_ic.face_id)==NULL) {
+		return JAVACALL_FAIL; }
 	return JAVACALL_OK; }
 
 // Direct interface implementation
@@ -345,6 +390,8 @@ int ftc_javacall_font_get_width(javacall_font_face face,
 
 	FTC_ScalerRec tmp_ic;
 	set_scaler_rec(&tmp_ic, face, style, size);
+	if ((tmp_ic.face_id)==NULL) {
+		return -1; }
 	int i, res;
 	unsigned int glyph_idx;
 	res=0;

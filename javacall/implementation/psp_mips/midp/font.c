@@ -49,11 +49,8 @@ extern "C" {
 javacall_result javacall_font_set_font( javacall_font_face face, 
                                         javacall_font_style style, 
                                         javacall_font_size size) {
-    if (ftc_javacall_font_set_font(face, style, size)==JAVACALL_FAIL) {
-			return ftc_javacall_font_set_font(JAVACALL_FONT_FACE_SYSTEM,
-    		                 JAVACALL_FONT_STYLE_PLAIN,
-    		                 JAVACALL_FONT_SIZE_MEDIUM); }
-		return JAVACALL_OK; }
+  // NOTE: Fallback to sys.ttf (and prior) now done in the inner call
+	return ftc_javacall_font_set_font(face, style, size); }
     
 /**
  * Draws the first n characters to Offscreen memory image specified using the current font,
@@ -121,11 +118,8 @@ javacall_result javacall_font_get_info( javacall_font_face  face,
     *ascent =0;
     *descent=0;
     *leading=0;
-    if (ftc_javacall_font_get_info(face, style, size, ascent, descent, leading)==JAVACALL_FAIL) {
-    	return ftc_javacall_font_get_info(JAVACALL_FONT_FACE_SYSTEM,
-    		                 JAVACALL_FONT_STYLE_PLAIN,
-    		                 JAVACALL_FONT_SIZE_MEDIUM, ascent, descent, leading); }
-    return JAVACALL_OK; }
+  // NOTE: Fallback to sys.ttf (and prior) now done in the inner call
+    return ftc_javacall_font_get_info(face, style, size, ascent, descent, leading); }
 
 /**
  * return the char width for the first n characters in charArray if
@@ -144,12 +138,8 @@ int javacall_font_get_width(javacall_font_face face,
                             javacall_font_size size,
                             const javacall_utf16* charArray, 
                             int charArraySize) {
-	int r = ftc_javacall_font_get_width(face, style, size, charArray, charArraySize);
-  if (r==-1) {
-		return ftc_javacall_font_get_width(JAVACALL_FONT_FACE_SYSTEM,
-    		                 JAVACALL_FONT_STYLE_PLAIN,
-    		                 JAVACALL_FONT_SIZE_MEDIUM, charArray, charArraySize); }
-	return r; }
+  // NOTE: Fallback to sys.ttf (and prior) now done in the inner call
+	return ftc_javacall_font_get_width(face, style, size, charArray, charArraySize); }
     
 #ifdef __cplusplus
 } //extern "C"
