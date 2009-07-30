@@ -329,7 +329,7 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
 		draw_small_bitmap(irec, color, clipX1, clipY1, clipX2, clipY2,
         	               destBuffer,
         	               destBufferHoriz, destBufferVert, x, 
-        	               y - irec->top + _MYSTERY_YPAD, irec->format);
+        	               y - irec->top + current_ic.height, irec->format);
 		x += irec->xadvance; }
 	return JAVACALL_OK; }
 
@@ -355,11 +355,15 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
 	FT_Size sz;
 	if (FTC_Manager_LookupSize(cache_manager, &r, &sz)) {
 		return JAVACALL_FAIL; }
-	(*descent) = FT_MulFix( sz->metrics.descender, sz->metrics.y_scale ) / 64;
-	(*ascent) = FT_MulFix( sz->metrics.ascender, sz->metrics.y_scale) / 64;	
-	if ((*descent)<0) {
-		(*descent) *= -1; }
-	(*leading)=_MIN_LEADING;
+	int a = FT_MulFix( sz->face->ascender, sz->metrics.y_scale ) / 64;
+	int d = FT_MulFix( sz->face->descender, sz->metrics.y_scale) / 64;	
+	if (d<0) {
+		d *= -1; }
+	if (a<0) {
+		a *= -1; }
+	(*ascent)=a;
+	(*descent)=d;
+	(*leading)=(_MIN_LEADING+r.height)-(a+d);
 	return JAVACALL_OK; }
 
 // Direct interface implementation
