@@ -24,7 +24,7 @@ make install
 
 The script replaces the autofonf.sh script in the source tarball with a slightly customized version which doesn't check the version of libtool. Your libtoolize script should be 2.2.4 or higher--check this yourself by running libtoolize --version. Note that the *last* number reported is the correct version, in Cygwin. The other number is a Cygwin build number. This version string confuses the version checking in the autofonf.sh in the default package--this is why we replace it.
 
-The script also copies a customized config.sub into the source's builds/unix irectory, to provide definitions for building correctly for the PSP. It does this just *before* the configure step (and after autoconf).
+The new autoconf.sh script also copies a customized config.sub into the source's builds/unix directory, to provide definitions for building correctly for the PSP. It does this just *before* the configure step (and after autoconf), so autoconf doesn't overwrite it.
 
 The config.psp.sh just forces a few compiler symbols before calling configure, so the Makefiles get set up with the correct LDFLAGS and CFLAGS configurations for building with psp-gcc and against the libs in the pspdev directories.
 
