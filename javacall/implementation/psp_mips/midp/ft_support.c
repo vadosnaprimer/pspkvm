@@ -40,11 +40,14 @@ const char* _typeface_filenames[] = {
 	"sys_i.ttf", "prop_i.ttf", "mono_i.ttf",
 	"sys_b.ttf", "prop_b.ttf", "mono_b.ttf",  
 	"sys_ib.ttf", "prop_ib.ttf", "mono_ib.ttf" };
+
+// Useful constant -- 3 faces x 4 variations
+#define _FTC_FACEID_COUNT 12
 	
 /* Ptr aliases, after resolving for fallback due to absent files--
 	point to _typeface_filenames values, according to which
 	are actually there. */
-FTC_FaceID ftc_faceids[12];
+FTC_FaceID ftc_faceids[_FTC_FACEID_COUNT];
 	
 // Support for initialize_face_ids() ... picks closest present font to i
 // using the fallback array.
@@ -70,13 +73,13 @@ FTC_FaceID pick_closest_present_font(int i, int font_file_present[]) {
 // present, so is this lookup array.
 void initialize_face_ids() {
 	// Field for which font files are present--just do one quick lookup for each
-	int font_file_present[12];
+	int font_file_present[_FTC_FACEID_COUNT];
 	int i;
-	for(i=0;i<12;i++) {
+	for(i=0;i<_FTC_FACEID_COUNT;i++) {
 		font_file_present[i]=(access((_typeface_filenames[i]), R_OK) == 0) ? 1 : 0; }
 	// Now, for each of the menmbers ftc_faceids, go through the fallback
 	// system, and pick the closest match (or NULL, if none)
-	for(i=0;i<12;i++) {
+	for(i=0;i<_FTC_FACEID_COUNT;i++) {
 		ftc_faceids[i]=pick_closest_present_font(i, font_file_present); } }
 
 // Resolve face specs to an FTC_FaceID
@@ -122,7 +125,7 @@ void init_from_config() {
 	char* str;
 	if (JAVACALL_OK == javacall_get_property("com.pspkvm.font.internal", 
 		JAVACALL_INTERNAL_PROPERTY, &str)) {
-		if (str && !strcmp(str, "true")) {
+		if (str && !stricmp(str, "true")) {
 			_ftc_use_internal_font = 1; } }
 	if (_ftc_use_internal_font) {
 		// Done
@@ -289,12 +292,6 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 		point += (w - xnum);
 		fontpoint += (bitmap->width - xnum); } }
 
-/** I have no idea where this number comes from -- was in the legacy source,
- ** appears to be necessary here, but then a lot of this rendering comes
- ** from there, too, and is a bit opaque
- */
-#define _MYSTERY_YPAD 12
-
 // Direct interface implementation
 javacall_result ftc_javacall_font_draw(javacall_pixel   color, 
                         int clipX1, 
@@ -329,7 +326,7 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
 		draw_small_bitmap(irec, color, clipX1, clipY1, clipX2, clipY2,
         	               destBuffer,
         	               destBufferHoriz, destBufferVert, x, 
-        	               y - irec->top + current_ic.height, irec->format);
+        	               y - irec->top + current_ic.height - 2, irec->format);
 		x += irec->xadvance; }
 	return JAVACALL_OK; }
 
