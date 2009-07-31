@@ -15,6 +15,15 @@ public class WifiSelector extends MIDlet implements CommandListener {
     Alert alertConnectOK;
     Alert alertConnectFail;
     
+    // Returns from getConnectState()
+	final static int PSP_NET_APCTL_STATE_DISCONNECTED = 0;
+	final static int PSP_NET_APCTL_STATE_SCANNING = 1;
+	final static int PSP_NET_APCTL_STATE_JOINING = 2;
+	final static int PSP_NET_APCTL_STATE_GETTING_IP = 3;
+	final static int PSP_NET_APCTL_STATE_GOT_IP = 4;
+	final static int PSP_NET_APCTL_STATE_EAP_AUTH = 5;
+	final static int PSP_NET_APCTL_STATE_KEY_EXCHANGE = 6;
+    
     Command backCmd =
         new Command(Resource.getString(ResourceConstants.BACK),
                     Command.BACK, 1);
@@ -101,12 +110,12 @@ public class WifiSelector extends MIDlet implements CommandListener {
     
                     
             alertConnectOK = new Alert("Connecting to network",
-    	                                               "Successfully connected by profile " + wifiprof.getString(wifiprof.getSelectedIndex()),
+    	                                               "Successfully connected using profile " + wifiprof.getString(wifiprof.getSelectedIndex()),
     	                                               null,
     	                                               AlertType.INFO);
 
             alertConnectFail = new Alert("Connecting to network",
-    	                                               "Failed connect to profile " + wifiprof.getString(wifiprof.getSelectedIndex()),
+    	                                               "Failed to connect using profile " + wifiprof.getString(wifiprof.getSelectedIndex()),
     	                                               null,
     	                                               AlertType.WARNING);
 
@@ -123,15 +132,10 @@ public class WifiSelector extends MIDlet implements CommandListener {
                     	   }
                     	   
                     	   if (state != laststate) {
-                    	   	/*
-                    	   	String[] stateString = {
-                    	   		new String("Connecting to WLAN..."),
-					new String("Configuring to WLAN..."),
-					new String("Obtaining IP..."),
-					new String("Connected OK to " + wifiprof.getString(wifiprof.getSelectedIndex()))
-                    	   	}*/
                     	   	laststate = state;
-                    	       alertConnecting.setString("Connecting by profile " + wifiprof.getString(wifiprof.getSelectedIndex()) + " Step " + state);
+                    	       alertConnecting.setString("Connecting using profile "
+														 	+ wifiprof.getString(wifiprof.getSelectedIndex())
+															+ "\n  (" + stateIntToString(state) +"...)");
                     	   }
                     	   
                     	   try {
@@ -159,6 +163,18 @@ public class WifiSelector extends MIDlet implements CommandListener {
     private native int connect (int index);
     private native int getConnectState ();
     private native void disconnect();
-
     
+	// Translate a received state (from getConnectState()) to a string description
+	String stateIntToString(int s) {
+		switch(s) {
+			case PSP_NET_APCTL_STATE_DISCONNECTED: return "Disconnected";
+			case PSP_NET_APCTL_STATE_SCANNING: return "Scanning";
+			case PSP_NET_APCTL_STATE_JOINING: return "Joining";
+			case PSP_NET_APCTL_STATE_GETTING_IP: return "Requesting IP address";
+			case PSP_NET_APCTL_STATE_GOT_IP: return "Received IP address";
+			case PSP_NET_APCTL_STATE_EAP_AUTH: return "Authenticating";
+			case PSP_NET_APCTL_STATE_KEY_EXCHANGE: return "Exchanging keys";
+			default: return "Unknown state"; } }
+			
 }
+	
