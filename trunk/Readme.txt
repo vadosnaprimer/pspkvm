@@ -1,5 +1,5 @@
-pspkvm v0.5.2+ (README edited since 0.5.2 release)
-28 July 2009
+pspkvm v0.5.3
+31 July 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -11,7 +11,7 @@ Project home on SF:
 
 	 
 --------------------------------
-Change log (current source)
+Change log (0.5.3)
 --------------------------------
 - Bugfix for 'Default CPU speed setting doesn't work' (tracker ID 2812036)
 - Bugfix for Sony Ericsson 480x272 profile issue (tracker ID 2812032)
@@ -24,7 +24,7 @@ Change log (current source)
 - Added interface so MIDlets can request and receive events signalling raw PSP control state
 - Added a semichordal virtual keyboard implementation (fast input, diacritics support). See notes below re use.
 - Improved alpha blending for TrueType font rendering--smoother blends.
-
+- Support multi-language in Sony OSK input method
 
 -----------------------------------
 Changes in previous release (0.5.2)
