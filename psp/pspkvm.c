@@ -500,7 +500,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 
 	SceUtilityOskData data;
 	memset(&data, 0, sizeof(data));
-	data.language = 2;			// key glyphs: 0-1=hiragana, 2+=western/whatever the other field says
+	data.language = PSP_UTILITY_OSK_LANGUAGE_DEFAULT;			// key glyphs: 0-1=hiragana, 2+=western/whatever the other field says
 	data.lines = 1;				// just one line
 	data.unk_24 = 1;			// set to 1
 	data.desc = titletext;
@@ -514,7 +514,8 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	osk.base.size = sizeof(osk);
 	// dialog language: 0=Japanese, 1=English, 2=French, 3=Spanish, 4=German,
 	// 5=Italian, 6=Dutch, 7=Portuguese, 8=Russian, 9=Korean, 10-11=Chinese, 12+=default
-	osk.base.language = 1;
+	//osk.base.language = 1;
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &osk.base.language); 
 	osk.base.buttonSwap = buttonSwap;		// X button: 1
 	osk.base.graphicsThread = 17;	// gfx thread pri
 	osk.base.accessThread = 19;			
