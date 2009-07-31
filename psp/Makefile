@@ -32,12 +32,12 @@ LIBS := -Wl,--start-group -lmidp$(g) -lcldc_vm$(cg) -lpcsl_file -lpcsl_print -lp
 
 EXTRA_TARGETS = EBOOT.PBP 
 ifeq ($(BUILD_SLIM), true)
-PSP_EBOOT_TITLE = pspkvm v0.5.2 OE
+PSP_EBOOT_TITLE = pspkvm v0.5.3 OE
 #PSP_EBOOT_ICON = java-duke-guitar.png
 PSP_FW_VERSION = 352
 BUILD_PRX=1
 else
-PSP_EBOOT_TITLE = pspkvm v0.5.2
+PSP_EBOOT_TITLE = pspkvm v0.5.3
 #PSP_EBOOT_ICON = java-duke-guitar.png
 PSP_FW_VERSION = 150
 BUILD_PRX=0
