@@ -1,4 +1,7 @@
-# Unicode page one defines /AJMilne
+# Unicode page one defines
+# AJ Milne
+# See http://unicode.org/charts/PDF/U0100.pdf and
+#   http://unicode.org/charts/PDF/U0180.pdf for the canonical charts
 
 # Font parameters:
         

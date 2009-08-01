@@ -1,6 +1,7 @@
 # Font parameters:
 # width height ascent descent leading high_code low_code_first low_code_last
-@ 8 16 12 4 0 0 0
+@ 8 16 12 4 0
+% 0 0 ff
 #----------
 : 0
 #----------

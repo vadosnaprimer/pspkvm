@@ -12,3 +12,8 @@ Contents (as of this writing)
 page_00.txt -- Unicode page 0x0000-0x00ff (recovered from original bitfields using rdfont_2.c)
 page_01.txt -- Unicode page 0x0100-0x01ff (hand-drawn glyphs)
 page_04.txt -- Unicode page 0x0400-0x04ff (hand-drawn glyphs)
+
+Note that while the gen_blanks.pl tool generates full pages (range 00 to ff in the low bit) and all of the pages currently in production will cover such ranges, the framework for these fonts does permit smaller ranges as of this writing. Edit low_code_first and low_code_last in the header by hand and delete glyphs outside this range to generate valid tables containing smaller sets. 
+
+Note also that, as of this writing, each generated page must have all glyphs the same width, and the CHAR_WIDTH macro in midp/src/lowlevelui/graphics/gx_putpixel/native/gxj_text.c must be adjusted as necessary to calculate properly which width is correct for the character in question (since, between pages, the widths are not all the same).
+ 
