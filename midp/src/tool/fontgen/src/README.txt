@@ -1,16 +1,19 @@
 Copyright  2007  Sun Microsystems, Inc. All rights reserved.
 (Additions 2008 Aug /AJ Milne)
 
-	MIDP Font Generation Tool
+MIDP Font Generation Tools
+--------------------------
+
+These tools are used for generating and decompiling the bitmap tables for the built-in font.
 
 Files:
 -----
 rdfont.c -- converts font bitmap from the C sources to a human-editable MIDP-FONTDEF format file
-	(Note: rdfont.c is now obsolete, as it expects shorter headers than are now standard. It will not work on the current sources.)
+	(Note: rdfont.c is now obsolete, as it expects shorter headers than are now standard. It will not work on the current sources. I've left it in for historical reasons, but for current tables, see rdfont_c.2.)
 
 rdfont_2.c -- converts font bitmap from the C sources to a human-editable MIDP-FONTDEF format file. This is an updated and modified version--it reads format 2 files with longer headers. See also 'Notes about the code', below.b
 
-wrfont.c -- converts a MIDP-FONTDEF file to C source defining the corresponding font bitmap
+wrfont.c -- converts a MIDP-FONTDEF file to C source defining the corresponding font bitmap. By default, with the V1_1 macro defined, it generates the current (version 2, eight byte header) bitmaps.
 
 gxj_font_bitmap.c.0 -- taken from the MIDP sources (version 1 table, with 4 byte header, works only with rdfont.c). Note that to decompile another version 1 (5-byte header) table, you should copy it over this file, with the table named appropriately, then rebuild rdfont.c, as it includes this file and only does output for such a table. See also the shell script decompile_table.sh, which does the same thing, essentially, using rdfont_2 and current (version 2, eight byte header) tables.
 
@@ -38,7 +41,7 @@ gcc wrfont.c -o wrfont
 
 Compiling rdfont_2 (and rdfont)
 -------------------------------
-Note rdfont and rdfont_2 have to be compiled against the specific table you want to take it apart--put it in a c file called bitmap_to_decompile.c.0 in this directory, #include "gxj_intern_font_bitmap.h" in it, and make sure the table is called TheFontBitmap, then compile and run. Or use the shell script decompile_table.sh with the file as the target, and it does all this for you (using current 7-byte header files, and rdfont_2).
+Note rdfont and rdfont_2 have to be compiled against the specific table you want to take  apart--put it in a c file called bitmap_to_decompile.c.0 in this directory, #include "gxj_intern_font_bitmap.h" in it, and make sure the table is called TheFontBitmap, then compile and run. Or use the shell script decompile_table.sh with the file as the target, and it does all this for you (using current 7-byte header files, and rdfont_2).
 
 Note that the format rdfont_2 expects is identical to the format wrfont expects, so if you were to do this:
 

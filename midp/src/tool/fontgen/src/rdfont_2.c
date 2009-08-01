@@ -40,7 +40,7 @@ int width;
 int height;
 
 static void drawChar(unsigned char c, unsigned char *fontbitmap, unsigned long mapLen,
-                     int fontWidth, int fontHeight) {
+                     int fontWidth, int fontHeight, unsigned char high_byte) {
 
     int i;
     int j;
@@ -75,7 +75,7 @@ static void drawChar(unsigned char c, unsigned char *fontbitmap, unsigned long m
     }
     
     printf("#----------\n");
-    printf(": %x\n",c);
+    printf(": %x\n",(high_byte<<8)+c);
     printf("#----------\n");
     for(i=0;i<fontHeight;i++) {
 	for(j=0;j<fontWidth;j++) {
@@ -92,13 +92,14 @@ int main()
   height = TheFontBitmap[FONT_HEIGHT];
   printf("# Font parameters:\n");
   printf("# width height ascent descent leading high_code low_code_first low_code_last\n");
-  printf("@ %i %i %i %i %i %i %i\n",width, height,TheFontBitmap[FONT_ASCENT],TheFontBitmap[FONT_DESCENT],TheFontBitmap[FONT_LEADING]
+  printf("@ %i %i %i %i %i\n%% %i %x %x\n",width, height,TheFontBitmap[FONT_ASCENT],TheFontBitmap[FONT_DESCENT],TheFontBitmap[FONT_LEADING]
 		,TheFontBitmap[FONT_CODE_RANGE_HIGH] ,TheFontBitmap[FONT_CODE_FIRST_LOW]
 		,TheFontBitmap[FONT_CODE_LAST_LOW]);
   int lastchar = (sizeof(TheFontBitmap)-FONT_DATA)*8 / (width*height);
   int i;
   for(i=0;i<lastchar;i++) {
-      drawChar(i,TheFontBitmap,sizeof(TheFontBitmap),width,height);
+      drawChar(i,TheFontBitmap,sizeof(TheFontBitmap),
+				width,height,TheFontBitmap[FONT_CODE_RANGE_HIGH]);
   }
 }
 
