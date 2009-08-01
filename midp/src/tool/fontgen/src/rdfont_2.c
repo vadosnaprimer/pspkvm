@@ -26,7 +26,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "gxj_font_bitmap.c.0"
+#include "bitmap_to_decompile.c.0"
 
 #define BUFY 20
 #define BUFX 20
