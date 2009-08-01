@@ -12,7 +12,7 @@ rdfont_2.c -- converts font bitmap from the C sources to a human-editable MIDP-F
 
 wrfont.c -- converts a MIDP-FONTDEF file to C source defining the corresponding font bitmap
 
-gxj_font_bitmap.c -- taken from the MIDP sources (version 1 table, with 4 byte header, works only with rdfont.c)
+gxj_font_bitmap.c.0 -- taken from the MIDP sources (version 1 table, with 4 byte header, works only with rdfont.c). Note that to decompile another version 1 (5-byte header) table, you should copy it over this file, with the table named appropriately, then rebuild rdfont.c, as it includes this file and only does output for such a table. See also the shell script decompile_table.sh, which does the same thing, essentially, using rdfont_2 and current (version 2, eight byte header) tables.
 
 gxj_intern_font_bitmap.h -- taken from the MIDP sources
 
