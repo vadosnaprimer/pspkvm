@@ -23,6 +23,13 @@
  * Clara, CA 95054 or visit www.sun.com if you need additional
  * information or have any questions.
  */
+ 
+/* NB: This version reads version 2 (from MIDP v 1.1) files only -- see rdfont.c for
+	earlier tables. NB also: it has to be compiled against the table, which is placed in
+	the file bitmap_to_decompile.c.0, and the script decompile_table.sh, which automates
+	all of this
+	/ AJM
+*/
 
 #include <string.h>
 #include <stdio.h>
