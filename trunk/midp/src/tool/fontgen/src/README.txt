@@ -4,6 +4,7 @@ Copyright  2007  Sun Microsystems, Inc. All rights reserved.
 
 Files:
 rdfont.c -- converts font bitmap from the C sources to a human-editable MIDP-FONTDEF format file
+rdfont_2.c -- converts font bitmap from the C sources to a human-editable MIDP-FONTDEF format file--modified version reads format 2 files with longer headers
 wrfont.c -- converts a MIDP-FONTDEF file to C source defining the corresponding font bitmap
 gxj_font_bitmap.c -- taken from the MIDP sources
 gxj_intern_font_bitmap.h -- taken from the MIDP sources

@@ -25,4 +25,5 @@
 
 # compile both tools
 gcc rdfont.c -o rdfont
+gcc rdfont_2.c -o rdfont_2
 gcc wrfont.c -o wrfont
