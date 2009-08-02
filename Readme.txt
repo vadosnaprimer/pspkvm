@@ -9,6 +9,12 @@ Project website:
 Project home on SF:
 	https://sourceforge.net/projects/pspkvm
 
+-----------------------------------------------
+Changes since release (in current trunk source)
+-----------------------------------------------
+
+- Tools for built-in font manipulation (midp/src/tools/fontgen/...) updated to work with current bitmap files.
+- Built-in font now supports basic Cyrillic characters in Unicode range 0x0400 to 0x045f (should support Russian, Ukrainian, Macedonian, Byelorussian). 
 	 
 --------------------------------
 Change log (0.5.3)
