@@ -80,17 +80,11 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
     unsigned short CJK = c0;
-    if (c0 >= 0x0200) {
-    	// Transform doesn't work for Unicode page 0
+    if (c0 >= 0x0500) {
+    	// Transform doesn't work for Unicode pages 0 through 4
     	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 		                     ((short*)UNI_CJK)[c0]:
 	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
-	  // Whatever else is going on here, we can confirm that this operation DOES NOT WORK
-	  // for many characters in 0x0080 - 0x00ff -- and an easy fix is not to do it
-	  // for the entire Unicode page. Note also that it's probably bad news for the first
-	  // several pages ... I know these; they shouldn't need such a transform.
-	  if ((c0 & 0xff00) == 0) {
-			CJK = c0; }
     unsigned char const * fontbitmap =
         selectFontBitmap(CJK,pfonts) + FONT_DATA;
     jchar const c = (CJK & 0xff) -
@@ -143,7 +137,18 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 }
 
 
-#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<512?1:3][FONT_WIDTH])
+#define CHAR_WIDTH(c,i)  char_width(c[i])
+
+// Replacement function for macro ... this is getting more complicated
+// Unicode pages 0 and 1 are 8 bits wide, Cyrillic (page 04) is 9 bits,
+// all the rest (Chinese, right now) are 16.
+inline char_width(jchar i) {
+	// Unicode pages 0 and 1
+	if (i<512) { return 8; }
+	// Page 04 (Cyrillic)
+	if (i<0x04ff) { return 9; }
+	// Remaining pages
+	return 0x10; }
 	
 /*
  * Draws the first n characters specified using the current font,
