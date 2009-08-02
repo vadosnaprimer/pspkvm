@@ -11,7 +11,7 @@ Contents (as of this writing)
 
 page_00.txt -- Unicode page 0x0000-0x00ff (recovered from original bitfields using rdfont_2.c)
 page_01.txt -- Unicode page 0x0100-0x01ff (hand-drawn glyphs)
-page_04.txt -- Unicode page 0x0400-0x04ff (hand-drawn glyphs)
+page_04.txt -- Unicode page 0x0400-0x045f (hand-drawn glyphs)
 
 Note that while the gen_blanks.pl tool generates full pages (range 00 to ff in the low bit) and all of the pages currently in production will cover such ranges, the framework for these fonts does permit smaller ranges as of this writing. Edit low_code_first and low_code_last in the header by hand and delete glyphs outside this range to generate valid tables containing smaller sets. 
 
