@@ -171,45 +171,10 @@ public class WifiSelector extends MIDlet implements CommandListener {
     private native int connect (int index);
     private native int getConnectState ();
     private native void disconnect();
-
- 		// State stuff we can do queries on--TODO: Move somewhere cleaner
- 		// Strings
- 		native String getBSSID();
-		native String getProfileName(); 
- 		native String getSSID();
- 		native String getIP();
- 		native String getSubnetMask();
- 		native String getGateway();
- 		native String getPrimaryDNS();
- 		native String getSecondaryDNS();
- 		native String getProxyURL();
- 		// Ints
- 		native int getSecurityType();
-		native int getSignalStrength();
-		native int getChannel();
-		native int getPowerSave();
-		native int getUseProxy();
-		native int getProxyPort();
-		native int getEAPType();
-		native int getStartBrowser();
-		native int getUseWiFiSP();
-		
-		// Convenience method--make a string return into something pretty
-		String formatConfigString(String n, String v) {
-			return n + ": " + ((v==null) ? "<unknown>" : v); }
-			
-		String statusReport() {
-			return formatConfigString("IP", getIP())+ "\n" + 
-				formatConfigString("Subnet", getSubnetMask())+ "\n" +
-				formatConfigString("Gateway", getGateway())+ "\n" +
-				formatConfigString("DNS 1", getPrimaryDNS())+ "\n" +
-				formatConfigString("DNS 2", getSecondaryDNS())+ "\n" +
-				formatConfigString("BSSID", getBSSID())+ "\n" +
-				formatConfigString("SSID", getSSID()); }
 			
 		// Convenience method--launch the connection status dialog
 		void launchWiFiStatusAlert() {
-			alertNetworkStatus.setString(statusReport());
+			alertNetworkStatus.setString(PSPWifiStatus.statusReport());
 			alertNetworkStatus.setTimeout(Alert.FOREVER);
       display.setCurrent(alertNetworkStatus, wifiprof); }
  		
