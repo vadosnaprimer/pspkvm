@@ -198,10 +198,18 @@ public class WifiSelector extends MIDlet implements CommandListener {
 		String formatConfigString(String n, String v) {
 			return n + ": " + ((v==null) ? "<unknown>" : v); }
 			
+		String statusReport() {
+			return formatConfigString("IP", getIP())+ "\n" + 
+				formatConfigString("Subnet", getSubnetMask())+ "\n" +
+				formatConfigString("Gateway", getGateway())+ "\n" +
+				formatConfigString("DNS 1", getPrimaryDNS())+ "\n" +
+				formatConfigString("DNS 2", getSecondaryDNS())+ "\n" +
+				formatConfigString("BSSID", getBSSID())+ "\n" +
+				formatConfigString("SSID", getSSID()); }
+			
 		// Convenience method--launch the connection status dialog
 		void launchWiFiStatusAlert() {
-			alertNetworkStatus.setString(formatConfigString("IP: ",
-				getIP()));
+			alertNetworkStatus.setString(statusReport());
 			alertNetworkStatus.setTimeout(Alert.FOREVER);
       display.setCurrent(alertNetworkStatus, wifiprof); }
  		
