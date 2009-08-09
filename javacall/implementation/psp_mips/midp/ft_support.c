@@ -40,6 +40,9 @@ const char* _typeface_filenames[] = {
 	"sys_i.ttf", "prop_i.ttf", "mono_i.ttf",
 	"sys_b.ttf", "prop_b.ttf", "mono_b.ttf",  
 	"sys_ib.ttf", "prop_ib.ttf", "mono_ib.ttf" };
+	
+// The (sorta built-in) tools font filename
+const char* _tools_typeface_filename = "tools.ttf";
 
 // Useful constant -- 3 faces x 4 variations
 #define _FTC_FACEID_COUNT 12
@@ -291,6 +294,14 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 	
 		point += (w - xnum);
 		fontpoint += (bitmap->width - xnum); } }
+		
+// Macro--checks init/internal font stuff
+#define _FTC_CHECK_INIT(err) \
+	if (_ftc_use_internal_font) { \
+		return err; } \
+	if (!_ftc_initialized) { \
+		if (init_font_cache_subsystem()) { \
+			return err; } }
 
 // Direct interface implementation
 javacall_result ftc_javacall_font_draw(javacall_pixel   color, 
@@ -307,11 +318,7 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
                         int textLen){
 
   int i;
-	if (_ftc_use_internal_font) {
-		return JAVACALL_FAIL; }
-	if (!_ftc_initialized) {
-		if (init_font_cache_subsystem()) {
-			return JAVACALL_FAIL; } }  
+  _FTC_CHECK_INIT(JAVACALL_FAIL)
   if ((current_ic.face_id)==NULL) {
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
@@ -339,11 +346,7 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
                                         /*out*/ int* ascent,
                                         /*out*/ int* descent,
                                         /*out*/ int* leading) {
-	if (_ftc_use_internal_font) {
-		return JAVACALL_FAIL; }
-	if (!_ftc_initialized) {
-		if (init_font_cache_subsystem()) {
-			return JAVACALL_FAIL; } }
+	_FTC_CHECK_INIT(JAVACALL_FAIL)
 			
 	FTC_ScalerRec r;
 	set_scaler_rec(&r, face, style, size);
@@ -367,11 +370,7 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
 javacall_result ftc_javacall_font_set_font( javacall_font_face face, 
                                         javacall_font_style style, 
                                         javacall_font_size size) {
-	if (_ftc_use_internal_font) {
-		return JAVACALL_FAIL; }
-	if (!_ftc_initialized) {
-		if (init_font_cache_subsystem()) {
-			return JAVACALL_FAIL; } }
+	_FTC_CHECK_INIT(JAVACALL_FAIL)
 	set_scaler_rec(&current_ic, face, style, size);
 	if ((current_ic.face_id)==NULL) {
 		return JAVACALL_FAIL; }
@@ -383,11 +382,7 @@ int ftc_javacall_font_get_width(javacall_font_face face,
                             javacall_font_size size,
                             const javacall_utf16* charArray, 
                             int charArraySize) {
-	if (_ftc_use_internal_font) {
-		return -1; }
-	if (!_ftc_initialized) {
-		if (init_font_cache_subsystem()) {
-			return -1; } }
+	_FTC_CHECK_INIT(-1)
 
 	FTC_ScalerRec tmp_ic;
 	set_scaler_rec(&tmp_ic, face, style, size);
