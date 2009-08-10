@@ -174,7 +174,7 @@ public class WifiSelector extends MIDlet implements CommandListener {
 			
 		// Convenience method--launch the connection status dialog
 		void launchWiFiStatusAlert() {
-			alertNetworkStatus.setString(PSPWifiStatus.statusReport());
+			alertNetworkStatus.setString(com.pspkvm.system.WifiStatus.statusReport());
 			alertNetworkStatus.setTimeout(Alert.FOREVER);
       display.setCurrent(alertNetworkStatus, wifiprof); }
  		
