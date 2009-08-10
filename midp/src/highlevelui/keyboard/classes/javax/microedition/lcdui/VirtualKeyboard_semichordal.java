@@ -37,6 +37,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		int live_dpad;
 		int symbolDownLast = 0;
 		int chordDownLast = 0;
+		boolean analog_cursor = false;
 
 		// Display mode enum (for display_chords_mode)
     private final static int last_display_chords_mode = 2;
@@ -94,6 +95,8 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 
 	// Initialize the various display variables--called at construction
 	void initDisplayVars() {
+		if(Configuration.getProperty("com.pspkvm.virtualkeyboard.direction").equals("true")){
+			analog_cursor=true; }
 		chordal_offset=0;
 		display_chords_mode=SM_DISP;
 		ls_set=false;
@@ -130,6 +133,14 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				display_chords_mode = 0;
 				return false; }
 			return true; }
+			
+			/**
+			 * Set large chord display.
+			 * Called from the keyboard layer handler when it detects its handling
+			 * a multiline textfield.			 
+			 */
+		public void setLargeDisplay() {
+			display_chords_mode = LG_DISP; }			 			
 			
 		final static int lg_dim_width = 210;
 		final static int lg_dim_height = 150;
@@ -389,6 +400,37 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     private final static int WHITE = 0xffffff;
     private final static int BLK = 0x000000;
     
+  /**
+   *	Call this with incoming standard key events. Currently,
+   *	it just processes analog stick commands, since these are the
+   *	only meaningful standard events not handled by the popup menus.   
+   */
+   public void processStandardKeyEvent(int type, int code) {
+		if (!analog_cursor) {
+			return; }
+   	if (type == EventConstants.RELEASED) {
+		 	// Ignore
+			 return; }
+		switch (code) {
+			// NB: Not quite sure how the DPAD keys get filtered out
+			// in this.
+			case Constants.KEYCODE_LEFT:
+				// Analog left
+				vkl.virtualMetaKeyEntered(SC_Keys.CLF);
+				return; 
+			case Constants.KEYCODE_RIGHT:
+				// Analog right
+				vkl.virtualMetaKeyEntered(SC_Keys.CRT);
+				return;
+			case Constants.KEYCODE_UP:
+				// Analog up
+				vkl.virtualMetaKeyEntered(SC_Keys.CUP);
+				return;
+			case Constants.KEYCODE_DOWN:
+				// Analog down
+				vkl.virtualMetaKeyEntered(SC_Keys.CDN);
+				return; } }
+
 	/**
 	 *
 	 * Call this with the incoming raw stroke--board will process and return
