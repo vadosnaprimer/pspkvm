@@ -14,7 +14,7 @@ Thereafter, run make to build the lib, and make install to install it into the c
 So, for example:
 
 (Download the source tarball to this directory)
-(cd to this directory (where the README is located)
+(cd to this directory--where the README is located)
 tar -xvzf freetype-2.3.9.tar.gz
 ./pspify freetype-2.3.9
 cd freetype-2.3.9
