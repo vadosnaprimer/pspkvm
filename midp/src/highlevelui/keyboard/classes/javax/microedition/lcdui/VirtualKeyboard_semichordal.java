@@ -7,6 +7,7 @@ package javax.microedition.lcdui;
 import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
 import com.sun.midp.main.Configuration;
+import com.pspkvm.keypad.PSPCtrlCodes;
 
 /**
  * Semichordal virtual keyboard, specific to PSP platform, for PSPKVM.
@@ -52,6 +53,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     Image c_lock_img, key_bg_img, key_bg_img_on, sel_img;
     // The soft fonts
     SFont sfont_red, sfont_blue;
+    
+    // Useful field
+    /** Union of all chordal keys */
+		static final int CHORDAL_KEYS = PSPCtrlCodes.LTRIGGER | PSPCtrlCodes.RTRIGGER
+			| PSPCtrlCodes.UP | PSPCtrlCodes.RIGHT | PSPCtrlCodes.DOWN | PSPCtrlCodes.LEFT;
+	
 
     /**
      * Virtual Keyboard constructor.
@@ -441,7 +448,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	 */
     public void processRawStroke(int p) {
 			updateChordMap(p);
-			int chordDownNow = p & PSPCtrlCodes.CHORDAL_KEYS;
+			int chordDownNow = p & CHORDAL_KEYS;
 			int symbolDownNow = p & PSPCtrlCodes.SYMBOLS;
 			boolean process_stroke = true;
 			if ((chordDownNow != chordDownLast) && (symbolDownNow == symbolDownLast)) {

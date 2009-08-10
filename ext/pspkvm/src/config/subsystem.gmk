@@ -15,7 +15,8 @@ EXTRA_CFLAGS  += -DENABLE_PSPKVM_EXT=1
 JPP_DEFS      += -DENABLE_PSPKVM_EXT
 
 SUBSYSTEM_PSPKVM_EXT_JAVA_FILES += \
-    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/WifiStatus.java
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/WifiStatus.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java
 
 #
 # Native

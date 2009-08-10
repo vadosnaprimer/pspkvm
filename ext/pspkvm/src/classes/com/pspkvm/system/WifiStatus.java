@@ -8,42 +8,42 @@ public class WifiStatus {
 	
 	 	// State stuff we can do queries on
  		// Strings
- 		static native String getBSSID();
-		static native String getProfileName(); 
- 		static native String getSSID();
- 		static native String getIP();
- 		static native String getSubnetMask();
- 		static native String getGateway();
- 		static native String getPrimaryDNS();
- 		static native String getSecondaryDNS();
- 		static native String getProxyURL();
+ 		public static native String getBSSID();
+		public static native String getProfileName(); 
+ 		public static native String getSSID();
+ 		public static native String getIP();
+ 		public static native String getSubnetMask();
+ 		public static native String getGateway();
+ 		public static native String getPrimaryDNS();
+ 		public static native String getSecondaryDNS();
+ 		public static native String getProxyURL();
  		// Ints
- 		static native int getSecurityType();
-		static native int getSignalStrength();
-		static native int getChannel();
-		static native int getPowerSave();
-		static native int getUseProxy();
-		static native int getProxyPort();
-		static native int getEAPType();
-		static native int getStartBrowser();
-		static native int getUseWiFiSP();
+ 		public static native int getSecurityType();
+		public static native int getSignalStrength();
+		public static native int getChannel();
+		public static native int getPowerSave();
+		public static native int getUseProxy();
+		public static native int getProxyPort();
+		public static native int getEAPType();
+		public static native int getStartBrowser();
+		public static native int getUseWiFiSP();
 		
 		// Few status codes
 		// All int status functions return -1 if an error occurs
-		static final int PSP_NET_UNKNOWN = -1;
+		public static final int PSP_NET_UNKNOWN = -1;
 		// Security types
-		static final int PSP_SECURITY_TYPE_NONE = 0;
-		static final int PSP_SECURITY_TYPE_WEP = 1;
-		static final int PSP_SECURITY_TYPE_WPA = 2;
+		public static final int PSP_SECURITY_TYPE_NONE = 0;
+		public static final int PSP_SECURITY_TYPE_WEP = 1;
+		public static final int PSP_SECURITY_TYPE_WPA = 2;
 		// EAP types
-		static final int PSP_EAP_TYPE_NONE = 0;
-		static final int PSP_EAP_TYPE_EAP_MD5 = 1;
+		public static final int PSP_EAP_TYPE_NONE = 0;
+		public static final int PSP_EAP_TYPE_EAP_MD5 = 1;
 		// True/False returns
-		static final int PSP_NET_TRUE = 1;
-		static final int PSP_NET_FALSE = 0;
+		public static final int PSP_NET_TRUE = 1;
+		public static final int PSP_NET_FALSE = 0;
 		
 		// Helper function--various booleans
-		static String netBoolToString(int i) {
+		public static String netBoolToString(int i) {
 			switch(i) {
 				case PSP_NET_UNKNOWN: return "<unknown>";
 				case PSP_NET_TRUE: return "yes";
@@ -51,7 +51,7 @@ public class WifiStatus {
 				default: return "<unknown>"; } }
 		
 		// Helper function--EA5 mode display
-		static String getEA5ModeStr() {
+		public static String getEA5ModeStr() {
 			int i = getEAPType();
 			switch(i) {
 				case PSP_NET_UNKNOWN: return "<unknown>";
@@ -60,7 +60,7 @@ public class WifiStatus {
 				default: return "<unknown>"; } }
 		
 		// Helper function--security mode display
-		static String getSecurityTypeStr() {
+		public static String getSecurityTypeStr() {
 			int i = getSecurityType();
 			switch(i) {
 				case PSP_NET_UNKNOWN: return "<unknown>";
@@ -70,17 +70,17 @@ public class WifiStatus {
 				default: return "<unknown>"; } }
 		
 		// Helper function--signal strength display
-		static String getSignalStrengthStr() {
-		int i = getSignalStrength();
-		if (i==-1) {
-			return "<unknown>"; }
-		return Integer.toString(i) + "%"; }
+		public static String getSignalStrengthStr() {
+			int i = getSignalStrength();
+			if (i==-1) {
+				return "<unknown>"; }
+			return Integer.toString(i) + "%"; }
 		
 		// Helper function--general int display
 		static String netIntToString(int i) {
-		if (i==-1) {
-			return "<unknown>"; }
-		return Integer.toString(i); }
+			if (i==-1) {
+				return "<unknown>"; }
+			return Integer.toString(i); }
 
 		// Convenience method--make a string return into something pretty
 		static String formatConfigString(String n, String v) {
