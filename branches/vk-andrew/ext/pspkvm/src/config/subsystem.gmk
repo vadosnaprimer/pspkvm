@@ -1,5 +1,5 @@
 ######################################################################
-# Module's Component Configuration file
+# PSPKVM EXT Module's Component Configuration file
 #
 # Remember: It is up to the module itself to impose rules of
 # how to compile the options. All the global Makefile needs
@@ -11,11 +11,14 @@ SUBSYSTEMS += PSPKVM_EXT
 
 PSPKVM_EXT_CONFIG_DIR = $(PSPKVM_EXT_DIR)/src/config/$(TARGET_PLATFORM)
 
-EXTRA_CFLAGS  += -DENABLE_PSPKVM_EXT=1
+PSPDEV_GNU_TOOLS_DIR=`psp-config -P`
+
+EXTRA_CFLAGS  += -DENABLE_PSPKVM_EXT=1 -I$(PSPDEV_GNU_TOOLS_DIR)/sdk/include -I$(PSPDEV_GNU_TOOLS_DIR)/include -G0 -fno-strict-aliasing
 JPP_DEFS      += -DENABLE_PSPKVM_EXT
 
 SUBSYSTEM_PSPKVM_EXT_JAVA_FILES += \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/WifiStatus.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/Power.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java
 
 #
@@ -29,7 +32,8 @@ vpath % $(PSPKVM_EXT_DIR)/src/native
 #
 
 SUBSYSTEM_PSPKVM_EXT_NATIVE_FILES += \
-    wifistatus.c
+    wifistatus.c \
+    power.c
 
 # Append PSPKVM EXT source bundle creation to target
 source_bundle:: pspkvm_ext_source_bundle

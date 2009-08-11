@@ -5,15 +5,13 @@
 #include <commonKNIMacros.h>
 #include <string.h>
 
-#ifdef PSP
 #include <javacall_wifi_support.h>
-#endif
 
 /* Access to all of the status stuff added in wifi_support.c */
+/* TODO: Move the back end of this out of javacall--doesn't have to be there */
 
 /* Macro--since the code for string returns is mostly boilerplate */
 /* null returned if javacall call fails */
-#ifdef PSP
 #define NET_CONFIG_STR_RET(kdecl, natvcall) \
 KNIEXPORT KNI_RETURNTYPE_OBJECT \
 KNIDECL(kdecl) { \
@@ -25,14 +23,6 @@ KNIDECL(kdecl) { \
     if ((re==JAVACALL_OK) && (strlen(r) > 0)) { \
         KNI_NewStringUTF(r, ret); } \
     KNI_EndHandlesAndReturnObject(ret); }
-#else
-#define NET_CONFIG_STR_RET(kdecl, natvcall) \
-KNIEXPORT KNI_RETURNTYPE_OBJECT \
-KNIDECL(kdecl) { \
-    KNI_StartHandles(1); \
-    KNI_DeclareHandle(ret); \
-    KNI_EndHandlesAndReturnObject(ret); }
-#endif    
 
 NET_CONFIG_STR_RET(com_pspkvm_system_WifiStatus_getProfileName,
 	javacall_pspNetGetProfileName)
@@ -55,7 +45,6 @@ NET_CONFIG_STR_RET(com_pspkvm_system_WifiStatus_getProxyURL,
 
 /* Macro for uint returns (return as int) */
 /* Note that int comes back -1 if call fails, correct value otherwise */
-#ifdef PSP
 #define NET_CONFIG_UINT_RET(kdecl, natvcall) \
 KNIEXPORT KNI_RETURNTYPE_INT \
 KNIDECL(kdecl) { \
@@ -64,12 +53,6 @@ KNIDECL(kdecl) { \
     if (natvcall(&i)==JAVACALL_OK) { \
     	 r=(int)i; } \
     KNI_ReturnInt(r); }
-#else
-#define NET_CONFIG_UINT_RET(kdecl, natvcall) \
-KNIEXPORT KNI_RETURNTYPE_INT \
-KNIDECL(kdecl) { \
-    KNI_ReturnInt(-1); }
-#endif
 
 NET_CONFIG_UINT_RET(com_pspkvm_system_WifiStatus_getSecurityType,
 	javacall_pspNetGetSecurityType)
