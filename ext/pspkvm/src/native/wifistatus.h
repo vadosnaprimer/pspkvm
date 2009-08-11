@@ -1,16 +1,18 @@
-#ifndef _wifi_support_int_h
-#define _wifi_support_int_h
+#ifndef _wifi_status_h
+#define _wifi_status_h
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 #include <pspnet_apctl.h>
 
 /*
-	Wifi support routines, defs, structs... much borrowed from 
-	pspZorba via http://forums.ps2dev.org/viewtopic.php?t=10277 .
+	Header for wifistatus.c--defines a struct and the field values
+	for calling into sceNetApctlGetInfo(...). Much is borrowed from: 
+
+		pspZorba via http://forums.ps2dev.org/viewtopic.php?t=10277 .
+	
 	NB: Defines may eventually collide if this winds up in the SDK;
 	hasn't as of this writing, however
 */
@@ -73,4 +75,4 @@ typedef struct pspNetConnectionState
 #endif
 
 
-#endif // #ifndef _wifi_support_int_h
+#endif // #ifndef _wifi_status_h
