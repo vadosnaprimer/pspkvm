@@ -145,11 +145,11 @@ javacall_result javacall_network_init_start(void) {
 	return JAVACALL_FAIL;
     }
 	if((err = sceNetResolverInit())) {
-    	printf(": Error, could not sceNetInetInit the network %08X\n", err);		
+    	printf(": Error, could not sceNetResolverInit the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }	
 	if((err = sceNetApctlInit(0x8000, 48))) {
-    	printf(": Error, could not sceNetInetInit the network %08X\n", err);		
+    	printf(": Error, could not sceNetApctlInit the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }
     
