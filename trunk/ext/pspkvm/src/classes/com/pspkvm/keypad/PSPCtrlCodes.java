@@ -3,7 +3,7 @@
 	/AJ Milne
 */ 
 
-package javax.microedition.lcdui;
+package com.pspkvm.keypad;
 
 // TODO/FIXME: Put this somewhere more sensible/obviously proprietary/
 // platform-specific. For now, it goes in the lcdui with the
@@ -57,8 +57,6 @@ public class PSPCtrlCodes {
 
 	/** Union of all symbols */
 	public static final int SYMBOLS = SQUARE | CIRCLE | TRIANGLE | CROSS;
-	/** Union of all chordal keys */
-	public static final int CHORDAL_KEYS = LTRIGGER | RTRIGGER | UP | RIGHT | DOWN | LEFT;
 	/** Union of all the DPAD keys */
 	public static final int DPAD_MASK = UP | LEFT | RIGHT | DOWN;
 }

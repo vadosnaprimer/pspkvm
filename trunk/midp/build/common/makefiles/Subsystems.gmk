@@ -438,6 +438,15 @@ endif
 
 
 #####################################################################
+# PSPKVM EXT
+# Description: PSPKVM extensions
+#####################################################################
+ifeq ($(USE_PSPKVM_EXT), true)
+include $(PSPKVM_EXT_DIR)/src/config/$(SUBSYSTEM_MAKE_FILE)
+endif
+
+
+#####################################################################
 # (Extra) Abstractions Subsystem
 # Description: Abstractions for optional packages
 #####################################################################
