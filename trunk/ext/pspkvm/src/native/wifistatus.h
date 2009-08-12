@@ -10,7 +10,7 @@ extern "C" {
 /*
 	Header for wifistatus.c--defines a struct and the field values
 	for calling into sceNetApctlGetInfo(...). Much is borrowed
-	from pspZorba via
+	from pspZorba and Insert_Witty_Name via
 	
 		http://forums.ps2dev.org/viewtopic.php?t=10277 .
 	

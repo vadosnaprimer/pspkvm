@@ -11,8 +11,8 @@
 // Native support for the com.pspkvm.system.WifiStatus extension.
 
 // Pretty place to put all this stuff, for each call.
-// Note that this may not seem terribly multithread-friendly,
-// the underlying states are global anyway.
+// Note that while this may not seem especially multithread-
+// compatible, the underlying states are global anyway.
 struct pspNetConnectionState crt_state;
 
 // Note that for unsigned char, unsigned short, we just return as unsigned int--
