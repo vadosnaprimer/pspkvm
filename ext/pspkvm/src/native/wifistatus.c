@@ -210,7 +210,8 @@ NET_CONFIG_UINT_RET(com_pspkvm_system_WifiStatus_getStartBrowser,
 NET_CONFIG_UINT_RET(com_pspkvm_system_WifiStatus_getUseWiFiSP,
 	pspNetGetUseWiFiSP)
 
-// Stuff below here is support through the pspwlan.h header
+// Stuff below here is supported through the pspwlan.h header
+// and the -lpspwlan lib.
 
 KNIEXPORT KNI_RETURNTYPE_BOOLEAN
 KNIDECL(com_pspkvm_system_WifiStatus_isPowerOn) {

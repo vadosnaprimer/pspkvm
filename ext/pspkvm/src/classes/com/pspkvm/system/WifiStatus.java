@@ -1,7 +1,7 @@
 package com.pspkvm.system;
 
 /*
-	PSP-specific extension--provides WiFi and IP network system status details  
+	PSP-specific extension--provides WiFi and IP network system status. 
 */
 
 public class WifiStatus {
