@@ -5,14 +5,16 @@
 #include <commonKNIMacros.h>
 #include <string.h>
 #include <stdio.h>
+#include <psptypes.h>
+#include <pspwlan.h>
 
 #include "wifistatus.h"
 
 // Native support for the com.pspkvm.system.WifiStatus extension.
 
 // Pretty place to put all this stuff, for each call.
-// Note that this may not seem terribly multithread-friendly,
-// the underlying states are global anyway.
+// Note that while this may not seem especially multithread-
+// compatible, the underlying states are global anyway.
 struct pspNetConnectionState crt_state;
 
 // Note that for unsigned char, unsigned short, we just return as unsigned int--
@@ -207,3 +209,30 @@ NET_CONFIG_UINT_RET(com_pspkvm_system_WifiStatus_getStartBrowser,
 	pspNetGetStartBrowser)
 NET_CONFIG_UINT_RET(com_pspkvm_system_WifiStatus_getUseWiFiSP,
 	pspNetGetUseWiFiSP)
+
+// Stuff below here is supported through the pspwlan.h header
+// and the -lpspwlan lib.
+
+KNIEXPORT KNI_RETURNTYPE_BOOLEAN
+KNIDECL(com_pspkvm_system_WifiStatus_isPowerOn) {
+	KNI_ReturnBoolean(sceWlanDevIsPowerOn()==0 ? KNI_FALSE : KNI_TRUE); }
+
+KNIEXPORT KNI_RETURNTYPE_BOOLEAN
+KNIDECL(com_pspkvm_system_WifiStatus_isSwitchOn) {
+	KNI_ReturnBoolean(sceWlanGetSwitchState()==0 ? KNI_FALSE : KNI_TRUE); }
+
+KNIEXPORT KNI_RETURNTYPE_OBJECT 
+KNIDECL(com_pspkvm_system_WifiStatus_getMACAddr) {
+	KNI_StartHandles(1);
+	KNI_DeclareHandle(ret);
+	// 6 x 2 digits + 5 separators + terminator
+	char retstr[18];
+	// Native function requests 8, uses 6; no one knows why:
+	unsigned char mac_addr[8];
+	sceWlanGetEtherAddr(mac_addr);
+	sprintf(retstr, "%02x:%02x:%02x:%02x:%02x:%02x",
+		mac_addr[0], mac_addr[1],
+		mac_addr[2], mac_addr[3], 
+		mac_addr[4], mac_addr[5]);
+	KNI_NewStringUTF(retstr, ret);
+	KNI_EndHandlesAndReturnObject(ret); }
