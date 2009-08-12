@@ -9,12 +9,13 @@ extern "C" {
 
 /*
 	Header for wifistatus.c--defines a struct and the field values
-	for calling into sceNetApctlGetInfo(...). Much is borrowed from: 
-
-		pspZorba via http://forums.ps2dev.org/viewtopic.php?t=10277 .
+	for calling into sceNetApctlGetInfo(...). Much is borrowed
+	from pspZorba and Insert_Witty_Name via
+	
+		http://forums.ps2dev.org/viewtopic.php?t=10277 .
 	
 	NB: Defines may eventually collide if this winds up in the SDK;
-	hasn't as of this writing, however
+	hasn't as of this writing, however.
 */
 
 /* Field selectors and corresponding return types for sceNetApctlGetInfo */
