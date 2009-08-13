@@ -58,7 +58,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     /** Union of all chordal keys */
 		static final int CHORDAL_KEYS = PSPCtrlCodes.LTRIGGER | PSPCtrlCodes.RTRIGGER
 			| PSPCtrlCodes.UP | PSPCtrlCodes.RIGHT | PSPCtrlCodes.DOWN | PSPCtrlCodes.LEFT;
-	
+			
+		// The keymaps, including the pointer to the crt_map.
+		SC_Keymap crt_map;
+		final static SC_Keymap roman_map = new SC_Keymap_Roman();
 
     /**
      * Virtual Keyboard constructor.
@@ -81,7 +84,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     initDisplayVars();    
 		currentKeyboard = 0;
     this.vkl = vkl;
-		currentKeyboard = 0; }
+		currentKeyboard = 0;
+		setup_keymaps(); }
+		
+	void setup_keymaps() {
+		// TODO: Read config param
+		crt_map = roman_map; }
 		
 	/**
 	 *	Construct images, soft fonts from the bitstreams in the aux classes
@@ -126,7 +134,8 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		   return; }
 		   
 		initDisplayVars();
-				
+		setup_keymaps();
+
 		this.vkl = vkl;	}
 		
 		/**
@@ -186,15 +195,15 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param o the offset into the key array		 		 		 		 		 		 		 
 		 */
 		void paintKeyStacked(Graphics g, SFont f, int x, int y, int o) {
-			if (SC_Keys.ls_matched_meta[o]) {
+			if (crt_map.isLSMatchedMeta(o)) {
 				if (rs_set) {
 					return; }
 				y-=4; }
-			else if (SC_Keys.us_matched_meta[o]) {
+			else if (crt_map.isUSMatchedMeta(o)) {
 				if (!rs_set) {
 					return; }
 				y+=5; }
-			else if (SC_Keys.isLCAlpha(caps_lock_set, o)) {
+			else if (crt_map.isLCAlpha(caps_lock_set, o)) {
 				if (rs_set ^ caps_lock_set) {
 					return; }
 				// !(rs_set ^ caps_lock_set). UC won't be printed.
@@ -202,7 +211,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					y+=5; }
 				else {
 					y-=4; } }
-			else if (SC_Keys.isUCAlpha(caps_lock_set, o)) {
+			else if (crt_map.isUCAlpha(caps_lock_set, o)) {
 				if (!(rs_set ^ caps_lock_set)) {
 					return; }
 				// (rs_set ^ caps_lock_set). LC won't be printed.
@@ -210,7 +219,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					y-=4; }
 				else {
 					y+=5; } }
-			String s=SC_Keys.getChordalMapDisplay(caps_lock_set)[o];
+			String s=crt_map.getDisplayString(caps_lock_set, o);
 			int offset = sfont_blue.stringWidth(s)/2;
 			f.drawString(g, x-offset, y, s); }
 			
@@ -274,7 +283,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	   * @param o The offset into the chord of the key
 	   */
 		void paintKey(Graphics g, SFont f, int x, int y, int o) {
-			String s=SC_Keys.getChordalMapDisplay(caps_lock_set)[o];
+			String s=crt_map.getDisplayString(caps_lock_set, o);
 			int offset = sfont_blue.stringWidth(s)/2;
 			f.drawString(g, x-offset, y, s); }
 		
@@ -465,12 +474,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				return; }
 			// Meaningful stroke. Process it.
 			int offset = getCharOffset(p);
-			if (SC_Keys.isChar(offset)) {
+			if (crt_map.isChar(offset)) {
 				vkl.virtualKeyEntered(EventConstants.PRESSED,
-					SC_Keys.getChordalMapChars(caps_lock_set)[offset]);
+					crt_map.getOutputChar(caps_lock_set, offset));
 				return; }
-			if (SC_Keys.isMeta(offset)) {
-				vkl.virtualMetaKeyEntered(SC_Keys.chordal_map_meta[offset]); } }
+			if (crt_map.isMeta(offset)) {
+				vkl.virtualMetaKeyEntered(crt_map.getMetaKey(offset)); } }
 
     /**
      * Update the chord map displayed
