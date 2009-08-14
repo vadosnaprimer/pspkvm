@@ -53,6 +53,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     Image c_lock_img, key_bg_img, key_bg_img_on, sel_img;
     // The soft fonts
     SFont sfont_red, sfont_blue;
+    // System font
+    static final Font sys_font =
+			Font.getFont(Font.FACE_SYSTEM, Font.STYLE_BOLD, Font.SIZE_SMALL);
+		// Colors for drawing the system font
+		static final int FONT_BLUE = 0x4040c0;
+		static final int FONT_RED = 0xc04040;
     
     // Useful field
     /** Union of all chordal keys */
@@ -173,14 +179,48 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					keypad_posn_x[idx], keypad_posn_y[idx], g.TOP|g.LEFT); }
 			// Draw keys
 			int ls_offset = ls_set ? 8 : 0;
+			g.setFont(sys_font);
 			for (int idx=0; idx<9; idx++) {
-				paintChordStacked(g, (idx==live_dpad) && (!rs_set) ? sfont_red : sfont_blue,
-					keypad_posn_x[idx], keypad_posn_y[idx], offsets[idx]+ls_offset);
-				paintChordStacked(g, (idx==live_dpad) && (rs_set) ? sfont_red : sfont_blue,
-					keypad_posn_x[idx], keypad_posn_y[idx]-9, offsets[idx]+ls_offset+4); }
+				paintChordStacked(g, 
+					keypad_posn_x[idx], keypad_posn_y[idx], offsets[idx]+ls_offset,
+					(idx==live_dpad) && (!rs_set));
+				paintChordStacked(g,
+					keypad_posn_x[idx], keypad_posn_y[idx]-9, offsets[idx]+ls_offset+4,
+					(idx==live_dpad) && (rs_set)); }
 			g.setColor(BLK);
 			g.drawRect(0, 0, lg_dim_width, lg_dim_height);
 			paintMiscState(g); }
+			
+		// Convenient method to identify the user block from ue000 to ue100
+		boolean isInUserBlock(char u) {
+			if (u < '\ue000') {
+				return false; }
+			return (u < '\ue100'); }
+			
+		// Convenient method to identify arrow chars
+		boolean isArrowChar(char u) {
+			if (u< '\u2190') {
+				return false; }
+			return (u < '\u2194'); }
+			
+		// Convenient method to identify stuff that should be 
+		// rendered with the SFonts
+		boolean useSFont(char u) {
+			if (isInUserBlock(u)) {
+				return true; }
+			return (isArrowChar(u)); }
+					
+		// Convenience method to draw a string using *either* the soft font
+		// (for certain mekeys) or the built-in font
+		void paintString(Graphics g, int x, int y, String s, boolean active) {
+			if (useSFont(s.charAt(0))) {
+				SFont sf = (active ? sfont_red : sfont_blue);
+				int offset = sf.stringWidth(s)/2;
+				sf.drawString(g, x-offset, y, s);
+				return; }
+			g.setColor(active ? FONT_RED : FONT_BLUE);
+			int offset = sys_font.stringWidth(s)/2;
+			g.drawString(s, x-offset, y, g.TOP|g.LEFT); }
 
 		/**
 		 *	Method called to paint a key in a 'stacked' array--in the large graphics context
@@ -194,7 +234,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param y the y coordinate
 		 * @param o the offset into the key array		 		 		 		 		 		 		 
 		 */
-		void paintKeyStacked(Graphics g, SFont f, int x, int y, int o) {
+		void paintKeyStacked(Graphics g, int x, int y, int o, boolean active) {
 			if (crt_map.isLSMatchedMeta(o)) {
 				if (rs_set) {
 					return; }
@@ -220,8 +260,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				else {
 					y+=5; } }
 			String s=crt_map.getDisplayString(caps_lock_set, o);
-			int offset = sfont_blue.stringWidth(s)/2;
-			f.drawString(g, x-offset, y, s); }
+			paintString(g, x, y, s, active); }
 			
 		/** Paint the 'stacked' chord displays in the large graphics context
 		 * Most of the logic is in paintKeyStacked
@@ -231,13 +270,13 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param y the y coordinate
 		 * @param offset the base offset of the chord
 		 */
-		void paintChordStacked(Graphics g, SFont f, int x, int y, int offset) {
+		void paintChordStacked(Graphics g, int x, int y, int offset, boolean active) {
 			x+= 28;
 			y+= 10;
-			paintKeyStacked(g, f, x+ltr_x[0], y+ltr_y[0], offset+0);
-			paintKeyStacked(g, f, x+ltr_x[1], y+ltr_y[1], offset+1);
-			paintKeyStacked(g, f, x+ltr_x[2], y+ltr_y[2], offset+2);
-			paintKeyStacked(g, f, x+ltr_x[3], y+ltr_y[3], offset+3); }
+			paintKeyStacked(g, x+ltr_x[0], y+ltr_y[0], offset+0, active);
+			paintKeyStacked(g, x+ltr_x[1], y+ltr_y[1], offset+1, active);
+			paintKeyStacked(g, x+ltr_x[2], y+ltr_y[2], offset+2, active);
+			paintKeyStacked(g, x+ltr_x[3], y+ltr_y[3], offset+3, active); }
 
 		/** Paint the 'simple' unstacked chord displays, in the small graphics context
 		 * @param g the graphics context
@@ -246,11 +285,11 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param y the y coordinate
 		 * @param offset the base offset of the chord
 		 */		 		 		 		 		 		 		
-		void paintChord(Graphics g, SFont f, int x, int y, int offset) {
-			paintKey(g, f, x+ltr_x[0], y+ltr_y[0], offset+0);
-			paintKey(g, f, x+ltr_x[1], y+ltr_y[1], offset+1);
-			paintKey(g, f, x+ltr_x[2], y+ltr_y[2], offset+2);
-			paintKey(g, f, x+ltr_x[3], y+ltr_y[3], offset+3); }
+		void paintChord(Graphics g, int x, int y, int offset, boolean active) {
+			paintKey(g, x+ltr_x[0], y+ltr_y[0], offset+0, active);
+			paintKey(g, x+ltr_x[1], y+ltr_y[1], offset+1, active);
+			paintKey(g, x+ltr_x[2], y+ltr_y[2], offset+2, active);
+			paintKey(g, x+ltr_x[3], y+ltr_y[3], offset+3, active); }
 
     /**
      * paint the virtual keyboard on the screen
@@ -282,10 +321,9 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	   * @param y Y coordinate of the string (top)
 	   * @param o The offset into the chord of the key
 	   */
-		void paintKey(Graphics g, SFont f, int x, int y, int o) {
+		void paintKey(Graphics g, int x, int y, int o, boolean active) {
 			String s=crt_map.getDisplayString(caps_lock_set, o);
-			int offset = sfont_blue.stringWidth(s)/2;
-			f.drawString(g, x-offset, y, s); }
+			paintString(g, x, y, s, active); }
 		
 		/**
 		 * Display caps lock state -- just paint one image or another
@@ -350,7 +388,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     	g.drawImage(key_bg_img, x, y, g.TOP|g.LEFT);
     	x += (key_bg_img.getWidth()/2);
     	y+=6;
-    	paintChord(g, sfont_blue, x, y, chordal_offset); }
+    	paintChord(g, x, y, chordal_offset, true); }
 			
 		/**
 		 *	Translate the control state into a DPAD direction for display
