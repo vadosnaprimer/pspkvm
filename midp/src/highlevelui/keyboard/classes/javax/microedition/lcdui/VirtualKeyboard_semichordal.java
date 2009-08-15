@@ -67,7 +67,22 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			
 		// The keymaps, including the pointer to the crt_map.
 		SC_Keymap crt_map;
+		int crt_map_idx;
+		
 		final static SC_Keymap roman_map = new SC_Keymap_Roman();
+		final static SC_Keymap cyrillic_map = new SC_Keymap_Cyrillic();
+		final static SC_Keymap[] mapset = {
+			roman_map, cyrillic_map };
+		// Indexes to the maps
+		final static int ROMAN_MAP = 0;
+		final static int CYRILLIC_MAP = 1;
+		
+		// Called whenever the keyboard sends 'SWM' (Switch Map)
+		void rotate_map() {
+			crt_map_idx++;
+			if (crt_map_idx >= mapset.length) {
+				crt_map_idx = 0; }
+			crt_map = mapset[crt_map_idx]; } 
 
     /**
      * Virtual Keyboard constructor.
@@ -94,8 +109,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		setup_keymaps(); }
 		
 	void setup_keymaps() {
-		// TODO: Read config param
-		crt_map = roman_map; }
+		// TODO: Read config param, init as 
+		// Cyrillic (or other) if so configured
+		crt_map_idx=ROMAN_MAP;
+		crt_map = mapset[crt_map_idx]; }
 		
 	/**
 	 *	Construct images, soft fonts from the bitstreams in the aux classes
