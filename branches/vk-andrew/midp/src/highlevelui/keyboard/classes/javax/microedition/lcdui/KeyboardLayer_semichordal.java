@@ -30,6 +30,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
+  /** Once cell character array--useful for various inserts */
+  char tmpchrarray[];
 
 	String layerID = null;
 
@@ -44,6 +46,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	    super((Image)null, -1); // don't draw a background  
 	
 	    this.layerID  = "KeyboardLayer";
+	    tmpchrarray = new char[1];
 	    tfContext = tf;
 	    //backupstring is set to original text before the kbd was used
 	    backupString = tfContext.tf.getString();
@@ -99,6 +102,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
+        tmpchrarray = new char[1];
         tfContext = null;
         cvContext = canvas;
         if (vk==null) {
@@ -377,6 +381,10 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					setVisible(vk.toggleDisplayChords());
 					disp.requestScreenRepaint();
 					return;
+				case SC_Keys.SWM:
+					vk.rotate_map();
+					disp.requestScreenRepaint();
+					return;
 				case SC_Keys.SEL:
 					tfContext.tf.synchSelectionStart();
 					vk.select_on = !vk.select_on;
@@ -410,10 +418,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			char a = tfContext.tf.getString().charAt(p-1);
 			// Annoyingly, to use insert, you need either a String or a char[]...
 			// so far as I can see.
-			char[] aa = new char[1];
-			aa[0] = Diacriticals.getDiacritical(a, d);
+			tmpchrarray[0] = Diacriticals.getDiacritical(a, d);
 			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-			tfContext.tf.insert(aa, 0, 1, tfContext.tf.getCaretPosition());
+			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
 			tfContext.tf.getString(); }
 
 	 // Called to close the thing
@@ -465,7 +472,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     public void virtualKeyEntered(int type, char c) {
     	eraseSelection();
     	if (tfContext != null) {
-				tfContext.uCallKeyPressed(c);
+    		// We have to use the insert call because
+    		// a lot of the more exotic characters won't 
+    		// go through on uCallKeyPressed.
+    		tmpchrarray[0]=c;
+    		tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
       	tfContext.tf.getString(); }
       if (cvContext != null) {
 				cvContext.uCallKeyPressed(c); } }
