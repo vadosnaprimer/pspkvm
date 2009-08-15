@@ -42,6 +42,16 @@ public class SC_Keys {
 	public static final int CPY=20;
 	public static final int PST=21;
 	public static final int SWM=22;
+	public static final int SYM=23;
+	public static final int SLK=24;
+	public static final int CNC=25;
+	
+	// Handy enum for uppercase/lowercase/non-case maps
+	// in symbol sets where it's inconvenient just to use
+	// the range (as in Roman)
+	public static final int NCS = 0;
+	public static final int LCS = 1;
+	public static final int UCS = 2;
 	
 	// Modifier/deadkey metakeys -- add
 	// diacritics to preceding letters
