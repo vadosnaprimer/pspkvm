@@ -1,12 +1,14 @@
 /**
  * Diacriticals maps for use by the semichordal board (and others, eventually).
  * Maps unicode characters to the same character with a given diacritical added.
- * Supports all diacritical marks added to Roman bases specified in ENV 1973:1995,
+ * Supports all diacritical marks added to page 0 Latin bases specified in ENV 1973:1995,
  * Minimum European Subset of ISO/IEC 10646-1. Boards supporting this set are
- * probably useable for the vast majority of European languages.  
+ * probably useable for the vast majority of European languages. Also supports all
+ * characters in Unicode page 0x0400-0x04ff (Cyrillic) and in Unicode page
+ * 0x03700-0x037ff (Greek/Coptic) for which combining characters exist.  
  *  
- * TODO: Add support for full set, incl. ENV 1973:1995 for Greek and Cyrillic
- * annotations, and remaining (non-minimal) Roman alphabet additions.
+ * TODO: Add support for full set, incl. remaining Latin extensions (unusual Latin set
+ * characters)
  * 
  */
 // breve macron stroke caron ogonek middle_dot, dot_above
@@ -39,6 +41,8 @@ public class Diacriticals {
 	// Receive a character, return the same character with
 	// an acute accent added, if appropriate. If not appropriate,
 	// or we have no map, return the same character back.
+	// NB: Greek and Coptic sets call this 'Tonos'. It's the same
+	// modifier (u0301) however.
 	static char getAcute(char a) {
 		switch(a) {
 			case 'A': return '\u00c1';
@@ -65,6 +69,28 @@ public class Diacriticals {
 			// Make U,u acute U,u double acute
 			case '\u00da': return '\u0170';
 			case '\u00fa': return '\u0171';
+			// Cyrillic encodings
+			case '\u0413': return '\u0403';
+			case '\u041a': return '\u040c';
+			case '\u0433': return '\u0453';
+			case '\u043a': return '\u045c';
+			// Greek/Coptic encodings
+			case '\u0395': return '\u0388';
+			case '\u0397': return '\u0389';
+			case '\u0399': return '\u038a';
+			case '\u039f': return '\u038c';
+			case '\u03a5': return '\u038e';
+			case '\u03a9': return '\u038f';
+			case '\u03ca': return '\u0390';
+			case '\u03b1': return '\u03ac';
+			case '\u03b5': return '\u03ad';
+			case '\u03b7': return '\u03ae';
+			case '\u03b9': return '\u03af';
+			case '\u03cb': return '\u03b0';
+			case '\u03bf': return '\u03cc';
+			case '\u03c5': return '\u03cd';
+			case '\u03c9': return '\u03ce';
+			case '\u03d2': return '\u03d3';
 			default: return a; } }
 
 		// Same as for getAcute, but with ring
@@ -96,6 +122,11 @@ public class Diacriticals {
 			case 'w': return '\u1e81';
 			case 'Y': return '\u1ef2';
 			case 'y': return '\u1ef3';
+			// Cyrillic encodings
+			case '\u0415': return '\u0400';
+			case '\u0418': return '\u040d';
+			case '\u0435': return '\u0450';
+			case '\u0438': return '\u045d';
 			default: return a; } }
 			
 		// Same as for getAcute, but with tilde
@@ -141,8 +172,9 @@ public class Diacriticals {
 			default: return a; } }
 			
 	// Same as for getAcute, but with diaeresis
-	// NB: In Unicode, umlaut and diaeresis are encoded
-	// (and thus rendered) identically
+	// NB: In Unicode, umlaut, diaeresis, and (Greek)
+	// dialytika are encoded (and thus rendered)
+	// identically
 	static char getDiaeresis(char a) {
 		switch(a) {
 			case 'A': return '\u00c4';
@@ -162,6 +194,17 @@ public class Diacriticals {
 			// Add diaeresis to A,a with macron
 			case '\u0100': return '\u01de'; 
 			case '\u0101': return '\u01df';
+			// Cyrillic encodings
+			case '\u0415': return '\u0401';
+			case '\u0406': return '\u0407';
+			case '\u0435': return '\u0451';
+			case '\u0456': return '\u0457';
+			// Greek/Coptic encodings
+			case '\u0399': return '\u03aa';
+			case '\u03a5': return '\u03ab';
+			case '\u03b9': return '\u03ca';
+			case '\u03c5': return '\u03cb';
+			case '\u03d2': return '\u03d4';
 			default: return a; } }
 
 		// Same as for getAcute, but with cedille
@@ -202,6 +245,11 @@ public class Diacriticals {
 			case 'o': return '\u014f';
 			case 'U': return '\u016c';
 			case 'u': return '\u016d';
+			// Cyrillic encodings
+			case '\u0423': return '\u040e';
+			case '\u0418': return '\u0419';
+			case '\u0438': return '\u0439';
+			case '\u0443': return '\u045e';
 			default: return a; } }
 
 	// Same as for getAcute, but with macron
