@@ -26,7 +26,8 @@ import com.sun.midp.chameleon.MIDPWindow;
 class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements CommandListener {
 
 	// Commands handled in the menu bar
-  private Command cmdOK, cmdCancel, cmdToggleDisplay;
+  private Command cmdOK, cmdCancel, cmdToggleDisplay,
+  	cmdClear, cmdCopyAll, cmdRotateMap;
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
@@ -70,7 +71,11 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		cmdOK = new Command("OK", Command.OK, 1);
 		cmdCancel = new Command("Cancel", Command.CANCEL, 2);
 		cmdToggleDisplay = new Command("Toggle Display", Command.HELP, 3);
-		Command commands[]={cmdOK,cmdCancel,cmdToggleDisplay};
+		cmdRotateMap = new Command("Rotate Map", Command.HELP, 3);
+		cmdClear = new Command("Clear", Command.HELP, 3);
+		cmdCopyAll = new Command("Copy All", Command.HELP, 3);
+		Command commands[]={cmdOK, cmdCancel, cmdToggleDisplay,
+			cmdRotateMap, cmdClear, cmdCopyAll };
 		setCommandListener(this);
 		setCommands(commands); }
 		       
@@ -87,6 +92,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return; }
       if (cmd == cmdCancel) {
 				closeKeyEntered(false);
+				return; }
+			if (cmd == cmdCopyAll) {
+				virtualMetaKeyEntered(SC_Keys.CAL);
+				return; }
+			if (cmd == cmdClear) {
+				virtualMetaKeyEntered(SC_Keys.CLR);
+				return; }
+			if (cmd == cmdRotateMap) {
+				virtualMetaKeyEntered(SC_Keys.SWM);
 				return; }
       if (cmd == cmdToggleDisplay) {
 				virtualMetaKeyEntered(SC_Keys.DSP); } }
@@ -314,6 +328,12 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			switch(m) {
 				case SC_Keys.CPY:
 					Clipboard.set(tfContext.tf.getSelection());
+					return;
+				case SC_Keys.CAL:
+					Clipboard.set(tfContext.tf.getString());
+					return;
+				case SC_Keys.CLR:
+					Clipboard.set(tfContext.tf.getString());
 					return;
 				case SC_Keys.PST:
 					eraseSelection();

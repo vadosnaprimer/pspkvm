@@ -41,10 +41,18 @@ public class SC_Keys {
 	public static final int DSP=19;
 	public static final int CPY=20;
 	public static final int PST=21;
+	// Switch map:
 	public static final int SWM=22;
+	// Overlay symbol map (one stroke):
 	public static final int SYM=23;
+	// Overlay symbol map (and lock):
 	public static final int SLK=24;
+	// Cancel (return from locked overlay):
 	public static final int CNC=25;
+	// Copy all:
+	public static final int CAL=26;
+	// Clear all:
+	public static final int CLR=27;
 	
 	// Handy enum for uppercase/lowercase/non-case maps
 	// in symbol sets where it's inconvenient just to use
@@ -75,5 +83,7 @@ public class SC_Keys {
 	public static final int OGO=111;
 	public static final int MDT=112;
 	public static final int UDT=113;
+	
+	public static final String helpStr_Eng = "Note that not all commands are available in all boards. See also the menu at the bottom of the screen, and alternate maps (see SWM).\n\nENT: Enter\nINS: Insert mode (toggle)\nBSP: Backspace (delete to left of cursor)\nDEL: Delete (delete to right of cursor)\nESC: Escape (cancels input in main boards)\nTAB: Tab\nPUP: Page up\nHME: Home\nPDN: Page down\nEND: End\nALT: Alt\nSEL: Select (toggle)\nCLK: Caps lock (toggle)\nCTL: Control\nDSP: Display mode (toggle)\nCPY: Copy\nPST: Paste\nSWM: Switch keymap (Cyrillic/English/etc.)\nSYM: Overlay symbol map (for one stroke)\nSLK: Overlay symbol map (and lock)\nCNC: Cancel (returns from overlay)\nCAL: Copy all\nCLR: Clear (all)\n";
 	
 }

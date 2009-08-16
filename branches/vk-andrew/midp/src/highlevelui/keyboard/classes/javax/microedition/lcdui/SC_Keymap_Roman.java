@@ -5,6 +5,10 @@ package javax.microedition.lcdui;
 
 class SC_Keymap_Roman extends SC_Keymap {
 
+	// Map's name (for display)
+	public String getMapName() {
+		return "Roman"; }
+
   // The map of non-meta characters. Note that where there are 
   // valid meta characters, space is set, but these are just 
   // placeholders (and using space makes the table more legible)
