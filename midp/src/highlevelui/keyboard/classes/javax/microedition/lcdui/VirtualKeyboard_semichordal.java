@@ -303,6 +303,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param offset the base offset of the chord
 		 */		 		 		 		 		 		 		
 		void paintChord(Graphics g, int x, int y, int offset, boolean active) {
+			g.setFont(sys_font);
 			paintKey(g, x+ltr_x[0], y+ltr_y[0], offset+0, active);
 			paintKey(g, x+ltr_x[1], y+ltr_y[1], offset+1, active);
 			paintKey(g, x+ltr_x[2], y+ltr_y[2], offset+2, active);
