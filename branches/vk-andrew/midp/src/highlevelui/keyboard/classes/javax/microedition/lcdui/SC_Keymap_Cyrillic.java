@@ -149,7 +149,7 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
     // these are the unicode escapes in 12th line of array.
     public static final String[] chordal_map_d = {
 			" ", "\u0430", "\u0438", "\u043e", ENTG, "\u0410", "\u0418", "\u041e",
-			"INS", "BSP", "DEL", "ESC", " ", " ", " ", " ",
+			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
 			"\u0435", "\u0451", "\u043d", "\u0442", "\u0415", "\u0401", "\u041d", "\u0422",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"\u0440", "\u0441", "\u0432", "\u043b", "\u0420", "\u0421", "\u0412", "\u041b",
@@ -169,7 +169,7 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 
    public static final String[] chordal_map_d_caps_lock = {
 			" ", "\u0410", "\u0418", "\u041e", ENTG, "\u0430", "\u0438", "\u043e",
-			"INS", "BSP", "DEL", "ESC", " ", " ", " ", " ",
+			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
 			"\u0415", "\u0401", "\u041d", "\u0422", "\u0435", "\u0451", "\u043d", "\u0442",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"\u0420", "\u0421", "\u0412", "\u041b", "\u0440", "\u0441", "\u0432", "\u043b",
