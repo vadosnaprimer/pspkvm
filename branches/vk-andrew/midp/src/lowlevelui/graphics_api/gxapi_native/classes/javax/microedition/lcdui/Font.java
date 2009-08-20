@@ -152,6 +152,14 @@ public final class Font {
     public static final int FACE_PROPORTIONAL = 64;
   
     /**
+     * The &quot;utility&quot; font face.
+     *
+     * <P>Value <code>512</code> is assigned to
+     * <code>FACE_UTILITY</code>.</P>
+     */
+    public static final int FACE_UTILITY = 512;
+  
+    /**
      * Default font specifier used to draw Item and Screen contents.
      *
      * <code>FONT_STATIC_TEXT</code> has the value <code>0</code>.
@@ -247,6 +255,7 @@ public final class Font {
     public static Font getFont(int inp_face, int inp_style, int inp_size) {
         if ((inp_face != FACE_SYSTEM) 
             && (inp_face != FACE_MONOSPACE)
+            && (inp_face != FACE_UTILITY)
             && (inp_face != FACE_PROPORTIONAL)) {
             throw new IllegalArgumentException("Unsupported face");
         }

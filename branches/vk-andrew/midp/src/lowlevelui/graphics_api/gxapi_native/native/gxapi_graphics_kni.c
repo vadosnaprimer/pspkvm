@@ -601,6 +601,56 @@ KNIDECL(javax_microedition_lcdui_Graphics_drawString) {
     KNI_ReturnVoid();
 }
 
+KNIEXPORT KNI_RETURNTYPE_VOID
+KNIDECL(javax_microedition_lcdui_Graphics_drawUtilityString) {
+    int anchor = KNI_GetParameterAsInt(4);
+    int      y = KNI_GetParameterAsInt(3);
+    int      x = KNI_GetParameterAsInt(2);
+    int strLen;
+
+    KNI_StartHandles(2);
+
+    KNI_DeclareHandle(str);
+    KNI_DeclareHandle(thisObject);
+
+    KNI_GetParameterAsObject(1, str);
+    KNI_GetThisPointer(thisObject);
+
+    if (GRAPHICS_OP_IS_ALLOWED(thisObject)) {
+        strLen = KNI_GetStringLength(str);
+        if (strLen < 0) {
+            KNI_ThrowNew(midpNullPointerException, NULL);
+        } else if (!check_anchor(anchor, VCENTER)) {
+            KNI_ThrowNew(midpIllegalArgumentException, NULL);
+        } else {
+            int      face, style, size;
+            _JavaString *jstr;
+            jshort clip[4]; /* Defined in Graphics.java as 4 shorts */
+
+        		face = 512; // Utility face
+        		style = 0; // Irrelevant
+        		size = 0; // Irrelevant
+        
+            TRANSLATE(thisObject, x, y);
+        
+            jstr = GET_STRING_PTR(str);
+        
+            GET_CLIP(thisObject, clip);
+
+            gx_draw_chars(GET_PIXEL(thisObject),
+                          clip,
+                          GET_IMAGEDATA_PTR_FROM_GRAPHICS(thisObject),
+                          GET_LINESTYLE(thisObject),
+                          face, style, size, x, y, anchor, 
+                          jstr->value->elements + jstr->offset,
+                          strLen);
+        }
+    }
+
+    KNI_EndHandles();
+    KNI_ReturnVoid();
+}
+
 /**
  * Draws a portion of the specified <tt>String</tt> using the
  * current font and color.
