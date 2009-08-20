@@ -128,7 +128,7 @@ class SC_Keymap_Roman extends SC_Keymap {
     // these are the unicode escapes in 12th line of array.
     public static final String[] chordal_map_d = {
 			"SPC", "e", "t", "s", ENTG, "E", "T", "S",
-			"INS", "BSP", "DEL", "ESC", " ", " ", " ", " ",
+			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
 			"o", "a", "u", "i", "O", "A", "U", "I",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 			"n", "p", "d", "h", "N", "P", "D", "H",
@@ -148,7 +148,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 
    public static final String[] chordal_map_d_caps_lock = {
 			"SPC", "E", "T", "S", ENTG, "e", "t", "s",
-			"INS", "BSP", "DEL", "ESC", " ", " ", " ", " ",
+			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
 			"O", "A", "U", "I", "o", "a", "u", "i",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 			"N", "P", "D", "H", "n", "p", "d", "h",

@@ -115,9 +115,12 @@ public class SC_Keys {
 	static final String XMDT = "\ue00d";
 	static final String XLIG = "\ue00e";
 	
-	// Enter, tab glyphs
+	// Enter, tab, edit key glyphs
 	static final String ENTG = "\ue020";
 	static final String TABG = "\ue021";
+	static final String DELG = "\ue022";
+	static final String BSPG = "\ue023";
+
 	
 	public static final String helpStr_Eng = "Note that not all commands are available in all boards. See also the menu at the bottom of the screen, and alternate maps (see SWM).\n\nENT: Enter\nINS: Insert mode (toggle)\nBSP: Backspace (delete to left of cursor)\nDEL: Delete (delete to right of cursor)\nESC: Escape (cancels input in main boards)\nTAB: Tab\nPUP: Page up\nHME: Home\nPDN: Page down\nEND: End\nALT: Alt\nSEL: Select (toggle)\nCLK: Caps lock (toggle)\nCTL: Control\nDSP: Display mode (toggle)\nCPY: Copy\nPST: Paste\nSWM: Switch keymap (Cyrillic/English/etc.)\nSYM: Overlay symbol map (for one stroke)\nSLK: Overlay symbol map (and lock)\nCNC: Cancel (returns from overlay)\nCAL: Copy all\nCLR: Clear (all)\n";
 	
