@@ -51,11 +51,13 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     
     // The board images
     Image c_lock_img, key_bg_img, key_bg_img_on, sel_img;
-    // The soft fonts
-    SFont sfont_red, sfont_blue;
-    // System font
-    static final Font sys_font =
-			Font.getFont(Font.FACE_SYSTEM, Font.STYLE_BOLD, Font.SIZE_SMALL);
+    // Utility font (NB: DO *NOT* call setFont with this 
+		// as an argument--use drawUtilityString instead--this
+		// is to avoid confusing client code which might get 
+		// back a font from getFont() it does not recognize.
+		// This object is just used for sizing calls.)
+    static final Font utility_font =
+			Font.getFont(Font.FACE_UTILITY, Font.STYLE_BOLD, Font.SIZE_SMALL);
 		// Colors for drawing the system font
 		static final int FONT_BLUE = 0x4040c0;
 		static final int FONT_RED = 0xc04040;
@@ -125,11 +127,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		key_bg_img = LongArrayHandler.createImage(Imgs_misc.psp_keys_off_seg,
 			Imgs_misc.psp_keys_off_segpad);
 		key_bg_img_on = LongArrayHandler.createImage(Imgs_misc.psp_keys_on_seg,
-			Imgs_misc.psp_keys_on_segpad);
-		sfont_blue = new SFont();
-		sfont_red = new SFont();
-		SFontInit_blue.initFont(sfont_blue.imgs);
-		SFontInit_red.initFont(sfont_red.imgs); }
+			Imgs_misc.psp_keys_on_segpad); }
 
 	// Initialize the various display variables--called at construction
 	void initDisplayVars() {
@@ -196,7 +194,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					keypad_posn_x[idx], keypad_posn_y[idx], g.TOP|g.LEFT); }
 			// Draw keys
 			int ls_offset = ls_set ? 8 : 0;
-			g.setFont(sys_font);
+			// g.setFont(utility_font);
 			for (int idx=0; idx<9; idx++) {
 				paintChordStacked(g, 
 					keypad_posn_x[idx], keypad_posn_y[idx], offsets[idx]+ls_offset,
@@ -204,40 +202,16 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				paintChordStacked(g,
 					keypad_posn_x[idx], keypad_posn_y[idx]-9, offsets[idx]+ls_offset+4,
 					(idx==live_dpad) && (rs_set)); }
+			// g.setFont(sys_font);
 			g.setColor(BLK);
 			g.drawRect(0, 0, lg_dim_width, lg_dim_height);
 			paintMiscState(g); }
 			
-		// Convenient method to identify the user block from ue000 to ue100
-		boolean isInUserBlock(char u) {
-			if (u < '\ue000') {
-				return false; }
-			return (u < '\ue100'); }
-			
-		// Convenient method to identify arrow chars
-		boolean isArrowChar(char u) {
-			if (u< '\u2190') {
-				return false; }
-			return (u < '\u2194'); }
-			
-		// Convenient method to identify stuff that should be 
-		// rendered with the SFonts
-		boolean useSFont(char u) {
-			if (isInUserBlock(u)) {
-				return true; }
-			return (isArrowChar(u)); }
-					
-		// Convenience method to draw a string using *either* the soft font
-		// (for certain mekeys) or the built-in font
+		// Convenience method to draw a string using the utility font
 		void paintString(Graphics g, int x, int y, String s, boolean active) {
-			if (useSFont(s.charAt(0))) {
-				SFont sf = (active ? sfont_red : sfont_blue);
-				int offset = sf.stringWidth(s)/2;
-				sf.drawString(g, x-offset, y, s);
-				return; }
 			g.setColor(active ? FONT_RED : FONT_BLUE);
-			int offset = sys_font.stringWidth(s)/2;
-			g.drawString(s, x-offset, y, g.TOP|g.LEFT); }
+			int offset = utility_font.stringWidth(s)/2;
+			g.drawUtilityString(s, x-offset, y, g.TOP|g.LEFT); }
 
 		/**
 		 *	Method called to paint a key in a 'stacked' array--in the large graphics context
@@ -303,11 +277,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param offset the base offset of the chord
 		 */		 		 		 		 		 		 		
 		void paintChord(Graphics g, int x, int y, int offset, boolean active) {
-			g.setFont(sys_font);
+			// g.setFont(utility_font);
 			paintKey(g, x+ltr_x[0], y+ltr_y[0], offset+0, active);
 			paintKey(g, x+ltr_x[1], y+ltr_y[1], offset+1, active);
 			paintKey(g, x+ltr_x[2], y+ltr_y[2], offset+2, active);
-			paintKey(g, x+ltr_x[3], y+ltr_y[3], offset+3, active); }
+			paintKey(g, x+ltr_x[3], y+ltr_y[3], offset+3, active);
+			/* g.setFont(sys_font); */ }
 
     /**
      * paint the virtual keyboard on the screen

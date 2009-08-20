@@ -58,6 +58,19 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts) {
     return pfonts[1];
 }
 
+// Quick inline to isolate the CJK characters
+// (or more precisely, isolate those we know 
+// we support which will be broken by this 
+// transform)
+inline int needs_cjk_transform(jchar c) {
+	if (c < 0x0500) {
+		return 0; }
+	if (c > 0xe100) {
+		return 1; }
+	if (c < 0xe000) {
+		return 1; }
+	return 0; }
+
 /**
  * @file
  *
@@ -80,8 +93,9 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
     unsigned short CJK = c0;
-    if (c0 >= 0x0200) {
-    	// Transform doesn't work for Unicode page 0
+    if (needs_cjk_transform(c0)) {
+    	// Transform doesn't work for Unicode pages 0 through 4,
+    	// and we also want to protected the user space at e000-e100
     	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 		                     ((short*)UNI_CJK)[c0]:
 	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
@@ -137,7 +151,18 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 }
 
 
-#define CHAR_WIDTH(c,i) 	(FontBitmaps[c[i]<512?1:3][FONT_WIDTH])
+#define CHAR_WIDTH(c,i)  char_width(c[i])
+
+// Replacement function for macro ... this is getting more complicated
+// Unicode pages 0 and 1 are 8 bits wide, Cyrillic (page 04) is 9 bits,
+// all the rest (Chinese, right now) are 16.
+inline int char_width(jchar i) {
+	// Unicode pages 0 and 1
+	if (i<512) { return 8; }
+	// Page 04 (Cyrillic)
+	if (i<0x04ff) { return 9; }
+	// Remaining pages
+	return 0x10; }
 	
 /*
  * Draws the first n characters specified using the current font,

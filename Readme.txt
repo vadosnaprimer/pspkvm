@@ -8,7 +8,8 @@ Project website:
 	http://www.pspkvm.cn
 Project home on SF:
 	https://sourceforge.net/projects/pspkvm
-	 
+
+NB: The semichordal board in this branch build now requires the TrueType system be functional for proper display of its layout. Make sure com.pspkvm.font.internal is *NOT* set in the pspkvm.ini file and that the utility.ttf font in the psp/ directory is placed in the folder with the EBOOT.PBP file on the memory stick, if using the semichordal board.
 	 
 --------------------------------
 Change log

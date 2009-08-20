@@ -84,6 +84,41 @@ public class SC_Keys {
 	public static final int MDT=112;
 	public static final int UDT=113;
 	
+	// Ligature
+	public static final int LIG=114;
+	
+	// Some useful strings for the display tables
+	// Single arrows
+	static final String L_ARR = "\u2190";
+	static final String U_ARR = "\u2191";
+	static final String R_ARR = "\u2192";
+	static final String D_ARR = "\u2193";
+	// Double arrows
+	static final String L_DAR = "\u219e";
+	static final String U_DAR = "\u219f";
+	static final String R_DAR = "\u21a0";
+	static final String D_DAR = "\u21a1";
+	// Deadkey glyphs
+	static final String XRIN = "\ue000";
+	static final String XDIA = "\ue001";
+	static final String XCIR = "\ue002";
+	static final String XGRV = "\ue003";
+	static final String XACU = "\ue004";
+	static final String XCED = "\ue005";
+	static final String XTIL = "\ue006";
+	static final String XCAR = "\ue007";
+	static final String XMCR = "\ue008";
+	static final String XBRV = "\ue009";
+	static final String XSTR = "\ue00a";
+	static final String XOGO = "\ue00b";
+	static final String XUDT = "\ue00c";
+	static final String XMDT = "\ue00d";
+	static final String XLIG = "\ue00e";
+	
+	// Enter, tab glyphs
+	static final String ENTG = "\ue020";
+	static final String TABG = "\ue021";
+	
 	public static final String helpStr_Eng = "Note that not all commands are available in all boards. See also the menu at the bottom of the screen, and alternate maps (see SWM).\n\nENT: Enter\nINS: Insert mode (toggle)\nBSP: Backspace (delete to left of cursor)\nDEL: Delete (delete to right of cursor)\nESC: Escape (cancels input in main boards)\nTAB: Tab\nPUP: Page up\nHME: Home\nPDN: Page down\nEND: End\nALT: Alt\nSEL: Select (toggle)\nCLK: Caps lock (toggle)\nCTL: Control\nDSP: Display mode (toggle)\nCPY: Copy\nPST: Paste\nSWM: Switch keymap (Cyrillic/English/etc.)\nSYM: Overlay symbol map (for one stroke)\nSLK: Overlay symbol map (and lock)\nCNC: Cancel (returns from overlay)\nCAL: Copy all\nCLR: Clear (all)\n";
 	
 }

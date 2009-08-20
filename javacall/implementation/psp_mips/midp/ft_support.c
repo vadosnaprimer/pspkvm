@@ -26,6 +26,11 @@ static int _ftc_small = 0;
 static int _ftc_medium = 0;
 static int _ftc_large = 0;
 
+/* Reserve space in the cache manager for as many faces
+	as can possibly be in flight (13)
+	(Memory card I/O on the PSP can be painfully slow) */
+static const int _ftc_face_max = 13;
+
 /* State: current font settings */
 static FTC_ScalerRec current_ic;
 
@@ -41,8 +46,10 @@ const char* _typeface_filenames[] = {
 	"sys_b.ttf", "prop_b.ttf", "mono_b.ttf",  
 	"sys_ib.ttf", "prop_ib.ttf", "mono_ib.ttf" };
 	
-// The (sorta built-in) tools font filename
-const char* _tools_typeface_filename = "tools.ttf";
+/** Utility font filename */
+const char* _utility_typeface_fn = "utility.ttf";
+/** Utility font size */
+const int _UTILITY_PIXEL_SIZE = 10;
 
 // Useful constant -- 3 faces x 4 variations
 #define _FTC_FACEID_COUNT 12
@@ -89,6 +96,8 @@ void initialize_face_ids() {
 // for requesting faces from the cache system.
 FTC_FaceID get_face_id(javacall_font_face face,
 	javacall_font_style style) {
+	if (face==JAVACALL_FONT_FACE_UTILITY) {
+		return (FTC_FaceID)_utility_typeface_fn; }
 	int idx = 0;
 	switch(face) {
 		case JAVACALL_FONT_FACE_PROPORTIONAL: idx=1; break;
@@ -154,7 +163,9 @@ inline void set_scaler_rec(FTC_ScalerRec* r,
                      javacall_font_style style, 
                      javacall_font_size size) {
 	r->face_id = get_face_id(face, style);
-	r->height = size_param_to_pixels(size);
+	r->height = face==JAVACALL_FONT_FACE_UTILITY ?
+		_UTILITY_PIXEL_SIZE :  
+		size_param_to_pixels(size);
 	r->width = 0;
 	r->pixel = 1; }
 
@@ -174,7 +185,7 @@ FT_Error init_font_cache_subsystem() {
 	if (err) {
 		return err; }
 	// Top level cache manager
-	err = FTC_Manager_New(_ftc_library, 0, 0, 0,
+	err = FTC_Manager_New(_ftc_library, _ftc_face_max, 0, 0,
 		fts_face_requester, (FT_Pointer)NULL, &cache_manager);
 	if (err) {
 		return err; }
@@ -302,7 +313,7 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 	if (!_ftc_initialized) { \
 		if (init_font_cache_subsystem()) { \
 			return err; } }
-
+			
 // Direct interface implementation
 javacall_result ftc_javacall_font_draw(javacall_pixel   color, 
                         int clipX1, 

@@ -46,9 +46,6 @@ SUBSYSTEM_KEYBOARD_JAVA_FILES = \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/LongArrayHandler.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Imgs_misc.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/Clipboard.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFont.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFontInit_blue.java \
-    $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SFontInit_red.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SC_Keys.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SC_Keymap.java \
     $(SUBSYSTEM_HIGHUI_DIR)/keyboard/classes/javax/microedition/lcdui/SC_Keymap_Roman.java \

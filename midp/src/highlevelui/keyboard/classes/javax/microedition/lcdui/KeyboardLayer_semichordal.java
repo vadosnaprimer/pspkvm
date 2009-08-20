@@ -333,7 +333,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					Clipboard.set(tfContext.tf.getString());
 					return;
 				case SC_Keys.CLR:
-					Clipboard.set(tfContext.tf.getString());
+					tfContext.tf.setString("");
+					tfContext.tf.getString();
 					return;
 				case SC_Keys.PST:
 					eraseSelection();

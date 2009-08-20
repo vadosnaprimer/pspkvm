@@ -37,6 +37,45 @@ public class Diacriticals {
 			case SC_Keys.MDT: return getMiddleDot(a);
 			case SC_Keys.UDT: return getDotAbove(a);
 			default: return a; } }
+			
+	// Return from getLigature() if there isn't one
+	// for this combination.
+	public static final char NOLIGATURE = 0;
+
+	// Top level handler for ligatures. Hand in two characters--
+	// if we know a ligature for those, you get it back. Otherwise,
+	// zero (NOLIGATURE) is returned
+	public static char getLigature(char a, char b) {
+		int c = (((int)a)<<16) | ((int)b);
+		switch (c) {
+			// AE, ae:
+			case 0x00410045: return '\u00c6';
+			case 0x00610065: return '\u00e6';
+			// ij, IJ
+			case 0x0049004a: return '\u0132';
+			case 0x0069006a: return '\u0133';
+			// OE, oe
+			case 0x004f0045: return '\u0152';
+			case 0x006f0065: return '\u0153';
+			// Croation digraphs
+			case 0x0044017d: return '\u01c4';
+			case 0x0044017e: return '\u01c5';
+			case 0x0064017e: return '\u01c6';
+			case 0x004c004a: return '\u01c7';
+			case 0x004c006a: return '\u01c8';
+			case 0x006c006a: return '\u01c9';
+			case 0x004e004a: return '\u01ca';
+			case 0x004e006a: return '\u01cb';
+			case 0x006e006a: return '\u01cc';
+			// Aficanist linguistics
+			case 0x00640062: return '\u0238';
+			case 0x00710070: return '\u0239';
+			// Cyrillic digraphs, ligatures
+			case 0x041e0443: return '\u0478';
+			case 0x043d0443: return '\u0479';
+			case 0x043d0433: return '\u04a5';
+			case 0x041d0413: return '\u04a4';
+			default: return NOLIGATURE; } }
 
 	// Receive a character, return the same character with
 	// an acute accent added, if appropriate. If not appropriate,
@@ -69,6 +108,9 @@ public class Diacriticals {
 			// Make U,u acute U,u double acute
 			case '\u00da': return '\u0170';
 			case '\u00fa': return '\u0171';
+			// AE, ae
+			case '\u00c6': return '\u01fc';
+			case '\u00e6': return '\u01fd';
 			// Cyrillic encodings
 			case '\u0413': return '\u0403';
 			case '\u041a': return '\u040c';
@@ -250,6 +292,11 @@ public class Diacriticals {
 			case '\u0418': return '\u0419';
 			case '\u0438': return '\u0439';
 			case '\u0443': return '\u045e';
+			case '\u0416': return '\u04c1';
+			case '\u0410': return '\u04d0';
+			case '\u0430': return '\u04d1';
+			case '\u0415': return '\u04d6';
+			case '\u0435': return '\u04d7';
 			default: return a; } }
 
 	// Same as for getAcute, but with macron
@@ -269,6 +316,9 @@ public class Diacriticals {
 			// Add macron to A,a with diaeresis
 			case '\u00c4': return '\u01de'; 
 			case '\u00e4': return '\u01df';
+			// AE, ae:
+			case '\u00c6': return '\u01e2';
+			case '\u00e6': return '\u01e3';
 			// Greek support -- alpha
 			case '\u03b1': return '\u1fb1';
 			case '\u0391': return '\u1fb9';
@@ -283,6 +333,14 @@ public class Diacriticals {
 	// Same as for getAcute, but with stroke
 	static char getStroke(char a) {
 		switch(a) {
+			case 'B': return '\u0243';
+			case 'b': return '\u0180';
+			case 'C': return '\u023b';
+			case 'c': return '\u023c';
+			case 'E': return '\u0246';
+			case 'e': return '\u0247';
+			case 'J': return '\u0248';
+			case 'j': return '\u0249';
 			case 'O': return '\u00d8';
 			case 'o': return '\u00f8';
 			case 'D': return '\u0110';

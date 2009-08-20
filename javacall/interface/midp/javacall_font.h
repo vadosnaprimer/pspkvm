@@ -89,7 +89,9 @@ typedef enum {
     /** The "monospace" font face. */
     JAVACALL_FONT_FACE_MONOSPACE      =0x20,
     /** The "proportional" font face. */
-    JAVACALL_FONT_FACE_PROPORTIONAL   =0x40
+    JAVACALL_FONT_FACE_PROPORTIONAL   =0x40,
+    /** Utility face (PSPKVM specific) */
+    JAVACALL_FONT_FACE_UTILITY			  =0x200
 } javacall_font_face;    
     
 
