@@ -9,10 +9,27 @@ Project website:
 Project home on SF:
 	https://sourceforge.net/projects/pspkvm
 
+*** Make sure utility.ttf is installed if using the semichordal board. ***
+
 NB: The semichordal board in this branch build now requires the TrueType system be functional for proper display of its layout. Make sure com.pspkvm.font.internal is *NOT* set in the pspkvm.ini file and that the utility.ttf font in the psp/ directory is placed in the folder with the EBOOT.PBP file on the memory stick, if using the semichordal board.
+
+-----------------
+Changes in branch
+-----------------
+
+The semichordal board now uses a custom TrueType utility font (utility.ttf) for its help display/nav display.
+
+The FreeType font system now supports all three fonts (proportional, monospace, system) and bold, italic, bold/italic faces for all three, in addition to a utility font, and uses the FreeType portable cache manager to speed rendering.
+
+----------------
+Note re building
+----------------
+
+You must link against a newer version of FreeType than is typically available in pspsdk toolchains to build this project. See the tools/freetype_239_patch directory (README.TXT within) for a patch to add the FreeType 2.3.9 distribution to your toolchain. 
+ 
 	 
 --------------------------------
-Change log
+Change log (previous release)
 --------------------------------
 - Large memory support
 - New Chinese Input Method: Stroke IM
