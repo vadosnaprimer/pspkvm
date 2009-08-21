@@ -65,7 +65,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, SWM, TAB,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			CHR, CHR, CHR, CHR, NUL, CHR, CHR, CHR,
+			CHR, CHR, CHR, CHR, SLK, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			GRV, ACU, CED, TIL, DIA, RIN, CIR, SYM,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
@@ -73,7 +73,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 			CHR, CHR, CHR, CHR, CHR, CHR, NUL, NUL,
 			PUP, HME, PDN, END, PUP, HME, PDN, END,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			ALT, SEL, CLK, DSP, CTL, SEL, CLK, DSP };
+			NUL, SEL, CLK, DSP, NUL, SEL, CLK, DSP };
 			
 	// Helper for drawing -- maps out metakeys matched high
 	// and low -- this one maps those that are low, with high right
@@ -134,17 +134,17 @@ class SC_Keymap_Roman extends SC_Keymap {
 			"n", "p", "d", "h", "N", "P", "D", "H",
 			"'", ";", "_", "/", "\"", ":", "^", "?",
 			"l", "w", "v", "m", "L", "W", "V", "M",
-			",", "q", ".", "-", "?", "Q", "SWM", TABG,
+			",", "q", ".", "-", "?", "Q", SWMS, TABG,
 			"f", "g", "c", "r", "F", "G", "C", "R",
-			"+", "=", "*", "!", " ", "@", "&", "\\",
+			"+", "=", "*", "!", SLKS, "@", "&", "\\",
 			"b", "j", "y", "k", "B", "J", "Y", "K",
-			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, "SYM",
+			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"z", "x", "0", "1", "Z", "X", "%", "|",
 			"<", "`", "$", "CPY", ">", "#", "~", "PST",
 			"6", "7", "8", "9", "(", ")", " ", " ",
 			U_DAR, L_DAR, D_DAR, R_DAR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"2", "3", "4", "5", "[", "]", "{", "}",
-			"ALT", "SEL", "CLK", "DSP", "CTL", "SEL", "CLK", "DSP" };
+			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
 
    public static final String[] chordal_map_d_caps_lock = {
 			"SPC", "E", "T", "S", ENTG, "e", "t", "s",
@@ -154,17 +154,17 @@ class SC_Keymap_Roman extends SC_Keymap {
 			"N", "P", "D", "H", "n", "p", "d", "h",
 			"'", ";", "_", "/", "\"", ":", "^", "?",
 			"L", "W", "V", "M", "l", "w", "v", "m",
-			",", "Q", ".", "-", "?", "q", "SWM", TABG,
+			",", "Q", ".", "-", "?", "q", SWMS, TABG,
 			"F", "G", "C", "R", "f", "g", "c", "r",
-			"+", "=", "*", "!", " ", "@", "&", "\\",
+			"+", "=", "*", "!", SLKS, "@", "&", "\\",
 			"B", "J", "Y", "K", "b", "j", "y", "k",
-			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, "SYM",
+			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"Z", "X", "0", "1", "z", "x", "%", "|",
 			"<", "`", "$", "CPY", ">", "#", "~", "PST",
 			"6", "7", "8", "9", "(", ")", " ", " ",
 			U_DAR, L_DAR, D_DAR, R_DAR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"2", "3", "4", "5", "[", "]", "{", "}",
-			"ALT", "SEL", "CLK", "DSP", "CTL", "SEL", "CLK", "DSP" };
+			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
 
 	// Get the character at a given position
 	char getOutputChar(boolean caps_lock, int offset) {

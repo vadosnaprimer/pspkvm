@@ -120,8 +120,14 @@ public class SC_Keys {
 	static final String TABG = "\ue021";
 	static final String DELG = "\ue022";
 	static final String BSPG = "\ue023";
-
 	
+	// Switch mode string (a Roman z next to a Cyrillic zhe)
+	static final String SWMS = "z/\u0436";
+	// Symbols transient shift string
+	static final String SYMS = "\u221e";
+	// Symbols lock mode string (infinity w/ an ellipsis)
+	static final String SLKS = "\u221e\u2026";
+
 	public static final String helpStr_Eng = "Note that not all commands are available in all boards. See also the menu at the bottom of the screen, and alternate maps (see SWM).\n\nENT: Enter\nINS: Insert mode (toggle)\nBSP: Backspace (delete to left of cursor)\nDEL: Delete (delete to right of cursor)\nESC: Escape (cancels input in main boards)\nTAB: Tab\nPUP: Page up\nHME: Home\nPDN: Page down\nEND: End\nALT: Alt\nSEL: Select (toggle)\nCLK: Caps lock (toggle)\nCTL: Control\nDSP: Display mode (toggle)\nCPY: Copy\nPST: Paste\nSWM: Switch keymap (Cyrillic/English/etc.)\nSYM: Overlay symbol map (for one stroke)\nSLK: Overlay symbol map (and lock)\nCNC: Cancel (returns from overlay)\nCAL: Copy all\nCLR: Clear (all)\n";
 	
 }

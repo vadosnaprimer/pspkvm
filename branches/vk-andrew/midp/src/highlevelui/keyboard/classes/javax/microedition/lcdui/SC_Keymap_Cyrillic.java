@@ -28,7 +28,7 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			ALT, SEL, CLK, DSP, CTL, SEL, CLK, DSP };
+			NUL, SEL, CLK, DSP, NUL, SEL, CLK, DSP };
 
   // The map of non-meta characters. Note that where there are 
   // valid meta characters, space is set, but these are just 
@@ -155,17 +155,17 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 			"\u0440", "\u0441", "\u0432", "\u043b", "\u0420", "\u0421", "\u0412", "\u041b",
 			"'", ";", "_", "/", "\"", ":", "^", "?",
 			"\u0434", "\u043f", "\u043a", "\u043c", "\u0414", "\u041f", "\u041a", "\u041c",
-			",", "(", ".", "-", "?", ")", "SWM", TABG,
+			",", "(", ".", "-", "?", ")", SWMS, TABG,
 			"\u0437", "\u044f", "\u044a", "\u0431", "\u0417", "\u042f", "\u042a", "\u0411",
-			"+", "=", "*", "!", "SLK", "@", "&", "\\",
+			"+", "=", "*", "!", SLKS, "@", "&", "\\",
 			"\u0447", "\u0446", "\u0449", "\u0448", "\u0427", "\u0426", "\u0429", "\u0428",
-			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, "SYM",
+			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"\u0443", "\u0433", "\u0436", "\u0445", "\u0423", "\u0413", "\u0416", "\u0425",
 			"<", "`", "$", "CPY", ">", "#", "~", "PST",
 			"\u0444", "\u0439", "\u044e", "\u044c", "\u0424", "\u0419", "\u042e", "\u042c",
 			"0", "1", "2", "3", "4", "5", "6", "7",
 			"\u044d", "\u044b", "8", "9", "\u042d", "\u042b", "%", "|",
-			"ALT", "SEL", "CLK", "DSP", "CTL", "SEL", "CLK", "DSP" };
+			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
 
    public static final String[] chordal_map_d_caps_lock = {
 			" ", "\u0410", "\u0418", "\u041e", ENTG, "\u0430", "\u0438", "\u043e",
@@ -175,17 +175,17 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 			"\u0420", "\u0421", "\u0412", "\u041b", "\u0440", "\u0441", "\u0432", "\u043b",
 			"'", ";", "_", "/", "\"", ":", "^", "?",
 			"\u0414", "\u041f", "\u041a", "\u041c", "\u0434", "\u043f", "\u043a", "\u043c",
-			",", "(", ".", "-", "?", ")", "SWM", TABG,
+			",", "(", ".", "-", "?", ")", SWMS, TABG,
 			"\u0417", "\u042f", "\u042a", "\u0411", "\u0437", "\u044f", "\u044a", "\u0431",
-			"+", "=", "*", "!", "SLK", "@", "&", "\\",
+			"+", "=", "*", "!", SLKS, "@", "&", "\\",
 			"\u0427", "\u0426", "\u0429", "\u0428", "\u0447", "\u0446", "\u0449", "\u0448",
-			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, "SYM",
+			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"\u0423", "\u0413", "\u0416", "\u0425", "\u0443", "\u0433", "\u0436", "\u0445",
 			"<", "`", "$", "CPY", ">", "#", "~", "PST",
 			"\u0424", "\u0419", "\u042e", "\u042c", "\u0444", "\u0439", "\u044e", "\u044c",
 			"0", "1", "2", "3", "4", "5", "6", "7",
 			"\u042d", "\u042b", "8", "9", "\u044d", "\u044b", "%", "|",
-			"ALT", "SEL", "CLK", "DSP", "CTL", "SEL", "CLK", "DSP" };
+			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
 
 	// Get the character at a given position
 	char getOutputChar(boolean caps_lock, int offset) {
