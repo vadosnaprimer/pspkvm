@@ -12,7 +12,7 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 	// The metakey mapping to the chordal keyboard
 	public static final int[] chordal_map_meta = {
 			CHR, CHR, CHR, CHR, ENT, CHR, CHR, CHR,
-			INS, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
+			NUL, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CUP, CLF, CDN, CRT, PUP, HME, PDN, END,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
@@ -144,12 +144,10 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
     // The display map--used just to give the user some idea
     // what this chordal combination will do for them. *Not*
     // used in triggering/processing strokes -- see the 
-    // SC_Keys.chordal_map_meta and chordal_map_char arrays.
-    // The diacritical keys all display 'representative' characters--
-    // these are the unicode escapes in 12th line of array.
+    // chordal_map_meta and chordal_map_char arrays.
     public static final String[] chordal_map_d = {
-			" ", "\u0430", "\u0438", "\u043e", ENTG, "\u0410", "\u0418", "\u041e",
-			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
+			SPCG, "\u0430", "\u0438", "\u043e", ENTG, "\u0410", "\u0418", "\u041e",
+			" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
 			"\u0435", "\u0451", "\u043d", "\u0442", "\u0415", "\u0401", "\u041d", "\u0422",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"\u0440", "\u0441", "\u0432", "\u043b", "\u0420", "\u0421", "\u0412", "\u041b",
@@ -161,15 +159,15 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 			"\u0447", "\u0446", "\u0449", "\u0448", "\u0427", "\u0426", "\u0429", "\u0428",
 			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"\u0443", "\u0433", "\u0436", "\u0445", "\u0423", "\u0413", "\u0416", "\u0425",
-			"<", "`", "$", "CPY", ">", "#", "~", "PST",
+			"<", "`", "$", CPYG, ">", "#", "~", PSTG,
 			"\u0444", "\u0439", "\u044e", "\u044c", "\u0424", "\u0419", "\u042e", "\u042c",
 			"0", "1", "2", "3", "4", "5", "6", "7",
 			"\u044d", "\u044b", "8", "9", "\u042d", "\u042b", "%", "|",
-			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
+			" ", SELG, CLKG, DSPG, " ", SELG, CLKG, DSPG };
 
    public static final String[] chordal_map_d_caps_lock = {
-			" ", "\u0410", "\u0418", "\u041e", ENTG, "\u0430", "\u0438", "\u043e",
-			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
+			SPCG, "\u0410", "\u0418", "\u041e", ENTG, "\u0430", "\u0438", "\u043e",
+			" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
 			"\u0415", "\u0401", "\u041d", "\u0422", "\u0435", "\u0451", "\u043d", "\u0442",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"\u0420", "\u0421", "\u0412", "\u041b", "\u0440", "\u0441", "\u0432", "\u043b",
@@ -181,11 +179,11 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 			"\u0427", "\u0426", "\u0429", "\u0428", "\u0447", "\u0446", "\u0449", "\u0448",
 			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"\u0423", "\u0413", "\u0416", "\u0425", "\u0443", "\u0433", "\u0436", "\u0445",
-			"<", "`", "$", "CPY", ">", "#", "~", "PST",
+			"<", "`", "$", CPYG, ">", "#", "~", PSTG,
 			"\u0424", "\u0419", "\u042e", "\u042c", "\u0444", "\u0439", "\u044e", "\u044c",
 			"0", "1", "2", "3", "4", "5", "6", "7",
 			"\u042d", "\u042b", "8", "9", "\u044d", "\u044b", "%", "|",
-			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
+			" ", SELG, CLKG, DSPG, " ", SELG, CLKG, DSPG };
 
 	// Get the character at a given position
 	char getOutputChar(boolean caps_lock, int offset) {

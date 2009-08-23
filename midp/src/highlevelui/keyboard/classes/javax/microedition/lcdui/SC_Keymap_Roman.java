@@ -57,7 +57,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 	// The metakey mapping to the chordal keyboard
 	public static final int[] chordal_map_meta = {
 			CHR, CHR, CHR, CHR, ENT, CHR, CHR, CHR,
-			INS, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
+			NUL, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CUP, CLF, CDN, CRT, CUP, CLF, CDN, CRT,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
@@ -124,11 +124,9 @@ class SC_Keymap_Roman extends SC_Keymap {
     // what this chordal combination will do for them. *Not*
     // used in triggering/processing strokes -- see the 
     // SC_Keys.chordal_map_meta and chordal_map_char arrays.
-    // The diacritical keys all display 'representative' characters--
-    // these are the unicode escapes in 12th line of array.
     public static final String[] chordal_map_d = {
-			"SPC", "e", "t", "s", ENTG, "E", "T", "S",
-			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
+			SPCG, "e", "t", "s", ENTG, "E", "T", "S",
+			" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
 			"o", "a", "u", "i", "O", "A", "U", "I",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 			"n", "p", "d", "h", "N", "P", "D", "H",
@@ -140,15 +138,15 @@ class SC_Keymap_Roman extends SC_Keymap {
 			"b", "j", "y", "k", "B", "J", "Y", "K",
 			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"z", "x", "0", "1", "Z", "X", "%", "|",
-			"<", "`", "$", "CPY", ">", "#", "~", "PST",
+			"<", "`", "$", CPYG, ">", "#", "~", PSTG,
 			"6", "7", "8", "9", "(", ")", " ", " ",
 			U_DAR, L_DAR, D_DAR, R_DAR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"2", "3", "4", "5", "[", "]", "{", "}",
-			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
+			" ", SELG, CLKG, DSPG, " ", SELG, CLKG, DSPG };
 
    public static final String[] chordal_map_d_caps_lock = {
-			"SPC", "E", "T", "S", ENTG, "e", "t", "s",
-			"INS", BSPG, DELG, "ESC", " ", " ", " ", " ",
+			SPCG, "E", "T", "S", ENTG, "e", "t", "s",
+			" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
 			"O", "A", "U", "I", "o", "a", "u", "i",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 			"N", "P", "D", "H", "n", "p", "d", "h",
@@ -160,11 +158,11 @@ class SC_Keymap_Roman extends SC_Keymap {
 			"B", "J", "Y", "K", "b", "j", "y", "k",
 			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, SYMS,
 			"Z", "X", "0", "1", "z", "x", "%", "|",
-			"<", "`", "$", "CPY", ">", "#", "~", "PST",
+			"<", "`", "$", CPYG, ">", "#", "~", PSTG,
 			"6", "7", "8", "9", "(", ")", " ", " ",
 			U_DAR, L_DAR, D_DAR, R_DAR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"2", "3", "4", "5", "[", "]", "{", "}",
-			" ", "SEL", "CLK", "DSP", " ", "SEL", "CLK", "DSP" };
+			" ", SELG, CLKG, DSPG, " ", SELG, CLKG, DSPG };
 
 	// Get the character at a given position
 	char getOutputChar(boolean caps_lock, int offset) {
