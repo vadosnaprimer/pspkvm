@@ -45,7 +45,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		private final static int NO_DISP = 0;
 		private final static int SM_DISP = 1;
 		private final static int LG_DISP = 2;
-		 
+		
 		// Keyboard state--may not need
     int currentKeyboard = 1; // abc
     
@@ -58,7 +58,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// This object is just used for sizing calls.)
     static final Font utility_font =
 			Font.getFont(Font.FACE_UTILITY, Font.STYLE_BOLD, Font.SIZE_SMALL);
-		// Colors for drawing the system font
+		// Colors for drawing the key glyphs
 		static final int FONT_BLUE = 0x4040c0;
 		static final int FONT_RED = 0xc04040;
     
@@ -78,7 +78,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// Indexes to the maps
 		final static int ROMAN_MAP = 0;
 		final static int CYRILLIC_MAP = 1;
-		
+		// The extension/symbol maps--you don't rotate through these,
+		// but 'shift' up to them from the corresponding root boards
+		final static SC_Keymap roman_sym_map = new SC_Keymap_NumericSymbolic_Roman();
+
 		// Called whenever the keyboard sends 'SWM' (Switch Map)
 		void rotate_map() {
 			crt_map_idx++;
@@ -207,9 +210,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			g.drawRect(0, 0, lg_dim_width, lg_dim_height);
 			paintMiscState(g); }
 			
-		// Convenience method to draw a string using the utility font
-		void paintString(Graphics g, int x, int y, String s, boolean active) {
-			g.setColor(active ? FONT_RED : FONT_BLUE);
+		// Draws the appropriate icon for the key--whichever it might be.
+		void paintIcon(Graphics g, int x, int y, int o, boolean active) {
+			String s=crt_map.getDisplayString(caps_lock_set, o);
+			g.setColor(active ? FONT_RED : FONT_BLUE );
 			int offset = utility_font.stringWidth(s)/2;
 			g.drawUtilityString(s, x-offset, y, g.TOP|g.LEFT); }
 
@@ -250,8 +254,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					y-=4; }
 				else {
 					y+=5; } }
-			String s=crt_map.getDisplayString(caps_lock_set, o);
-			paintString(g, x, y, s, active); }
+			paintIcon(g, x, y, o, active); }
 			
 		/** Paint the 'stacked' chord displays in the large graphics context
 		 * Most of the logic is in paintKeyStacked
@@ -315,8 +318,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	   * @param o The offset into the chord of the key
 	   */
 		void paintKey(Graphics g, int x, int y, int o, boolean active) {
-			String s=crt_map.getDisplayString(caps_lock_set, o);
-			paintString(g, x, y, s, active); }
+			paintIcon(g, x, y, o, active); }
 		
 		/**
 		 * Display caps lock state -- just paint one image or another

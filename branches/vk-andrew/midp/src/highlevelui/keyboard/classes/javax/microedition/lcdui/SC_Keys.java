@@ -54,9 +54,9 @@ public class SC_Keys {
 	// Clear all:
 	public static final int CLR=27;
 	
-	// Handy enum for uppercase/lowercase/non-case maps
+	// Enum for use in uppercase/lowercase/non-case maps
 	// in symbol sets where it's inconvenient just to use
-	// the range (as in Roman)
+	// the range
 	public static final int NCS = 0;
 	public static final int LCS = 1;
 	public static final int UCS = 2;
@@ -120,14 +120,26 @@ public class SC_Keys {
 	static final String TABG = "\ue021";
 	static final String DELG = "\ue022";
 	static final String BSPG = "\ue023";
+	static final String CPYG = "\ue02e\ue02c";
+	static final String PSTG = "\ue02e\ue02d";
 	
 	// Switch mode string (a Roman z next to a Cyrillic zhe)
 	static final String SWMS = "z/\u0436";
-	// Symbols transient shift string
+	// Symbols transient shift string (infinity symbol)
 	static final String SYMS = "\u221e";
-	// Symbols lock mode string (infinity w/ an ellipsis)
-	static final String SLKS = "\u221e\u2026";
-
-	public static final String helpStr_Eng = "Note that not all commands are available in all boards. See also the menu at the bottom of the screen, and alternate maps (see SWM).\n\nENT: Enter\nINS: Insert mode (toggle)\nBSP: Backspace (delete to left of cursor)\nDEL: Delete (delete to right of cursor)\nESC: Escape (cancels input in main boards)\nTAB: Tab\nPUP: Page up\nHME: Home\nPDN: Page down\nEND: End\nALT: Alt\nSEL: Select (toggle)\nCLK: Caps lock (toggle)\nCTL: Control\nDSP: Display mode (toggle)\nCPY: Copy\nPST: Paste\nSWM: Switch keymap (Cyrillic/English/etc.)\nSYM: Overlay symbol map (for one stroke)\nSLK: Overlay symbol map (and lock)\nCNC: Cancel (returns from overlay)\nCAL: Copy all\nCLR: Clear (all)\n";
+	// Symbols lock mode string (infinity symbol w/ a hollow up arrow)
+	static final String SLKS = "\u221e\ue027";
+	// CNC mode string (a next to a hollow down arrow)
+	static final String CNCS = "a\ue026";
 	
+	// Display gliph
+	static final String DSPG = "\ue028";
+	// Caps lock glyph (lock, up arrow)
+	static final String CLKG = "\ue029\ue027";
+	// Select glyph
+	static final String SELG = "\ue02a";
+	// Space glyph
+	static final String SPCG = "\ue02b";
+	// Escape string (x with a hollow down arrow)
+	static final String ESCS = "x\ue026";
 }
