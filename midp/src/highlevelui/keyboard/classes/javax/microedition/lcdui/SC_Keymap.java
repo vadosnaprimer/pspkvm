@@ -27,4 +27,7 @@ abstract class SC_Keymap extends SC_Keys {
 	abstract boolean isNull(int p);
 	// Is there a metakey at this position?
 	abstract boolean isMeta(int p);
+	// Does this key cancel a transient map?
+	boolean cancelsTransient(int o) {
+		return true; }
 }

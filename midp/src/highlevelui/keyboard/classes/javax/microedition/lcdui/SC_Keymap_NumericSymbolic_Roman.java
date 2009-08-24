@@ -18,10 +18,7 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 		// but written as Unicode escapes in UTF-16 source:
 
 		// 20a8 = Rupee (India)
-		// 20a2 = Cruzero (Brazil)
-		// 20b1 = Peso (Phillipines)
-		// 20a9 = Won (Korea)
-		// 20ad = Kip (Laos)
+		// 20b0 = German penny
 		
 		// Note: Escaped typographic symbols:
 
@@ -42,36 +39,30 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 		// 0283 Latin small esh
 		// 01f7 Latin capital wynn
 		// 01bf Latin small wynn
-		// 01f6 Latin capital hwair
-		// 0195 Latin small hwair
 		// 021c Latin capital yogh
 		// 021d Latin small yogh
-		// 0222 Latin capital ou
-		// 0223 Latin small ou
-		// 0241 Latin capital glottal stop
-		// 0242 Latin small glottal stop
-		// 0244 Latin capital turned V
+		// 0245 Latin capital turned V
 		// 028c Latin small turned v
 		// 01b1 Latin capital upsilon
 		// 028a Latin small upsilon
 		
     public static final String[] chordal_map_d = {
-			SPCG, "0", "1", "2", ENTG, "[", "]", "\u00b5",
-			" ", BSPG, DELG, CNCS, " ", " ", " ", " ",
-			"3", "4", "5", "6", "{", "}", "\u00d7", "\u00f7",
-			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR,
+			SPCG, "0", "1", "2", ENTG, "[", "]", "\u00b5", // 0-7
+			" ", BSPG, DELG, CNCS, " ", " ", " ", " ", // 8-15
+			"3", "4", "5", "6", "{", "}", "\u00d7", "\u00f7", // 16-23
+			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR, // 24-31
 			"7", "8", "9", "\u00b1", "\u00a2", "\u00a3", "\u00a4", "\u00a5",
-			"\u20a8", "\u20a2", "\u20b1", "\u20a9", "\u20ac", "\u20ab", "\u20aa", "\u20ad",
+			"\u20a8", " ", "\u20b0", " ", "\u20ac", "\u20ab", "\u20aa", " ",
 			"\u00fe", "\u00f0", "\u00f8", "\u00df", "\u00de", "\u00d0", "\u00d8", "\u0138",
 			"\u00a7", "\u00a9", "\u00ae",  "\u2052", "\u00aa", "\u00ba", "\u00a1", "\u00bf",
 			"\u014b", "\u01a3", "\u0292", "\u017f", "\u014a", "\u01a2", "\u0192", "\u01a6",
-			"\u00ac", "\u2014", "\u2013", "\u00b6", "\u2053", "\u203b", "\u2020", "\u2021",
+			"\u00ac", "\u2014", "\u2013", "\u00b6", "\u2053", " ", "\u2020", "\u2021",
 			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, CNCS,
 			XCAR, XMCR, XBRV, XSTR, XOGO, XUDT, XMDT, XLIG,
 			"\u2018", "\u2019", "\u201c", "\u201d", "\u2039", "\u203a", "\u00ab", "\u00bb",
 			"\u2015", "\u2052", "\u2022", CPYG, " ", " ", " ", PSTG,
-			"\u01a9", "\u01bf", "\u0195", "\u021d", "\u0283", "\u01f7", "\u01f6", "\u021c",
-			"\u0223", "\u0242", "\u028c", "\u028a", "\u0222", "\u0241", "\u0244", "\u01b1",
+			"\u01a9", "\u01bf", " ", "\u021d", "\u0283", "\u01f7", " ", "\u021c",
+			" ", " ", "\u028c", "\u028a", " ", " ", "\u0245", "\u01b1",
 			" ", " ", " ", " ", " ", " ", " ", " ",
 			" ", SELG, CLKG, DSPG, " ", SELG, CLKG, DSPG };
 
@@ -82,17 +73,17 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CUP, CLF, CDN, CRT, PUP, HME, PDN, END,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
+			CHR, CHR, NUL, NUL, CHR, CHR, CHR, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
+			CHR, CHR, CHR, CHR, CHR, NUL, CHR, CHR,
 			GRV, ACU, CED, TIL, DIA, RIN, CIR, CNC,
 			CAR, MCR, BRV, STR, OGO, UDT, MDT, LIG,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CPY, NUL, NUL, NUL, PST,
-			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
+			CHR, CHR, NUL, CHR, CHR, CHR, NUL, CHR,
+			NUL, NUL, CHR, CHR, NUL, NUL, CHR, CHR,
 			NUL, NUL, NUL, NUL, NUL, NUL, NUL, NUL,
 			NUL, SEL, CLK, DSP, NUL, SEL, CLK, DSP };
 
@@ -105,17 +96,17 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 		'3', '4', '5', '6', '{', '}', '\u00d7', '\u00f7',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		'7', '8', '9', '\u00b1', '\u00a2', '\u00a3', '\u00a4', '\u00a5',
-		'\u20a8', '\u20a2', '\u20b1', '\u20a9', '\u20ac', '\u20ab', '\u20aa', '\u20ad',
+		'\u20a8', ' ', '\u20b0', ' ', '\u20ac', '\u20ab', '\u20aa', ' ',
 		'\u00fe', '\u00f0', '\u00f8', '\u00df', '\u00de', '\u00d0', '\u00d8', '\u0138',
 		'\u00a7', '\u00a9', '\u00ae',  '\u2052', '\u00aa', '\u00ba', '\u00a1', '\u00bf',
 		'\u014b', '\u01a3', '\u0292', '\u017f', '\u014a', '\u01a2', '\u0192', '\u01a6',
-		'\u00ac', '\u2014', '\u2013', '\u00b6', '\u2053', '\u203b', '\u2020', '\u2021',
+		'\u00ac', '\u2014', '\u2013', '\u00b6', '\u2053', ' ', '\u2020', '\u2021',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		'\u2018', '\u2019', '\u201c', '\u201d', '\u2039', '\u203a', '\u00ab', '\u00bb',
 		'\u2015', '\u2052', '\u2022', ' ', ' ', ' ', ' ', ' ',
-		'\u01a9', '\u01bf', '\u0195', '\u021d', '\u0283', '\u01f7', '\u01f6', '\u021c',
-		'\u0223', '\u0242', '\u028c', '\u028a', '\u0222', '\u0241', '\u0244', '\u01b1',
+		'\u01a9', '\u01bf', ' ', '\u021d', '\u0283', '\u01f7', ' ', '\u021c',
+		' ', ' ', '\u028c', '\u028a', ' ', ' ', '\u0245', '\u01b1',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', };
 
@@ -127,17 +118,17 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 		'3', '4', '5', '6', '{', '}', '\u00d7', '\u00f7',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		'7', '8', '9', '\u00b1', '\u00a2', '\u00a3', '\u00a4', '\u00a5',
-		'\u20a8', '\u20a2', '\u20b1', '\u20a9', '\u20ac', '\u20ab', '\u20aa', '\u20ad',
+		'\u20a8', ' ', '\u20b0', ' ', '\u20ac', '\u20ab', '\u20aa', ' ',
 		'\u00de', '\u00d0', '\u00d8', '\u00df', '\u00fe', '\u00f0', '\u00f8', '\u0138',
 		'\u00a7', '\u00a9', '\u00ae',  '\u2052', '\u00aa', '\u00ba', '\u00a1', '\u00bf',
 		'\u014a', '\u01a2', '\u0192', '\u017f', '\u014b', '\u01a3', '\u0292', '\u01a6',
-		'\u00ac', '\u2014', '\u2013', '\u00b6', '\u2053', '\u203b', '\u2020', '\u2021',
+		'\u00ac', '\u2014', '\u2013', '\u00b6', '\u2053', ' ', '\u2020', '\u2021',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		'\u2018', '\u2019', '\u201c', '\u201d', '\u2039', '\u203a', '\u00ab', '\u00bb',
 		'\u2015', '\u2052', '\u2022', ' ', ' ', ' ', ' ', ' ',
-		'\u0283', '\u01f7', '\u01f6', '\u021c', '\u01a9', '\u01bf', '\u0195', '\u021d',
-		'\u0222', '\u0241', '\u0244', '\u01b1', '\u0223', '\u0242', '\u028c', '\u028a',
+		'\u0283', '\u01f7', ' ', '\u021c', '\u01a9', '\u01bf', ' ', '\u021d',
+		' ', ' ', '\u0245', '\u01b1', ' ', ' ', '\u028c', '\u028a',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
 		' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 
@@ -157,8 +148,8 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 		NCS, NCS, NCS, NCS, NCS, NCS, NCS, NCS,
 		NCS, NCS, NCS, NCS, NCS, NCS, NCS, NCS,
 		NCS, NCS, NCS, NCS, NCS, NCS, NCS, NCS,
-		LCS, LCS, LCS, LCS, UCS, UCS, UCS, UCS,
-		LCS, LCS, LCS, LCS, UCS, UCS, UCS, UCS,
+		LCS, LCS, NCS, LCS, UCS, UCS, NCS, UCS,
+		NCS, NCS, LCS, LCS, NCS, NCS, UCS, UCS,
 		NCS, NCS, NCS, NCS, NCS, NCS, NCS, NCS,
 		NCS, NCS, NCS, NCS, NCS, NCS, NCS, NCS };
 
@@ -213,17 +204,17 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 			"3", "4", "5", "6", "{", "}", "\u00d7", "\u00f7",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_DAR, L_DAR, D_DAR, R_DAR,
 			"7", "8", "9", "\u00b1", "\u00a2", "\u00a3", "\u00a4", "\u00a5",
-			"\u20a8", "\u20a2", "\u20b1", "\u20a9", "\u20ac", "\u20ab", "\u20aa", "\u20ad",
+			"\u20a8", " ", "\u20b0", " ", "\u20ac", "\u20ab", "\u20aa", " ",
 			"\u00de", "\u00d0", "\u00d8", "\u00df", "\u00fe", "\u00f0", "\u00f8", "\u0138",
 			"\u00a7", "\u00a9", "\u00ae",  "\u2052", "\u00aa", "\u00ba", "\u00a1", "\u00bf",
 			"\u014a", "\u01a2", "\u0192", "\u017f", "\u014b", "\u01a3", "\u0292", "\u01a6",
-			"\u00ac", "\u2014", "\u2013", "\u00b6", "\u2053", "\u203b", "\u2020", "\u2021",
+			"\u00ac", "\u2014", "\u2013", "\u00b6", "\u2053", " ", "\u2020", "\u2021",
 			XGRV, XACU, XCED, XTIL, XDIA, XRIN, XCIR, CNCS,
 			XCAR, XMCR, XBRV, XSTR, XOGO, XUDT, XMDT, XLIG,
 			"\u2018", "\u2019", "\u201c", "\u201d", "\u2039", "\u203a", "\u00ab", "\u00bb",
 			"\u2015", "\u2052", "\u2022", CPYG, " ", " ", " ", PSTG,
-			"\u0283", "\u01f7", "\u01f6", "\u021c", "\u01a9", "\u01bf", "\u0195", "\u021d",
-			"\u0222", "\u0241", "\u0244", "\u01b1", "\u0223", "\u0242", "\u028c", "\u028a",
+			"\u0283", "\u01f7", " ", "\u021c", "\u01a9", "\u01bf", " ", "\u021d",
+			" ", " ", "\u0245", "\u01b1", " ", " ", "\u028c", "\u028a",
 			" ", " ", " ", " ", " ", " ", " ", " ",
 			" ", SELG, CLKG, DSPG, " ", SELG, CLKG, DSPG };
 
@@ -282,4 +273,27 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 	// Is there a metakey at this position?
 	boolean isMeta(int p) {
 		return ((chordal_map_meta[p]!=NUL) && (chordal_map_meta[p]!=CHR)); }
+		
+	// Does this keystroke cancel a transient map?
+	boolean cancelsTransient(int o) {
+		if (isChar(o)) { 
+			return true; }
+		if (isNull(o)) {
+			return false; }
+		int m = getMetaKey(o);
+		switch(m) {
+			case CUP:
+			case CLF:
+			case CDN:
+			case CRT:
+			case PUP:
+			case HME:
+			case PDN:
+			case END:
+			case SEL:
+			case CLK:
+			case DSP:
+			return false;
+		default:
+			return true; } }
 }

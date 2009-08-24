@@ -58,18 +58,17 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts) {
     return pfonts[1];
 }
 
-// Quick inline to isolate the CJK characters
-// (or more precisely, isolate those we know 
-// we support which will be broken by this 
-// transform)
+// Quick inline to isolate the CJK characters and Yi syllables
+// (0x4e00 - 0x9fff,  a000-a48f
 inline int needs_cjk_transform(jchar c) {
-	if (c < 0x0500) {
+	if (c < 0x4e00) {
 		return 0; }
-	if (c > 0xe100) {
-		return 1; }
-	if (c < 0xe000) {
-		return 1; }
-	return 0; }
+	if (c > 0xa48f) {
+		return 0; }
+	if (c > 0x9fff) {
+		if (c < 0xa000) {
+			return 0; } }
+	return 1; }
 
 /**
  * @file

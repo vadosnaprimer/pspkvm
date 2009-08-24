@@ -70,6 +70,8 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// The keymaps, including the pointer to the crt_map.
 		SC_Keymap crt_map;
 		int crt_map_idx;
+		// Whether the transient symbols set is up
+		boolean symbols_transient;
 		
 		final static SC_Keymap roman_map = new SC_Keymap_Roman();
 		final static SC_Keymap cyrillic_map = new SC_Keymap_Cyrillic();
@@ -89,6 +91,36 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				crt_map_idx = 0; }
 			crt_map = mapset[crt_map_idx]; } 
 
+		// Called whenever the keyboard sends 'SLK' (Symbol lock)
+		void lock_symbols() {
+			// TODO: Handle Cyrillic symbol map
+			crt_map = roman_sym_map; 
+			symbols_transient=false; }
+
+		// Called whenever the keyboard sends 'SYM' (Transient symbol set)
+		void set_symbols_transient() {
+			// TODO: Handle Cyrillic symbol map (when we've got one)
+			crt_map = roman_sym_map;
+			symbols_transient=true; }
+
+		// Called whenever the keyboard sends 'CNC' (Symbol lock)
+		void cancel_symbols() {
+			symbols_transient=false;
+			crt_map = mapset[crt_map_idx];; }
+			
+		// Called (from w/i the board) on all character emits--
+		// makes sure the transient board gets killed properly
+		void checkTransientCancel(int o) {
+			if (!symbols_transient) {
+				return; }
+			if (!crt_map.cancelsTransient(o)) {
+				return; }
+			// Symbols board was transient, and the user entered
+			// a stroke considered significant enough to cancel it
+			// (excludes cursor, display control). Kill the transient board.
+			cancel_symbols();
+			vkl.repaintVK(); }
+			
     /**
      * Virtual Keyboard constructor.
      * 
@@ -107,7 +139,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return; }
            
-    initDisplayVars();    
+    initDisplayVars();
 		currentKeyboard = 0;
     this.vkl = vkl;
 		currentKeyboard = 0;
@@ -117,7 +149,8 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// TODO: Read config param, init as 
 		// Cyrillic (or other) if so configured
 		crt_map_idx=ROMAN_MAP;
-		crt_map = mapset[crt_map_idx]; }
+		crt_map = mapset[crt_map_idx];
+		symbols_transient=false; }
 		
 	/**
 	 *	Construct images, soft fonts from the bitstreams in the aux classes
@@ -510,9 +543,13 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			if (crt_map.isChar(offset)) {
 				vkl.virtualKeyEntered(EventConstants.PRESSED,
 					crt_map.getOutputChar(caps_lock_set, offset));
+				checkTransientCancel(offset);
 				return; }
 			if (crt_map.isMeta(offset)) {
-				vkl.virtualMetaKeyEntered(crt_map.getMetaKey(offset)); } }
+				boolean old_symbols_transient = symbols_transient; 
+				vkl.virtualMetaKeyEntered(crt_map.getMetaKey(offset));
+				if (old_symbols_transient) {
+					checkTransientCancel(offset); } } }
 
     /**
      * Update the chord map displayed
