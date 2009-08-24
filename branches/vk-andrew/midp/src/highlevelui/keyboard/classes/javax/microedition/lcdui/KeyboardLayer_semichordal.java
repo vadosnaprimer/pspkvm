@@ -341,7 +341,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
 					tfContext.tf.getString();
 					return;
-				case SC_Keys.ESC: 
+				case SC_Keys.ESC:
           closeKeyEntered(false);
           return;
 				case SC_Keys.ENT: 
@@ -404,6 +404,18 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					return;
 				case SC_Keys.SWM:
 					vk.rotate_map();
+					repaintVK();
+					return;
+				case SC_Keys.SLK:
+					vk.lock_symbols();
+					repaintVK();
+					return;
+				case SC_Keys.SYM:
+					vk.set_symbols_transient();
+					repaintVK();
+					return;
+				case SC_Keys.CNC:
+					vk.cancel_symbols();
 					disp.requestScreenRepaint();
 					return;
 				case SC_Keys.SEL:
@@ -418,11 +430,47 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				case SC_Keys.DIA:
 				case SC_Keys.RIN:
 				case SC_Keys.CED:
+				case SC_Keys.BRV:
+				case SC_Keys.MCR:
+				case SC_Keys.STR:
+				case SC_Keys.CAR:
+				case SC_Keys.OGO:
+				case SC_Keys.MDT:
+				case SC_Keys.UDT:
 					addDiacritical(m);
+					return;
+				case SC_Keys.LIG:
+					addLigature();
 					return;
         default:
         	return; } }        	
         	
+		/**
+		 * Called to combine the two characters before the cursor into
+		 * a ligature
+		 * @param d the diacritical key pressed (from SC_Keys ... GRV et al)
+		 */		 		 
+		void addLigature() {
+			if (tfContext == null) {
+				return; }
+			int p = tfContext.tf.getCaretPosition();
+			if (p<=1) {
+				// You have to be pointed just after 
+				// the characters you're going to combine
+				return; }
+			char a = tfContext.tf.getString().charAt(p-2);
+			char b = tfContext.tf.getString().charAt(p-1);
+			// Annoyingly, to use insert, you need either a String or a char[]...
+			// so far as I can see.
+			tmpchrarray[0] = Diacriticals.getLigature(a, b);
+			if (tmpchrarray[0]==Diacriticals.NOLIGATURE) {
+				return; }
+			// Delete the existing characters, place the ligature in:
+			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
+			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
+			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
+			tfContext.tf.getString(); }
+
 		/**
 		 * Called to add a diacritical to the character before the
 		 * 		 selection, when the diacritical modifier metakeys are struck.
