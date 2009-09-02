@@ -117,6 +117,7 @@ public class Diacriticals {
 			case '\u0433': return '\u0453';
 			case '\u043a': return '\u045c';
 			// Greek/Coptic encodings
+			case '\u0391': return '\u0386';
 			case '\u0395': return '\u0388';
 			case '\u0397': return '\u0389';
 			case '\u0399': return '\u038a';
@@ -247,6 +248,9 @@ public class Diacriticals {
 			case '\u03b9': return '\u03ca';
 			case '\u03c5': return '\u03cb';
 			case '\u03d2': return '\u03d4';
+			// Add diaeresis to lower-case accent acute iota and upsilon
+			case '\u03af': return '\u0390';
+			case '\u03cd': return '\u03b0';
 			default: return a; } }
 
 		// Same as for getAcute, but with cedille
