@@ -17,6 +17,8 @@ NB: The semichordal board in this branch build now requires the TrueType system 
 Changes in branch
 -----------------
 
+The semichordal board supports Greek and Cyrillic scripts, and you can customize which one you want to come up by default in pspkvm.ini.
+
 The semichordal board now uses a custom TrueType utility font (utility.ttf) for its help display/nav display.
 
 The FreeType font system now supports all three fonts (proportional, monospace, system) and bold, italic, bold/italic faces for all three, in addition to a utility font, and uses the FreeType portable cache manager to speed rendering.

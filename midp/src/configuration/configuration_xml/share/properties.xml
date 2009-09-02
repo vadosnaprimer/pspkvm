@@ -228,6 +228,11 @@
 		Scope="internal"
 		Callout="isVKUseDirection"
 		Comment="Getting system input method."/>		
+  <property Key="com.pspkvm.virtualkeyboard.default_keymap" 
+		Value="" 
+		Scope="internal"
+		Callout="getVKeyboardDefaultKeymap"
+		Comment="Getting virtual keyboard default keymap."/>		
   <property Key="com.pspkvm.setting.defaultspeed" 
 		Value="" 
 		Scope="internal"
