@@ -72,7 +72,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		int crt_map_idx;
 		// Whether the transient symbols set is up
 		boolean symbols_transient;
-		
+
 		final static SC_Keymap roman_map = new SC_Keymap_Roman();
 		final static SC_Keymap cyrillic_map = new SC_Keymap_Cyrillic();
 		final static SC_Keymap greek_map = new SC_Keymap_Greek();
@@ -148,12 +148,15 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		setup_keymaps(); }
 		
 	void setup_keymaps() {
-		// TODO: Read config param, init as 
-		// Cyrillic (or other) if so configured
 		crt_map_idx=ROMAN_MAP;
+		String imap = Configuration.getProperty("com.pspkvm.virtualkeyboard.default_keymap");
+    if((imap != null) && (imap.equals("cyrillic"))) {
+    	crt_map_idx=CYRILLIC_MAP; }
+    if((imap != null) && (imap.equals("greek"))) {
+    	crt_map_idx=GREEK_MAP; }
 		crt_map = mapset[crt_map_idx];
 		symbols_transient=false; }
-		
+
 	/**
 	 *	Construct images, soft fonts from the bitstreams in the aux classes
 	 */	 	
