@@ -11,7 +11,7 @@
  * characters)
  * 
  */
-// breve macron stroke caron ogonek middle_dot, dot_above
+
 package javax.microedition.lcdui;
 
 public class Diacriticals {
