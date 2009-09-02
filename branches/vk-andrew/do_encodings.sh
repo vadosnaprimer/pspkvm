@@ -10,3 +10,7 @@ $JDK_DIR/bin/native2ascii.exe -encoding UnicodeLittle \
 midp/src/highlevelui/keyboard/classes/javax/microedition/lcdui/SC_Keymap_NumericSymbolic_Roman.utf16.java \
 midp/src/highlevelui/keyboard/classes/javax/microedition/lcdui/SC_Keymap_NumericSymbolic_Roman.java 
 
+$JDK_DIR/bin/native2ascii.exe -encoding UnicodeLittle \
+midp/src/highlevelui/keyboard/classes/javax/microedition/lcdui/SC_Keymap_Greek.utf16.java \
+midp/src/highlevelui/keyboard/classes/javax/microedition/lcdui/SC_Keymap_Greek.java 
+

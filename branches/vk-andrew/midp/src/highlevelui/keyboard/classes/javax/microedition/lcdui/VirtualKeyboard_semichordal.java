@@ -75,11 +75,13 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		
 		final static SC_Keymap roman_map = new SC_Keymap_Roman();
 		final static SC_Keymap cyrillic_map = new SC_Keymap_Cyrillic();
+		final static SC_Keymap greek_map = new SC_Keymap_Greek();
 		final static SC_Keymap[] mapset = {
-			roman_map, cyrillic_map };
+			roman_map, cyrillic_map, greek_map };
 		// Indexes to the maps
 		final static int ROMAN_MAP = 0;
 		final static int CYRILLIC_MAP = 1;
+		final static int GREEK_MAP = 2;
 		// The extension/symbol maps--you don't rotate through these,
 		// but 'shift' up to them from the corresponding root boards
 		final static SC_Keymap roman_sym_map = new SC_Keymap_NumericSymbolic_Roman();
@@ -93,13 +95,13 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 
 		// Called whenever the keyboard sends 'SLK' (Symbol lock)
 		void lock_symbols() {
-			// TODO: Handle Cyrillic symbol map
+			// TODO: Handle Cyrillic, Greek symbol maps (when we've got these)
 			crt_map = roman_sym_map; 
 			symbols_transient=false; }
 
 		// Called whenever the keyboard sends 'SYM' (Transient symbol set)
 		void set_symbols_transient() {
-			// TODO: Handle Cyrillic symbol map (when we've got one)
+			// TODO: Handle Cyrillic, Greek symbol maps (when we've got these)
 			crt_map = roman_sym_map;
 			symbols_transient=true; }
 
