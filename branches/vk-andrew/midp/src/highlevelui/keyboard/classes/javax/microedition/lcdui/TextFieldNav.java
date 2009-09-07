@@ -25,7 +25,8 @@ public class TextFieldNav {
 		int rbound = s.length()-1;
 		while ((spos < rbound) && (!isWhiteSpace(s.charAt(spos)))) {
 			spos++; }
-		return spos; }
+		// If there's no whitespace at the end, point one past the end.
+		return isWhiteSpace(s.charAt(spos)) ? spos : spos+1; }
 		
 	static int findWordStartLeft(String s, int spos) {
 		while ((spos > 0) && (!isWhiteSpace(s.charAt(spos)))) {
@@ -53,7 +54,7 @@ public class TextFieldNav {
 	public static void wordRight(TextFieldLFImpl t) {
 		int spos = t.tf.getCaretPosition();
 		String s = t.tf.getString();
-		int rbound = s.length()-1;
+		int rbound = s.length();
 		if (spos>=rbound) { 
 			return; }
 		int tgt_pos = findFirstWhiteSpaceRight(s, spos);
@@ -78,7 +79,7 @@ public class TextFieldNav {
 	public static void paraRight(TextFieldLFImpl t) {
 		int spos = t.tf.getCaretPosition();
 		String s = t.tf.getString();
-		int rbound = s.length()-1;
+		int rbound = s.length();
 		if (spos>=rbound) { 
 			return; }
 		int tgt_pos = s.indexOf('\n', spos);
