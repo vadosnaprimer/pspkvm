@@ -6,8 +6,12 @@ package javax.microedition.lcdui;
 class SC_Keymap_Roman extends SC_Keymap {
 
 	// Map's name (for display)
-	public String getMapName() {
+	String getMapName() {
 		return "Roman"; }
+
+	// Map's name (short)
+	String getMapNameShort() {
+		return "abcd"; } 
 
   // The map of non-meta characters. Note that where there are 
   // valid meta characters, space is set, but these are just 
@@ -59,7 +63,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 			CHR, CHR, CHR, CHR, ENT, CHR, CHR, CHR,
 			NUL, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-			CUP, CLF, CDN, CRT, CUP, CLF, CDN, CRT,
+			CUP, CLF, CDN, CRT, CUP, WLF, CDN, WRT,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,

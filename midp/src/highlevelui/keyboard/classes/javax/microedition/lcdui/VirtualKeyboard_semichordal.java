@@ -92,6 +92,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			if (crt_map_idx >= mapset.length) {
 				crt_map_idx = 0; }
 			crt_map = mapset[crt_map_idx]; } 
+			
+		// Called to get the current keymap's name
+		String getMapSName() {
+			return crt_map.getMapNameShort(); }
 
 		// Called whenever the keyboard sends 'SLK' (Symbol lock)
 		void lock_symbols() {

@@ -176,17 +176,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     public String getIMName() {
 			if (vk == null) {
 				return null; }
-			switch(vk.currentKeyboard) {
-	      case AbstractKeyboardLayer.NUMERIC:
-	        return "1234";
-	      case AbstractKeyboardLayer.LOWERCASE:
-	        return "abcd";
-	      case AbstractKeyboardLayer.UPPERCASE:
-	        return "ABCD";
-	      case AbstractKeyboardLayer.SYMBOL:
-	        return "Symbol";
-			    }
-			return null; }
+			return vk.getMapSName(); }
 
     /**
      * get TextField Keyboard layer instance
@@ -361,8 +351,16 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           tfContext.moveCursor(Canvas.LEFT);
           synchSelectEnd(tfContext.tf);
           return;
+        case SC_Keys.WLF:
+        	TextFieldNav.wordLeft(tfContext);
+          synchSelectEnd(tfContext.tf);
+          return;
         case SC_Keys.CRT:
 					tfContext.moveCursor(Canvas.RIGHT);
+          synchSelectEnd(tfContext.tf);
+          return;
+        case SC_Keys.WRT:
+        	TextFieldNav.wordRight	(tfContext);
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CDN:
@@ -373,14 +371,22 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					tfContext.moveCursor(Canvas.UP);
           synchSelectEnd(tfContext.tf);
           return;
-        case SC_Keys.HME:
+        case SC_Keys.PUP:
         	tfContext.setCaretPosition(0);
         	tfContext.lRequestPaint();
         	synchSelectEnd(tfContext.tf);
         	return;
-        case SC_Keys.END:
+        case SC_Keys.PDN:
         	tfContext.setCaretPosition(tfContext.tf.buffer.length());
         	tfContext.lRequestPaint();
+        	synchSelectEnd(tfContext.tf);
+        	return;
+        case SC_Keys.HME:
+        	TextFieldNav.paraLeft(tfContext);
+        	synchSelectEnd(tfContext.tf);
+        	return;
+        case SC_Keys.END:
+        	TextFieldNav.paraRight(tfContext);
         	synchSelectEnd(tfContext.tf);
         	return;
         case SC_Keys.BSP: {

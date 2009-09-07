@@ -6,8 +6,12 @@ package javax.microedition.lcdui;
 class SC_Keymap_Greek extends SC_Keymap {
 
 	// Map's name (for display)
-	public String getMapName() {
-		return "Greek"; } // TODO: Really should be in the Greek orthography
+	String getMapName() {
+		return "\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03cc"; }
+		
+	// Map's name (short)
+	String getMapNameShort() {
+		return "\u03b1\u03b2\u03b3\u03b4"; } 
 
   // The map of non-meta characters. Note that where there are 
   // valid meta characters, space is set, but these are just 
@@ -59,7 +63,7 @@ class SC_Keymap_Greek extends SC_Keymap {
 		CHR, CHR, CHR, ACU, ENT, CHR, CHR, ACU,
 		NUL, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
 		CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
-		CUP, CLF, CDN, CRT, CUP, CLF, CDN, CRT,
+		CUP, CLF, CDN, CRT, CUP, WLF, CDN, WRT,
 		CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 		CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 		CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,

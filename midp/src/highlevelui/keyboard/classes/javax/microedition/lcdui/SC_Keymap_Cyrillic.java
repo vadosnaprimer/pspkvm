@@ -6,8 +6,12 @@ package javax.microedition.lcdui;
 class SC_Keymap_Cyrillic extends SC_Keymap {
 
 	// Map's name (for display)
-	public String getMapName() {
+	String getMapName() {
 		return "\u041a\u0438\u0440\u0438\u0434\u0434\u0438\u0446\u0430"; }
+
+	// Map's name (short)
+	String getMapNameShort() {
+		return "\u0430\u0431\u0432\u0433"; } 
 
 	// The metakey mapping to the chordal keyboard
 	public static final int[] chordal_map_meta = {

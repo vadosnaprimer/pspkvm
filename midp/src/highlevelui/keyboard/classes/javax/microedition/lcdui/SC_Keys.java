@@ -53,6 +53,12 @@ public class SC_Keys {
 	public static final int CAL=26;
 	// Clear all:
 	public static final int CLR=27;
+	// Word left, word right
+	public static final int WLF=28;
+	public static final int WRT=29;
+	// Document start, document end
+	public static final int DCS=30;
+	public static final int DCE=31;
 	
 	// Enum for use in uppercase/lowercase/non-case maps
 	// in symbol sets where it's inconvenient just to use
