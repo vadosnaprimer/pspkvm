@@ -338,6 +338,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					// TODO/FIXME--if this is a one line textfield, it would 
 					// be nice to call closeKeyEntered(true) here instead.
 					if (!tfContext.isMultiLine()) {
+						// TODO: Fix. This probably doesn't work for TextField types
+						// that do allow \n. Technically, if TextField.ANY is set
+						// in the constraint mask, it does.
 						return; }
 					eraseSelection();
 					tfContext.tf.insert("\n", tfContext.tf.getCaretPosition());
@@ -353,7 +356,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           return;
         case SC_Keys.WLF:
         	TextFieldNav.wordLeft(tfContext);
-        	tfContext.lRequestPaint();
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CRT:
@@ -362,7 +364,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           return;
         case SC_Keys.WRT:
         	TextFieldNav.wordRight(tfContext);
-        	tfContext.lRequestPaint();
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CDN:
@@ -385,12 +386,10 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         	return;
         case SC_Keys.HME:
         	TextFieldNav.paraLeft(tfContext);
-        	tfContext.lRequestPaint();
         	synchSelectEnd(tfContext.tf);
         	return;
         case SC_Keys.END:
         	TextFieldNav.paraRight(tfContext);
-        	tfContext.lRequestPaint();
         	synchSelectEnd(tfContext.tf);
         	return;
         case SC_Keys.BSP: {
