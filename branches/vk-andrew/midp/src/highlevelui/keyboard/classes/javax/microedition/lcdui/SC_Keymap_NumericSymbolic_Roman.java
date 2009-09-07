@@ -11,8 +11,9 @@ class SC_Keymap_NumericSymbolic_Roman extends SC_Keymap {
 	public String getMapName() {
 		return "Roman sym/num"; }
 		
-		// TODO: Add additional diacritical markup keys in row 16
-		// (various hooks, tails, missing tails, so on, in Latin B)
+	// Map's name (short)
+	String getMapNameShort() {
+		return "\u00a7\u00de\u00b1\u00bf"; } 
 
 		// Note: Currencies supported in symbol board
 		// but written as Unicode escapes in UTF-16 source:

@@ -30,4 +30,8 @@ abstract class SC_Keymap extends SC_Keys {
 	// Does this key cancel a transient map?
 	boolean cancelsTransient(int o) {
 		return true; }
+	// Long form map name
+	abstract String getMapName();
+	// Short form map name
+	abstract String getMapNameShort();
 }
