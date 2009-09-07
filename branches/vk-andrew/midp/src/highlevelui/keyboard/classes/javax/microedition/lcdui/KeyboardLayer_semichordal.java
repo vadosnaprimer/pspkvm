@@ -353,6 +353,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           return;
         case SC_Keys.WLF:
         	TextFieldNav.wordLeft(tfContext);
+        	tfContext.lRequestPaint();
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CRT:
@@ -360,7 +361,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.WRT:
-        	TextFieldNav.wordRight	(tfContext);
+        	TextFieldNav.wordRight(tfContext);
+        	tfContext.lRequestPaint();
           synchSelectEnd(tfContext.tf);
           return;
         case SC_Keys.CDN:
@@ -383,10 +385,12 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         	return;
         case SC_Keys.HME:
         	TextFieldNav.paraLeft(tfContext);
+        	tfContext.lRequestPaint();
         	synchSelectEnd(tfContext.tf);
         	return;
         case SC_Keys.END:
         	TextFieldNav.paraRight(tfContext);
+        	tfContext.lRequestPaint();
         	synchSelectEnd(tfContext.tf);
         	return;
         case SC_Keys.BSP: {
