@@ -120,6 +120,8 @@ class AppManagerUI extends Form
     private static final String SETTINGS_STORE = "amssettings";
 
     private static final int LASTPLAY_MIDLET_RECORD_ID = 1;
+    // A stream containing the folders
+    private static final int FOLDER_STREAM_RECORD_ID = 2;
     /**
      * The font used to paint midlet names in the AppSelector.
      * Inner class cannot have static variables thus it has to be here.
@@ -189,7 +191,7 @@ class AppManagerUI extends Form
     private static final int ITEM_PAD = 2;
 
     /**
-     * Cashed truncation mark
+     * Cached truncation mark
      */
     private static final char truncationMark =
         Resource.getString(ResourceConstants.TRUNCATION_MARK).charAt(0);
@@ -309,6 +311,54 @@ class AppManagerUI extends Form
     private MIDletSwitcher midletSwitcher;
 
     private boolean first;
+    
+    // The folders
+    AMSFolderCustomItem rootFolder, currentFolder;
+    
+    /* Aux method for first run of the new folders framework --
+    		Inits the root folder from the current list of items */
+    void initRootFolder(Vector mcis) {
+    	rootFolder=AMSFolderCustomItem.createRoot(mcis);
+			currentFolder=rootFolder; }
+			
+		void writeFolders() {
+			// First, create the store, if there is no such thing
+			// Then, write
+			// TODO
+		}
+    
+    /* Builds the folder structure from the records store */
+    void readFolders() {
+    	// First, fill a vector with all the current custom items
+    	int s = size();
+    	Vector mcis = new Vector(s);
+    	for(int i=0; i<s; i++) {
+				mcis.addElement(get(i)); }
+			// Now, read the folders from the store and populate with these
+    	RecordStore settings=null;
+			try {
+				settings = RecordStore.openRecordStore(SETTINGS_STORE, false);
+				if (settings.getNumRecords() < 2) {
+					initRootFolder(mcis);
+					return; }
+				byte[] data = settings.getRecord(FOLDER_STREAM_RECORD_ID);
+				ByteArrayInputStream das = new ByteArrayInputStream(data);
+				DataInputStream di = new DataInputStream(das);
+				rootFolder=AMSFolderCustomItem.readRoot(di, mcis);
+				currentFolder=rootFolder;
+			} catch (RecordStoreException e) {
+				// TODO: Warn
+				initRootFolder(mcis);
+			} catch (IOException e) {
+				// TODO: Warn
+				initRootFolder(mcis);
+			} finally {
+			if (settings != null) {
+				try {
+					settings.closeRecordStore();
+				} catch (RecordStoreException e) {
+			// ignore
+			} } } }
 
     /**
      * Creates and populates the Application Selector Screen.
@@ -1585,7 +1635,14 @@ class AppManagerUI extends Form
      * put into foreground (requires user attention) an additional
      * system provided icon will be displayed.
      */
-    class MidletCustomItem extends CustomItem {
+    class MidletCustomItem extends WriteableAMSCustomItem {
+
+        void write(DataOutputStream ostream) throws IOException {
+        	ostream.writeByte((byte)(WriteableAMSCustomItem.TYPE_MIDLET));
+        	ostream.writeInt(msi.suiteId); }
+        	
+        int getSuiteID() {
+					return msi.suiteId; }
 
         /**
          * Constructs a midlet representation for the App Selector Screen.
@@ -1606,6 +1663,7 @@ class AppManagerUI extends Form
             xScrollOffset = 0;
 
         }
+        
 
         /**
          * Gets the minimum width of a midlet representation in
@@ -1924,7 +1982,7 @@ class AppManagerUI extends Form
         /** The height of this MIDletSuiteInfo */
         int height; // = 0
 
-        /** Cashed width of the truncation mark */
+        /** Cached width of the truncation mark */
         int truncWidth;
 
         /** The text of this MidletCustomItem */
