@@ -122,79 +122,9 @@ class AppManagerUI extends Form
     private static final int LASTPLAY_MIDLET_RECORD_ID = 1;
     // A stream containing the folders
     private static final int FOLDER_STREAM_RECORD_ID = 2;
-    /**
-     * The font used to paint midlet names in the AppSelector.
-     * Inner class cannot have static variables thus it has to be here.
-     */
-    private static final Font ICON_FONT = Font.getFont(Font.FACE_SYSTEM,
-                                                         Font.STYLE_BOLD,
-                                                         Font.SIZE_SMALL);
+    // How many records we need
+    private static final int RECORDS_NEEDED = 2;
 
-    /**
-     * The image used to draw background for the midlet representation.
-     * IMPL NOTE: it is assumed that background image is larger or equal
-     * than all other images that are painted over it
-     */
-    private static final Image ICON_BG =
-        GraphicalInstaller.getImageFromInternalStorage("_ch_hilight_bg");
-
-    /**
-     * Cashed background image width.
-     */
-    private static final int bgIconW = ICON_BG.getWidth();
-
-    /**
-     * Cashed background image height.
-     */
-    private static final int bgIconH = ICON_BG.getHeight();
-
-    /**
-     * The icon used to display that user attention is requested
-     * and that midlet needs to brought into foreground.
-     */
-    private static final Image FG_REQUESTED =
-        GraphicalInstaller.getImageFromInternalStorage("_ch_fg_requested");
-
-    /**
-     * The image used to draw disable midlet representation.
-     */
-    private static final Image DISABLED_IMAGE =
-        GraphicalInstaller.getImageFromInternalStorage("_ch_disabled");
-
-    /**
-     * The color used to draw midlet name
-     * for the hilighted non-running running midlet representation.
-     */
-    private static final int ICON_HL_TEXT = 0x000B2876;
-
-    /**
-     * The color used to draw the shadow of the midlet name
-     * for the non hilighted non-running midlet representation.
-     */
-    private static final int ICON_TEXT = 0x003177E2;
-
-    /**
-     * The color used to draw the midlet name
-     * for the non hilighted running midlet representation.
-     */
-    private static final int ICON_RUNNING_TEXT = 0xbb0000;
-
-    /**
-     * The color used to draw the midlet name
-     * for the hilighted running midlet representation.
-     */
-    private static final int ICON_RUNNING_HL_TEXT = 0xff0000;
-
-    /**
-     * Tha pad between custom item's icon and text
-     */
-    private static final int ITEM_PAD = 2;
-
-    /**
-     * Cached truncation mark
-     */
-    private static final char truncationMark =
-        Resource.getString(ResourceConstants.TRUNCATION_MARK).charAt(0);
 
 
     /** Command object for "Exit" command for splash screen. */
@@ -312,53 +242,72 @@ class AppManagerUI extends Form
 
     private boolean first;
     
-    // The folders
-    AMSFolderCustomItem rootFolder, currentFolder;
-    
-    /* Aux method for first run of the new folders framework --
-    		Inits the root folder from the current list of items */
-    void initRootFolder(Vector mcis) {
-    	rootFolder=AMSFolderCustomItem.createRoot(mcis);
-			currentFolder=rootFolder; }
+  // The folders
+  AMSFolderCustomItem rootFolder, currentFolder;
+  
+  /* Aux method for first run of the new folders framework --
+  		Inits the root folder from the current list of items */
+  void initRootFolder(Vector mcis) {
+  	rootFolder=AMSFolderCustomItem.createRoot(mcis);
+		currentFolder=rootFolder; }
 			
-		void writeFolders() {
-			// First, create the store, if there is no such thing
-			// Then, write
-			// TODO
-		}
+	// Write folders to the permanent store -- note that initSettings
+	// should have ensured there's a record no. 2 in which to put them.
+	void writeFolders() {
+		RecordStore settings=null;
+		try {
+			ByteArrayOutputStream bas = new ByteArrayOutputStream();
+			DataOutputStream dos = new DataOutputStream(bas);
+			settings = RecordStore.openRecordStore(SETTINGS_STORE, true);
+			rootFolder.write(dos);
+			byte[] bstream = bas.toByteArray();
+			settings.setRecord(FOLDER_STREAM_RECORD_ID,
+				bstream, 0, bstream.length); }
+		catch (RecordStoreException e) {
+			/* TODO */ }
+		catch (IOException e) {
+			/* TODO */ }
+		finally {
+			if (settings != null) {
+			try {
+				settings.closeRecordStore(); }
+			catch (RecordStoreException e) {
+				/* TODO */ } } } }
     
     /* Builds the folder structure from the records store */
-    void readFolders() {
-    	// First, fill a vector with all the current custom items
-    	int s = size();
-    	Vector mcis = new Vector(s);
-    	for(int i=0; i<s; i++) {
-				mcis.addElement(get(i)); }
-			// Now, read the folders from the store and populate with these
-    	RecordStore settings=null;
+  void readFolders() {
+  	// First, fill a vector with all the current custom items
+  	int s = size();
+  	Vector mcis = new Vector(s);
+  	for(int i=0; i<s; i++) {
+			mcis.addElement(get(i)); }
+		// Now, read the folders from the store and populate with these
+  	RecordStore settings=null;
+		try {
+			settings = RecordStore.openRecordStore(SETTINGS_STORE, false);
+			if (settings.getNumRecords() < 2) {
+				initRootFolder(mcis);
+				return; }
+			byte[] data = settings.getRecord(FOLDER_STREAM_RECORD_ID);
+			if (data==null) {
+				initRootFolder(mcis);
+				return; }
+			ByteArrayInputStream das = new ByteArrayInputStream(data);
+			DataInputStream di = new DataInputStream(das);
+			rootFolder=AMSFolderCustomItem.readRoot(di, mcis);
+			currentFolder=rootFolder;
+		} catch (RecordStoreException e) {
+			// TODO: Warn
+			initRootFolder(mcis);
+		} catch (IOException e) {
+			// TODO: Warn
+			initRootFolder(mcis);
+		} finally {
+		if (settings != null) {
 			try {
-				settings = RecordStore.openRecordStore(SETTINGS_STORE, false);
-				if (settings.getNumRecords() < 2) {
-					initRootFolder(mcis);
-					return; }
-				byte[] data = settings.getRecord(FOLDER_STREAM_RECORD_ID);
-				ByteArrayInputStream das = new ByteArrayInputStream(data);
-				DataInputStream di = new DataInputStream(das);
-				rootFolder=AMSFolderCustomItem.readRoot(di, mcis);
-				currentFolder=rootFolder;
+				settings.closeRecordStore();
 			} catch (RecordStoreException e) {
-				// TODO: Warn
-				initRootFolder(mcis);
-			} catch (IOException e) {
-				// TODO: Warn
-				initRootFolder(mcis);
-			} finally {
-			if (settings != null) {
-				try {
-					settings.closeRecordStore();
-				} catch (RecordStoreException e) {
-			// ignore
-			} } } }
+		/* Ignore */ } } } }
 
     /**
      * Creates and populates the Application Selector Screen.
@@ -1396,8 +1345,7 @@ class AppManagerUI extends Form
                                    openRecordStore(SETTINGS_STORE, true);
 
             try {
-                if (settings.getNumRecords() == 0) {
-                    // space for last played MIDlet Suite name
+                while (settings.getNumRecords() < RECORDS_NEEDED) {
                     settings.addRecord(null, 0, 0);
                 }
             } finally {
@@ -1615,18 +1563,7 @@ class AppManagerUI extends Form
      * generation of repaint events.
      */
     void cleanUp() {
-        textScrollTimer.cancel();
-    }
-
-    /** A Timer which will handle firing repaints of the ScrollPainter */
-    protected static Timer textScrollTimer;
-
-    /** Text auto-scrolling parameters */
-    private static int SCROLL_RATE = 250;
-
-    private static int SCROLL_DELAY = 500;
-
-    private static int SCROLL_SPEED = 10;
+        WriteableAMSCustomItem.stopTimer(); }
 
     /**
      * Inner class used to display a running midlet in the AppSelector.
@@ -1635,14 +1572,7 @@ class AppManagerUI extends Form
      * put into foreground (requires user attention) an additional
      * system provided icon will be displayed.
      */
-    class MidletCustomItem extends WriteableAMSCustomItem {
-
-        void write(DataOutputStream ostream) throws IOException {
-        	ostream.writeByte((byte)(WriteableAMSCustomItem.TYPE_MIDLET));
-        	ostream.writeInt(msi.suiteId); }
-        	
-        int getSuiteID() {
-					return msi.suiteId; }
+    class MidletCustomItem extends WriteableAMSMidletCustomItem {
 
         /**
          * Constructs a midlet representation for the App Selector Screen.
@@ -1676,17 +1606,6 @@ class AppManagerUI extends Form
         }
 
         /**
-         * Gets the minimum height of a midlet representation in
-         * the App Selector Screen.
-         * @return the minimum height of a midlet representation
-         *         in the App Selector Screen.
-         */
-        protected int getMinContentHeight() {
-            return ICON_BG.getHeight() > ICON_FONT.getHeight() ?
-                ICON_BG.getHeight() : ICON_FONT.getHeight();
-        }
-
-        /**
          * Gets the preferred width of a midlet representation in
          * the App Selector Screen based on the passed in height.
          * @param height the amount of height available for this Item
@@ -1695,18 +1614,6 @@ class AppManagerUI extends Form
          */
         protected int getPrefContentWidth(int height) {
             return AppManagerUI.this.getWidth();
-        }
-
-        /**
-         * Gets the preferred height of a midlet representation in
-         * the App Selector Screen based on the passed in width.
-         * @param width the amount of width available for this Item
-         * @return the minimum height of a midlet representation
-         *         in the App Selector Screen.
-         */
-        protected int getPrefContentHeight(int width) {
-            return ICON_BG.getHeight() > ICON_FONT.getHeight() ?
-                ICON_BG.getHeight() : ICON_FONT.getHeight();
         }
 
         /**
@@ -1807,44 +1714,6 @@ class AppManagerUI extends Form
         }
 
         /**
-        * Start the scrolling of the text
-        */
-        protected void startScroll() {
-            if (!hasFocus || !truncated) {
-                return;
-            }
-            stopScroll();
-            textScrollPainter = new TextScrollPainter();
-            textScrollTimer.schedule(textScrollPainter, SCROLL_DELAY, SCROLL_RATE);
-        }
-
-        /**
-        * Stop the scrolling of the text
-        */
-        protected void stopScroll() {
-            if (textScrollPainter == null) {
-                return;
-            }
-            xScrollOffset = 0;
-            textScrollPainter.cancel();
-            textScrollPainter = null;
-            repaint(bgIconW, 0, width, height);
-        }
-
-        /**
-        * Called repeatedly to animate a side-scroll effect for text
-        */
-        protected void repaintScrollText() {
-            if (-xScrollOffset < scrollWidth) {
-                xScrollOffset -= SCROLL_SPEED;
-                repaint(bgIconW, 0, width, height);
-            } else {
-                // already scrolled to the end of text
-                stopScroll();
-            }
-        }
-
-        /**
          * Handles traversal.
          * @param dir The direction of traversal (Canvas.UP, Canvas.DOWN,
          *            Canvas.LEFT, Canvas.RIGHT)
@@ -1886,33 +1755,6 @@ class AppManagerUI extends Form
         }
 
         /**
-         * Repaints MidletCustomItem. Called when internal state changes.
-         */
-        public void update() {
-            repaint();
-        }
-
-        /**
-         * Sets the owner (AppManagerUI) of this MidletCustomItem
-         * @param hs The AppSelector in which this MidletCustomItem is shown
-         */
-        void setOwner(AppManagerUI hs) {
-            owner = hs;
-        }
-
-        /**
-         * Sets default <code>Command</code> for this <code>Item</code>.
-         *
-         * @param c the command to be used as this <code>Item's</code> default
-         * <code>Command</code>, or <code>null</code> if there is to
-         * be no default command
-         */
-        public void setDefaultCommand(Command c) {
-            default_command = c;
-            super.setDefaultCommand(c);
-        }
-
-        /**
          * Called when MidletCustomItem is shown.
          */
         public void showNotify() {
@@ -1933,70 +1775,6 @@ class AppManagerUI extends Form
                 appManagerMidlet.destroyMidlet();
             }
         }
-
-        /** A TimerTask which will repaint scrolling text  on a repeated basis */
-        protected TextScrollPainter textScrollPainter;
-
-        /**
-        * Width of the scroll area for text
-        */
-        protected int scrollWidth;
-
-        /**
-        * If text is truncated
-        */
-        boolean truncated;
-
-        /**
-        * pixel offset to the start of the text field  (for example,  if
-        * xScrollOffset is -60 it means means that the text in this
-        * text field is scrolled 60 pixels left of the left edge of the
-        * text field)
-        */
-        protected int xScrollOffset;
-
-        /**
-        * Helper class used to repaint scrolling text
-        * if needed.
-        */
-        private class TextScrollPainter extends TimerTask {
-            /**
-            * Repaint the item text
-            */
-            public final void run() {
-                repaintScrollText();
-            }
-        }
-
-        /** True if this MidletCustomItem has focus, and false - otherwise */
-        boolean hasFocus; // = false;
-
-        /** The owner of this MidletCustomItem */
-        AppManagerUI owner; // = false
-
-        /** The MIDletSuiteInfo associated with this MidletCustomItem */
-        RunningMIDletSuiteInfo msi; // = null
-
-        /** The width of this MidletCustomItem */
-        int width; // = 0
-        /** The height of this MIDletSuiteInfo */
-        int height; // = 0
-
-        /** Cached width of the truncation mark */
-        int truncWidth;
-
-        /** The text of this MidletCustomItem */
-        char[] text;
-
-        /** Length of the text */
-        int textLen;
-
-        /**
-         * The icon to be used to draw this midlet representation.
-         */
-        Image icon; // = null
-        /** current default command */
-        Command default_command; // = null
     }
 }
 

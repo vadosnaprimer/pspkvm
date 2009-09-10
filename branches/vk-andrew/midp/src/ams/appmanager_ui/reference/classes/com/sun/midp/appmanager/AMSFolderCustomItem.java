@@ -3,6 +3,8 @@ package com.sun.midp.appmanager;
 import java.util.Vector;
 import java.io.*;
 import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
+import com.sun.midp.installer.GraphicalInstaller;
 
 /*
 	A folder within the AMS, containing (potentially) additional folders and/or
@@ -14,9 +16,11 @@ class AMSFolderCustomItem extends WriteableAMSCustomItem {
 	boolean open;
 	AMSFolderCustomItem parent;
 	
-	// For creation in UI, sans content
+	// Constructor for creation in UI, sans content
 	AMSFolderCustomItem(String n, AMSFolderCustomItem p) {
-		super(n);
+		super(null);
+		text = n.toCharArray();
+		icon = folderImg;
 		open = false;
 		contents = new Vector();
 		parent=p; }
@@ -37,10 +41,11 @@ class AMSFolderCustomItem extends WriteableAMSCustomItem {
 		root.contents=mcis;
 		return root; }
 
-	// For creation from a stream (storage)		
+	// Constructor for creation from storage		
 	AMSFolderCustomItem(AMSFolderCustomItem p, DataInputStream di, Vector mcis)
 		throws IOException {
-		super(di.readUTF());
+		super(null);
+		text=di.readUTF().toCharArray();
 		open = false;
 		parent=p;
 		int csize = di.readInt();
@@ -51,13 +56,14 @@ class AMSFolderCustomItem extends WriteableAMSCustomItem {
 	// Write to storage		
 	void write(DataOutputStream ostream) throws IOException {
 		ostream.writeByte((byte)(WriteableAMSCustomItem.TYPE_FOLDER));
-		ostream.writeUTF(getLabel());
+		ostream.writeUTF(new String(text));
 		int c = contents.size();
 		ostream.writeInt(c);
 		for(int i=0; i<c; i++) {
 			WriteableAMSCustomItem wamci = (WriteableAMSCustomItem)(contents.elementAt(i));
 			wamci.write(ostream); } }
-			 
+	
+	// Helper for construction from storage
 	WriteableAMSCustomItem readNextCI(DataInputStream di, Vector mcis)
 		throws IOException {
 		int t = (int)(di.readByte());
@@ -70,7 +76,8 @@ class AMSFolderCustomItem extends WriteableAMSCustomItem {
 					return getMidletSuiteByID(mcis, suiteID);
 				default:
 					throw new IOException("Unexpected type field in AMSFolderCustomItem:" + t); } }
-					
+	
+	// Finds a WriteableAMSCustomItem in a Vector containing these, by its suiteID
 	static WriteableAMSCustomItem getMidletSuiteByID(Vector mcis, int suiteID) {
 		int s = mcis.size();
 		for (int i=0; i<s; i++) {
@@ -85,14 +92,6 @@ class AMSFolderCustomItem extends WriteableAMSCustomItem {
     // TODO
     return -1; }
           
-	protected int	getMinContentHeight() { 
-    // TODO
-    return -1; }
-          
-	protected int	getPrefContentHeight(int width) {
-		// TODO
-		return -1; }
-		 
 	protected int	getPrefContentWidth(int height) {
 		// TODO
 		return -1; }
