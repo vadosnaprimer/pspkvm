@@ -50,9 +50,9 @@ MIDP_JAVADOC_SOURCEPATH += $(APPMANAGER_UI_DIR)/classes
 SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppInfo.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppManagerUI.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSFolderCustomItem.java \
-    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/WriteableAMSCustomItem.java \
-    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/WriteableAMSMidletCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppSettings.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/DisplayError.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/MIDletSelector.java \
@@ -67,4 +67,3 @@ vpath % $(APPMANAGER_UI_DIR)/native
 
 SUBSYSTEM_AMS_NATIVE_FILES += \
     wifiselector.c 
-

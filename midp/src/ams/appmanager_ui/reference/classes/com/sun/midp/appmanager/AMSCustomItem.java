@@ -1,17 +1,30 @@
+/*
+	Superclass providing basic functionality for CustomItems representing
+	midlets and folders in the AMS.
+
+	A lot of the basic fields and all (non I/O, non Folder) stuff came out of 
+	AppManagerUI.java, which had an inner class that provided some of this 
+	functionality. I basically broke it up, spread it over a descendance tree
+	allowing me to override bits to do the folder items reasonably cleanly.
+
+	/ AJM
+*/
+
 package com.sun.midp.appmanager;
 
 import java.io.*;
 import javax.microedition.lcdui.CustomItem;
 import javax.microedition.lcdui.Font;
-import javax.microedition.lcdui.Image;
 import com.sun.midp.installer.GraphicalInstaller;
 import com.sun.midp.i18n.Resource;
 import com.sun.midp.i18n.ResourceConstants;
 import javax.microedition.lcdui.Command;
 import java.util.TimerTask;
 import java.util.Timer;
+import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
 
-abstract class WriteableAMSCustomItem extends CustomItem {
+abstract class AMSCustomItem extends CustomItem {
 
 	// Field specifiers for reading/writing in a stream
 	protected static final int TYPE_FOLDER=0x00;
@@ -25,7 +38,6 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 		GraphicalInstaller.getImageFromInternalStorage("folder");
 	final static Image folderOpenImg =
 		GraphicalInstaller.getImageFromInternalStorage("folder_open");
-
 		
 	/**
 	* The image used to draw background for the midlet representation.
@@ -97,6 +109,18 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 	*/
 	protected static final char truncationMark =
 		Resource.getString(ResourceConstants.TRUNCATION_MARK).charAt(0);
+		
+	/** Cached width of the truncation mark */
+	protected static int truncWidth=-1;
+	
+	static void initTruncWidth() {
+		if (truncWidth != -1) {
+			return; }
+		truncWidth = ICON_FONT.charWidth(truncationMark); }
+
+	static void initScrollTimer() {
+		if (textScrollTimer == null) {
+			textScrollTimer = new Timer(); } }
 	
   /**
 	* Gets the preferred height of a midlet representation in
@@ -118,14 +142,38 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 		return itemHeight; }
 		
 	/**
+	* Gets the minimum width of a midlet representation in
+	* the App Selector Screen.
+	* @return the minimum width of a midlet representation
+	*         in the App Selector Screen.
+	*/
+	protected int getMinContentWidth() {
+		return owner.getWidth(); }
+	
+	/**
+	* Gets the preferred width of a midlet representation in
+	* the App Selector Screen based on the passed in height.
+	* @param height the amount of height available for this Item
+	* @return the minimum width of a midlet representation
+	*         in the App Selector Screen.
+	*/
+	protected int getPrefContentWidth(int height) {
+		return owner.getWidth(); }
+
+	/**
 	* Repaints MidletCustomItem. Called when internal state changes.
 	*/
 	public void update() {
 		repaint(); }
 
 	// Passthrough constructor
-	WriteableAMSCustomItem(String s) {
-		super(s); }
+	AMSCustomItem(String s, AppManagerUI ams) {
+		super(s);
+		owner=ams;
+		initTruncWidth();
+		initScrollTimer();
+		truncated = false;
+		xScrollOffset = 0; }
 
 	// Write to storage 
 	abstract void write(DataOutputStream ostream) throws IOException;
@@ -135,8 +183,6 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 	/** The height of the item */
 	int height; // = 0
 	
-	/** Cached width of the truncation mark */
-	int truncWidth;	
 	/** The text of the item */
 	char[] text;
 	/** Length of the text */
@@ -145,10 +191,6 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 	/** The owner of this MidletCustomItem */
 	AppManagerUI owner; // = null
 
-	/**
-	 * The icon to be used to draw this midlet representation.
-	 */
-	Image icon; // = null
 	/** current default command */
 	Command default_command; // = null
 	
@@ -220,7 +262,7 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 			stopScroll(); } }
 			
 	/** A Timer which will handle firing repaints of the ScrollPainter */
-	protected static Timer textScrollTimer;
+	protected static Timer textScrollTimer=null;
 	
 	/** Text auto-scrolling parameters */
 	private static int SCROLL_RATE = 250;
@@ -247,5 +289,99 @@ abstract class WriteableAMSCustomItem extends CustomItem {
 	public void setDefaultCommand(Command c) {
 		default_command = c;
 		super.setDefaultCommand(c); }
+		
+	/**
+	* On size change event we define the item's text
+	* according to item's new width
+	* @param w The current width of this Item
+	* @param h The current height of this Item
+	*/
+	protected void sizeChanged(int w, int h) {
+		stopScroll();
+		width = w;
+		height = h;
+		int widthForText = w - ITEM_PAD - ICON_BG.getWidth();
+		int nameWidth = ICON_FONT.charsWidth(text, 0, textLen);
+		scrollWidth = nameWidth - widthForText + w/5;
+		truncated = nameWidth > widthForText; }
+
+	/**
+	* Handles traversal out. This method is called when this
+	* MidletCustomItem looses focus.
+	*/
+	protected void traverseOut() {
+		hasFocus = false;
+		stopScroll(); }
+		
+	/**
+	* Handles traversal.
+	* @param dir The direction of traversal (Canvas.UP, Canvas.DOWN,
+	*            Canvas.LEFT, Canvas.RIGHT)
+	* @param viewportWidth The width of the viewport in the AppSelector
+	* @param viewportHeight The height of the viewport in the AppSelector
+	* @param visRect_inout The return array that tells AppSelector
+	*        which portion of the MidletCustomItem has to be made visible
+	* @return true if traversal was handled in this method
+	*         (this MidletCustomItem just got focus or there was an
+	*         internal traversal), otherwise false - to transfer focus
+	*         to the next item
+	*/
+	protected boolean traverse(int dir,
+		int viewportWidth, int viewportHeight,
+		int visRect_inout[]) {
+		// entirely visible and hasFocus
+		if (!hasFocus) {
+			hasFocus = true; }
+		visRect_inout[0] = 0;
+		visRect_inout[1] = 0;
+		visRect_inout[2] = width;
+		visRect_inout[3] = height;
+		startScroll();
+		return false; }
+
+	/**
+	* Paints the content of a midlet representation or folder in
+	* the App Selector Screen.
+	* Note that icon representing that foreground was requested
+	* is painted on top of the existing icon.
+	* @param g The graphics context where painting should be done
+	* @param w The width available to this Item
+	* @param h The height available to this Item
+	*/
+	protected void paint(Graphics g, int w, int h) {
+		int cX = g.getClipX();
+		int cY = g.getClipY();
+		int cW = g.getClipWidth();
+		int cH = g.getClipHeight();
+		
+		if ((cW + cX) > bgIconW) {
+			if (text != null && h > ICON_FONT.getHeight()) {
+				setLabelColor(g);
+				g.setFont(ICON_FONT);
+				boolean truncate = (xScrollOffset == 0) && truncated;
+				g.clipRect(bgIconW + ITEM_PAD, 0,
+					truncate ? w - truncWidth - bgIconW - 2 * ITEM_PAD :
+					w - bgIconW - 2 * ITEM_PAD, h);
+				g.drawChars(text, 0, textLen,
+					bgIconW + ITEM_PAD + xScrollOffset, (h - ICON_FONT.getHeight())/2,
+					Graphics.LEFT | Graphics.TOP);
+				g.setClip(cX, cY, cW, cH);
+				if (truncate) {
+					g.drawChar(truncationMark, w - truncWidth,
+						(h - ICON_FONT.getHeight())/2, Graphics.LEFT | Graphics.TOP); } } }
+			
+		if (cX < bgIconW) {
+			g.clipRect(0, 0, bgIconW, h);
+			if (hasFocus) {
+				g.drawImage(ICON_BG, 0, (h - bgIconH)/2,
+					Graphics.TOP | Graphics.LEFT); }
+			drawIcons(g);
+			g.setClip(cX, cY, cW, cH); } }
+		
+	/* Override--different implementation for folders and midlets */
+	abstract void setLabelColor(Graphics g);
+
+	/* Override--different implementation for folders and midlets */
+	abstract void drawIcons(Graphics g);
 
 }
