@@ -291,7 +291,8 @@ class AppManagerUI extends Form
     
     /* Builds the folder structure from the records store */
   void readFolders() {
-  	// First, fill a vector with all the current custom items
+  	// int[] suiteIds = midletSuiteStorage.getListOfSuites();
+  	// First, get all the currently installed suites
   	int s = size();
   	Vector mcis = new Vector(s);
   	for(int i=0; i<s; i++) {
@@ -743,10 +744,10 @@ class AppManagerUI extends Form
                     }
 
                     /*
-                     * When the Installer midlet quites
+                     * When the Installer midlet quits
                      * (it is removed from the running apps list)
                      * this is a good time to see if any new MIDlet suites
-                     * where added
+                     * were added
                      * Also the CA manager could have disabled a MIDlet.
                      */
                     if (INSTALLER.equals(midletClassName)) {
@@ -784,7 +785,7 @@ class AppManagerUI extends Form
             }
         }
 
-        // Midlet quited; display the application Selector
+        // Midlet quitted; display the application Selector
         display.setCurrent(this);
     }
 
