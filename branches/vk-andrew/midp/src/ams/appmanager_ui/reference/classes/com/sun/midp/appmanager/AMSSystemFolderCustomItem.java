@@ -87,10 +87,12 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
 	// Override
 	AMSMidletCustomItem find(MIDletProxy midlet) {
-		if (discoveryMidlet.equals(midlet)) {
-			return discoveryMidlet; }
-		if (wifiMidlet.equals(midlet)) {
-			return wifiMidlet; }
+		if (discoveryMidlet.msi.proxy != null) {
+			if (discoveryMidlet.msi.proxy.equals(midlet)) {
+				return discoveryMidlet; } }
+		if (wifiMidlet.msi.proxy != null) {
+			if (wifiMidlet.msi.proxy.equals(midlet)) {
+				return wifiMidlet; } }
 		return super.find(midlet); }
 
 }

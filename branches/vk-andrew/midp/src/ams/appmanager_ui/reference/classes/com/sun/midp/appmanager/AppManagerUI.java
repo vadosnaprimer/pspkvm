@@ -583,8 +583,8 @@ class AppManagerUI extends Form
 			
 			} else if (c == deviceSettingCmd) {
 			try {
-			DeviceSetting devSetting = new DeviceSetting(msi.suiteId, display, this);
-			display.setCurrent(devSetting);
+				DeviceSetting devSetting = new DeviceSetting(msi.suiteId, display, this);
+				display.setCurrent(devSetting);
 			} catch (Throwable t) {
 			displayError.showErrorAlert(msi.displayName, t, null, null); } } }
 
@@ -594,21 +594,25 @@ class AppManagerUI extends Form
      * @param midlet proxy of a newly added MIDlet
      */
     void notifyMidletStarted(MIDletProxy midlet) {
-        String midletClassName = midlet.getClassName();
-
-        if (midletClassName.equals(manager.getClass().getName())) {
-            return; }
-
-        if (midlet.getSuiteId() == MIDletSuite.INTERNAL_SUITE_ID &&
-                !midletClassName.equals(DISCOVERY_APP) &&
-                !midletClassName.equals(INSTALLER) &&
-                !midletClassName.equals(CA_MANAGER)) {
-            appManagerMidlet = midlet;
-            return; }
-	      AMSMidletCustomItem m = find(midlet);
-	      if (m==null) {
+			String midletClassName = midlet.getClassName();
+			if (midletClassName.equals(manager.getClass().getName())) {
+				return; }
+			
+			if (midlet.getSuiteId() == MIDletSuite.INTERNAL_SUITE_ID &&
+				!midletClassName.equals(DISCOVERY_APP) &&
+				!midletClassName.equals(INSTALLER) &&
+				!midletClassName.equals(CA_MANAGER)) {
+					appManagerMidlet = midlet;
 					return; }
-				m.updateDisplay(); }
+			// Find the Midlet belonging to this one
+      AMSMidletCustomItem m = find(midlet);
+      if (m==null) {
+				return; }
+			if (m.msi.proxy == null) {
+				// Add item to midlet switcher
+				midletSwitcher.append(m.msi); }
+      m.msi.proxy = midlet;
+			m.updateDisplay(); }
 
     /**
      * Called when state of a running midlet was changed.
@@ -616,7 +620,9 @@ class AppManagerUI extends Form
      * @param midlet proxy of a newly added MIDlet
      */
 		void notifyMidletStateChanged(MIDletProxy midlet) {
-		AMSMidletCustomItem mci = rootFolder.find(midlet);
+			AMSMidletCustomItem mci = rootFolder.find(midlet);
+			if (mci == null) {
+				return; }
 			if (mci.msi.proxy == midlet) {
 				mci.updateDisplay(); } }
 
@@ -642,9 +648,9 @@ class AppManagerUI extends Form
 				AMSMidletCustomItem ci = find(midlet);
 		    if (ci==null) {
 						return; }
-				ci.updateDisplay();
 	      midletSwitcher.remove(ci.msi);
 	      ci.msi.proxy = null;
+				ci.updateDisplay();
 
         if (removeMsi != null && removeMsi.equals(midlet)) {
         	// TODO: Fix. This won't work
