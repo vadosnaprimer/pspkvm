@@ -176,7 +176,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	AMSMidletCustomItem find(MIDletProxy midlet) {
 		int c = items.length;
 		for(int i=0; i<c; i++) {
-			if (items[i].equals(midlet)) {
+			if (items[i].msi.equals(midlet)) {
 				return items[i]; } }
 		c = subfolders.length;
 		for(int i=0; i<c; i++) {

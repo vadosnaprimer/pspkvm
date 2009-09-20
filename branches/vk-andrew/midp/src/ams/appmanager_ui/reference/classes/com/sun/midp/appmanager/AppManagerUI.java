@@ -141,15 +141,6 @@ class AppManagerUI extends Form
     private Command launchCaManagerCmd =
         new Command(Resource.getString(ResourceConstants.LAUNCH),
                     Command.ITEM, 1);
-
-    private Command launchWifiSetupCmd =
-        new Command(Resource.getString(ResourceConstants.LAUNCH),
-                    Command.ITEM, 1);
-
-    /** Command object for "Launch". */
-    private Command launchCmd =
-        new Command(Resource.getString(ResourceConstants.LAUNCH),
-                    Command.ITEM, 1);
     /** Command object for "Info". */
     private Command infoCmd =
         new Command(Resource.getString(ResourceConstants.INFO),
@@ -188,16 +179,6 @@ class AppManagerUI extends Form
     Command backCmd =
         new Command(Resource.getString(ResourceConstants.BACK),
                     Command.BACK, 1);
-
-    /** Command object for "Bring to foreground". */
-    private Command fgCmd = new Command(Resource.getString
-                                        (ResourceConstants.FOREGROUND),
-                                        Command.ITEM, 1);
-
-    /** Command object for "End" midlet. */
-    private Command endCmd = new Command(Resource.getString
-                                             (ResourceConstants.END),
-                                         Command.ITEM, 1);
 
     /** Command object for "Yes" command. */
     private Command runYesCmd = new Command(Resource.getString
@@ -252,6 +233,12 @@ class AppManagerUI extends Form
   // The folders
   AMSFolderCustomItem rootFolder, currentFolder;
   AMSSystemFolderCustomItem systemFolder;
+  
+  AMSMidletCustomItem find(MIDletProxy p) {
+  	AMSMidletCustomItem r = systemFolder.find(p);
+  	if (r!=null) {
+			return r; }
+		return rootFolder.find(p); }
   
   /* Aux method for first run of the new folders framework --
   		Inits the root folder from the current list of items */
@@ -548,10 +535,10 @@ class AppManagerUI extends Form
 			if (c == launchCaManagerCmd) {
 				manager.launchCaManager();
 				return; }
-			if (c == launchWifiSetupCmd) {
+			if (c == AMSMidletCustomItem_WifiManager.launchWifiSetupCmd) {
 				manager.launchWifiManager();
 				return; }
-			if (c == launchCmd) {
+			if (c == AMSMidletCustomItem.launchCmd) {
 				launchMidlet(msi);
 				return; }
 			if (c == infoCmd) {
@@ -585,12 +572,12 @@ class AppManagerUI extends Form
 				catch (Throwable t) {
 					displayError.showErrorAlert(msi.displayName, t, null, null); }
 				return; }
-		if (c == fgCmd) {
+		if (c == AMSMidletCustomItem.fgCmd) {
 			
 			manager.moveToForeground(msi);
 			display.setCurrent(this);
 			
-			} else if (c == endCmd) {
+			} else if (c == AMSMidletCustomItem.endCmd) {
 			manager.exitMidlet(msi);
 			display.setCurrent(this);
 			
@@ -610,40 +597,18 @@ class AppManagerUI extends Form
         String midletClassName = midlet.getClassName();
 
         if (midletClassName.equals(manager.getClass().getName())) {
-            return;
-        }
+            return; }
 
         if (midlet.getSuiteId() == MIDletSuite.INTERNAL_SUITE_ID &&
                 !midletClassName.equals(DISCOVERY_APP) &&
                 !midletClassName.equals(INSTALLER) &&
                 !midletClassName.equals(CA_MANAGER)) {
             appManagerMidlet = midlet;
-        } else {
-            AMSMidletCustomItem ci;
-            for (int i = 0; i < size(); i++) {
-                ci = (AMSMidletCustomItem)get(i);
-
-                if (ci.msi.equals(midlet)) {
-                    ci.removeCommand(launchCmd);
-                    ci.removeCommand(launchInstallCmd);
-                    ci.removeCommand(launchWifiSetupCmd);
-
-                    if (caManagerIncluded) {
-                        ci.removeCommand(launchCaManagerCmd);
-                    }
-
-                    ci.setDefaultCommand(fgCmd);
-                    ci.addCommand(endCmd);
-                    if (ci.msi.proxy == null) {
-                        // add item to midlet switcher
-                        midletSwitcher.append(ci.msi);
-                    }
-                    ci.msi.proxy = midlet;
-                    return;
-                }
-            }
-        }
-    }
+            return; }
+	      AMSMidletCustomItem m = find(midlet);
+	      if (m==null) {
+					return; }
+				m.updateDisplay(); }
 
     /**
      * Called when state of a running midlet was changed.
@@ -671,84 +636,55 @@ class AppManagerUI extends Form
                 !midletClassName.equals(INSTALLER) &&
                 !midletClassName.equals(CA_MANAGER)) {
             appManagerMidlet = null;
-        } else {
-            AMSMidletCustomItem ci;
+            display.setCurrent(this);
+            return; }
 
-            for (int i = 0; i < size(); i++) {
-                ci = (AMSMidletCustomItem)get(i);
+				AMSMidletCustomItem ci = find(midlet);
+		    if (ci==null) {
+						return; }
+				ci.updateDisplay();
+	      midletSwitcher.remove(ci.msi);
+	      ci.msi.proxy = null;
 
-                if (ci.msi.equals(midlet)) {
-                    ci.removeCommand(fgCmd);
-                    ci.removeCommand(endCmd);
+        if (removeMsi != null && removeMsi.equals(midlet)) {
+        	// TODO: Fix. This won't work
+          remove(removeMsi); }
 
-                    if (ci.msi.midletToRun != null &&
-                        ci.msi.midletToRun.equals(DISCOVERY_APP)) {
-                        ci.setDefaultCommand(launchInstallCmd);
-                    } else if (caManagerIncluded &&
-                        ci.msi.midletToRun != null &&
-                        ci.msi.midletToRun.equals(CA_MANAGER)) {
-                        ci.setDefaultCommand(launchCaManagerCmd);
-                    } else if (ci.msi.midletToRun != null &&
-                        ci.msi.midletToRun.equals(WIFI_SELECTOR_APP)) {
-                        ci.setDefaultCommand(launchWifiSetupCmd);
-                    } else {
-                        if (ci.msi.enabled) {
-                            ci.setDefaultCommand(launchCmd);
-                        }
-                    }
+        /*
+         * When the Installer midlet quits
+         * (it is removed from the running apps list)
+         * this is a good time to see if any new MIDlet suites
+         * were added
+         * Also the CA manager could have disabled a MIDlet.
+         */
+        if (INSTALLER.equals(midletClassName)) {
+        	// TODO: Add the new midlet -- this won't work
+            updateContent(true);
+            /*
+            * After a MIDlet suite is successfully installed on the
+            * device, ask the user whether or not to launch
+            * a MIDlet from the suite.
+            */
+          AMSMidletCustomItem mci = getLastInstalledMidletItem();
+          if (mci != null) {
+              askUserIfLaunchMidlet();
+              return; }
+	          display.setCurrent(this);
+            return; }
+	          
+        if (CA_MANAGER.equals(midletClassName)) {
+            updateContent(true);
+						ci.update(); }
 
-                    midletSwitcher.remove(ci.msi);
-                    ci.msi.proxy = null;
+        Displayable cur = display.getCurrent();
+        if (cur != null && cur instanceof Alert) {
+        	   //Please don't disappear too fast...
+        	   try {
+                Thread.sleep(3000);
+        	   } catch (InterruptedException e) { } }
+        
+        display.setCurrent(this); }
 
-                    if (removeMsi != null && removeMsi.equals(midlet)) {
-                        remove(removeMsi);
-                    }
-
-                    /*
-                     * When the Installer midlet quits
-                     * (it is removed from the running apps list)
-                     * this is a good time to see if any new MIDlet suites
-                     * were added
-                     * Also the CA manager could have disabled a MIDlet.
-                     */
-                    if (INSTALLER.equals(midletClassName)) {
-                        updateContent(true);
-                        /*
-                        * After a MIDlet suite is successfully installed on the
-                        * device, ask the user whether or not to launch
-                        * a MIDlet from the suite.
-                        */
-                        AMSMidletCustomItem mci = getLastInstalledMidletItem();
-                        if (mci != null) {
-                            askUserIfLaunchMidlet();
-                            return;
-                        }
-                    } else {
-                        if (CA_MANAGER.equals(midletClassName)) {
-                            updateContent(true);
-                        }
-                        ci.update();
-                    }
-
-                    Displayable cur = display.getCurrent();
-                    if (cur != null && cur instanceof Alert) {
-                    	   //Please don't disappear too fast...
-                    	   try {
-                            Thread.sleep(3000);
-                    	   } catch (InterruptedException e) {
-                    	   }
-                    }
-                    
-                    display.setCurrent(this);
-                    
-                    return;
-                }
-            }
-        }
-
-        // Midlet quitted; display the application Selector
-        display.setCurrent(this);
-    }
 
     /**
      * Called when a midlet could not be launched.
@@ -1004,9 +940,11 @@ class AppManagerUI extends Form
      *
      * @param suiteInfo the midlet suite info
      *                  of the recently started midlet
+     * // TODO: Remove entirely, migrate additional cmd setting bits into various
+     * // AMSCustomItem implementations.
      */
-    private void append(RunningMIDletSuiteInfo suiteInfo) {
-        AMSMidletCustomItem ci = new AMSMidletCustomItem(suiteInfo, this);
+    private void append_trash(RunningMIDletSuiteInfo suiteInfo) {
+        /*AMSMidletCustomItem ci = new AMSMidletCustomItem(suiteInfo, this);
 
         if (suiteInfo.midletToRun != null &&
             suiteInfo.midletToRun.equals(DISCOVERY_APP)) {
@@ -1018,7 +956,7 @@ class AppManagerUI extends Form
             ci.setDefaultCommand(launchCaManagerCmd);
         } else if (suiteInfo.midletToRun != null &&
             suiteInfo.midletToRun.equals(WIFI_SELECTOR_APP)) {
-            ci.setDefaultCommand(launchWifiSetupCmd);
+            ci.setDefaultCommand(AMSMidletCustomItem_WifiManager.launchWifiSetupCmd);
         } else {
             ci.addCommand(infoCmd);
             ci.addCommand(removeCmd);
@@ -1033,7 +971,7 @@ class AppManagerUI extends Form
         }
 
         ci.setItemCommandListener(this);
-        append(ci);
+        append(ci);*/
     }
 
     /**
