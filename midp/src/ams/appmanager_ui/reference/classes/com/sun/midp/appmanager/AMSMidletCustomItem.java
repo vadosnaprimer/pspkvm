@@ -94,6 +94,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	AMSMidletCustomItem(int suiteID, AppManagerUI ams) throws IOException {
 		super(null, ams);
 		createMSI(suiteID);
+		icon = msi.icon;
 		text = msi.displayName.toCharArray();
 		textLen = msi.displayName.length(); }
 		

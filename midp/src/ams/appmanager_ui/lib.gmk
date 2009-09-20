@@ -54,6 +54,8 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSFolderCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSSystemFolderCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/QuicksortAlg.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/Sortable.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppSettings.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/DisplayError.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/MIDletSelector.java \
