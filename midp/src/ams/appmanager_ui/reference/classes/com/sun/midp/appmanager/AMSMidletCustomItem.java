@@ -22,15 +22,8 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	/** Constant for the discovery application class name. */
 	static final String DISCOVERY_APP =
 		"com.sun.midp.installer.DiscoveryApp";
-	/** Constant for the wifi setup application class name. */
-	private static final String WIFI_SELECTOR_APP =
-		"com.sun.midp.appmanager.WifiSelector";
 	/** Command object for "Launch" install app. */
 	static Command launchInstallCmd =
-		new Command(Resource.getString(ResourceConstants.LAUNCH),
-		Command.ITEM, 1);
-	/** Command object for "Launch" WiFi setup app. */
-	static final Command launchWifiSetupCmd =
 		new Command(Resource.getString(ResourceConstants.LAUNCH),
 		Command.ITEM, 1);
 	/** General command object for "Launch" */
@@ -65,17 +58,6 @@ class AMSMidletCustomItem extends AMSCustomItem {
 						return (INSTALLER.equals(midlet.getClassName())); } };
 		AMSMidletCustomItem r = new AMSMidletCustomItem(msi, ams);
 		r.setDefaultCommand(launchInstallCmd);
-		return r; }
-
-	// Constructs the AMSMidletCustomItem containing the wifi setup midlet
-	static AMSMidletCustomItem getWiFiMidletCI(AppManagerUI ams) {
-		RunningMIDletSuiteInfo msi =
-			new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
-				WIFI_SELECTOR_APP,
-				"Network Setup",
-				true);
-		AMSMidletCustomItem r = new AMSMidletCustomItem(msi, ams);
-		r.setDefaultCommand(launchWifiSetupCmd);
 		return r; }
 
 	/**

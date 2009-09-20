@@ -10,6 +10,7 @@ import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import com.sun.midp.installer.GraphicalInstaller;
 import com.sun.midp.midletsuite.*;
+import com.sun.midp.main.*;
 
 class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
@@ -26,7 +27,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	// Create the built-in midlets
 	void createBuiltInMidlets() {
 		discoveryMidlet = AMSMidletCustomItem.getDiscoveryMidletCI(owner);
-		wifiMidlet = AMSMidletCustomItem.getWiFiMidletCI(owner); }
+		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner); }
 
 	// Create the system folder
 	static AMSSystemFolderCustomItem createSystemRoot(AppManagerUI ams) {
@@ -83,5 +84,13 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		discoveryMidlet.updateDisplay();
 		wifiMidlet.updateDisplay();
 		super.updateDisplayForContents(); }
+
+	// Override
+	AMSMidletCustomItem find(MIDletProxy midlet) {
+		if (discoveryMidlet.equals(midlet)) {
+			return discoveryMidlet; }
+		if (wifiMidlet.equals(midlet)) {
+			return wifiMidlet; }
+		return super.find(midlet); }
 
 }
