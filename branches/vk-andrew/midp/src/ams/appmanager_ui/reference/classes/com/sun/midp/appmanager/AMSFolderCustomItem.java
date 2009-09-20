@@ -9,11 +9,21 @@ import java.io.*;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import com.sun.midp.installer.GraphicalInstaller;
+import com.sun.midp.midletsuite.*;
+import com.sun.midp.main.*;
+import javax.microedition.lcdui.Command;
 
 class AMSFolderCustomItem extends AMSCustomItem {
-	Vector contents;
+	AMSFolderCustomItem[] subfolders;
+	AMSMidletCustomItem[] items;
 	boolean open;
 	AMSFolderCustomItem parent;
+	
+	static final Command openFolderCmd =
+		new Command("Open", Command.ITEM, 7);
+	static final Command closeFolderCmd =
+		new Command("Close", Command.ITEM, 7);
+
 	
 	// Constructor for creation in UI, sans content
 	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
@@ -21,72 +31,125 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		text = n.toCharArray();
 		textLen = n.length();
 		open = false;
-		contents = new Vector();
+		subfolders = new AMSFolderCustomItem[0];
+		items = new AMSMidletCustomItem[0];
 		parent=p; }
+	
+	// Open the folder in the AMS UI--displays all its content (if any)
+	void setOpen() {
+		if (open) {
+			return; }
+		insertContentsNoCheck();
+		open=true;
+		updateDisplay(); }
 		
+	// Special method called by AMS when inserting folders--
+	// since if they're open already, you should also insert
+	// their contents
+	void insertContents() {
+		if (!open) {
+			return; }
+		insertContentsNoCheck(); }
+		
+	void insertContentsNoCheck() {
+		int idx = owner.getIndexOf(this);
+		if (idx==-1) {
+			// This really shouldn't happen
+			return; }
+		int c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			subfolders[i].updateDisplay();
+			idx++;
+			owner.insertFolderAt(idx, subfolders[i]); }
+		c = items.length;
+		for(int i=0; i<c; i++) {
+			items[i].updateDisplay();
+			idx++;
+			owner.insertAt(idx, items[i]); } }
+		
+	// Close the folder in the AMS UI--hides all its content (if any)
+	void setClosed() {
+		if (!open) {
+			return; }
+		int c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			subfolders[i].setClosed();
+			subfolders[i].hide(); }
+		c = items.length;
+		for(int i=0; i<c; i++) {
+			items[i].hide(); }
+		open=false;
+		updateDisplay(); }
+
 	// Read the root from storage
-	static AMSFolderCustomItem readRoot(DataInputStream di, Vector mcis, AppManagerUI ams)
+	static AMSFolderCustomItem readRoot(DataInputStream di, AppManagerUI ams)
 		throws IOException {
-		int t = (int)(di.readByte());
-		if (t != TYPE_FOLDER) {
-			throw new IOException("Root was not folder--unexpected type field: " + t); }
-		return new AMSFolderCustomItem(null, di, mcis, ams); }
-		
-	// Create the root from a list of midlets--usually just called first time
-	// the folder system runs.
-	static AMSFolderCustomItem createRoot(Vector mcis, AppManagerUI ams) {
-		AMSFolderCustomItem root = new AMSFolderCustomItem("root", null, ams);
-		root.open=true;
-		root.contents=mcis;
-		return root; }
+		return new AMSFolderCustomItem(null, di, ams); }
+
+	// Create the root from a list of installed midlets--usually
+	// just called the first time the folder system runs.
+	static AMSFolderCustomItem createRoot(AppManagerUI ams) {
+		AMSFolderCustomItem userroot = new AMSFolderCustomItem("Installed midlets", null, ams);
+		userroot.open=false;
+		userroot.subfolders=new AMSFolderCustomItem[0];
+		userroot.populateRootFromIntalledMidlets();
+		return userroot; }
+
+	// Populate the root (user) list from the list of installed midlets--
+	// helper for createRoot(..).
+	void populateRootFromIntalledMidlets() {
+		int[] suiteIds = MIDletSuiteStorage.getMIDletSuiteStorage().getListOfSuites();
+		Vector r = new Vector(suiteIds.length);
+		// Add the rest of the installed midlets
+		for (int lowest, i = 0; i < suiteIds.length; i++) {
+			lowest = i;
+			for (int k = i + 1; k < suiteIds.length; k++) {
+				// This odd (and very inefficient) bubble sort
+				// was in the AppManagerUI legacy code--I'm just using it to
+				// make sure at init, the folder system adds the midlets
+				// in the same order they used to appear.
+				if (suiteIds[k] < suiteIds[lowest]) {
+					lowest = k; } }
+			try {
+				r.addElement(new AMSMidletCustomItem(lowest, owner)); }
+			catch (Exception e) {
+				// move on to the next suite
+				// TODO?
+			}
+			// Other half of the bubble sort swap
+			suiteIds[lowest] = suiteIds[i]; }
+		setItemsFromVector(r); }
 
 	// Constructor for creation from storage		
 	AMSFolderCustomItem(AMSFolderCustomItem p, DataInputStream di,
-		Vector mcis, AppManagerUI ams)
+	AppManagerUI ams)
 		throws IOException {
 		super(null, ams);
 		text=di.readUTF().toCharArray();
 		textLen = text.length;
-		open = false;
+		open = di.readBoolean();
 		parent=p;
-		int csize = di.readInt();
-		contents = new Vector(csize);
-		for(int i=0; i<csize; i++) {
-			contents.addElement(readNextCI(di, mcis)); } }
+		int sfsize = di.readInt();
+		subfolders = new AMSFolderCustomItem[sfsize];
+		for(int i=0; i<sfsize; i++) {
+			subfolders[i] = new AMSFolderCustomItem(this, di, owner); }
+		int isize = di.readInt();
+		items = new AMSMidletCustomItem[isize];
+		for(int i=0; i<isize; i++) {
+			items[i] = new AMSMidletCustomItem(di, owner); } }
 
 	// Write to storage		
 	void write(DataOutputStream ostream) throws IOException {
-		ostream.writeByte((byte)(AMSCustomItem.TYPE_FOLDER));
 		ostream.writeUTF(new String(text));
-		int c = contents.size();
+		ostream.writeBoolean(open);
+		int c = subfolders.length;
 		ostream.writeInt(c);
 		for(int i=0; i<c; i++) {
-			AMSCustomItem wamci = (AMSCustomItem)(contents.elementAt(i));
-			wamci.write(ostream); } }
-	
-	// Helper for construction from storage
-	AMSCustomItem readNextCI(DataInputStream di, Vector mcis)
-		throws IOException {
-		int t = (int)(di.readByte());
-		switch(t) {
-				case TYPE_FOLDER:
-					AMSFolderCustomItem afci = new AMSFolderCustomItem(this, di, mcis, owner);
-					return afci;
-				case TYPE_MIDLET:
-					int suiteID = di.readInt();
-					return getMidletSuiteByID(mcis, suiteID);
-				default:
-					throw new IOException("Unexpected type field in AMSFolderCustomItem:" + t); } }
-	
-	// Finds a AMSCustomItem in a Vector containing these, by its suiteID
-	static AMSCustomItem getMidletSuiteByID(Vector mcis, int suiteID) {
-		int s = mcis.size();
-		for (int i=0; i<s; i++) {
-			AMSMidletCustomItem amci = (AMSMidletCustomItem)(mcis.elementAt(i));
-			if (amci.getSuiteID()==suiteID) {
-				return amci; } }
-		// Error. Throw.
-		throw new ArrayIndexOutOfBoundsException("No such suiteID"); }
+			subfolders[i].write(ostream); }
+		c = items.length;
+		ostream.writeInt(c);
+		for(int i=0; i<c; i++) {
+			items[i].write(ostream); } }
 	
 	/* Override */
 	void setLabelColor(Graphics g) {
@@ -96,8 +159,159 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	void drawIcons(Graphics g) {
 		Image i = open ? folderOpenImg : folderImg;
 		g.drawImage(i, (bgIconW - i.getWidth())/2,
-			(bgIconH - i.getHeight())/2,
+ 			(bgIconH - i.getHeight())/2,
 			Graphics.TOP | Graphics.LEFT); }
+	
+	/* Override */		
+	void updateCommands() {
+		if (open) {
+			removeCommand(openFolderCmd);
+			addCommand(closeFolderCmd);
+			setDefaultCommand(closeFolderCmd);
+			return; }
+		// Closed ...
+		removeCommand(closeFolderCmd);
+		addCommand(openFolderCmd);
+		setDefaultCommand(openFolderCmd); }
+	
+	// Find the AMSMCI matching a given MIDletProxy in the tree
+	// below this folder, or null, if it's not there.
+	// (Thus, searching from the root initially usually makes sense.)
+	AMSMidletCustomItem find(MIDletProxy midlet) {
+		int c = items.length;
+		for(int i=0; i<c; i++) {
+			if (items[i].equals(midlet)) {
+				return items[i]; } }
+		c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			AMSMidletCustomItem a = subfolders[i].find(midlet);
+			if (a != null) {
+				return a; } }
+		return null; }
+		
+	// Find the AMSMCI matching a given suiteID in the tree
+	// below this folder, or null, if it's not there.
+	// (Thus, searching from the root initially usually makes sense.)
+	AMSMidletCustomItem find(int suiteID) {
+		int c = items.length;
+		for(int i=0; i<c; i++) {
+			if (items[i].getSuiteID()==suiteID) {
+				return items[i]; } }
+		c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			AMSMidletCustomItem a = subfolders[i].find(suiteID);
+			if (a != null) {
+				return a; } }
+		return null; }
+		
+	// We keep the subfolders and items in arrays (not resizeable
+	// containers) for efficiency, but it does mean some work to 
+	// to do inserts/removes, so on. Stuff below makes it easier.
+	protected Vector itemsAsVector() {
+		int c = items.length;
+		Vector r = new Vector(c);
+		for(int i=0; i<c; i++) {
+			r.addElement(items[i]); }
+		return r; }
+		
+	protected void setItemsFromVector(Vector v) {
+		int c = v.size();
+		items = new AMSMidletCustomItem[c];
+		for(int i=0; i<c; i++) {
+			items[i]=(AMSMidletCustomItem)(v.elementAt(i)); } }
+	
+	void insert(AMSMidletCustomItem m, int pos) {
+		Vector v = itemsAsVector();
+		if (pos<0) {
+			return; }
+		if (pos>=items.length) {
+			v.addElement(m); }
+		else {
+			v.insertElementAt(m, pos); }
+		setItemsFromVector(v);
+		// TODO: Additional stuff?
+	}
+	
+	void append(AMSMidletCustomItem m) {
+		insert(m, items.length); }
+		
+	void remove(AMSMidletCustomItem m) {
+		Vector v = itemsAsVector();
+		v.removeElement(m);
+		setItemsFromVector(v); }
+		
+	int getPos(AMSMidletCustomItem m) {
+		int c=items.length;
+		for(int i=0; i<c; i++) {
+			if (m==items[i]) {
+				return i; } }
+		return -1; }
+		
+	void moveDown(AMSMidletCustomItem m) {
+		int p = getPos(m);
+		if (p==-1) {
+			return; }
+		int c = items.length;
+		if (p>=(c-1)) {
+			return; }
+		remove(m);
+		insert(m, p+1); }
+
+	void moveUp(AMSMidletCustomItem m) {
+		int p = getPos(m);
+		if (p<=1) {
+			return; }
+		remove(m);
+		insert(m, p-1); }
+
+	protected Vector subfoldersAsVector() {
+		int c = subfolders.length;
+		Vector r = new Vector(c);
+		for(int i=0; i<c; i++) {
+			r.addElement(subfolders[i]); }
+		return r; }
+		
+	protected void setSubfoldersFromVector(Vector v) {
+		int c = v.size();
+		subfolders = new AMSFolderCustomItem[c];
+		for(int i=0; i<c; i++) {
+			subfolders[i]=(AMSFolderCustomItem)(v.elementAt(i)); } }
+	
+	void insert(AMSFolderCustomItem f, int pos) {
+		Vector v = subfoldersAsVector();
+		if (pos<0) {
+			return; }
+		if (pos>=subfolders.length) {
+			v.addElement(f); }
+		else {
+			v.insertElementAt(f, pos); }
+		setSubfoldersFromVector(v);
+		// TODO: Additional stuff?
+	}
+
+	void append(AMSFolderCustomItem f) {
+		insert(f, subfolders.length); }
+		
+	void remove(AMSFolderCustomItem m) {
+		Vector v = subfoldersAsVector();
+		v.removeElement(m);
+		setSubfoldersFromVector(v); }
+		
+	// Overrides std implementation to make sure
+	// contained items currently displayed
+	// also get their update
+	void updateDisplay() {
+		super.updateDisplay();
+		updateDisplayForContents(); }
+		
+	void updateDisplayForContents() {
+		if (!open) {
+			return; }
+		int c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			subfolders[i].updateDisplay(); }
+		c = items.length;
+		for(int i=0; i<c; i++) {
+			items[i].updateDisplay(); } }
 
 }
-

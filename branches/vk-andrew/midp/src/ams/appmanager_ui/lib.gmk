@@ -52,6 +52,7 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppManagerUI.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSFolderCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSSystemFolderCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppSettings.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/DisplayError.java \

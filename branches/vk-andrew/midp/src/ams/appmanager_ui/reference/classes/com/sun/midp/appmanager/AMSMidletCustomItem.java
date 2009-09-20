@@ -9,8 +9,40 @@ import com.sun.midp.midletsuite.*;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import com.sun.midp.midlet.MIDletSuite;
+import com.sun.midp.i18n.Resource;
+import com.sun.midp.i18n.ResourceConstants;
+import com.sun.midp.main.MIDletProxy;
+import javax.microedition.lcdui.Command;
 
 class AMSMidletCustomItem extends AMSCustomItem {
+
+	/** Constant for the graphical installer class name. */
+	static final String INSTALLER =
+		"com.sun.midp.installer.GraphicalInstaller";
+	/** Constant for the discovery application class name. */
+	static final String DISCOVERY_APP =
+		"com.sun.midp.installer.DiscoveryApp";
+	/** Constant for the wifi setup application class name. */
+	private static final String WIFI_SELECTOR_APP =
+		"com.sun.midp.appmanager.WifiSelector";
+	/** Command object for "Launch" install app. */
+	static Command launchInstallCmd =
+		new Command(Resource.getString(ResourceConstants.LAUNCH),
+		Command.ITEM, 1);
+	/** Command object for "Launch" WiFi setup app. */
+	static final Command launchWifiSetupCmd =
+		new Command(Resource.getString(ResourceConstants.LAUNCH),
+		Command.ITEM, 1);
+	/** General command object for "Launch" */
+	static final Command launchCmd =
+		new Command(Resource.getString(ResourceConstants.LAUNCH),
+			Command.ITEM, 1);
+	/** Command object for "Bring to foreground". */
+	static final Command fgCmd = new Command(Resource.getString
+	(ResourceConstants.FOREGROUND), Command.ITEM, 1);
+	/** Command object for "End" midlet. */
+	static final Command endCmd = new Command(Resource.getString
+	 (ResourceConstants.END), Command.ITEM, 1);
 
 	/** The MIDletSuiteInfo associated with this MidletCustomItem */
   RunningMIDletSuiteInfo msi; // = null
@@ -19,6 +51,32 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	 * The icon to be used to draw this midlet representation.
 	 */
 	Image icon; // = null
+
+	// Constructs the AMSMidletCustomItem containing the discovery midlet
+	static AMSMidletCustomItem getDiscoveryMidletCI(AppManagerUI ams) {
+		RunningMIDletSuiteInfo msi =
+			new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
+		    DISCOVERY_APP,
+		    Resource.getString(ResourceConstants.INSTALL_APPLICATION),
+				true) {
+					public boolean equals(MIDletProxy midlet) {
+						if (super.equals(midlet)) {
+							return true; }
+						return (INSTALLER.equals(midlet.getClassName())); } };
+		AMSMidletCustomItem r = new AMSMidletCustomItem(msi, ams);
+		r.setDefaultCommand(launchInstallCmd);
+		return r; }
+
+	// Constructs the AMSMidletCustomItem containing the wifi setup midlet
+	static AMSMidletCustomItem getWiFiMidletCI(AppManagerUI ams) {
+		RunningMIDletSuiteInfo msi =
+			new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
+				WIFI_SELECTOR_APP,
+				"Network Setup",
+				true);
+		AMSMidletCustomItem r = new AMSMidletCustomItem(msi, ams);
+		r.setDefaultCommand(launchWifiSetupCmd);
+		return r; }
 
 	/**
 	* Constructs a midlet representation for the App Selector Screen.
@@ -32,11 +90,38 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		text = msi.displayName.toCharArray();
 		textLen = msi.displayName.length(); }
 
+	// Same from just the suiteID--used by initial folder creation code.
+	AMSMidletCustomItem(int suiteID, AppManagerUI ams) throws IOException {
+		super(null, ams);
+		createMSI(suiteID);
+		text = msi.displayName.toCharArray();
+		textLen = msi.displayName.length(); }
+		
+	// Helper for constructors--creates and inits the msi
+	void createMSI(int suiteID) throws IOException {
+		MIDletSuiteInfo temp =
+			MIDletSuiteStorage.getMIDletSuiteStorage().getMIDletSuiteInfo(suiteID);
+		msi = new RunningMIDletSuiteInfo(temp, MIDletSuiteStorage.getMIDletSuiteStorage(), true); }
+		
+	// Used to read from the stream (assumes type specifier has already
+	// been read)
+	AMSMidletCustomItem(DataInputStream istream, AppManagerUI ams) throws IOException {
+		super(null, ams);
+		String n = istream.readUTF();
+		int sid = istream.readInt();
+		createMSI(sid);
+		text = n.toCharArray();
+		textLen = text.length; }
+
+	// Accessor--TODO--See if it's now obsolete
 	int getSuiteID() {
 		return msi.suiteId; }
 
+	// Write to stream
 	void write(DataOutputStream ostream) throws IOException {
-		ostream.writeByte((byte)TYPE_MIDLET);
+		// We save the text so we can allow 
+		// users to rename Midlets
+		ostream.writeUTF(new String(text));
 		ostream.writeInt(msi.suiteId); }
 
 	protected boolean traverse(int dir,
@@ -100,5 +185,25 @@ class AMSMidletCustomItem extends AMSCustomItem {
 			(bgIconW - DISABLED_IMAGE.getWidth())/2,
 			(bgIconH - DISABLED_IMAGE.getHeight())/2,
 			Graphics.TOP | Graphics.LEFT); } }
-
+			
+	// Determine if the associated midlet is running
+	boolean isRunning() {
+		return (msi.proxy != null); }
+			
+	/* Override */		
+	void updateCommands() {
+		if (isRunning()) {
+			addCommand(fgCmd);
+			setDefaultCommand(fgCmd);
+			addCommand(endCmd);
+			removeCommand(launchCmd);
+			return; }
+		removeCommand(fgCmd);
+		removeCommand(endCmd);
+		if (msi.enabled) {
+			addCommand(launchCmd);
+			setDefaultCommand(launchCmd);
+			return; }
+		removeCommand(launchCmd); }
+	
 }
