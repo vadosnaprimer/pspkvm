@@ -175,14 +175,6 @@ class AppManagerUI extends Form
     private Command createFolderCmd =
         new Command("Create folder", Command.SCREEN, 7);
 
-    /** Command object for "Move up". */
-    private Command moveUpCmd =
-        new Command("Move up", Command.ITEM, 7);
-
-    /** Command object for "Move down". */
-    private Command moveDwnCmd =
-        new Command("Move down", Command.ITEM, 7);
-
     /** Command object for "Cancel" command for the remove form. */
     private Command cancelCmd =
         new Command(Resource.getString(ResourceConstants.CANCEL),
@@ -204,7 +196,7 @@ class AppManagerUI extends Form
 
     /** Command object for "End" midlet. */
     private Command endCmd = new Command(Resource.getString
-                                         (ResourceConstants.END),
+                                             (ResourceConstants.END),
                                          Command.ITEM, 1);
 
     /** Command object for "Yes" command. */
@@ -259,13 +251,13 @@ class AppManagerUI extends Form
     
   // The folders
   AMSFolderCustomItem rootFolder, currentFolder;
+  AMSSystemFolderCustomItem systemFolder;
   
   /* Aux method for first run of the new folders framework --
   		Inits the root folder from the current list of items */
-  void initRootFolder(Vector mcis) {
-  	rootFolder=AMSFolderCustomItem.createRoot(mcis, this);
-		currentFolder=rootFolder; }
-			
+  void initRootFolder() {
+  	rootFolder=AMSFolderCustomItem.createRoot(this); }
+
 	// Write folders to the permanent store -- note that initSettings
 	// should have ensured there's a record no. 2 in which to put them.
 	void writeFolders() {
@@ -289,41 +281,53 @@ class AppManagerUI extends Form
 			catch (RecordStoreException e) {
 				/* TODO */ } } } }
     
-    /* Builds the folder structure from the records store */
+  /* Builds the folder structure from the records store */
   void readFolders() {
-  	// int[] suiteIds = midletSuiteStorage.getListOfSuites();
-  	// First, get all the currently installed suites
-  	int s = size();
-  	Vector mcis = new Vector(s);
-  	for(int i=0; i<s; i++) {
-			mcis.addElement(get(i)); }
-		// Now, read the folders from the store and populate with these
   	RecordStore settings=null;
 		try {
 			settings = RecordStore.openRecordStore(SETTINGS_STORE, false);
 			if (settings.getNumRecords() < 2) {
-				initRootFolder(mcis);
+				initRootFolder();
 				return; }
 			byte[] data = settings.getRecord(FOLDER_STREAM_RECORD_ID);
 			if (data==null) {
-				initRootFolder(mcis);
+				initRootFolder();
 				return; }
 			ByteArrayInputStream das = new ByteArrayInputStream(data);
 			DataInputStream di = new DataInputStream(das);
-			rootFolder=AMSFolderCustomItem.readRoot(di, mcis, this);
+			rootFolder=AMSFolderCustomItem.readRoot(di, this);
 			currentFolder=rootFolder;
 		} catch (RecordStoreException e) {
 			// TODO: Warn
-			initRootFolder(mcis);
+			initRootFolder();
 		} catch (IOException e) {
 			// TODO: Warn
-			initRootFolder(mcis);
+			initRootFolder();
 		} finally {
 		if (settings != null) {
 			try {
 				settings.closeRecordStore();
 			} catch (RecordStoreException e) {
 		/* Ignore */ } } } }
+		
+	// Create the folder system
+	void createFolders() {
+		systemFolder = AMSSystemFolderCustomItem.createSystemRoot(this);
+		appendFolder(systemFolder);
+		readFolders();
+		appendFolder(rootFolder); }
+		
+	// Special method for appending folders--makes sure
+	// if they're already open, we also append their contents
+	void appendFolder(AMSFolderCustomItem f) {
+		append(f);
+		f.insertContents(); }
+
+	// Special method for inserting folders--makes sure
+	// if they're already open, we also insert their contents
+	void insertFolderAt(int p, AMSFolderCustomItem f) {
+		insertAt(p, f);
+		f.insertContents(); }
 
     /**
      * Creates and populates the Application Selector Screen.
@@ -336,110 +340,78 @@ class AppManagerUI extends Form
      *             suites midletToRun should be set, for the other suites
      *             suiteId is enough to find the corresponding item.
      */
-    AppManagerUI(ApplicationManager manager, Display display,
-                 DisplayError displayError, boolean first,
-                 MIDletSuiteInfo ms) {
-        super(null);
+  AppManagerUI(ApplicationManager manager, Display display,
+               DisplayError displayError, boolean first,
+               MIDletSuiteInfo ms) {
+      super(null);
 
-        this.first = first;
+      this.first = first;
+      caManagerIncluded = false;        
+      this.manager = manager;
+      this.display = display;
+      this.displayError = displayError;
 
-        /*
-        try {
-            caManagerIncluded = Class.forName(CA_MANAGER) != null;
-        } catch (ClassNotFoundException e) {
-            // keep caManagerIncluded false
-        }
-        */
-        //M@x: We don't need caManager currently, leave it out for keeping AMS simple
-        caManagerIncluded = false;
-        
+      midletSwitcher = new MIDletSwitcher(this, manager, display);
+      midletSuiteStorage = MIDletSuiteStorage.getMIDletSuiteStorage();
+      initSettings();
+      setTitle(Resource.getString(ResourceConstants.AMS_MGR_TITLE));
+      createFolders();
+      // updateContent(false);
+      addCommand(exitCmd);
+      setCommandListener(this);
 
-        this.manager = manager;
-        this.display = display;
-        this.displayError = displayError;
+      if (first) {
+          display.setCurrent(this);
 
-        midletSwitcher = new MIDletSwitcher(this, manager, display);
+          new Thread(new Runnable() {
+						public void run() {
+      				updateContent(true); } }).start();
+          return; }
 
-        midletSuiteStorage = MIDletSuiteStorage.getMIDletSuiteStorage();
+      // if a MIDlet was just installed
+      // getLastInstalledMidletItem() will return AMSMidletCustomItem
+      // corresponding to this suite, then we have to prompt
+      // the user if he want to launch a midlet from the suite.
+      /*AMSMidletCustomItem mci = getLastInstalledMidletItem();
+      if (mci != null) {
+          askUserIfLaunchMidlet();
+          return; } 
+      display.setCurrent(this);
 
-        initSettings();
-
-        setTitle(Resource.getString(
-                ResourceConstants.AMS_MGR_TITLE));
-
-        updateContent(false);
-        
-        addCommand(exitCmd);
-        setCommandListener(this);
-
-        if (first) {
-            //display.setCurrent(new SplashScreen(display, this));
-            display.setCurrent(this);
-            /*
-            int suiteId = getLastPlayedMIDlet();
-            if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
-                for (int i = 0; i < size(); i++) {
-                    AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                    if (mi.msi.suiteId == suiteId) {
-                        display.setCurrentItem(mi);
-                        break;
-                    }
-                }
-            }
-            */
-            new Thread(new Runnable() {
-        	public void run() {
-        		updateContent(true);
-        	}
-            }).start();
-
-        } else {
-            // if a MIDlet was just installed
-            // getLastInstalledMidletItem() will return AMSMidletCustomItem
-            // corresponding to this suite, then we have to prompt
-            // the user if he want to launch a midlet from the suite.
-            AMSMidletCustomItem mci = getLastInstalledMidletItem();
-            if (mci != null) {
-                askUserIfLaunchMidlet();
-            } else {
-                display.setCurrent(this);
-                if (ms != null) {
-                    // Find item to select
-                    if (ms.suiteId == MIDletSuite.INTERNAL_SUITE_ID) {
-                        for (int i = 0; i < size(); i++) {
-                            AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                            if ((mi.msi.suiteId == MIDletSuite.INTERNAL_SUITE_ID)
-                                && (mi.msi.midletToRun.equals(ms.midletToRun))) {
-                                display.setCurrentItem(mi);
-                                break;
-                            }
-                        }
-                    } else {
-                        for (int i = 0; i < size(); i++) {
-                            AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                            if (mi.msi.suiteId == ms.suiteId) {
-                                display.setCurrentItem(mi);
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    int suiteId = getLastPlayedMIDlet();
-                    if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
-                        for (int i = 0; i < size(); i++) {
-                            AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                            if (mi.msi.suiteId == suiteId) {
-                                display.setCurrentItem(mi);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+      if (ms != null) {
+          // Find item to select
+          if (ms.suiteId == MIDletSuite.INTERNAL_SUITE_ID) {
+              for (int i = 0; i < size(); i++) {
+                  AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
+                  if ((mi.msi.suiteId == MIDletSuite.INTERNAL_SUITE_ID)
+                      && (mi.msi.midletToRun.equals(ms.midletToRun))) {
+                      display.setCurrentItem(mi);
+                      break; } }
+            return; }
+              for (int i = 0; i < size(); i++) {
+                  AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
+                  if (mi.msi.suiteId == ms.suiteId) {
+                      display.setCurrentItem(mi);
+                      break;
+                  }
+          }
+        return; }
+          int suiteId = getLastPlayedMIDlet();
+          if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
+              for (int i = 0; i < size(); i++) {
+                  AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
+                  if (mi.msi.suiteId == suiteId) {
+                      display.setCurrentItem(mi);
+                      break;
+                  }
+              }
+  }*/
+}
 
     protected void sizeChanged(int w, int h) {
+    	/* TODO: Think about this. I'm not sure
+    			I want to have to deal with the possibilities
+    			of the folder being closed above it 
     	 if (first) {
             int suiteId = getLastPlayedMIDlet();
             if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
@@ -452,7 +424,7 @@ class AppManagerUI extends Form
                 }
             }
             first = false;
-        }
+        }*/
     }
 
     /**
@@ -547,92 +519,87 @@ class AppManagerUI extends Form
         display.setCurrent(this);
     }
 
-    /**
-     * Respond to a command issued on an Item in AppSelector
-     *
-     * @param c command activated by the user
-     * @param item the Item the command was on.
-     */
-    public void commandAction(Command c, Item item) {
-        RunningMIDletSuiteInfo msi = ((AMSMidletCustomItem)item).msi;
-        if (msi == null) {
-            return;
-        }
+		/**
+		* Respond to a command issued on an Item in AppSelector
+		*
+		* @param c command activated by the user
+		* @param item the Item the command was on.
+		*/
+		public void commandAction(Command c, Item item) {
+			// Folder-specific commands
+			if (c == AMSFolderCustomItem.openFolderCmd) {
+				((AMSFolderCustomItem)item).setOpen();
+				return; }
+			if (c == AMSFolderCustomItem.closeFolderCmd) {
+				((AMSFolderCustomItem)item).setClosed();
+				return; }
 
-        if (c == launchInstallCmd) {
-
-            manager.installSuite();
-
-        } else if (c == launchCaManagerCmd) {
-
-            manager.launchCaManager();
-
-        } else if (c == launchWifiSetupCmd) {
-        
-            manager.launchWifiManager();
-            
-        } else if (c == launchCmd) {
-
-            launchMidlet(msi);
-
-        } else if (c == infoCmd) {
-
-            try {
-                AppInfo appInfo = new AppInfo(msi.suiteId);
-                appInfo.addCommand(backCmd);
-                appInfo.setCommandListener(this);
-                display.setCurrent(appInfo);
-            } catch (Throwable t) {
-                displayError.showErrorAlert(msi.displayName, t, null, null);
-            }
-
-        } else if (c == removeCmd) {
-
-            confirmRemove(msi);
-
-        } else if (c == updateCmd) {
-
-            if (!isInstallerRunning()) {
-                manager.updateSuite(msi);
-                display.setCurrent(this);
-            } else {
-                String alertMessage = Resource.getString(
-                    ResourceConstants.AMS_MGR_INSTALLER_IS_RUNNING);
-
-                displayError.showErrorAlert(null, null,
-                    Resource.getString(ResourceConstants.ERROR),
-                    alertMessage);
-            }
-
-        } else if (c == appSettingsCmd) {
-
-            try {
-                AppSettings appSettings = new AppSettings(msi.suiteId, display,
-                                                          displayError, this);
-                display.setCurrent(appSettings);
-
-            } catch (Throwable t) {
-                displayError.showErrorAlert(msi.displayName, t, null, null);
-            }
-
-        } else if (c == fgCmd) {
-
-            manager.moveToForeground(msi);
-            display.setCurrent(this);
-
-        } else if (c == endCmd) {
-            manager.exitMidlet(msi);
-            display.setCurrent(this);
-
-        } else if (c == deviceSettingCmd) {
-            try {
-                DeviceSetting devSetting = new DeviceSetting(msi.suiteId, display, this);
-                display.setCurrent(devSetting);
-            } catch (Throwable t) {
-                displayError.showErrorAlert(msi.displayName, t, null, null);
-            }
-        }
-    }
+			// Midlet-specific commands
+			if (!(item instanceof AMSMidletCustomItem)) {
+				// Rest of this is legacy code--expects MidletCustomItem
+				return; }
+			RunningMIDletSuiteInfo msi = ((AMSMidletCustomItem)item).msi;
+			if (msi == null) {
+				return; }
+		
+			if (c == launchInstallCmd) {
+				manager.installSuite();
+				return; }
+			if (c == launchCaManagerCmd) {
+				manager.launchCaManager();
+				return; }
+			if (c == launchWifiSetupCmd) {
+				manager.launchWifiManager();
+				return; }
+			if (c == launchCmd) {
+				launchMidlet(msi);
+				return; }
+			if (c == infoCmd) {
+				try {
+					AppInfo appInfo = new AppInfo(msi.suiteId);
+					appInfo.addCommand(backCmd);
+					appInfo.setCommandListener(this);
+					display.setCurrent(appInfo); }
+				catch (Throwable t) {
+					displayError.showErrorAlert(msi.displayName, t, null, null); }
+				return; }
+			if (c == removeCmd) {
+				confirmRemove(msi);
+				return; }
+			if (c == updateCmd) {
+				if (!isInstallerRunning()) {
+					manager.updateSuite(msi);
+					display.setCurrent(this); }
+				else {
+					String alertMessage = Resource.getString(
+					ResourceConstants.AMS_MGR_INSTALLER_IS_RUNNING);
+					displayError.showErrorAlert(null, null,
+					Resource.getString(ResourceConstants.ERROR),
+					alertMessage); }
+				return; }
+			if (c == appSettingsCmd) {
+				try {
+					AppSettings appSettings = new AppSettings(msi.suiteId, display,
+					displayError, this);
+					display.setCurrent(appSettings); }
+				catch (Throwable t) {
+					displayError.showErrorAlert(msi.displayName, t, null, null); }
+				return; }
+		if (c == fgCmd) {
+			
+			manager.moveToForeground(msi);
+			display.setCurrent(this);
+			
+			} else if (c == endCmd) {
+			manager.exitMidlet(msi);
+			display.setCurrent(this);
+			
+			} else if (c == deviceSettingCmd) {
+			try {
+			DeviceSetting devSetting = new DeviceSetting(msi.suiteId, display, this);
+			display.setCurrent(devSetting);
+			} catch (Throwable t) {
+			displayError.showErrorAlert(msi.displayName, t, null, null); } } }
 
     /**
      * Called when a new midlet was launched.
@@ -683,16 +650,10 @@ class AppManagerUI extends Form
      *
      * @param midlet proxy of a newly added MIDlet
      */
-    void notifyMidletStateChanged(MIDletProxy midlet) {
-        AMSMidletCustomItem mci = null;
-
-        for (int i = 0; i < size(); i++) {
-            mci = (AMSMidletCustomItem)get(i);
-            if (mci.msi.proxy == midlet) {
-                mci.update();
-            }
-        }
-    }
+		void notifyMidletStateChanged(MIDletProxy midlet) {
+		AMSMidletCustomItem mci = rootFolder.find(midlet);
+			if (mci.msi.proxy == midlet) {
+				mci.updateDisplay(); } }
 
     /**
      * Called when a running midlet exited.
@@ -872,8 +833,17 @@ class AppManagerUI extends Form
     /**
      * Read in and create a MIDletInfo for newly added MIDlet suite and
      * check enabled state of currently added MIDlet suites.
+     * ('Kay--not really--still working on the newly added part)     
      */
     private void updateContent(boolean loadIcon) {
+    	systemFolder.updateDisplay();
+    	rootFolder.updateDisplay();
+			try {
+				Thread.sleep(50); }
+			catch (InterruptedException e) {} }
+    
+    /* private void oldUpdateContent(boolean loadIcon) {
+			
         int[] suiteIds;
         RunningMIDletSuiteInfo msi = null;
         boolean newlyAdded;
@@ -915,9 +885,7 @@ class AppManagerUI extends Form
             append(msi);
         }
 
-        /**
-         * Wifi selector
-         **/
+       // Wifi selector
         if (size() > 1) {
             msi = ((AMSMidletCustomItem)get(1)).msi;
         }
@@ -1029,7 +997,7 @@ class AppManagerUI extends Form
 
             suiteIds[lowest] = suiteIds[i];
         }
-    }
+    } */
 
     /**
      * Appends a AMSMidletCustomItem to the App Selector Screen
@@ -1296,7 +1264,7 @@ class AppManagerUI extends Form
     }
 
     /**
-     * Open the settings database and retreive an id of the midlet suite
+     * Open the settings database and retrieve an id of the midlet suite
      * that was installed last.
      *
      * @return ID of the midlet suite that was installed last or
@@ -1462,14 +1430,8 @@ class AppManagerUI extends Form
 
         if (installedMidlet != MIDletSuite.UNUSED_SUITE_ID &&
                 installedMidlet != MIDletSuite.INTERNAL_SUITE_ID) {
-            for (int i = 0; i < size(); i++) {
-                AMSMidletCustomItem ci = (AMSMidletCustomItem)get(i);
-                if (ci.msi.suiteId == installedMidlet) {
-                    return ci;
-                }
-            }
+              return rootFolder.find(installedMidlet);
         }
-
         return null;
     }
 
@@ -1514,10 +1476,7 @@ class AppManagerUI extends Form
                 new MIDletSelector(msi, display, this, manager);
             } catch (Throwable t) {
                 displayError.showErrorAlert(msi.displayName, t,
-                                            null, null);
-            }
-        }
-    }
+                                            null, null); } } }
 
     /**
      * Prompts the user to specify whether to launch a midlet from
@@ -1530,22 +1489,6 @@ class AppManagerUI extends Form
             display.setCurrentItem(mciToRun);
             launchMidlet(mciToRun.msi);            
         }
-
-        // Ask the user if he wants to run a midlet from
-        // the newly installed midlet suite
-        //String title = Resource.getString(
-        //    ResourceConstants.AMS_MGR_RUN_THE_NEW_SUITE_TITLE, null);
-        //String msg = Resource.getString(
-        //    ResourceConstants.AMS_MGR_RUN_THE_NEW_SUITE, null);
-
-        //Alert alert = new Alert(title, msg, null, AlertType.CONFIRMATION);
-        //alert.addCommand(runNoCmd);
-        //alert.addCommand(runYesCmd);
-        //alert.setCommandListener(this);
-        //alert.setTimeout(Alert.FOREVER);
-
-        //display.setCurrent(alert);
-     
     }
 
     /**
@@ -1555,21 +1498,27 @@ class AppManagerUI extends Form
      *         false otherwise
      */
     private boolean isInstallerRunning() {
-        AMSMidletCustomItem ci;
-        RunningMIDletSuiteInfo msi;
-
-        for (int i = 0; i < size(); i++) {
-            ci = (AMSMidletCustomItem)get(i);
-            msi = ci.msi;
-            if (msi.suiteId == MIDletSuite.INTERNAL_SUITE_ID &&
-                msi.proxy != null && (DISCOVERY_APP.equals(msi.midletToRun) ||
-                                      INSTALLER.equals(msi.midletToRun))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    	return systemFolder.isInstallerRunning(); }
+    
+    // Handy method for folders doing their thing--get the 
+    // index of an object
+    int getIndexOf(Item o) {
+    	int c = size();
+    	for(int i=0; i<c; i++) {
+				Item t = get(i);
+				if (o==t) {
+					return i; } }
+			return -1; }
+			
+		// Slightly safer insert/add method--makes the inserts from
+		// the folder system a bit cleaner.
+		void insertAt(int p, Item i) {
+			if (p<0) {
+				return; }
+			if (p>=size()) {
+				append(i);
+				return; }
+			insert(p, i); }
 
     /**
      * Called by Manager when destroyApp happens to clean up data.
@@ -1578,7 +1527,6 @@ class AppManagerUI extends Form
      * generation of repaint events.
      */
     void cleanUp() {
-        WriteableAMSCustomItem.stopTimer(); }
+       AMSCustomItem.stopTimer(); }
 
 }
-

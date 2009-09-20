@@ -26,10 +26,6 @@ import javax.microedition.lcdui.Image;
 
 abstract class AMSCustomItem extends CustomItem {
 
-	// Field specifiers for reading/writing in a stream
-	protected static final int TYPE_FOLDER=0x00;
-	protected static final int TYPE_MIDLET=0x01;
-
 	// Standard font for drawing these
 	static final Font ICON_FONT = Font.getFont(Font.FACE_SYSTEM,
 		Font.STYLE_BOLD, Font.SIZE_SMALL);
@@ -104,6 +100,16 @@ abstract class AMSCustomItem extends CustomItem {
 	*/
 	protected static final int ITEM_PAD = 2;
 	
+	/** Command object for "Move up". */
+	static final Command moveUpCmd =
+		new Command("Move up", Command.ITEM, 7);
+	
+	/** Command object for "Move down". */
+	static final Command moveDwnCmd =
+		new Command("Move down", Command.ITEM, 7);
+
+
+
 	/**
 	* Cached truncation mark
 	*/
@@ -173,7 +179,10 @@ abstract class AMSCustomItem extends CustomItem {
 		initTruncWidth();
 		initScrollTimer();
 		truncated = false;
-		xScrollOffset = 0; }
+		xScrollOffset = 0;
+		addCommand(moveUpCmd);
+		addCommand(moveDwnCmd);
+		setItemCommandListener(owner); }
 
 	// Write to storage 
 	abstract void write(DataOutputStream ostream) throws IOException;
@@ -194,7 +203,7 @@ abstract class AMSCustomItem extends CustomItem {
 	/** current default command */
 	Command default_command; // = null
 	
-	/** A TimerTask which will repaint scrolling text  on a repeated basis */
+	/** A TimerTask which will repaint scrolling text on a repeated basis */
 	protected TextScrollPainter textScrollPainter;
 	
 	/**
@@ -270,6 +279,8 @@ abstract class AMSCustomItem extends CustomItem {
 	private static int SCROLL_SPEED = 10;
 	
 	static void stopTimer() {
+		if (textScrollTimer==null) {
+			return; }
 		textScrollTimer.cancel(); }
 
 	/**
@@ -383,5 +394,19 @@ abstract class AMSCustomItem extends CustomItem {
 
 	/* Override--different implementation for folders and midlets */
 	abstract void drawIcons(Graphics g);
+	
+	/* Override--call to add/remove commands according to current state */
+	abstract void updateCommands();
+
+	/* General call -- calls all the display update code */
+	void updateDisplay() {
+		updateCommands(); }
+
+	/* Hide this item in the AMS UI */
+	void hide() {
+		int idx = owner.getIndexOf(this);
+		if (idx==-1) {
+			return; }
+		owner.delete(idx); }
 
 }
