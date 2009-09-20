@@ -24,7 +24,7 @@ import java.util.Timer;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 
-abstract class AMSCustomItem extends CustomItem {
+abstract class AMSCustomItem extends CustomItem implements Sortable {
 
 	// Standard font for drawing these
 	static final Font ICON_FONT = Font.getFont(Font.FACE_SYSTEM,
@@ -107,8 +107,13 @@ abstract class AMSCustomItem extends CustomItem {
 	/** Command object for "Move down". */
 	static final Command moveDwnCmd =
 		new Command("Move down", Command.ITEM, 7);
-
-
+		
+	/**
+	 * Required for Sortable */
+	public boolean lessthan(Sortable cmp) {
+		if (!(cmp instanceof AMSCustomItem)) {
+			return true; }
+		return (String.valueOf(text).compareTo(String.valueOf(((AMSCustomItem)cmp).text))<0); }	
 
 	/**
 	* Cached truncation mark

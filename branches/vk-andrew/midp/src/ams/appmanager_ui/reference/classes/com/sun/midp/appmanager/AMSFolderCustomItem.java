@@ -93,7 +93,13 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		userroot.open=false;
 		userroot.subfolders=new AMSFolderCustomItem[0];
 		userroot.populateRootFromIntalledMidlets();
+		userroot.sort();
 		return userroot; }
+		
+	// Sort the contents of the folder alphabetically
+	void sort() {
+		QuicksortAlg.sort(subfolders);
+		QuicksortAlg.sort(items); }
 
 	// Populate the root (user) list from the list of installed midlets--
 	// helper for createRoot(..).
@@ -101,23 +107,13 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		int[] suiteIds = MIDletSuiteStorage.getMIDletSuiteStorage().getListOfSuites();
 		Vector r = new Vector(suiteIds.length);
 		// Add the rest of the installed midlets
-		for (int lowest, i = 0; i < suiteIds.length; i++) {
-			lowest = i;
-			for (int k = i + 1; k < suiteIds.length; k++) {
-				// This odd (and very inefficient) bubble sort
-				// was in the AppManagerUI legacy code--I'm just using it to
-				// make sure at init, the folder system adds the midlets
-				// in the same order they used to appear.
-				if (suiteIds[k] < suiteIds[lowest]) {
-					lowest = k; } }
+		for (int i = 0; i < suiteIds.length; i++) {
 			try {
-				r.addElement(new AMSMidletCustomItem(lowest, owner)); }
+				r.addElement(new AMSMidletCustomItem(suiteIds[i], owner)); }
 			catch (Exception e) {
 				// move on to the next suite
-				// TODO?
-			}
-			// Other half of the bubble sort swap
-			suiteIds[lowest] = suiteIds[i]; }
+				// TODO? Why would this fail?
+			} }
 		setItemsFromVector(r); }
 
 	// Constructor for creation from storage		
