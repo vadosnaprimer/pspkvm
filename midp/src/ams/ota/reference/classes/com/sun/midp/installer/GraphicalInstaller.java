@@ -687,7 +687,15 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
     }
 
     public static Exception saveDeviceSettings(int deviceID, int curMidlet) {
-        return saveDeviceSettings(deviceID, 222, curMidlet);
+    	 int speed = 222;
+        RecordStore settings = null;
+        String defaultSpeed = Configuration.getPropertyDefault("com.pspkvm.setting.defaultspeed", "222");
+        try {
+           speed = Integer.parseInt(defaultSpeed);
+        } catch (NumberFormatException nfe) {
+           //ignore
+        }
+        return saveDeviceSettings(deviceID, speed, curMidlet);
     }
     
     public static Exception saveDeviceSettings(int deviceID, int cpuSpeed, int curMidlet) {
@@ -1859,7 +1867,7 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
             new CommandListener() {
                 public void commandAction(Command c, Displayable d) { 
                 	if (c == List.SELECT_COMMAND) {
-                	    saveDeviceSettings(selector.getSelectedIndex(), mid);
+                	    saveDeviceSettings(DeviceDesc.dispIdToDevId(selector.getSelectedIndex()), mid);
                 	    synchronized (backgroundInstaller) {
                              backgroundInstaller.notify();
                          }
