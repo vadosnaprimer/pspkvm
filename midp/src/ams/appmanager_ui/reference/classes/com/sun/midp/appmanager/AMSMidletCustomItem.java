@@ -1,6 +1,25 @@
-/*
-	CustomItem representing a midlet in the AMS. 
-*/
+/**
+ *
+ *  CustomItem representing a midlet in the AMS.
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 only, as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt).
+ * 
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ * 
+ * Original code AJ Milne / 2009
+ *  
+ **/
 
 package com.sun.midp.appmanager;
 
@@ -16,16 +35,6 @@ import javax.microedition.lcdui.Command;
 
 class AMSMidletCustomItem extends AMSCustomItem {
 
-	/** Constant for the graphical installer class name. */
-	static final String INSTALLER =
-		"com.sun.midp.installer.GraphicalInstaller";
-	/** Constant for the discovery application class name. */
-	static final String DISCOVERY_APP =
-		"com.sun.midp.installer.DiscoveryApp";
-	/** Command object for "Launch" install app. */
-	static Command launchInstallCmd =
-		new Command(Resource.getString(ResourceConstants.LAUNCH),
-		Command.ITEM, 1);
 	/** General command object for "Launch" */
 	static final Command launchCmd =
 		new Command(Resource.getString(ResourceConstants.LAUNCH),
@@ -36,49 +45,59 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	/** Command object for "End" midlet. */
 	static final Command endCmd = new Command(Resource.getString
 	 (ResourceConstants.END), Command.ITEM, 1);
+	/** Command object for "Info". */
+	static final Command infoCmd =
+		new Command(Resource.getString(ResourceConstants.INFO),
+			Command.ITEM, 2);
+	/** Command object for "Remove". */
+	static final Command removeCmd =
+		new Command(Resource.getString(ResourceConstants.REMOVE),
+			Command.ITEM, 3);
+	/** Command object for "Update". */
+	static final Command updateCmd =
+		new Command(Resource.getString(ResourceConstants.UPDATE),
+			Command.ITEM, 4);
+	/** Command object for "Application settings". */
+	static final Command appSettingsCmd =
+		new Command(Resource.getString(ResourceConstants.APPLICATION_SETTINGS),
+			Command.ITEM, 5);
+	/** Command object for "Select device". */
+	static final Command deviceSettingCmd =
+		new Command("Select device", Command.ITEM, 6);
 
 	/** The MIDletSuiteInfo associated with this MidletCustomItem */
   RunningMIDletSuiteInfo msi; // = null
+  /** The parent folder */
+  AMSFolderCustomItem parent;
 
 	/**
 	 * The icon to be used to draw this midlet representation.
 	 */
 	Image icon; // = null
 
-	// Constructs the AMSMidletCustomItem containing the discovery midlet
-	static AMSMidletCustomItem getDiscoveryMidletCI(AppManagerUI ams) {
-		RunningMIDletSuiteInfo msi =
-			new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
-		    DISCOVERY_APP,
-		    Resource.getString(ResourceConstants.INSTALL_APPLICATION),
-				true) {
-					public boolean equals(MIDletProxy midlet) {
-						if (super.equals(midlet)) {
-							return true; }
-						return (INSTALLER.equals(midlet.getClassName())); } };
-		AMSMidletCustomItem r = new AMSMidletCustomItem(msi, ams);
-		r.setDefaultCommand(launchInstallCmd);
-		return r; }
-
 	/**
 	* Constructs a midlet representation for the App Selector Screen.
 	* @param msi The MIDletSuiteInfo for which representation has
 	*            to be created
 	*/
-	AMSMidletCustomItem(RunningMIDletSuiteInfo msi, AppManagerUI ams) {
+	AMSMidletCustomItem(RunningMIDletSuiteInfo msi, AppManagerUI ams, AMSFolderCustomItem p) {
 		super(null, ams);
 		this.msi = msi;
+		parent=p;
 		icon = msi.icon;
 		text = msi.displayName.toCharArray();
-		textLen = msi.displayName.length(); }
+		textLen = msi.displayName.length();
+		setFixedCommands(); }
 
 	// Same from just the suiteID--used by initial folder creation code.
-	AMSMidletCustomItem(int suiteID, AppManagerUI ams) throws IOException {
+	AMSMidletCustomItem(int suiteID, AppManagerUI ams, AMSFolderCustomItem p) throws IOException {
 		super(null, ams);
 		createMSI(suiteID);
 		icon = msi.icon;
+		parent=p;
 		text = msi.displayName.toCharArray();
-		textLen = msi.displayName.length(); }
+		textLen = msi.displayName.length();
+		setFixedCommands(); }
 		
 	// Helper for constructors--creates and inits the msi
 	void createMSI(int suiteID) throws IOException {
@@ -90,13 +109,17 @@ class AMSMidletCustomItem extends AMSCustomItem {
 
 	// Used to read from the stream (assumes type specifier has already
 	// been read)
-	AMSMidletCustomItem(DataInputStream istream, AppManagerUI ams) throws IOException {
+	AMSMidletCustomItem(DataInputStream istream, AppManagerUI ams,
+		AMSFolderCustomItem p) throws IOException {
 		super(null, ams);
 		String n = istream.readUTF();
 		int sid = istream.readInt();
 		createMSI(sid);
+		icon = msi.icon;
+		parent=p;
 		text = n.toCharArray();
-		textLen = text.length; }
+		textLen = text.length;
+		setFixedCommands(); }
 
 	// Accessor--TODO--See if it's now obsolete
 	int getSuiteID() {
@@ -174,6 +197,20 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	// Determine if the associated midlet is running
 	boolean isRunning() {
 		return (msi.proxy != null); }
+		
+	// Remove this item from its parent
+	void remove() {
+		hide();
+		parent.remove(this); }
+		
+	/* These commands don't come and go--they're set at
+		construction */
+	void setFixedCommands() {
+		addCommand(infoCmd);
+		addCommand(removeCmd);
+		addCommand(updateCmd);
+		addCommand(appSettingsCmd);
+		addCommand(deviceSettingCmd); }		
 			
 	/* Override */		
 	void updateCommands() {

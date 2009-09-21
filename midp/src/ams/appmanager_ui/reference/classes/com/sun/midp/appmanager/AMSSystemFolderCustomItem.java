@@ -1,6 +1,24 @@
 /*
-	CustomItem representing a folder in the AMS. 
-*/
+ * CustomItem representing the system folder in the AMS. 
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 only, as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt).
+ * 
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ * 
+ * Original code AJ Milne / 2009 
+ *  
+ **/
 
 package com.sun.midp.appmanager;
 
@@ -8,15 +26,13 @@ import java.util.Vector;
 import java.io.*;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
-import com.sun.midp.installer.GraphicalInstaller;
 import com.sun.midp.midletsuite.*;
 import com.sun.midp.main.*;
 
 class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
 	// Handy reference to the discovery midlet--having this
-	// explicitly available speeds a few things
-	// along in the AMS UI
+	// explicitly available speeds a few things along in the AMS UI
 	AMSMidletCustomItem discoveryMidlet, wifiMidlet;
 	
 	// Constructor for creation in UI, sans content
@@ -26,15 +42,13 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
 	// Create the built-in midlets
 	void createBuiltInMidlets() {
-		discoveryMidlet = AMSMidletCustomItem.getDiscoveryMidletCI(owner);
-		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner); }
+		discoveryMidlet = AMSMidletCustomItem_Installer.getDiscoveryMidletCI(owner, this);
+		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner, this); }
 
 	// Create the system folder
 	static AMSSystemFolderCustomItem createSystemRoot(AppManagerUI ams) {
 		AMSSystemFolderCustomItem sysroot =
 			new AMSSystemFolderCustomItem("System midlets", null, ams);
-		// sysroot.open=false;
-		// TODO: Test code
 		sysroot.open=true;
 		return sysroot; }
 
@@ -42,8 +56,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	boolean isInstallerRunning() {
 		RunningMIDletSuiteInfo msi = discoveryMidlet.msi;
 		if (msi.proxy != null && 
-			(AMSMidletCustomItem.DISCOVERY_APP.equals(msi.midletToRun) ||
-			AMSMidletCustomItem.INSTALLER.equals(msi.midletToRun))) {
+			(AMSMidletCustomItem_Installer.DISCOVERY_APP.equals(msi.midletToRun) ||
+			AMSMidletCustomItem_Installer.INSTALLER.equals(msi.midletToRun))) {
 				return true; }
 		return false; }
 		

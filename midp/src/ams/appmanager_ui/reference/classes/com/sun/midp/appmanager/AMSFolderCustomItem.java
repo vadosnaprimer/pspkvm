@@ -1,6 +1,24 @@
 /*
-	CustomItem representing a folder in the AMS. 
-*/
+ * CustomItem representing a folder in the AMS. 
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 2 only, as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License version 2 for more details (a copy is
+ * included at /legal/license.txt).
+ * 
+ * You should have received a copy of the GNU General Public License
+ * version 2 along with this work; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ *  
+ * Original code AJ Milne / 2009
+ *  
+ **/
 
 package com.sun.midp.appmanager;
 
@@ -23,8 +41,11 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		new Command("Open", Command.ITEM, 7);
 	static final Command closeFolderCmd =
 		new Command("Close", Command.ITEM, 7);
+	static final Command createSubfolderCmd =
+		new Command("New subfolder", Command.ITEM, 7);
+	static final Command removeCmd = 
+		new Command("Remove", Command.ITEM, 7);
 
-	
 	// Constructor for creation in UI, sans content
 	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
 		super(null, ams);
@@ -33,7 +54,11 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		open = false;
 		subfolders = new AMSFolderCustomItem[0];
 		items = new AMSMidletCustomItem[0];
-		parent=p; }
+		parent=p;
+		if (parent == null) {
+			// You can't remove or rename the root
+			removeCommand(removeCmd);
+			removeCommand(renameCmd); } }
 	
 	// Open the folder in the AMS UI--displays all its content (if any)
 	void setOpen() {
@@ -42,7 +67,15 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		insertContentsNoCheck();
 		open=true;
 		updateDisplay(); }
-		
+
+	// Called when contents change (add/delete) to make sure
+	// the proper items get added to the parent
+	void updateContentDisplay() {
+		if (!open) {
+			return; }
+		hideContents();
+		insertContentsNoCheck(); }
+
 	// Special method called by AMS when inserting folders--
 	// since if they're open already, you should also insert
 	// their contents
@@ -71,15 +104,23 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	void setClosed() {
 		if (!open) {
 			return; }
+		hideContents();
+		open=false;
+		updateDisplay(); }
+		
+	void hideContents() {
 		int c = subfolders.length;
 		for(int i=0; i<c; i++) {
 			subfolders[i].setClosed();
 			subfolders[i].hide(); }
 		c = items.length;
 		for(int i=0; i<c; i++) {
-			items[i].hide(); }
-		open=false;
-		updateDisplay(); }
+			items[i].hide(); } }
+			
+	void hide() {
+		if (open) {
+			hideContents(); }
+		super.hide(); }
 
 	// Read the root from storage
 	static AMSFolderCustomItem readRoot(DataInputStream di, AppManagerUI ams)
@@ -105,16 +146,38 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	// helper for createRoot(..).
 	void populateRootFromIntalledMidlets() {
 		int[] suiteIds = MIDletSuiteStorage.getMIDletSuiteStorage().getListOfSuites();
+		installFromList(suiteIds); }
+		
+	void installFromList(int[] suiteIds) {
 		Vector r = new Vector(suiteIds.length);
 		// Add the rest of the installed midlets
 		for (int i = 0; i < suiteIds.length; i++) {
 			try {
-				r.addElement(new AMSMidletCustomItem(suiteIds[i], owner)); }
+				r.addElement(new AMSMidletCustomItem(suiteIds[i], owner, this)); }
 			catch (Exception e) {
 				// move on to the next suite
 				// TODO? Why would this fail?
 			} }
 		setItemsFromVector(r); }
+		
+	// Find midlets for which we have install information, but no
+	// point of attachment on the tree (typically, after install)
+	int[] findUnattachedMidlets() {
+		int[] suiteIds = MIDletSuiteStorage.getMIDletSuiteStorage().getListOfSuites();
+		Vector rt = new Vector(2);
+		for(int i=0; i<suiteIds.length; i++) {
+			if (find(suiteIds[i])==null) {
+				rt.addElement(new Integer(suiteIds[i])); } }
+		int[] r = new int[rt.size()];
+		for(int i=0; i<r.length; i++) {
+			r[i] = ((Integer)rt.elementAt(i)).intValue(); }
+		return r; }
+		
+	boolean addUnattachedMidlets() {
+		int[] suiteIds=findUnattachedMidlets();
+		boolean r = (suiteIds.length > 0);
+		installFromList(suiteIds);
+		return r; }
 
 	// Constructor for creation from storage		
 	AMSFolderCustomItem(AMSFolderCustomItem p, DataInputStream di,
@@ -132,7 +195,11 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		int isize = di.readInt();
 		items = new AMSMidletCustomItem[isize];
 		for(int i=0; i<isize; i++) {
-			items[i] = new AMSMidletCustomItem(di, owner); } }
+			items[i] = new AMSMidletCustomItem(di, owner, this); }
+		if (parent == null) {
+			// You can't remove the root
+			removeCommand(removeCmd);
+			removeCommand(renameCmd); } }
 
 	// Write to storage		
 	void write(DataOutputStream ostream) throws IOException {
@@ -196,6 +263,21 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		c = subfolders.length;
 		for(int i=0; i<c; i++) {
 			AMSMidletCustomItem a = subfolders[i].find(suiteID);
+			if (a != null) {
+				return a; } }
+		return null; }
+		
+	// Find the AMSMCI matching a given RunningMidletSuiteInfo in the tree
+	// below this folder, or null, if it's not there.
+	// (Thus, searching from the root initially usually makes sense.)
+	AMSMidletCustomItem find(RunningMIDletSuiteInfo rmsi) {
+		int c = items.length;
+		for(int i=0; i<c; i++) {
+			if (items[i].msi==rmsi) {
+				return items[i]; } }
+		c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			AMSMidletCustomItem a = subfolders[i].find(rmsi);
 			if (a != null) {
 				return a; } }
 		return null; }
@@ -287,12 +369,12 @@ class AMSFolderCustomItem extends AMSCustomItem {
 
 	void append(AMSFolderCustomItem f) {
 		insert(f, subfolders.length); }
-		
+
 	void remove(AMSFolderCustomItem m) {
 		Vector v = subfoldersAsVector();
 		v.removeElement(m);
 		setSubfoldersFromVector(v); }
-		
+
 	// Overrides std implementation to make sure
 	// contained items currently displayed
 	// also get their update
@@ -309,5 +391,10 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		c = items.length;
 		for(int i=0; i<c; i++) {
 			items[i].updateDisplay(); } }
-
+			
+	void setFixedCommands() {
+		super.setFixedCommands();
+		addCommand(createSubfolderCmd);
+		addCommand(removeCmd); }
 }
+
