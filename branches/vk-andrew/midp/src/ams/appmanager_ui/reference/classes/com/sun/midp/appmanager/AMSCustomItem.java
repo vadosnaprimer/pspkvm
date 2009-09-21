@@ -1,13 +1,15 @@
-/*
-	Superclass providing basic functionality for CustomItems representing
-	midlets and folders in the AMS.
-
-	A lot of the basic fields and all (non I/O, non Folder) stuff came out of 
-	AppManagerUI.java, which had an inner class that provided some of this 
-	functionality. I basically broke it up, spread it over a descendance tree
-	allowing me to override bits to do the folder items reasonably cleanly.
-
-	/ AJM
+/**
+ *
+ * Superclass providing basic functionality for CustomItems representing
+ * midlets and folders in the AMS.
+ * 
+ * A lot of the basic fields and all (non I/O, non Folder) stuff came out of
+ * AppManagerUI.java, which had an inner class that provided some of this
+ * functionality. I basically broke it up, spread it over a descendance tree
+ * allowing me to override bits to do the folder items reasonably cleanly.
+ * 
+ * Original code AJ Milne / 2009
+ *  
 */
 
 package com.sun.midp.appmanager;
@@ -34,6 +36,8 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		GraphicalInstaller.getImageFromInternalStorage("folder");
 	final static Image folderOpenImg =
 		GraphicalInstaller.getImageFromInternalStorage("folder_open");
+	final static Image markedImg =
+		GraphicalInstaller.getImageFromInternalStorage("_marked");
 		
 	/**
 	* The image used to draw background for the midlet representation.
@@ -100,13 +104,15 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 	*/
 	protected static final int ITEM_PAD = 2;
 	
-	/** Command object for "Move up". */
-	static final Command moveUpCmd =
-		new Command("Move up", Command.ITEM, 7);
-	
-	/** Command object for "Move down". */
-	static final Command moveDwnCmd =
-		new Command("Move down", Command.ITEM, 7);
+	/** Command object for "Mark". */
+	static final Command markCmd =
+		new Command("Mark", Command.ITEM, 7);
+	/** Command object for "UnMark". */
+	static final Command unMarkCmd =
+		new Command("Unmark", Command.ITEM, 7);
+	/** Command object for "Rename". */
+	static final Command renameCmd =
+		new Command("Rename", Command.ITEM, 7);
 		
 	/**
 	 * Required for Sortable */
@@ -184,13 +190,17 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		initTruncWidth();
 		initScrollTimer();
 		truncated = false;
+		marked=false;
 		xScrollOffset = 0;
-		addCommand(moveUpCmd);
-		addCommand(moveDwnCmd);
+		addCommand(markCmd);
+		setFixedCommands();
 		setItemCommandListener(owner); }
 
 	// Write to storage 
 	abstract void write(DataOutputStream ostream) throws IOException;
+	
+	/** Whether this item is marked */
+	boolean marked;
 	
 	  /** The width of the item */
 	int width; // = 0
@@ -392,8 +402,11 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 				g.drawImage(ICON_BG, 0, (h - bgIconH)/2,
 					Graphics.TOP | Graphics.LEFT); }
 			drawIcons(g);
+			if (marked) {
+				g.drawImage(markedImg, 0, (h - bgIconH)/2,
+					Graphics.TOP | Graphics.LEFT); }
 			g.setClip(cX, cY, cW, cH); } }
-		
+
 	/* Override--different implementation for folders and midlets */
 	abstract void setLabelColor(Graphics g);
 
@@ -402,10 +415,28 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 	
 	/* Override--call to add/remove commands according to current state */
 	abstract void updateCommands();
+		
+	void mark() {
+		marked=true; }
+
+	void unMark() {
+		marked=false; }
 
 	/* General call -- calls all the display update code */
 	void updateDisplay() {
+		setBaseCommands();
 		updateCommands(); }
+	
+	void setBaseCommands() {
+		if (marked) {
+			removeCommand(markCmd);
+			addCommand(unMarkCmd);
+			return; }
+		removeCommand(unMarkCmd);
+		addCommand(markCmd); }
+		
+	void setFixedCommands() {
+		addCommand(renameCmd); }
 
 	/* Hide this item in the AMS UI */
 	void hide() {
@@ -413,5 +444,5 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		if (idx==-1) {
 			return; }
 		owner.delete(idx); }
-
+		
 }
