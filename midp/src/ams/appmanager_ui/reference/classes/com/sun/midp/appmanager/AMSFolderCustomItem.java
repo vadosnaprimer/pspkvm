@@ -87,7 +87,9 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	void insertContentsNoCheck() {
 		int idx = owner.getIndexOf(this);
 		if (idx==-1) {
-			// This really shouldn't happen
+			// This really shouldn't happen. But really,
+			// the logical assumption is this item is itself
+			// hidden. So do nothing.
 			return; }
 		int c = subfolders.length;
 		for(int i=0; i<c; i++) {
