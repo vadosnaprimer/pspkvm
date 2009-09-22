@@ -437,6 +437,10 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		
 	void setFixedCommands() {
 		addCommand(renameCmd); }
+		
+	void setText(String s) {
+		text = s.toCharArray();
+		textLen = text.length; }
 
 	/* Hide this item in the AMS UI */
 	void hide() {

@@ -141,10 +141,6 @@ class AppManagerUI extends Form
         new Command(Resource.getString(ResourceConstants.LAUNCH),
                     Command.ITEM, 1);
 
-    /** Command object for "Create folder". */
-    private Command createFolderCmd =
-        new Command("Create folder", Command.SCREEN, 7);
-
     /** Command object for "Cancel" command for the remove form. */
     private Command cancelCmd =
         new Command(Resource.getString(ResourceConstants.CANCEL),
@@ -245,7 +241,25 @@ class AppManagerUI extends Form
 		while (markedItems.size()>0) {
 			Object i = markedItems.elementAt(0);
 			unmarkItem((AMSCustomItem)i); } }
+	
+	// Move all the marked items to the target folder
+	void moveTo(AMSFolderCustomItem t) {
+		// TODO
+	}
+	
+	// Create a new subfolder in parent p
+	void createSubFolder(AMSFolderCustomItem p) {
+		AMSFolderCustomItem f = new AMSFolderCustomItem("new folder",
+			p, this);
+		AMSCustomItemRenameForm rnb = new AMSCustomItemRenameForm(this, f, true);
+		display.setCurrent(rnb); }
 
+	// Rename an item
+	void rename(AMSCustomItem i) {
+		AMSCustomItemRenameForm rnb = new AMSCustomItemRenameForm(this, i, false);
+		display.setCurrent(rnb); }
+
+	// Find an item through a reference to its proxy
   AMSMidletCustomItem find(MIDletProxy p) {
   	AMSMidletCustomItem r = systemFolder.find(p);
   	if (r!=null) {
@@ -462,6 +476,16 @@ class AppManagerUI extends Form
     	if (c == unmarkAllCmd) {
 				unmarkAll();
 				return; }
+				
+			if (c == AMSCustomItemRenameForm.cancelCmd) {
+				display.setCurrent(this);
+				return; }
+   	
+			if (c == AMSCustomItemRenameForm.doneCmd) {
+				AMSCustomItemRenameForm f = (AMSCustomItemRenameForm)s;
+				f.commitChanges();
+				display.setCurrent(this);
+				return; }
     
         if (c == exitCmd) {
             if (s == this) {
@@ -538,6 +562,9 @@ class AppManagerUI extends Form
 			if (c == AMSCustomItem.unMarkCmd) {
 				unmarkItem((AMSCustomItem)item);
 				return; }
+			if (c == AMSCustomItem.renameCmd) {
+				rename((AMSCustomItem)item);
+				return; }
 			// Folder-specific command
 			if (c == AMSFolderCustomItem.openFolderCmd) {
 				((AMSFolderCustomItem)item).setOpen();
@@ -545,6 +572,10 @@ class AppManagerUI extends Form
 			// Folder-specific command
 			if (c == AMSFolderCustomItem.closeFolderCmd) {
 				((AMSFolderCustomItem)item).setClosed();
+				return; }
+			// Folder-specific command
+			if (c == AMSFolderCustomItem.createSubfolderCmd) {
+				createSubFolder((AMSFolderCustomItem)item);
 				return; }
 
 			// Midlet-specific commands
@@ -1290,6 +1321,7 @@ class AppManagerUI extends Form
      * generation of repaint events.
      */
     void cleanUp() {
-       AMSCustomItem.stopTimer(); }
+    	// TODO: Save the folder store
+      AMSCustomItem.stopTimer(); }
 
 }

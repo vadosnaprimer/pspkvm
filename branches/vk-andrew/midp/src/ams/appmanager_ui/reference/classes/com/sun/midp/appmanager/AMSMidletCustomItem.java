@@ -86,8 +86,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		parent=p;
 		icon = msi.icon;
 		text = msi.displayName.toCharArray();
-		textLen = msi.displayName.length();
-		setFixedCommands(); }
+		textLen = msi.displayName.length(); }
 
 	// Same from just the suiteID--used by initial folder creation code.
 	AMSMidletCustomItem(int suiteID, AppManagerUI ams, AMSFolderCustomItem p) throws IOException {
@@ -96,8 +95,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		icon = msi.icon;
 		parent=p;
 		text = msi.displayName.toCharArray();
-		textLen = msi.displayName.length();
-		setFixedCommands(); }
+		textLen = msi.displayName.length(); }
 		
 	// Helper for constructors--creates and inits the msi
 	void createMSI(int suiteID) throws IOException {
@@ -118,8 +116,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		icon = msi.icon;
 		parent=p;
 		text = n.toCharArray();
-		textLen = text.length;
-		setFixedCommands(); }
+		textLen = text.length; }
 
 	// Accessor--TODO--See if it's now obsolete
 	int getSuiteID() {
@@ -206,6 +203,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	/* These commands don't come and go--they're set at
 		construction */
 	void setFixedCommands() {
+		super.setFixedCommands();
 		addCommand(infoCmd);
 		addCommand(removeCmd);
 		addCommand(updateCmd);
