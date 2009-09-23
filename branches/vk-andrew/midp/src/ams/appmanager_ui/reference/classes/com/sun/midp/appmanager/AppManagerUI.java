@@ -169,10 +169,6 @@ class AppManagerUI extends Form
 		private Command unmarkAllCmd =
 			new Command("Unmark All", Command.ITEM, 7);
 			
-		/** Command object for moving objects */
-		private Command moveHereCmd =
-			new Command("Move here", Command.ITEM, 7);
-
     /** Display for the Manager MIDlet. */
     ApplicationManager manager;
 
@@ -214,20 +210,21 @@ class AppManagerUI extends Form
     private boolean first;
     
   // The folders
-  AMSFolderCustomItem rootFolder, currentFolder;
+  AMSFolderCustomItem rootFolder;
   AMSSystemFolderCustomItem systemFolder;
 
   // A list of marked items--nice for quick unmarking/recursion
 	Vector markedItems;
 	
-	void setCurrentFolder(AMSFolderCustomItem f) {
-		currentFolder = f;
-		if (f.marked) {
-			removeCommand(moveHereCmd);
-			return; }
-		if (markedItems.size()>0) {
-			addCommand(moveHereCmd); } }
-	
+	// Debug method--allows adding unattached/lost midlets
+	void addUnattachedMidlets(AMSFolderCustomItem f) {
+		if (f.addUnattachedMidlets()) {
+			f.sort();
+			// If open, update with the added midlets
+			f.updateContentDisplay();
+			// If it's not yet, open it.
+			f.setOpen(); } }
+
 	// Support routine for marking items
 	void markItem(AMSCustomItem i) {
 		i.mark();
@@ -237,11 +234,7 @@ class AppManagerUI extends Form
 		// it's still a nice safeguard.
 		markedItems.removeElement(i);
 		markedItems.addElement(i);
-		addCommand(unmarkAllCmd);
-		if (!currentFolder.marked) {
-			addCommand(moveHereCmd); }
-		else {
-			removeCommand(moveHereCmd); } }
+		addCommand(unmarkAllCmd); }
 		
 	// Support routine for unmarking items
 	void unmarkItem(AMSCustomItem i) {
@@ -250,15 +243,7 @@ class AppManagerUI extends Form
 		i.update();
 		markedItems.removeElement(i);
 		if (markedItems.size()==0) {
-			removeCommand(unmarkAllCmd);
-			return; }
-		// Not zero. Handle move here logic
-		// in case they just unmarked a
-		// folder you could move stuff to.
-		if (!currentFolder.marked) {
-			addCommand(moveHereCmd); }
-		else {
-			removeCommand(moveHereCmd); } }
+			removeCommand(unmarkAllCmd); } }
 			
 	// Support routine for unmarking items
 	void unmarkAll() {
@@ -374,9 +359,7 @@ class AppManagerUI extends Form
 				// TODO: Handle this more neatly. Should mention
 				initRootFolder();
 				return; }
-			// STORAGE_FORMAT
 			rootFolder=AMSFolderCustomItem.readRoot(di, this);
-			currentFolder=rootFolder;
 		} catch (RecordStoreException e) {
 			// TODO: Warn
 			initRootFolder();
@@ -395,7 +378,10 @@ class AppManagerUI extends Form
 		systemFolder = AMSSystemFolderCustomItem.createSystemRoot(this);
 		appendFolder(systemFolder);
 		readFolders();
-		appendFolder(rootFolder); }
+		appendFolder(rootFolder);
+		// Debug thing ... allows recovery of missing/unattached midlets
+		// without restart
+		rootFolder.addCommand(AMSFolderCustomItem.addUnattachedCmd); }
 		
 	// Special method for appending folders--makes sure
 	// if they're already open, we also append their contents
@@ -436,10 +422,13 @@ class AppManagerUI extends Form
       initSettings();
       setTitle(Resource.getString(ResourceConstants.AMS_MGR_TITLE));
       createFolders();
-      // updateContent(false);
       addCommand(exitCmd);
       setCommandListener(this);
       markedItems = new Vector();
+      // This is a 'backup' method, in case something goes 
+      // very wrong, and attached midlets are lost, not attached to
+      // the folder system. At startup, we automatically look for them...
+      addUnattachedMidlets(rootFolder);
 
       if (first) {
           display.setCurrent(this);
@@ -544,10 +533,6 @@ class AppManagerUI extends Form
 				unmarkAll();
 				return; }
 			
-			if (c == moveHereCmd) {
-				moveTo(currentFolder);
-				return; }
-
 			if (c == AMSCustomItemRenameForm.cancelCmd) {
 				display.setCurrent(this);
 				return; }
@@ -633,8 +618,12 @@ class AppManagerUI extends Form
 			if (c == AMSCustomItem.unMarkCmd) {
 				unmarkItem((AMSCustomItem)item);
 				return; }
+			// Generic AMSCustomItem command
 			if (c == AMSCustomItem.renameCmd) {
 				rename((AMSCustomItem)item);
+				return; }
+			if (c == AMSFolderCustomItem.addUnattachedCmd) {
+				addUnattachedMidlets((AMSFolderCustomItem)item);
 				return; }
 			// Folder-specific command
 			if (c == AMSFolderCustomItem.openFolderCmd) {
@@ -651,6 +640,10 @@ class AppManagerUI extends Form
 			// Folder-specific command
 			if (c == AMSFolderCustomItem.removeCmd) {
 				removeFolder((AMSFolderCustomItem)item);
+				return; }
+			// Folder-specific command
+			if (c == AMSFolderCustomItem.moveHereCmd) {
+				moveTo((AMSFolderCustomItem)item);
 				return; }
 
 			// Midlet-specific commands
@@ -794,11 +787,10 @@ class AppManagerUI extends Form
          * were added
          * Also the CA manager could have disabled a MIDlet.
          */
-        if (systemFolder.discoveryMidlet.msi.equals(midlet)) { 
-        	if (rootFolder.addUnattachedMidlets()) {
-		      	rootFolder.setClosed();
-		      	rootFolder.sort();
-		      	rootFolder.setOpen(); }
+        if ((midlet.getSuiteId() == MIDletSuite.INTERNAL_SUITE_ID) &&
+					(midletClassName.equals(DISCOVERY_APP) ||
+            midletClassName.equals(INSTALLER))) { 
+        			addUnattachedMidlets(rootFolder);
 
             /*
             * After a MIDlet suite is successfully installed on the

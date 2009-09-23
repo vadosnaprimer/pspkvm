@@ -70,9 +70,6 @@ class AMSMidletCustomItem extends AMSCustomItem {
   /** The parent folder */
   AMSFolderCustomItem parent;
   
-  void setCurrentFolder() {
-		owner.setCurrentFolder(parent); }
-
 	/**
 	 * The icon to be used to draw this midlet representation.
 	 */

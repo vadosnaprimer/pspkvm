@@ -208,7 +208,8 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		truncated = false;
 		marked=false;
 		xScrollOffset = 0;
-		addCommand(markCmd);
+		if (allowsMark()) {
+			addCommand(markCmd); }
 		setFixedCommands();
 		setItemCommandListener(owner); }
 		
@@ -383,7 +384,6 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		int visRect_inout[]) {
 		// entirely visible and hasFocus
 		if (!hasFocus) {
-			setCurrentFolder();
 			hasFocus = true; }
 		visRect_inout[0] = 0;
 		visRect_inout[1] = 0;
@@ -475,8 +475,6 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		text = s.toCharArray();
 		textLen = text.length; }
 		
-	abstract void setCurrentFolder();
-
 	/* Hide this item in the AMS UI */
 	void hide() {
 		int idx = owner.getIndexOf(this);

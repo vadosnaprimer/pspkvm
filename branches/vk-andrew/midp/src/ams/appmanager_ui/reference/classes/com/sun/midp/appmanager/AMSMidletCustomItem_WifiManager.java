@@ -43,8 +43,8 @@ class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 		
 	final static Image wifiImg =
 		GraphicalInstaller.getImageFromInternalStorage("_wifi");
-	final static int wifiImgW = markedImg.getWidth();
-	final static int wifiImgH = markedImg.getHeight();
+	final static int wifiImgW = wifiImg.getWidth();
+	final static int wifiImgH = wifiImg.getHeight();
 
 		
 	AMSMidletCustomItem_WifiManager(RunningMIDletSuiteInfo msi, AppManagerUI ams,
@@ -54,13 +54,24 @@ class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 	/* Override */		
 	void updateCommands() {
 		if (isRunning()) {
+			addCommand(fgCmd);
+			setDefaultCommand(fgCmd);
 			removeCommand(launchWifiSetupCmd);
 			return; }
+		removeCommand(fgCmd);
+		removeCommand(endCmd);
 		if (msi.enabled) {
 			addCommand(launchWifiSetupCmd);
 			setDefaultCommand(launchWifiSetupCmd);
 			return; }
 		removeCommand(launchWifiSetupCmd); }
+
+	// None of the standard commands are allowed here
+	void setFixedCommands() {}
+		
+	// You can't mark this, either
+	boolean allowsMark() {
+		return false; }
 
 	// Constructs the AMSMidletCustomItem containing the wifi setup midlet
 	static AMSMidletCustomItem getWiFiMidletCI(AppManagerUI ams, AMSFolderCustomItem p) {
