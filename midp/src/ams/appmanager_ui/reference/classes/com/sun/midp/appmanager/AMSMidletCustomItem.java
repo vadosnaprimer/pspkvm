@@ -228,5 +228,9 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		
 	void ensureVisible() {
 		parent.openFromBottom(); }
-	
+		
+	void select() {
+		ensureVisible();
+		owner.display.setCurrentItem(this); }
+		
 }

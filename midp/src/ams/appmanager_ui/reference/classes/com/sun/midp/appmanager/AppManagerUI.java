@@ -448,54 +448,28 @@ class AppManagerUI extends Form
           return; } 
       display.setCurrent(this);
 
-      /*if (ms != null) {
-          // Find item to select
-          if (ms.suiteId == MIDletSuite.INTERNAL_SUITE_ID) {
-              for (int i = 0; i < size(); i++) {
-                  AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                  if ((mi.msi.suiteId == MIDletSuite.INTERNAL_SUITE_ID)
-                      && (mi.msi.midletToRun.equals(ms.midletToRun))) {
-                      display.setCurrentItem(mi);
-                      break; } }
-            return; }
-              for (int i = 0; i < size(); i++) {
-                  AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                  if (mi.msi.suiteId == ms.suiteId) {
-                      display.setCurrentItem(mi);
-                      break;
-                  }
-          }
-        return; }
-          int suiteId = getLastPlayedMIDlet();
-          if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
-              for (int i = 0; i < size(); i++) {
-                  AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                  if (mi.msi.suiteId == suiteId) {
-                      display.setCurrentItem(mi);
-                      break;
-                  }
-              }
-  }*/
-}
+      if (ms != null) {
+      	// NB -- won't work for internal stuff yet
+      	// For these, we also have to check ms.midletToRun
+      	AMSMidletCustomItem mi = rootFolder.find(ms.suiteId);
+        if (mi != null) {
+					mi.select();
+					return; } }
+      	
+			int suiteId = getLastPlayedMIDlet();
+			if (suiteId == MIDletSuite.UNUSED_SUITE_ID) {
+				return; }
+			AMSMidletCustomItem mi = rootFolder.find(suiteId);
+			if (mi != null) {
+				mi.select(); } }
 
     protected void sizeChanged(int w, int h) {
-    	/* TODO: Think about this. I'm not sure
-    			I want to have to deal with the possibilities
-    			of the folder being closed above it 
-    	 if (first) {
-            int suiteId = getLastPlayedMIDlet();
-            if (suiteId != MIDletSuite.UNUSED_SUITE_ID) {
-                for (int i = 0; i < size(); i++) {
-                    AMSMidletCustomItem mi = (AMSMidletCustomItem)get(i);
-                    if (mi.msi.suiteId == suiteId) {
-                        display.setCurrentItem(mi);
-                        break;
-                    }
-                }
-            }
-            first = false;
-        }*/
-    }
+  	 if (first) {
+  	 	int suiteId = getLastPlayedMIDlet();
+  	 	AMSMidletCustomItem mi = rootFolder.find(suiteId);
+			if (mi != null) {
+				mi.select(); } }
+      first = false; }
 
     /**
      * Called when midlet selector needed.
