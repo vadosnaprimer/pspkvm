@@ -37,7 +37,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	
 	// Constructor for creation in UI, sans content
 	AMSSystemFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
-		super(n, p, ams);
+		super(n, p, ams, 0);
 		createBuiltInMidlets(); }
 
 	// Create the built-in midlets

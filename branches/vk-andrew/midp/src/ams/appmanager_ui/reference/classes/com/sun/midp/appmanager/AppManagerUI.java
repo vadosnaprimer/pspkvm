@@ -168,6 +168,10 @@ class AppManagerUI extends Form
 		/** Command object for unmarking all marked objects */
 		private Command unmarkAllCmd =
 			new Command("Unmark All", Command.ITEM, 7);
+			
+		/** Command object for moving objects */
+		private Command moveHereCmd =
+			new Command("Move here", Command.ITEM, 7);
 
     /** Display for the Manager MIDlet. */
     ApplicationManager manager;
@@ -216,16 +220,28 @@ class AppManagerUI extends Form
   // A list of marked items--nice for quick unmarking/recursion
 	Vector markedItems;
 	
+	void setCurrentFolder(AMSFolderCustomItem f) {
+		currentFolder = f;
+		if (f.marked) {
+			removeCommand(moveHereCmd);
+			return; }
+		if (markedItems.size()>0) {
+			addCommand(moveHereCmd); } }
+	
 	// Support routine for marking items
 	void markItem(AMSCustomItem i) {
-		// Prevent duplicate marks--should be impossible, but 
-		// it's still a nice safeguard.
 		i.mark();
 		i.updateDisplay();
 		i.update();
+		// Prevent duplicate marks--should be impossible, but 
+		// it's still a nice safeguard.
 		markedItems.removeElement(i);
 		markedItems.addElement(i);
-		addCommand(unmarkAllCmd); }
+		addCommand(unmarkAllCmd);
+		if (!currentFolder.marked) {
+			addCommand(moveHereCmd); }
+		else {
+			removeCommand(moveHereCmd); } }
 		
 	// Support routine for unmarking items
 	void unmarkItem(AMSCustomItem i) {
@@ -234,25 +250,69 @@ class AppManagerUI extends Form
 		i.update();
 		markedItems.removeElement(i);
 		if (markedItems.size()==0) {
-			removeCommand(unmarkAllCmd); } }
+			removeCommand(unmarkAllCmd);
+			return; }
+		// Not zero. Handle move here logic
+		// in case they just unmarked a
+		// folder you could move stuff to.
+		if (!currentFolder.marked) {
+			addCommand(moveHereCmd); }
+		else {
+			removeCommand(moveHereCmd); } }
 			
 	// Support routine for unmarking items
 	void unmarkAll() {
 		while (markedItems.size()>0) {
 			Object i = markedItems.elementAt(0);
 			unmarkItem((AMSCustomItem)i); } }
+			
+	// Move s into t
+	void moveFolder(AMSFolderCustomItem t, AMSFolderCustomItem s) {
+		if (t.hasParent(s)) {
+			// Can't move a parent into its own child
+			return; }
+		s.remove();
+		t.append(s); }
 	
+	// Move s into t
+	void moveMidlet(AMSFolderCustomItem t, AMSMidletCustomItem s) {
+		s.remove();
+		t.append(s); }
+
 	// Move all the marked items to the target folder
 	void moveTo(AMSFolderCustomItem t) {
-		// TODO
-	}
-	
+		while (markedItems.size()>0) {
+			Object i = markedItems.elementAt(0);
+			unmarkItem((AMSCustomItem)i);
+			if (i instanceof AMSMidletCustomItem) {
+				moveMidlet(t, (AMSMidletCustomItem)i);
+				continue; }
+			// Otherwise, it's a folder
+			moveFolder(t, (AMSFolderCustomItem)i); }
+		// Once we're done, sort the target folder
+		t.sort();
+		// Make sure the additions are visible, if the target is open
+		t.updateContentDisplay();
+		// If it's not yet, open it.
+		t.setOpen(); }
+
 	// Create a new subfolder in parent p
 	void createSubFolder(AMSFolderCustomItem p) {
 		AMSFolderCustomItem f = new AMSFolderCustomItem("new folder",
-			p, this);
+			p, this, p.depth+1);
 		AMSCustomItemRenameForm rnb = new AMSCustomItemRenameForm(this, f, true);
 		display.setCurrent(rnb); }
+		
+	// Remove a folder
+	void removeFolder(AMSFolderCustomItem f) {
+		if (!f.isEmpty()) {
+			// TODO: Eventually, we should allow this--and
+			// recursively tear out everything within--useful for 
+			// rapid removal of contents
+			// TODO: For now, we should also put up
+			// a warning.
+			return; }
+		f.remove(); }
 
 	// Rename an item
 	void rename(AMSCustomItem i) {
@@ -279,6 +339,7 @@ class AppManagerUI extends Form
 			ByteArrayOutputStream bas = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(bas);
 			settings = RecordStore.openRecordStore(SETTINGS_STORE, true);
+			dos.writeInt(AMSCustomItem.STORAGE_FORMAT);
 			rootFolder.write(dos);
 			byte[] bstream = bas.toByteArray();
 			settings.setRecord(FOLDER_STREAM_RECORD_ID,
@@ -308,6 +369,12 @@ class AppManagerUI extends Form
 				return; }
 			ByteArrayInputStream das = new ByteArrayInputStream(data);
 			DataInputStream di = new DataInputStream(das);
+			int version = di.readInt();
+			if (version != AMSCustomItem.STORAGE_FORMAT) {
+				// TODO: Handle this more neatly. Should mention
+				initRootFolder();
+				return; }
+			// STORAGE_FORMAT
 			rootFolder=AMSFolderCustomItem.readRoot(di, this);
 			currentFolder=rootFolder;
 		} catch (RecordStoreException e) {
@@ -476,7 +543,11 @@ class AppManagerUI extends Form
     	if (c == unmarkAllCmd) {
 				unmarkAll();
 				return; }
-				
+			
+			if (c == moveHereCmd) {
+				moveTo(currentFolder);
+				return; }
+
 			if (c == AMSCustomItemRenameForm.cancelCmd) {
 				display.setCurrent(this);
 				return; }
@@ -576,6 +647,10 @@ class AppManagerUI extends Form
 			// Folder-specific command
 			if (c == AMSFolderCustomItem.createSubfolderCmd) {
 				createSubFolder((AMSFolderCustomItem)item);
+				return; }
+			// Folder-specific command
+			if (c == AMSFolderCustomItem.removeCmd) {
+				removeFolder((AMSFolderCustomItem)item);
 				return; }
 
 			// Midlet-specific commands
@@ -1321,7 +1396,7 @@ class AppManagerUI extends Form
      * generation of repaint events.
      */
     void cleanUp() {
-    	// TODO: Save the folder store
+    	writeFolders();
       AMSCustomItem.stopTimer(); }
 
 }
