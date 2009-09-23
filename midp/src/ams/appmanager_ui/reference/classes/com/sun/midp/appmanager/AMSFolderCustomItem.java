@@ -45,6 +45,10 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		new Command("New subfolder", Command.ITEM, 7);
 	static final Command removeCmd = 
 		new Command("Remove", Command.ITEM, 7);
+	static final Command moveHereCmd =
+			new Command("Move here", Command.ITEM, 7);
+	static final Command addUnattachedCmd =
+			new Command("Add unattached (debug)", Command.ITEM, 7);
 
 	// Constructor for creation in UI, sans content
 	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams, int d) {
@@ -174,6 +178,16 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			} }
 		setItemsFromVector(r); }
 		
+	void appendFromList(int[] suiteIds) {
+		// Add from a list of suiteIDs
+		for (int i = 0; i < suiteIds.length; i++) {
+			try {
+				append(new AMSMidletCustomItem(suiteIds[i], owner, this)); }
+			catch (Exception e) {
+				// move on to the next suite
+				// TODO? Why would this fail?
+			} } }
+
 	// Find midlets for which we have install information, but no
 	// point of attachment on the tree (typically, after install)
 	int[] findUnattachedMidlets() {
@@ -189,9 +203,8 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		
 	boolean addUnattachedMidlets() {
 		int[] suiteIds=findUnattachedMidlets();
-		boolean r = (suiteIds.length > 0);
-		installFromList(suiteIds);
-		return r; }
+		appendFromList(suiteIds);
+		return (suiteIds.length > 0); }
 
 	// Constructor for creation from storage		
 	AMSFolderCustomItem(AMSFolderCustomItem p, DataInputStream di,
@@ -315,6 +328,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	
 	void insert(AMSMidletCustomItem m, int pos) {
 		m.setDepth(depth+1);
+		m.parent = this;
 		if (pos<0) {
 			return; }
 		Vector v = itemsAsVector();
@@ -380,6 +394,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	
 	void insert(AMSFolderCustomItem f, int pos) {
 		f.setDepth(depth+1);
+		f.parent = this;
 		Vector v = subfoldersAsVector();
 		if (pos<0) {
 			return; }
@@ -424,10 +439,8 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	void setFixedCommands() {
 		super.setFixedCommands();
 		addCommand(createSubfolderCmd);
-		addCommand(removeCmd); }
-		
-	void setCurrentFolder() {
-		owner.setCurrentFolder(this); }
+		addCommand(removeCmd);
+		addCommand(moveHereCmd); }
 		
 	// Convenience method for ensuring a folder is open
 	// and its contents are visible by opening from the 
@@ -440,7 +453,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	boolean isEmpty() {
 		return ((items.length == 0) && (subfolders.length == 0)); }
 		
-	boolean hasParent(AMSCustomFolderItem f) {
+	boolean hasParent(AMSFolderCustomItem f) {
 		if (parent==null) {
 			return false; }
 		if (parent==f) {

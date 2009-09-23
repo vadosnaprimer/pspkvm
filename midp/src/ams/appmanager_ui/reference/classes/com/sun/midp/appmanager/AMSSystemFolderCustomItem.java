@@ -38,6 +38,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	// Constructor for creation in UI, sans content
 	AMSSystemFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
 		super(n, p, ams, 0);
+		removeCommand(moveHereCmd);
+		removeCommand(createSubfolderCmd);
 		createBuiltInMidlets(); }
 
 	// Create the built-in midlets
@@ -101,12 +103,10 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
 	// Override
 	AMSMidletCustomItem find(MIDletProxy midlet) {
-		if (discoveryMidlet.msi.proxy != null) {
-			if (discoveryMidlet.msi.proxy.equals(midlet)) {
-				return discoveryMidlet; } }
-		if (wifiMidlet.msi.proxy != null) {
-			if (wifiMidlet.msi.proxy.equals(midlet)) {
-				return wifiMidlet; } }
+			if (discoveryMidlet.msi.equals(midlet)) {
+				return discoveryMidlet; }
+			if (wifiMidlet.msi.equals(midlet)) {
+				return wifiMidlet; }
 		return super.find(midlet); }
 
 }
