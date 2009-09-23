@@ -40,7 +40,10 @@ class AMSCustomItemRenameForm extends TextBox {
 			AMSFolderCustomItem f = (AMSFolderCustomItem)target; 
 			f.parent.append(f);
 			f.parent.sort();
-			f.parent.updateContentDisplay(); } }
+			// If the parent is open, make sure the folder gets visibly added
+			f.parent.updateContentDisplay();
+			// If it's not yet, open it.
+			f.parent.setOpen(); } }
 
 	boolean getCreateFolder() {
 		return createFolder; }

@@ -69,6 +69,9 @@ class AMSMidletCustomItem extends AMSCustomItem {
   RunningMIDletSuiteInfo msi; // = null
   /** The parent folder */
   AMSFolderCustomItem parent;
+  
+  void setCurrentFolder() {
+		owner.setCurrentFolder(parent); }
 
 	/**
 	 * The icon to be used to draw this midlet representation.
@@ -81,7 +84,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	*            to be created
 	*/
 	AMSMidletCustomItem(RunningMIDletSuiteInfo msi, AppManagerUI ams, AMSFolderCustomItem p) {
-		super(null, ams);
+		super(null, ams, p.depth+1);
 		this.msi = msi;
 		parent=p;
 		icon = msi.icon;
@@ -90,7 +93,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 
 	// Same from just the suiteID--used by initial folder creation code.
 	AMSMidletCustomItem(int suiteID, AppManagerUI ams, AMSFolderCustomItem p) throws IOException {
-		super(null, ams);
+		super(null, ams, p.depth+1);
 		createMSI(suiteID);
 		icon = msi.icon;
 		parent=p;
@@ -109,7 +112,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	// been read)
 	AMSMidletCustomItem(DataInputStream istream, AppManagerUI ams,
 		AMSFolderCustomItem p) throws IOException {
-		super(null, ams);
+		super(null, ams, p.depth+1);
 		String n = istream.readUTF();
 		int sid = istream.readInt();
 		createMSI(sid);
@@ -173,7 +176,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	
 		// TODO: Provide system icon for those we don't have
 		if (icon != null) {
-			g.drawImage(icon, (bgIconW - icon.getWidth())/2,
+			g.drawImage(icon, indent + (bgIconW - icon.getWidth())/2,
 			(bgIconH - icon.getHeight())/2,
 			Graphics.TOP | Graphics.LEFT); }
 
@@ -181,13 +184,13 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		// that midlet needs to be brought into foreground by the user
 		if (msi.proxy != null && msi.proxy.isAlertWaiting()) {
 			g.drawImage(FG_REQUESTED,
-			bgIconW - FG_REQUESTED.getWidth(), 0,
+			indent + bgIconW - FG_REQUESTED.getWidth(), 0,
 			Graphics.TOP | Graphics.LEFT); }
 	
 		if (!msi.enabled) {
 			// indicate that this suite is disabled
 			g.drawImage(DISABLED_IMAGE,
-			(bgIconW - DISABLED_IMAGE.getWidth())/2,
+			indent + (bgIconW - DISABLED_IMAGE.getWidth())/2,
 			(bgIconH - DISABLED_IMAGE.getHeight())/2,
 			Graphics.TOP | Graphics.LEFT); } }
 			
@@ -208,7 +211,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		addCommand(removeCmd);
 		addCommand(updateCmd);
 		addCommand(appSettingsCmd);
-		addCommand(deviceSettingCmd); }		
+		addCommand(deviceSettingCmd); }
 			
 	/* Override */		
 	void updateCommands() {
@@ -225,5 +228,8 @@ class AMSMidletCustomItem extends AMSCustomItem {
 			setDefaultCommand(launchCmd);
 			return; }
 		removeCommand(launchCmd); }
+		
+	void ensureVisible() {
+		parent.openFromBottom(); }
 	
 }

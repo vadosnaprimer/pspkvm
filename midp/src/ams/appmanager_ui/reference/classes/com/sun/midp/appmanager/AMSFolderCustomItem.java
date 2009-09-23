@@ -47,8 +47,8 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		new Command("Remove", Command.ITEM, 7);
 
 	// Constructor for creation in UI, sans content
-	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
-		super(null, ams);
+	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams, int d) {
+		super(null, ams, d);
 		text = n.toCharArray();
 		textLen = n.length();
 		open = false;
@@ -56,7 +56,8 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		items = new AMSMidletCustomItem[0];
 		parent=p;
 		if (parent == null) {
-			// You can't remove or rename the root
+			// You can't remove, mark, or rename the root
+			removeCommand(markCmd);
 			removeCommand(removeCmd);
 			removeCommand(renameCmd); } }
 	
@@ -66,8 +67,9 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			return; }
 		insertContentsNoCheck();
 		open=true;
-		updateDisplay(); }
-
+		updateDisplay();
+		update(); }
+		
 	// Called when contents change (add/delete) to make sure
 	// the proper items get added to the parent
 	void updateContentDisplay() {
@@ -84,6 +86,14 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			return; }
 		insertContentsNoCheck(); }
 		
+	int getVisibleItems() {
+		if (!open) {
+			return 1; }
+		int r = 1 + items.length;
+		for (int i=0; i<subfolders.length; i++) {
+			r+=subfolders[i].getVisibleItems(); }
+		return r; }
+		
 	void insertContentsNoCheck() {
 		int idx = owner.getIndexOf(this);
 		if (idx==-1) {
@@ -92,15 +102,16 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			// hidden. So do nothing.
 			return; }
 		int c = subfolders.length;
+		idx++;
 		for(int i=0; i<c; i++) {
 			subfolders[i].updateDisplay();
-			idx++;
-			owner.insertFolderAt(idx, subfolders[i]); }
+			owner.insertFolderAt(idx, subfolders[i]);
+			idx+=subfolders[i].getVisibleItems(); }
 		c = items.length;
 		for(int i=0; i<c; i++) {
 			items[i].updateDisplay();
-			idx++;
-			owner.insertAt(idx, items[i]); } }
+			owner.insertAt(idx, items[i]);
+			idx++; } }
 		
 	// Close the folder in the AMS UI--hides all its content (if any)
 	void setClosed() {
@@ -108,12 +119,13 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			return; }
 		hideContents();
 		open=false;
-		updateDisplay(); }
+		updateDisplay();
+		update(); }
 		
 	void hideContents() {
 		int c = subfolders.length;
 		for(int i=0; i<c; i++) {
-			subfolders[i].setClosed();
+			subfolders[i].hideContents();
 			subfolders[i].hide(); }
 		c = items.length;
 		for(int i=0; i<c; i++) {
@@ -127,12 +139,12 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	// Read the root from storage
 	static AMSFolderCustomItem readRoot(DataInputStream di, AppManagerUI ams)
 		throws IOException {
-		return new AMSFolderCustomItem(null, di, ams); }
+		return new AMSFolderCustomItem(null, di, ams, 0); }
 
 	// Create the root from a list of installed midlets--usually
 	// just called the first time the folder system runs.
 	static AMSFolderCustomItem createRoot(AppManagerUI ams) {
-		AMSFolderCustomItem userroot = new AMSFolderCustomItem("Installed midlets", null, ams);
+		AMSFolderCustomItem userroot = new AMSFolderCustomItem("Installed midlets", null, ams, 0);
 		userroot.open=false;
 		userroot.subfolders=new AMSFolderCustomItem[0];
 		userroot.populateRootFromIntalledMidlets();
@@ -183,9 +195,9 @@ class AMSFolderCustomItem extends AMSCustomItem {
 
 	// Constructor for creation from storage		
 	AMSFolderCustomItem(AMSFolderCustomItem p, DataInputStream di,
-	AppManagerUI ams)
+	AppManagerUI ams, int d)
 		throws IOException {
-		super(null, ams);
+		super(null, ams, d);
 		text=di.readUTF().toCharArray();
 		textLen = text.length;
 		open = di.readBoolean();
@@ -193,13 +205,14 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		int sfsize = di.readInt();
 		subfolders = new AMSFolderCustomItem[sfsize];
 		for(int i=0; i<sfsize; i++) {
-			subfolders[i] = new AMSFolderCustomItem(this, di, owner); }
+			subfolders[i] = new AMSFolderCustomItem(this, di, owner, depth+1); }
 		int isize = di.readInt();
 		items = new AMSMidletCustomItem[isize];
 		for(int i=0; i<isize; i++) {
 			items[i] = new AMSMidletCustomItem(di, owner, this); }
 		if (parent == null) {
-			// You can't remove the root
+			// You can't remove, rename, or mark the root
+			removeCommand(markCmd);
 			removeCommand(removeCmd);
 			removeCommand(renameCmd); } }
 
@@ -223,7 +236,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	/* Override */
 	void drawIcons(Graphics g) {
 		Image i = open ? folderOpenImg : folderImg;
-		g.drawImage(i, (bgIconW - i.getWidth())/2,
+		g.drawImage(i, indent + (bgIconW - i.getWidth())/2,
  			(bgIconH - i.getHeight())/2,
 			Graphics.TOP | Graphics.LEFT); }
 	
@@ -301,9 +314,10 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			items[i]=(AMSMidletCustomItem)(v.elementAt(i)); } }
 	
 	void insert(AMSMidletCustomItem m, int pos) {
-		Vector v = itemsAsVector();
+		m.setDepth(depth+1);
 		if (pos<0) {
 			return; }
+		Vector v = itemsAsVector();
 		if (pos>=items.length) {
 			v.addElement(m); }
 		else {
@@ -319,6 +333,13 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		Vector v = itemsAsVector();
 		v.removeElement(m);
 		setItemsFromVector(v); }
+		
+	// Remove this item from its parent
+	void remove() {
+		if (parent==null) {
+			return; }
+		hide();
+		parent.remove(this); }
 		
 	int getPos(AMSMidletCustomItem m) {
 		int c=items.length;
@@ -358,6 +379,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			subfolders[i]=(AMSFolderCustomItem)(v.elementAt(i)); } }
 	
 	void insert(AMSFolderCustomItem f, int pos) {
+		f.setDepth(depth+1);
 		Vector v = subfoldersAsVector();
 		if (pos<0) {
 			return; }
@@ -384,6 +406,11 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		super.updateDisplay();
 		updateDisplayForContents(); }
 		
+	boolean allowsMark() {
+		// You can't mark/unmark the
+		// the root folders
+		return (parent != null); }
+		
 	void updateDisplayForContents() {
 		if (!open) {
 			return; }
@@ -398,5 +425,27 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		super.setFixedCommands();
 		addCommand(createSubfolderCmd);
 		addCommand(removeCmd); }
-}
+		
+	void setCurrentFolder() {
+		owner.setCurrentFolder(this); }
+		
+	// Convenience method for ensuring a folder is open
+	// and its contents are visible by opening from the 
+	// bottom -- used when selecting a midlet at startup
+	void openFromBottom() {
+		if (parent != null) {
+			parent.openFromBottom(); }
+		setOpen(); }
+		
+	boolean isEmpty() {
+		return ((items.length == 0) && (subfolders.length == 0)); }
+		
+	boolean hasParent(AMSCustomFolderItem f) {
+		if (parent==null) {
+			return false; }
+		if (parent==f) {
+			return true; }
+		return parent.hasParent(f); }
 
+
+}

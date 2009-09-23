@@ -8,6 +8,10 @@
  * functionality. I basically broke it up, spread it over a descendance tree
  * allowing me to override bits to do the folder items reasonably cleanly.
  * 
+ * This class provides an array of convenient services--provides a sort of 
+ * framework for painting, a write-to-stream interface, naming, mark/unmark,
+ * etc. 
+ *  
  * Original code AJ Milne / 2009
  *  
 */
@@ -38,6 +42,12 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		GraphicalInstaller.getImageFromInternalStorage("folder_open");
 	final static Image markedImg =
 		GraphicalInstaller.getImageFromInternalStorage("_marked");
+	final static int markedImgW = markedImg.getWidth();
+	final static int markedImgH = markedImg.getHeight();
+	// Static indicating the current rev of the folder system--
+	// written at start of stream to allow rev'ing the storage
+	// format easier, in case it comes to this
+	final static int STORAGE_FORMAT = 1;
 		
 	/**
 	* The image used to draw background for the midlet representation.
@@ -103,6 +113,10 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 	* Tha pad between custom item's icon and text
 	*/
 	protected static final int ITEM_PAD = 2;
+	/**
+	 * How much to indent each level of the tree
+	 */
+	protected static final int INDENT_W = 8; 	 	
 	
 	/** Command object for "Mark". */
 	static final Command markCmd =
@@ -182,10 +196,12 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 	*/
 	public void update() {
 		repaint(); }
-
+		
 	// Passthrough constructor
-	AMSCustomItem(String s, AppManagerUI ams) {
+	AMSCustomItem(String s, AppManagerUI ams, int d) {
 		super(s);
+		depth=d;
+		indent = d * INDENT_W;
 		owner=ams;
 		initTruncWidth();
 		initScrollTimer();
@@ -195,13 +211,17 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		addCommand(markCmd);
 		setFixedCommands();
 		setItemCommandListener(owner); }
+		
+	void setDepth(int d) {
+		depth = d;
+		indent = d * INDENT_W; }
 
 	// Write to storage 
 	abstract void write(DataOutputStream ostream) throws IOException;
 	
 	/** Whether this item is marked */
 	boolean marked;
-	
+
 	  /** The width of the item */
 	int width; // = 0
 	/** The height of the item */
@@ -217,6 +237,12 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 
 	/** current default command */
 	Command default_command; // = null
+	
+	/** The depth in the tree of this item */
+	int depth;
+	
+	/** The amount to indent this item (due to depth) */
+	int indent;	
 	
 	/** A TimerTask which will repaint scrolling text on a repeated basis */
 	protected TextScrollPainter textScrollPainter;
@@ -357,6 +383,7 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		int visRect_inout[]) {
 		// entirely visible and hasFocus
 		if (!hasFocus) {
+			setCurrentFolder();
 			hasFocus = true; }
 		visRect_inout[0] = 0;
 		visRect_inout[1] = 0;
@@ -385,11 +412,11 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 				setLabelColor(g);
 				g.setFont(ICON_FONT);
 				boolean truncate = (xScrollOffset == 0) && truncated;
-				g.clipRect(bgIconW + ITEM_PAD, 0,
+				g.clipRect(bgIconW + ITEM_PAD + indent, 0,
 					truncate ? w - truncWidth - bgIconW - 2 * ITEM_PAD :
 					w - bgIconW - 2 * ITEM_PAD, h);
 				g.drawChars(text, 0, textLen,
-					bgIconW + ITEM_PAD + xScrollOffset, (h - ICON_FONT.getHeight())/2,
+					bgIconW + ITEM_PAD + indent + xScrollOffset, (h - ICON_FONT.getHeight())/2,
 					Graphics.LEFT | Graphics.TOP);
 				g.setClip(cX, cY, cW, cH);
 				if (truncate) {
@@ -397,13 +424,14 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 						(h - ICON_FONT.getHeight())/2, Graphics.LEFT | Graphics.TOP); } } }
 			
 		if (cX < bgIconW) {
-			g.clipRect(0, 0, bgIconW, h);
+			g.clipRect(indent, 0, bgIconW, h);
 			if (hasFocus) {
-				g.drawImage(ICON_BG, 0, (h - bgIconH)/2,
+				g.drawImage(ICON_BG, 0 + indent, (h - bgIconH)/2,
 					Graphics.TOP | Graphics.LEFT); }
 			drawIcons(g);
+			g.setClip(cX, cY, cW, cH);
 			if (marked) {
-				g.drawImage(markedImg, 0, (h - bgIconH)/2,
+				g.drawImage(markedImg, cW-markedImgW, h - markedImgH,
 					Graphics.TOP | Graphics.LEFT); }
 			g.setClip(cX, cY, cW, cH); } }
 
@@ -428,12 +456,17 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 		updateCommands(); }
 	
 	void setBaseCommands() {
+		if (!allowsMark()) {
+			return; }
 		if (marked) {
 			removeCommand(markCmd);
 			addCommand(unMarkCmd);
 			return; }
 		removeCommand(unMarkCmd);
 		addCommand(markCmd); }
+
+	boolean allowsMark() {
+		return true; }
 		
 	void setFixedCommands() {
 		addCommand(renameCmd); }
@@ -441,6 +474,8 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 	void setText(String s) {
 		text = s.toCharArray();
 		textLen = text.length; }
+		
+	abstract void setCurrentFolder();
 
 	/* Hide this item in the AMS UI */
 	void hide() {

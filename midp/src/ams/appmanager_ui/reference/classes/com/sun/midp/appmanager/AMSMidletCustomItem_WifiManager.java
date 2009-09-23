@@ -26,6 +26,9 @@ import com.sun.midp.midlet.MIDletSuite;
 import javax.microedition.lcdui.Command;
 import com.sun.midp.i18n.Resource;
 import com.sun.midp.i18n.ResourceConstants;
+import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
+import com.sun.midp.installer.GraphicalInstaller;
 
 class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 	// Just has a slightly different set of commands--otherwise, it's a standard
@@ -37,6 +40,12 @@ class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 	/** Constant for the wifi setup application class name. */
 	private static final String WIFI_SELECTOR_APP =
 		"com.sun.midp.appmanager.WifiSelector";
+		
+	final static Image wifiImg =
+		GraphicalInstaller.getImageFromInternalStorage("_wifi");
+	final static int wifiImgW = markedImg.getWidth();
+	final static int wifiImgH = markedImg.getHeight();
+
 		
 	AMSMidletCustomItem_WifiManager(RunningMIDletSuiteInfo msi, AppManagerUI ams,
 		AMSFolderCustomItem p) {
@@ -63,4 +72,15 @@ class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 		AMSMidletCustomItem r = new AMSMidletCustomItem_WifiManager(msi, ams, p);
 		r.setDefaultCommand(launchWifiSetupCmd);
 		return r; }
+	
+	// Override, to draw pretty WiFi icon
+	void drawIcons(Graphics g) {
+		g.drawImage(wifiImg, indent + (bgIconW - wifiImgW)/2,
+			(bgIconH - wifiImgH)/2,
+			Graphics.TOP | Graphics.LEFT);
+		// Draw alert icon
+		if (msi.proxy != null && msi.proxy.isAlertWaiting()) {
+			g.drawImage(FG_REQUESTED,
+			indent + bgIconW - FG_REQUESTED.getWidth(), 0,
+			Graphics.TOP | Graphics.LEFT); } }
 }
