@@ -13,7 +13,7 @@
 
 /* The cache manager handles */
 static FT_Library _ftc_library;
-static FTC_Manager cache_manager;
+static FTC_Manager cache_manager = 0;
 static FTC_CMapCache cmap_cache;
 static FTC_SBitCache sbit_cache;
 
@@ -49,7 +49,7 @@ const char* _typeface_filenames[] = {
 /** Utility font filename */
 const char* _utility_typeface_fn = "utility.ttf";
 /** Utility font size */
-const int _UTILITY_PIXEL_SIZE = 10;
+const int _UTILITY_PIXEL_SIZE = 12;
 
 // Useful constant -- 3 faces x 4 variations
 #define _FTC_FACEID_COUNT 12
@@ -107,6 +107,15 @@ FTC_FaceID get_face_id(javacall_font_face face,
   if ((style&JAVACALL_FONT_STYLE_BOLD)!=0) {
 		idx+=6; }
 	return ftc_faceids[idx]; }
+	
+/* Call to reset the cache manager--called to 
+	prevent dropped glyphs after sleep/resume cycle */
+void invalidate_ftc_manager() {
+	if (!_ftc_initialized) {
+		return; }
+	FTC_Manager_Done(cache_manager);
+	FT_Done_FreeType(_ftc_library);
+	_ftc_initialized=0; }
 
 // Read a font size setting -- pass in the config name, and a fallback
 int ftc_pixsize_fr_config(const char* cfgname, int default_sz) {

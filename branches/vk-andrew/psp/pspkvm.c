@@ -23,6 +23,7 @@
 #include <psputility.h>
 #include <psputility_netparam.h>
 #include <pspgu.h>
+#include <psppower.h>
 
 #if _PSP_FW_VERSION >= 200
 #include <pspusb.h>
@@ -64,13 +65,30 @@ int exit_callback(int arg1, int arg2, void *common)
 	return 0;
 }
 
+// Forward declare for the power callback
+void invalidate_ftc_manager();
+
+/* Power callback */
+static int powerCallback(int unknown, int powerInfo, void* common) {
+	if (powerInfo & PSP_POWER_CB_RESUMING) {
+		// We just invalidate it. This forces
+		// everything to reload once we need it.
+		invalidate_ftc_manager(); }
+	return 0; }
+
+
 /* Callback thread */
 int CallbackThread(SceSize args, void *argp)
 {
 	int cbid;
 
+	// Exit callback
 	cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
 	sceKernelRegisterExitCallback(cbid);
+	// Power callback.
+	const SceUID powerCallbackID = sceKernelCreateCallback("powerCallback", powerCallback, NULL);
+	scePowerRegisterCallback(0, powerCallbackID);
+
 	sceKernelSleepThreadCB();
 
 	return 0;
