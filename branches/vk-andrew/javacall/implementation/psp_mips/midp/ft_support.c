@@ -30,9 +30,12 @@ static int _ftc_large = 0;
 	as can possibly be in flight (13)
 	(Memory card I/O on the PSP can be painfully slow) */
 static const int _ftc_face_max = 13;
+/* Marker to indicate if the fallback face is present */
+static int fallback_font_present = 0;
 
 /* State: current font settings */
 static FTC_ScalerRec current_ic;
+static FTC_ScalerRec current_fallback_ic;
 
 /** Face retrieval support */
 
@@ -45,6 +48,8 @@ const char* _typeface_filenames[] = {
 	"sys_i.ttf", "prop_i.ttf", "mono_i.ttf",
 	"sys_b.ttf", "prop_b.ttf", "mono_b.ttf",  
 	"sys_ib.ttf", "prop_ib.ttf", "mono_ib.ttf" };
+/* Backup font filename */
+const char* _fallback_fn = "fallback.ttf";
 	
 /** Utility font filename */
 const char* _utility_typeface_fn = "utility.ttf";
@@ -88,9 +93,13 @@ void initialize_face_ids() {
 	for(i=0;i<_FTC_FACEID_COUNT;i++) {
 		font_file_present[i]=(access((_typeface_filenames[i]), R_OK) == 0) ? 1 : 0; }
 	// Now, for each of the menmbers ftc_faceids, go through the fallback
-	// system, and pick the closest match (or NULL, if none)
+	// routing, and pick the closest match (or NULL, if none)
 	for(i=0;i<_FTC_FACEID_COUNT;i++) {
 		ftc_faceids[i]=pick_closest_present_font(i, font_file_present); } }
+		
+// Call to initialize the 'last resort' fallback system
+void initialize_fallback_system() {
+	fallback_font_present = (access((_fallback_fn), R_OK) == 0) ? 1 : 0; }
 
 // Resolve face specs to an FTC_FaceID
 // for requesting faces from the cache system.
@@ -178,6 +187,18 @@ inline void set_scaler_rec(FTC_ScalerRec* r,
 	r->width = 0;
 	r->pixel = 1; }
 
+// Utility inline to set an FTC_ScalerRec structure consistently
+// from the 'last resort' fallback  
+inline void set_fallback_scaler_rec(FTC_ScalerRec* r,
+                     javacall_font_face face, 
+                     javacall_font_size size) {
+	r->face_id = (FTC_FaceID)_fallback_fn;
+	r->height = face==JAVACALL_FONT_FACE_UTILITY ?
+		_UTILITY_PIXEL_SIZE :  
+		size_param_to_pixels(size);
+	r->width = 0;
+	r->pixel = 1; }
+
 /** Init call--initializes the lib and the various cache managers */
 FT_Error init_font_cache_subsystem() {
 	FT_Error err;
@@ -186,15 +207,21 @@ FT_Error init_font_cache_subsystem() {
 		// Don't need all this cache stuff, in this case
 		return 1; }
 	initialize_face_ids();
+	initialize_fallback_system();
 	set_scaler_rec(&current_ic, JAVACALL_FONT_FACE_SYSTEM,
 					JAVACALL_FONT_STYLE_PLAIN,
 					JAVACALL_FONT_SIZE_MEDIUM);
+	if (fallback_font_present) {
+		set_fallback_scaler_rec(&current_fallback_ic, JAVACALL_FONT_FACE_SYSTEM,
+				JAVACALL_FONT_SIZE_MEDIUM); }
 	// Lib inits
 	err = FT_Init_FreeType(&_ftc_library);
 	if (err) {
 		return err; }
 	// Top level cache manager
-	err = FTC_Manager_New(_ftc_library, _ftc_face_max, 0, 0,
+	// Add three extra slots if the fallback face is present (sm, med, lg)
+	int lc_face_max = fallback_font_present ? _ftc_face_max + 3 : _ftc_face_max;
+	err = FTC_Manager_New(_ftc_library, lc_face_max, 0, 0,
 		fts_face_requester, (FT_Pointer)NULL, &cache_manager);
 	if (err) {
 		return err; }
@@ -322,7 +349,26 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 	if (!_ftc_initialized) { \
 		if (init_font_cache_subsystem()) { \
 			return err; } }
-			
+
+// Convenient local--takes two FTC_ScalerRec pointers (first preferred, second fallback),
+// sets a pointer to a pointer to indicate which one you call FTC_SBitCache_LookupScaler
+// with after, and returns the glyph index to use.
+FT_UInt cmap_cache_lookup_fb(FTC_CMapCache  cache,
+	FTC_ScalerRec* primary,
+	FTC_ScalerRec* fallback,
+	FTC_ScalerRec** selected_rec,
+	FT_UInt32 char_code) {
+	
+	FT_UInt r = FTC_CMapCache_Lookup(cache, primary->face_id, -1, char_code);
+	if (r) {
+		*selected_rec = primary;
+		return r; }
+	if (!fallback_font_present) {
+		*selected_rec = primary;
+		return r; }
+	*selected_rec = fallback;
+	return FTC_CMapCache_Lookup(cmap_cache, fallback->face_id, -1, char_code); }
+
 // Direct interface implementation
 javacall_result ftc_javacall_font_draw(javacall_pixel   color, 
                         int clipX1, 
@@ -343,16 +389,17 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
 	FTC_SBit irec;
+	FTC_ScalerRec* selected_ic;
   for(i=0; i<textLen; i++) {
-		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, current_ic.face_id, -1, text[i]);
-		// TODO: Here, consider a fallback to Firefly if the glyph isn't present.
-		if (FTC_SBitCache_LookupScaler(sbit_cache, &current_ic, FT_LOAD_DEFAULT,
+		glyph_idx = cmap_cache_lookup_fb(cmap_cache, &current_ic, &current_fallback_ic,
+			&selected_ic, text[i]);
+		if (FTC_SBitCache_LookupScaler(sbit_cache, selected_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
 			return JAVACALL_FAIL; }
 		draw_small_bitmap(irec, color, clipX1, clipY1, clipX2, clipY2,
-        	               destBuffer,
-        	               destBufferHoriz, destBufferVert, x, 
-        	               y - irec->top + current_ic.height - 2, irec->format);
+       destBuffer,
+       destBufferHoriz, destBufferVert, x, 
+       y - irec->top + current_ic.height - 2, irec->format);
 		x += irec->xadvance; }
 	return JAVACALL_OK; }
 
@@ -393,8 +440,12 @@ javacall_result ftc_javacall_font_set_font( javacall_font_face face,
 	set_scaler_rec(&current_ic, face, style, size);
 	if ((current_ic.face_id)==NULL) {
 		return JAVACALL_FAIL; }
+	if (fallback_font_present) {
+		set_fallback_scaler_rec(&current_fallback_ic, face, size);
+		if ((current_fallback_ic.face_id)==NULL) {
+			return JAVACALL_FAIL; } }
 	return JAVACALL_OK; }
-
+	
 // Direct interface implementation
 int ftc_javacall_font_get_width(javacall_font_face face, 
                             javacall_font_style style, 
@@ -403,18 +454,23 @@ int ftc_javacall_font_get_width(javacall_font_face face,
                             int charArraySize) {
 	_FTC_CHECK_INIT(-1)
 
-	FTC_ScalerRec tmp_ic;
+	FTC_ScalerRec tmp_ic, tmp_fallback_ic;
+	FTC_ScalerRec* selected_ic;
 	set_scaler_rec(&tmp_ic, face, style, size);
 	if ((tmp_ic.face_id)==NULL) {
 		return -1; }
+	if (fallback_font_present) {
+		set_fallback_scaler_rec(&tmp_fallback_ic, face, size);
+		if (tmp_fallback_ic.face_id==NULL) {
+			return -1; } }
 	int i, res;
 	unsigned int glyph_idx;
 	res=0;
 	FTC_SBit irec;
 	for(i=0; i<charArraySize; i++) {
-		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, tmp_ic.face_id, -1, charArray[i]);
-		// TODO: Fallback typeface would go here.
-		if (FTC_SBitCache_LookupScaler(sbit_cache, &tmp_ic, FT_LOAD_DEFAULT,
+		glyph_idx = cmap_cache_lookup_fb(cmap_cache, &tmp_ic, &tmp_fallback_ic,
+			&selected_ic, charArray[i]);
+		if (FTC_SBitCache_LookupScaler(sbit_cache, selected_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
 			return -1; }
 		res += irec->xadvance; }
