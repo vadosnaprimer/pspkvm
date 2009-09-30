@@ -345,8 +345,7 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
 	FTC_SBit irec;
   for(i=0; i<textLen; i++) {
 		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, current_ic.face_id, -1, text[i]);
-		if (!glyph_idx) {
-			return JAVACALL_FAIL; }
+		// TODO: Here, consider a fallback to Firefly if the glyph isn't present.
 		if (FTC_SBitCache_LookupScaler(sbit_cache, &current_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
 			return JAVACALL_FAIL; }
@@ -414,8 +413,7 @@ int ftc_javacall_font_get_width(javacall_font_face face,
 	FTC_SBit irec;
 	for(i=0; i<charArraySize; i++) {
 		glyph_idx = FTC_CMapCache_Lookup(cmap_cache, tmp_ic.face_id, -1, charArray[i]);
-		if (!glyph_idx) {
-			return -1; }
+		// TODO: Fallback typeface would go here.
 		if (FTC_SBitCache_LookupScaler(sbit_cache, &tmp_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
 			return -1; }
