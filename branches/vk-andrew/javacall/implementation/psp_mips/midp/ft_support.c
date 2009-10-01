@@ -21,6 +21,8 @@ static FTC_SBitCache sbit_cache;
 static int _ftc_initialized=0;
 /* State: use internal font flag (bypass freetype entirely) */
 static int _ftc_use_internal_font = 0;
+/* State: need utility font (important if _ftc_use_internal_font is 0) */
+static int _ftc_need_utility_font = 0;
 /* State: static font sizes */
 static int _ftc_small = 0;
 static int _ftc_medium = 0;
@@ -148,6 +150,17 @@ int size_param_to_pixels(javacall_font_size s) {
 			return _ftc_large;
 		default:
 			return _ftc_medium; } }
+			
+// Call to find out if we need the utility font
+// Right now, this is just if they're using the semichordal board
+int get_need_utility_font() {
+	char* str;
+	if (JAVACALL_OK == javacall_get_property("com.pspkvm.inputmethod", 
+		JAVACALL_INTERNAL_PROPERTY, &str)) {
+		if (str && !stricmp(str, "vk-semichordal")) {
+			return 1; } }
+	// TODO: Add other potential conditions here
+	return 0; }
 
 // Call to set the local static font sizes, and the _ftc_use_internal_font flag
 // from the system config.
@@ -157,6 +170,7 @@ void init_from_config() {
 		JAVACALL_INTERNAL_PROPERTY, &str)) {
 		if (str && !stricmp(str, "true")) {
 			_ftc_use_internal_font = 1; } }
+	_ftc_need_utility_font = get_need_utility_font();
 	if (_ftc_use_internal_font) {
 		// Done
 		return; }
@@ -198,12 +212,24 @@ inline void set_fallback_scaler_rec(FTC_ScalerRec* r,
 		size_param_to_pixels(size);
 	r->width = 0;
 	r->pixel = 1; }
+	
+// Find out how many faces we need to allocate
+int get_faces_to_allocate() {
+	if (_ftc_use_internal_font) {
+		// Just need the utility font--that's the only way to get here
+		return 1; }
+	int r = _ftc_face_max;
+	if (fallback_font_present) {
+		r++; }
+	if (_ftc_need_utility_font) {
+		r++; }
+	return r; }
 
 /** Init call--initializes the lib and the various cache managers */
 FT_Error init_font_cache_subsystem() {
 	FT_Error err;
 	init_from_config();
-	if (_ftc_use_internal_font) {
+	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) {
 		// Don't need all this cache stuff, in this case
 		return 1; }
 	initialize_face_ids();
@@ -219,9 +245,7 @@ FT_Error init_font_cache_subsystem() {
 	if (err) {
 		return err; }
 	// Top level cache manager
-	// Add three extra slots if the fallback face is present (sm, med, lg)
-	int lc_face_max = fallback_font_present ? _ftc_face_max + 3 : _ftc_face_max;
-	err = FTC_Manager_New(_ftc_library, lc_face_max, 0, 0,
+	err = FTC_Manager_New(_ftc_library, get_faces_to_allocate(), 0, 0,
 		fts_face_requester, (FT_Pointer)NULL, &cache_manager);
 	if (err) {
 		return err; }
@@ -342,9 +366,20 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 		point += (w - xnum);
 		fontpoint += (bitmap->width - xnum); } }
 		
-// Macro--checks init/internal font stuff
-#define _FTC_CHECK_INIT(err) \
-	if (_ftc_use_internal_font) { \
+// Macros--check init/internal font stuff
+#define _FTC_CHECK_INIT(err, lface) \
+	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) { \
+		return err; } \
+	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) { \
+		return err; } \
+	if (!_ftc_initialized) { \
+		if (init_font_cache_subsystem()) { \
+			return err; } } \
+	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) { \
+		return err; }
+
+#define _FTC_CHECK_INIT_NOFACE(err) \
+	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) { \
 		return err; } \
 	if (!_ftc_initialized) { \
 		if (init_font_cache_subsystem()) { \
@@ -384,7 +419,7 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
                         int textLen){
 
   int i;
-  _FTC_CHECK_INIT(JAVACALL_FAIL)
+  _FTC_CHECK_INIT_NOFACE(JAVACALL_FAIL)
   if ((current_ic.face_id)==NULL) {
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
@@ -412,7 +447,7 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
                                         /*out*/ int* ascent,
                                         /*out*/ int* descent,
                                         /*out*/ int* leading) {
-	_FTC_CHECK_INIT(JAVACALL_FAIL)
+	_FTC_CHECK_INIT(JAVACALL_FAIL, face)
 			
 	FTC_ScalerRec r;
 	set_scaler_rec(&r, face, style, size);
@@ -436,7 +471,7 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
 javacall_result ftc_javacall_font_set_font( javacall_font_face face, 
                                         javacall_font_style style, 
                                         javacall_font_size size) {
-	_FTC_CHECK_INIT(JAVACALL_FAIL)
+	_FTC_CHECK_INIT(JAVACALL_FAIL, face)
 	set_scaler_rec(&current_ic, face, style, size);
 	if ((current_ic.face_id)==NULL) {
 		return JAVACALL_FAIL; }
@@ -452,7 +487,7 @@ int ftc_javacall_font_get_width(javacall_font_face face,
                             javacall_font_size size,
                             const javacall_utf16* charArray, 
                             int charArraySize) {
-	_FTC_CHECK_INIT(-1)
+	_FTC_CHECK_INIT(-1, face)
 
 	FTC_ScalerRec tmp_ic, tmp_fallback_ic;
 	FTC_ScalerRec* selected_ic;
