@@ -23,10 +23,11 @@
  * information or have any questions.  
  */
  
- // TODO: Look at icon updating code in old implementation; get
- // auto-attach working
+ // TODO: Look at icon updating code in old implementation
+ // (see midletSwitcher.update(...) call)
  // help screen?
- 
+
+
  
 package com.sun.midp.appmanager;
 
@@ -255,6 +256,9 @@ class AppManagerUI extends Form
 	void moveFolder(AMSFolderCustomItem t, AMSFolderCustomItem s) {
 		if (t.hasParent(s)) {
 			// Can't move a parent into its own child
+			return; }
+		if (t==s) {
+			// Or into itself
 			return; }
 		s.remove();
 		t.append(s); }
@@ -655,6 +659,7 @@ class AppManagerUI extends Form
 			if (c == AMSMidletCustomItem.updateCmd) {
 				if (!isInstallerRunning()) {
 					manager.updateSuite(msi);
+					update((AMSMidletCustomItem)item);
 					display.setCurrent(this); }
 				else {
 					String alertMessage = Resource.getString(
@@ -1364,5 +1369,34 @@ class AppManagerUI extends Form
     void cleanUp() {
     	writeFolders();
       AMSCustomItem.stopTimer(); }
+      
+		/**
+		 *	Called to update the GUI display after a midlet is updated
+		 */
+		 
+		 void update(AMSMidletCustomItem i) {
+		 	try {
+			 	// Get the info straight from storage again (after the update) 
+				MIDletSuiteInfo temp =
+					midletSuiteStorage.getMIDletSuiteInfo(i.msi.suiteId);
+				RunningMIDletSuiteInfo suiteInfo =
+					new RunningMIDletSuiteInfo(temp, midletSuiteStorage, true);
+				// Update all information about the suite;
+				// if the suite's icon was changed, reload it.
+				String oldIconName = i.msi.iconName;
+				int oldNumberOfMidlets = i.msi.numberOfMidlets;
+				MIDletProxy oldProxy = i.msi.proxy;
+				midletSwitcher.update(i.msi, suiteInfo);
+				i.msi = suiteInfo;
+				i.msi.proxy = oldProxy;
+				if ((suiteInfo.iconName != null &&
+					!suiteInfo.iconName.equals(oldIconName)) ||
+					(suiteInfo.iconName == null &&
+					suiteInfo.numberOfMidlets != oldNumberOfMidlets)) {
+						i.msi.icon = null;
+						i.msi.loadIcon(midletSuiteStorage);
+						i.icon = i.msi.icon;
+						Thread.sleep(50); } }
+			catch(Exception e) {} }
 
 }
