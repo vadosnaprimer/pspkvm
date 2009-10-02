@@ -104,7 +104,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		msi = new RunningMIDletSuiteInfo(temp, MIDletSuiteStorage.getMIDletSuiteStorage(), true) {
 					public boolean equals(MIDletProxy midlet) {
 						return super.equals(midlet); } } ; }
-
+						
 	// Used to read from the stream (assumes type specifier has already
 	// been read)
 	AMSMidletCustomItem(DataInputStream istream, AppManagerUI ams,

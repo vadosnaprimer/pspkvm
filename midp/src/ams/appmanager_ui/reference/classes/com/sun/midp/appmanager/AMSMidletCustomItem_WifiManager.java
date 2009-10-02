@@ -46,7 +46,6 @@ class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 	final static int wifiImgW = wifiImg.getWidth();
 	final static int wifiImgH = wifiImg.getHeight();
 
-		
 	AMSMidletCustomItem_WifiManager(RunningMIDletSuiteInfo msi, AppManagerUI ams,
 		AMSFolderCustomItem p) {
 		super(msi, ams, p); }
