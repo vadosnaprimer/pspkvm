@@ -428,12 +428,12 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 			if (hasFocus) {
 				g.drawImage(ICON_BG, 0 + indent, (h - bgIconH)/2,
 					Graphics.TOP | Graphics.LEFT); }
-			drawIcons(g);
+			drawIcons(g); }
+		if (marked) {
 			g.setClip(cX, cY, cW, cH);
-			if (marked) {
-				g.drawImage(markedImg, cW-markedImgW, h - markedImgH,
-					Graphics.TOP | Graphics.LEFT); }
-			g.setClip(cX, cY, cW, cH); } }
+			g.drawImage(markedImg, w-markedImgW, h - markedImgH,
+				Graphics.TOP | Graphics.LEFT); }
+		g.setClip(cX, cY, cW, cH); }
 
 	/* Override--different implementation for folders and midlets */
 	abstract void setLabelColor(Graphics g);
