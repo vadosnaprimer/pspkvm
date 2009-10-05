@@ -13,7 +13,6 @@ import com.sun.midp.chameleon.skins.DateEditorSkin;
 import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
-import com.sun.midp.main.Configuration;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -163,7 +162,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 					vk.currentKeyboard=LOWERCASE;
 					break;
 				case KEYBOARD_INPUT_ANY://+ú+ÝPSPKVM.INI +S+++öÝ¨-¬+--S+d+¨+a--
-					if("vk-chinese".equals(Configuration.getProperty("com.pspkvm.inputmethod"))){
+					if("awf_chinese".equals(com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod"))){
 						vk.currentKeyboard=PINYIN;
 					}else{
 						vk.currentKeyboard=LOWERCASE;

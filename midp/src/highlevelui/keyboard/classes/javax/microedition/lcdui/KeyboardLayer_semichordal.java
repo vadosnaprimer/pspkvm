@@ -190,7 +190,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		      instanceTF = new KeyboardLayer_semichordal(tf);
 		      instanceTF_Y = instanceTF.bounds[Y];
 		      instanceCV = null; }
-
+		    instanceTF.vk.setup_keymaps();
         instanceTF.tfContext = tf;
         instanceTF.bounds[Y]= instanceTF_Y;
         return instanceTF; }
@@ -206,7 +206,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         if ((instanceCV == null) || (instanceCV.cvContext != canvas)) {
             instanceCV = new KeyboardLayer_semichordal(canvas);
             instanceTF = null; }
-
+				instanceCV.vk.setup_keymaps();
         return instanceCV; }
 
     /**
