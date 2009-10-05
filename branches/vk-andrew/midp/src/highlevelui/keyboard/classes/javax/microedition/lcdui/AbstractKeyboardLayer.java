@@ -1,7 +1,7 @@
 package javax.microedition.lcdui;
 
 import com.sun.midp.chameleon.layers.PopupLayer;
-import com.sun.midp.main.Configuration;
+import com.pspkvm.system.VMSettings;
 
 abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 
@@ -50,10 +50,10 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 
     static AbstractKeyboardLayer getVKInstance(TextFieldLFImpl tf)  
                                                            throws VirtualKeyboardException {
-        String im = Configuration.getProperty("com.pspkvm.inputmethod");
-        if(im != null && im.equals("vk-qwert")){
+        String im = VMSettings.get("com.pspkvm.inputmethod");
+        if(im != null && im.equals("qwerty")){
             return KeyboardLayer_qwert.getInstance(tf); }
-        if(im != null && im.equals("vk-semichordal")){
+        if(im != null && im.equals("semichordal")){
             return KeyboardLayer_semichordal.getInstance(tf); }
 				return KeyboardLayer_awf.getInstance(tf);
     }
@@ -66,10 +66,10 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
      */
     static AbstractKeyboardLayer getVKInstance(CanvasLFImpl canvas) 
                                                            throws VirtualKeyboardException {
-        String im = Configuration.getProperty("com.pspkvm.inputmethod");
-        if(im != null && im.equals("vk-qwert")){
+        String im = VMSettings.get("com.pspkvm.inputmethod");
+        if(im != null && im.equals("qwerty")){
             return KeyboardLayer_qwert.getInstance(canvas); }
-        if(im != null && im.equals("vk-semichordal")){
+        if(im != null && im.equals("semichordal")){
             return KeyboardLayer_semichordal.getInstance(canvas); }
 				return KeyboardLayer_awf.getInstance(canvas);
     }

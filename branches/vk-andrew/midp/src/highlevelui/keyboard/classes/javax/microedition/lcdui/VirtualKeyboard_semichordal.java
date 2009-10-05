@@ -6,8 +6,8 @@ package javax.microedition.lcdui;
 
 import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
-import com.sun.midp.main.Configuration;
 import com.pspkvm.keypad.PSPCtrlCodes;
+import com.pspkvm.system.VMSettings;
 
 /**
  * Semichordal virtual keyboard, specific to PSP platform, for PSPKVM.
@@ -135,12 +135,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
      */
     public VirtualKeyboard_semichordal(VirtualKeyboardListener vkl,
                            int neededColumns, int neededRows) throws VirtualKeyboardException {
-       if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
+       if ("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
 
-       String im = Configuration.getProperty("com.pspkvm.inputmethod");
-       if(im != null && im.equals("sony-osk")){
+       String im = VMSettings.get("com.pspkvm.inputmethod");
+       if(im != null && im.equals("osk")){
            USE_VIRTUAL_KEYBOARD = false;
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return; }
@@ -153,7 +153,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		
 	void setup_keymaps() {
 		crt_map_idx=ROMAN_MAP;
-		String imap = Configuration.getProperty("com.pspkvm.virtualkeyboard.default_keymap");
+		String imap = VMSettings.get("com.pspkvm.virtual_keyboard.default_keymap");
     if((imap != null) && (imap.equals("cyrillic"))) {
     	crt_map_idx=CYRILLIC_MAP; }
     if((imap != null) && (imap.equals("greek"))) {
@@ -176,7 +176,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 
 	// Initialize the various display variables--called at construction
 	void initDisplayVars() {
-		if(Configuration.getProperty("com.pspkvm.virtualkeyboard.direction").equals("true")){
+		if(VMSettings.get("com.pspkvm.virtualkeyboard.direction").equals("on")){
 			analog_cursor=true; }
 		chordal_offset=0;
 		display_chords_mode=SM_DISP;
@@ -190,11 +190,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
   public VirtualKeyboard_semichordal(int kbtype,
 		  	VirtualKeyboardListener vkl,
 		int w, int h) throws VirtualKeyboardException {
-		if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
-		   USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true; }
-		
-		String im = Configuration.getProperty("com.pspkvm.inputmethod");
-		if(im != null && im.equals("sony-osk")){
+    if ("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
+           USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
+       }
+
+    String im = VMSettings.get("com.pspkvm.inputmethod");
+    if(im != null && im.equals("osk")){
 		   USE_VIRTUAL_KEYBOARD = false;
 		   USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
 		   return; }
@@ -245,7 +246,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					keypad_posn_x[idx], keypad_posn_y[idx], offsets[idx]+ls_offset,
 					(idx==live_dpad) && (!rs_set));
 				paintChordStacked(g,
-					keypad_posn_x[idx], keypad_posn_y[idx]-9, offsets[idx]+ls_offset+4,
+					keypad_posn_x[idx], keypad_posn_y[idx]-10, offsets[idx]+ls_offset+4,
 					(idx==live_dpad) && (rs_set)); }
 			// g.setFont(sys_font);
 			g.setColor(BLK);
