@@ -119,9 +119,6 @@ class AppManagerUI extends Form
     private static final String INSTALLER =
         "com.sun.midp.installer.GraphicalInstaller";
 
-    private static final String WIFI_SELECTOR_APP =
-    	 "com.sun.midp.appmanager.WifiSelector";
-
     private static final String SETTINGS_STORE = "amssettings";
 
     private static final int LASTPLAY_MIDLET_RECORD_ID = 1;
@@ -420,7 +417,8 @@ class AppManagerUI extends Form
       this.manager = manager;
       this.display = display;
       this.displayError = displayError;
-
+      
+      
       midletSwitcher = new MIDletSwitcher(this, manager, display);
       midletSuiteStorage = MIDletSuiteStorage.getMIDletSuiteStorage();
       initSettings();
@@ -640,6 +638,9 @@ class AppManagerUI extends Form
 				return; }
 			if (c == AMSMidletCustomItem_WifiManager.launchWifiSetupCmd) {
 				manager.launchWifiManager();
+				return; }
+			if (c == AMSMidletCustomItem_VMConfigPanel.launchVMCPanelCmd) {
+				manager.launchVMConfigPanel();
 				return; }
 			if (c == AMSMidletCustomItem.launchCmd) {
 				launchMidlet(msi);
@@ -1368,6 +1369,7 @@ class AppManagerUI extends Form
      */
     void cleanUp() {
     	writeFolders();
+			com.pspkvm.system.VMSettings.commit();
       AMSCustomItem.stopTimer(); }
       
 		/**

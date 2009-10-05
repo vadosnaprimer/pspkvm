@@ -33,7 +33,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
 	// Handy reference to the discovery midlet--having this
 	// explicitly available speeds a few things along in the AMS UI
-	AMSMidletCustomItem discoveryMidlet, wifiMidlet;
+	AMSMidletCustomItem discoveryMidlet, wifiMidlet, vmConfigMidlet;
 	
 	// Constructor for creation in UI, sans content
 	AMSSystemFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
@@ -45,7 +45,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	// Create the built-in midlets
 	void createBuiltInMidlets() {
 		discoveryMidlet = AMSMidletCustomItem_Installer.getDiscoveryMidletCI(owner, this);
-		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner, this); }
+		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner, this);
+		vmConfigMidlet = AMSMidletCustomItem_VMConfigPanel.getVMSPanelCI(owner, this); }
 
 	// Create the system folder
 	static AMSSystemFolderCustomItem createSystemRoot(AppManagerUI ams) {
@@ -73,6 +74,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		owner.insertAt(idx, discoveryMidlet);
 		idx++;
 		owner.insertAt(idx, wifiMidlet);
+		idx++;
+		owner.insertAt(idx, vmConfigMidlet);
 		int c = subfolders.length;
 		for(int i=0; i<c; i++) {
 			subfolders[i].updateDisplay();
@@ -91,6 +94,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 			return; }
 		discoveryMidlet.hide();
 		wifiMidlet.hide();
+		vmConfigMidlet.hide();
 		super.setClosed(); }
 		
 	// Override
@@ -99,6 +103,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 			return; }
 		discoveryMidlet.updateDisplay();
 		wifiMidlet.updateDisplay();
+		vmConfigMidlet.updateDisplay();
 		super.updateDisplayForContents(); }
 
 	// Override
@@ -107,6 +112,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 				return discoveryMidlet; }
 			if (wifiMidlet.msi.equals(midlet)) {
 				return wifiMidlet; }
+			if (vmConfigMidlet.msi.equals(midlet)) {
+				return vmConfigMidlet; }
 		return super.find(midlet); }
 
 }
