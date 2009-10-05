@@ -27,6 +27,9 @@ static int _ftc_need_utility_font = 0;
 static int _ftc_small = 0;
 static int _ftc_medium = 0;
 static int _ftc_large = 0;
+/* State--configuration already read (we don't reread while running ...
+	even after sleep/wake--changing this stuff really upsets some MIDlets) */
+static int _ftc_config_read = 0;
 
 /* Reserve space in the cache manager for as many faces
 	as can possibly be in flight (13)
@@ -52,11 +55,11 @@ const char* _typeface_filenames[] = {
 	"sys_ib.ttf", "prop_ib.ttf", "mono_ib.ttf" };
 /* Backup font filename */
 const char* _fallback_fn = "fallback.ttf";
-	
+
 /** Utility font filename */
 const char* _utility_typeface_fn = "utility.ttf";
 /** Utility font size */
-const int _UTILITY_PIXEL_SIZE = 12;
+const int _UTILITY_PIXEL_SIZE = 13;
 
 // Useful constant -- 3 faces x 4 variations
 #define _FTC_FACEID_COUNT 12
@@ -127,17 +130,23 @@ void invalidate_ftc_manager() {
 	FTC_Manager_Done(cache_manager);
 	FT_Done_FreeType(_ftc_library);
 	_ftc_initialized=0; }
+	
+// Externs below are from the ext/pspkvm vmsettings store
+// TODO: Do a proper include. But it's a pain.
 
-// Read a font size setting -- pass in the config name, and a fallback
-int ftc_pixsize_fr_config(const char* cfgname, int default_sz) {
-	char* cstr;
-	int r;
-	if (javacall_get_property(cfgname,
-		JAVACALL_INTERNAL_PROPERTY, &cstr)!=JAVACALL_OK) {
-			return default_sz; }
-	if (sscanf(cstr, "%i", &r)!=1) {
-		return default_sz; }
-	return r; }
+// Get an integer or default (if there's no such key or it
+// doesn't parse as an int)
+extern int vmsettings_getint(const char* k, int d);
+
+// Returns true if value v exists for key k and v equals cmp	
+extern int vmsettings_key_equals(const char* k, const char* cmp);
+
+// End ext/pspkvm vmsettings store interface
+
+// Read a font size setting (from vmconfig)-- pass in the config name,
+// and a fallback
+int ftc_pixsize_fr_vmconfig(const char* cfgname, int default_sz) {
+	return vmsettings_getint(cfgname, default_sz); }
 
 // Translate a size parameter to a pixel size
 int size_param_to_pixels(javacall_font_size s) {
@@ -153,30 +162,28 @@ int size_param_to_pixels(javacall_font_size s) {
 			
 // Call to find out if we need the utility font
 // Right now, this is just if they're using the semichordal board
-int get_need_utility_font() {
-	char* str;
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.inputmethod", 
-		JAVACALL_INTERNAL_PROPERTY, &str)) {
-		if (str && !stricmp(str, "vk-semichordal")) {
-			return 1; } }
-	// TODO: Add other potential conditions here
-	return 0; }
+int get_need_utility_font_vmconfig() {
+	return vmsettings_key_equals("com.pspkvm.inputmethod", "semichordal"); }
+
+// Call to find out if the internal font is set
+int get_internal_font_set_vmconfig() {
+	return vmsettings_key_equals("com.pspkvm.font.internal", "on"); }
 
 // Call to set the local static font sizes, and the _ftc_use_internal_font flag
 // from the system config.
 void init_from_config() {
-	char* str;
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.font.internal", 
-		JAVACALL_INTERNAL_PROPERTY, &str)) {
-		if (str && !stricmp(str, "true")) {
-			_ftc_use_internal_font = 1; } }
-	_ftc_need_utility_font = get_need_utility_font();
+	if (_ftc_config_read) {
+		return; }
+	_ftc_use_internal_font = get_internal_font_set_vmconfig();
+	_ftc_need_utility_font = get_need_utility_font_vmconfig();
 	if (_ftc_use_internal_font) {
 		// Done
+		_ftc_config_read = 1;
 		return; }
-	_ftc_small = ftc_pixsize_fr_config("com.pspkvm.fontsize.small", 14);
-	_ftc_medium = ftc_pixsize_fr_config("com.pspkvm.fontsize.med", 16);
-	_ftc_large = ftc_pixsize_fr_config("com.pspkvm.fontsize.large", 18); }
+	_ftc_small = ftc_pixsize_fr_vmconfig("com.pspkvm.fontsize.small", 14);
+	_ftc_medium = ftc_pixsize_fr_vmconfig("com.pspkvm.fontsize.med", 16);
+	_ftc_large = ftc_pixsize_fr_vmconfig("com.pspkvm.fontsize.large", 18);
+	_ftc_config_read = 1; }
 
 /** Face retrieval callback used by top level cache manager */
 FT_CALLBACK_DEF( FT_Error )  
@@ -366,24 +373,27 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 		point += (w - xnum);
 		fontpoint += (bitmap->width - xnum); } }
 		
-// Macros--check init/internal font stuff
-#define _FTC_CHECK_INIT(err, lface) \
-	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) { \
-		return err; } \
-	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) { \
-		return err; } \
-	if (!_ftc_initialized) { \
-		if (init_font_cache_subsystem()) { \
-			return err; } } \
-	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) { \
-		return err; }
+// Init/check init--returns 1 only if we're good to go
+int _ftc_check_init(javacall_font_face lface) {
+	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) {
+		return 0; }
+	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) {
+		return 0; }
+	if (!_ftc_initialized) {
+		if (init_font_cache_subsystem()) {
+			return 0; } }
+	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) {
+		return 0; }
+	return 1; }
 
-#define _FTC_CHECK_INIT_NOFACE(err) \
-	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) { \
-		return err; } \
-	if (!_ftc_initialized) { \
-		if (init_font_cache_subsystem()) { \
-			return err; } }
+// Same as above, when we don't know the face
+int _ftc_check_init_noface() {
+	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) {
+		return 0; }
+	if (!_ftc_initialized) {
+		if (init_font_cache_subsystem()) {
+			return 0; } }
+	return 1; }
 
 // Convenient local--takes two FTC_ScalerRec pointers (first preferred, second fallback),
 // sets a pointer to a pointer to indicate which one you call FTC_SBitCache_LookupScaler
@@ -419,7 +429,8 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
                         int textLen){
 
   int i;
-  _FTC_CHECK_INIT_NOFACE(JAVACALL_FAIL)
+  if (!_ftc_check_init_noface()) {
+		return JAVACALL_FAIL; }
   if ((current_ic.face_id)==NULL) {
   	return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
@@ -447,8 +458,8 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
                                         /*out*/ int* ascent,
                                         /*out*/ int* descent,
                                         /*out*/ int* leading) {
-	_FTC_CHECK_INIT(JAVACALL_FAIL, face)
-			
+	if (!_ftc_check_init(face)) {
+		return JAVACALL_FAIL; }
 	FTC_ScalerRec r;
 	set_scaler_rec(&r, face, style, size);
 	if ((r.face_id)==NULL) {
@@ -471,7 +482,8 @@ javacall_result ftc_javacall_font_get_info( javacall_font_face  face,
 javacall_result ftc_javacall_font_set_font( javacall_font_face face, 
                                         javacall_font_style style, 
                                         javacall_font_size size) {
-	_FTC_CHECK_INIT(JAVACALL_FAIL, face)
+	if (!_ftc_check_init(face)) {
+		return JAVACALL_FAIL; }
 	set_scaler_rec(&current_ic, face, style, size);
 	if ((current_ic.face_id)==NULL) {
 		return JAVACALL_FAIL; }
@@ -487,8 +499,8 @@ int ftc_javacall_font_get_width(javacall_font_face face,
                             javacall_font_size size,
                             const javacall_utf16* charArray, 
                             int charArraySize) {
-	_FTC_CHECK_INIT(-1, face)
-
+	if (!_ftc_check_init(face)) {
+		return -1; }
 	FTC_ScalerRec tmp_ic, tmp_fallback_ic;
 	FTC_ScalerRec* selected_ic;
 	set_scaler_rec(&tmp_ic, face, style, size);
