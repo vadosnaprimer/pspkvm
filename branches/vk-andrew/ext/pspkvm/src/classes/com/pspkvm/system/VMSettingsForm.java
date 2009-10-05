@@ -5,7 +5,7 @@ import javax.microedition.lcdui.*;
 // Parent class for the settings forms--with some convenient
 // methods we can generally use
 
-public class VMSettingsForm extends Form {
+public abstract class VMSettingsForm extends Form {
 
 	static final String[] ONOFFCHOICES={"On", "Off"};
 	static final String[] ONOFFCHOICES_V={"on", "off"};
@@ -122,4 +122,8 @@ public class VMSettingsForm extends Form {
 			t.setString(Integer.toString(i)); }
 		catch(Exception e) {
 			t.setString(Integer.toString(d)); } }
+			
+	// Always implement this--needed to write the content to config
+	// after changes entered
+	public abstract void writeToConfig();
 }

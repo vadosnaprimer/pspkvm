@@ -44,7 +44,11 @@ interface ApplicationManager {
     /** Launch the CA manager. */
     void launchCaManager();
 
-    void launchWifiManager();
+    /** Launch the WiFi Manager */
+		void launchWifiManager();
+    
+    /** Launch the VM configuration panel */
+    void launchVMConfigPanel();
 
     /**
      * Launches a suite.

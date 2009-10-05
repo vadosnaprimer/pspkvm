@@ -20,10 +20,9 @@ void vmsettings_get(const jchar* k, unsigned int kl,
 // External (C) commit
 void vmsettings_commit();
 
-// The functions below are 8-bit interfaces--generally useful
+// The functions below are 8-bit char interfaces--generally useful
 // more for the C-layers (like the font manager) that have
 // to read these properties--not much good to the Java stuff
-// C function used by C layers speaking 8-bit
 
 // Get an integer or default (if there's no such key or it
 // doesn't parse as an int)
@@ -31,6 +30,8 @@ int vmsettings_getint(const char* k, int d);
 
 // Returns true if value v exists for key k and v equals cmp	
 int vmsettings_key_equals(const char* k, const char* cmp);
+
+// End 8-bit char interfaces
 
 #ifdef __cplusplus
 }
