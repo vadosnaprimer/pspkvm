@@ -22,6 +22,7 @@ SUBSYSTEM_PSPKVM_EXT_JAVA_FILES += \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VMSettings.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VMSettingsForm.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VKSettingsForm.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/FontSettingsForm.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java
 
 #

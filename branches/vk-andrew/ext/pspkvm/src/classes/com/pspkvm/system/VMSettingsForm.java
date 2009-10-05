@@ -7,6 +7,9 @@ import javax.microedition.lcdui.*;
 
 public class VMSettingsForm extends Form {
 
+	static final String[] ONOFFCHOICES={"On", "Off"};
+	static final String[] ONOFFCHOICES_V={"on", "off"};
+
 	VMSettingsForm(String t) {
 		super(t); }
 
@@ -56,10 +59,67 @@ public class VMSettingsForm extends Form {
 		
 	// Same as above, but get the value from config first
 	void setFromConfig(Choice c, String[] r, String k) {
-		setFromVal(c, r, com.pspkvm.system.VMSettings.get(k)); }
+		setFromVal(c, r, VMSettings.get(k)); }
 		
 	// Reverse of above--write config string from control
 	void writeToConfig(Choice s, String[] r, String k) {
-		com.pspkvm.system.VMSettings.set(k, r[s.getSelectedIndex()]); }
+		VMSettings.set(k, r[s.getSelectedIndex()]); }
 
+	// Set a textfield from config
+	void setFromConfig(TextField t, String k) {
+		t.setString(VMSettings.get(k)); }
+		
+	// Set a textfield from config integer, with default
+	void setFromConfig(TextField t, String k, int d) {
+		t.setString(Integer.toString(VMSettings.getInt(k, d))); }
+
+	// Write a textfield to config
+	void writeToConfig(TextField t, String k) {
+		VMSettings.set(k, t.getString()); }
+		
+	// Write an on/off value to config
+	void writeToConfig(boolean b, String k) {
+		VMSettings.set(k, b ? "on":"off"); }
+		
+	// Get a value from config
+	boolean onOffFromConfig(String k) {
+		String v = VMSettings.get(k);
+		if (v==null) {
+			return false; }
+		return (v.equals("on")); }
+		
+	// Set a multiple list from a list of config values w/ on/off each
+	void writeMultipleToConfig(ChoiceGroup c, String[] k) {
+		for(int i=0; i<k.length; i++) {
+			writeToConfig(c.isSelected(i), k[i]); } }
+			
+	// Write a multiple list to a list of config values w/ on/off each
+	void setMultipleFromConfig(ChoiceGroup c, String[] k) {
+		for(int i=0; i<k.length; i++) {
+			c.setSelectedIndex(i, onOffFromConfig(k[i])); } } 
+		
+	// Write a textfield to config, interpreting as integer
+	// Provide min, max, and default for fixes at write
+	void writeToConfig(TextField t, String k, int min, int d, int max) {
+		try {
+			int i = Integer.parseInt(t.getString());
+			if (i < min) {
+				i = min; }
+			if (i > max) {
+				i = max; }
+			VMSettings.setInt(k, i); }
+		catch(Exception e) {
+			VMSettings.setInt(k, d); } }
+			
+	// Validate a numeric textfield
+	void validate(TextField t, int min, int d, int max) {
+		try {
+			int i = Integer.parseInt(t.getString());
+			if (i < min) {
+				i = min; }
+			if (i > max) {
+				i = max; }
+			t.setString(Integer.toString(i)); }
+		catch(Exception e) {
+			t.setString(Integer.toString(d)); } }
 }

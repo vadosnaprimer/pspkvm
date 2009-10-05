@@ -30,44 +30,39 @@ public class VKSettingsForm extends VMSettingsForm
 	static final String[] SCMAPS_V = {"cyrillic", "greek", "roman"};
 	static final String SCMAPS_PNAME = "com.pspkvm.virtual_keyboard.default_keymap";
 
-	// Autoopen
-	static final String AOPENLABEL="Autoopen";
-	static final String[] ONOFFCHOICES={"On", "Off"};
-	static final String[] ONOFFCHOICES_V={"on", "off"};
-	static final String AOPEN_PNAME = "com.pspkvm.virtualkeyboard.autoopen";
-	
-	// Analog direction control
-	static final String ANADIRECTIONLABEL="Analog cursor";
-	// Uses onoff choices from above
-	static final String ANADIRECTION_PNAME = "com.pspkvm.virtualkeyboard.direction";
-
+	// General options label
+	static final String OPTIONSLABEL = "Options";
+	static final String[] OPTIONSNAMES={
+		"Autoopen", "Analog cursor" };
+	static final String[] OPTIONS_KEYS = {
+		"com.pspkvm.virtualkeyboard.autoopen",
+		"com.pspkvm.virtualkeyboard.direction" };
+		
 	// Form controls
-	ChoiceGroup boardType, defaultSCMap, autoOpen, anaDirection;
-
+	ChoiceGroup boardType, defaultSCMap, optionsGroup;
 	// Set all the controls from the config
 	void setFromConfig() {
 		setFromConfig(boardType, VKTYPES_V, VKTYPES_PNAME);
 		setFromConfig(defaultSCMap, SCMAPS_V, SCMAPS_PNAME);
-		setFromConfig(autoOpen, ONOFFCHOICES_V, AOPEN_PNAME);
-		setFromConfig(anaDirection, ONOFFCHOICES_V, ANADIRECTION_PNAME); }
+		setMultipleFromConfig(optionsGroup, OPTIONS_KEYS); }
 		
 	// Write the controls to the config
 	public void writeToConfig() {
 		writeToConfig(boardType, VKTYPES_V, VKTYPES_PNAME);
 		writeToConfig(defaultSCMap, SCMAPS_V, SCMAPS_PNAME);
-		writeToConfig(autoOpen, ONOFFCHOICES_V, AOPEN_PNAME);
-		writeToConfig(anaDirection, ONOFFCHOICES_V, ANADIRECTION_PNAME); }
+		writeMultipleToConfig(optionsGroup, OPTIONS_KEYS); }
 
 	// Constructor
 	public VKSettingsForm() {
 		super(TITLE);
-		boardType = new ChoiceGroup(TYPELABEL, Choice.POPUP, VKTYPES, null);
+		boardType = new ChoiceGroup(TYPELABEL, Choice.EXCLUSIVE, VKTYPES, null);
+		boardType.setLayout(Item.LAYOUT_2);
 		append(boardType);
-		defaultSCMap = new ChoiceGroup(SCMAPLABEL, Choice.POPUP, SCMAPS, null);
-		autoOpen = new ChoiceGroup(AOPENLABEL, Choice.POPUP, ONOFFCHOICES, null);
-		append(autoOpen);
-		anaDirection = new ChoiceGroup(ANADIRECTIONLABEL, Choice.POPUP, ONOFFCHOICES, null);
-		append(anaDirection);
+		defaultSCMap = new ChoiceGroup(SCMAPLABEL, Choice.EXCLUSIVE, SCMAPS, null);
+		defaultSCMap.setLayout(Item.LAYOUT_2);
+		optionsGroup = new ChoiceGroup(OPTIONSLABEL, Choice.MULTIPLE, OPTIONSNAMES, null);
+		optionsGroup.setLayout(Item.LAYOUT_2|Item.LAYOUT_NEWLINE_BEFORE);
+		append(optionsGroup);
 		setItemStateListener(this);
 		setFromConfig();
 		updateDisplay(); }
