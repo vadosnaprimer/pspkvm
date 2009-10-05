@@ -1230,8 +1230,8 @@ class TextFieldLFImpl extends ItemLFImpl implements
      * @param keyCode the code for the key which was pressed
      */
     void uCallKeyPressed(int keyCode) {
-        String im = Configuration.getProperty("com.pspkvm.inputmethod");
-        if(im != null && im.equals("sony-osk")){
+        String im = com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod");
+        if(im != null && im.equals("osk")){
        	if (launchNativeTextField0(keyCode, tf.buffer, tf.owner.getTitle()) == 0) {
        		System.out.println("launchNativeTextField0 return");
             
