@@ -24,7 +24,8 @@ SUBSYSTEM_PSPKVM_EXT_JAVA_FILES += \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VKSettingsForm.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VMConfigMidlet.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/FontSettingsForm.java \
-    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/RawState.java
 
 #
 # Native
@@ -40,7 +41,8 @@ SUBSYSTEM_PSPKVM_EXT_NATIVE_FILES += \
     wifistatus.c \
     power.c \
     vmsettings.c \
-    vmsettings_store.cpp
+    vmsettings_store.cpp \
+    rawstate.c
 
 # Append PSPKVM EXT source bundle creation to target
 source_bundle:: pspkvm_ext_source_bundle

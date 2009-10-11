@@ -55,6 +55,8 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
             return KeyboardLayer_qwert.getInstance(tf); }
         if(im != null && im.equals("semichordal")){
             return KeyboardLayer_semichordal.getInstance(tf); }
+        if(im != null && im.equals("danzeff")){
+            return KeyboardLayer_danzeff.getInstance(tf); }
 				return KeyboardLayer_awf.getInstance(tf);
     }
 

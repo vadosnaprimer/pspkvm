@@ -62,5 +62,4 @@ public class FontSettingsForm extends VMSettingsForm {
 		append(fsSmall);
 		append(RESTART_MESSAGE);
 		setFromConfig(); }
-
 }

@@ -1,6 +1,7 @@
 #include "ft_support.h"
 #include "alpha_blend.h"
 #include <unistd.h>
+
 /*
 	FreeType2 caching support layer for the javacall_font implementations
 	for the PSP
@@ -97,7 +98,7 @@ void initialize_face_ids() {
 	int i;
 	for(i=0;i<_FTC_FACEID_COUNT;i++) {
 		font_file_present[i]=(access((_typeface_filenames[i]), R_OK) == 0) ? 1 : 0; }
-	// Now, for each of the menmbers ftc_faceids, go through the fallback
+	// Now, for each of the members of ftc_faceids, go through the fallback
 	// routing, and pick the closest match (or NULL, if none)
 	for(i=0;i<_FTC_FACEID_COUNT;i++) {
 		ftc_faceids[i]=pick_closest_present_font(i, font_file_present); } }
@@ -522,4 +523,3 @@ int ftc_javacall_font_get_width(javacall_font_face face,
 			return -1; }
 		res += irec->xadvance; }
 	return res; }
-
