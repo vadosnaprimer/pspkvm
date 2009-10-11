@@ -106,11 +106,16 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
      * @param state the state of the keyboard.
      */
     public void setState(int state) {
-        if (vk != null && 
-            (state == NUMERIC || 
-             state == LOWERCASE ||
-             state == UPPERCASE)) {
-            vk.currentKeyboard = state;
+        if (vk != null) { 
+            switch (state) {
+            	case KEYBOARD_INPUT_NUMERIC:
+                  vk.currentKeyboard = NUMERIC;
+                  break;
+              case KEYBOARD_INPUT_ASCII:
+              case KEYBOARD_INPUT_ANY:
+                  vk.currentKeyboard = LOWERCASE;
+                  break;
+            }
         }
     }
 

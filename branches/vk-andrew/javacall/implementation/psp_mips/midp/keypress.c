@@ -18,181 +18,6 @@ static int done = 0;
 // See also higher JVM modifications filtering these from clients that 
 // won't recognize them (see CLayer, CWindow).
 
-#if 0
-/*
-u32 oldAnalogKeys = 0;
-u32 oldDigitalKeys = 0;
-void processKey(javacall_keypress_type type, int pspkey) {
-	u32 comboKey;
-	u32 allKeyDown = oldDigitalKeys|oldAnalogKeys|pspkey;
-	javacall_key javacallkey;
-	static int allKeyReleased = 1;
-
-	if (allKeyDown == 0) {
-		allKeyReleased = 1;
-	}
-
-	comboKey = PSP_CTRL_LTRIGGER|PSP_CTRL_RTRIGGER|PSP_CTRL_CROSS;
-	if ((allKeyDown&comboKey)==comboKey && allKeyReleased) {
-		javanotify_shutdown_current();
-		pspkey &= ~comboKey;
-		allKeyReleased = 0;
-	}
-	comboKey = PSP_CTRL_LTRIGGER|PSP_CTRL_RTRIGGER|PSP_CTRL_TRIANGLE;
-	if ((allKeyDown&comboKey)==comboKey && allKeyReleased) {
-		javanotify_switch_to_ams();
-		pspkey &= ~comboKey;
-		allKeyReleased = 0;
-	}
-	comboKey = PSP_CTRL_LTRIGGER|PSP_CTRL_SQUARE;
-	if ((allKeyDown&comboKey)==comboKey && (pspkey&PSP_CTRL_SQUARE)) {
-		javacallkey = JAVACALL_KEY_7;
-	       javanotify_key_event(javacallkey, type);
-		pspkey &= ~comboKey;
-	}
-	comboKey = PSP_CTRL_LTRIGGER|PSP_CTRL_TRIANGLE;
-	if ((allKeyDown&comboKey)==comboKey && (pspkey&PSP_CTRL_TRIANGLE)) {
-		javacallkey = JAVACALL_KEY_9;
-		javanotify_key_event(javacallkey, type);
-		pspkey &= ~comboKey;
-	}
-	comboKey = PSP_CTRL_LTRIGGER|PSP_CTRL_CIRCLE;
-	if ((allKeyDown&comboKey)==comboKey && (pspkey&PSP_CTRL_CIRCLE)) {
-		javacallkey = JAVACALL_KEY_SELECT;
-		javanotify_key_event(javacallkey, type);
-		pspkey &= ~comboKey;
-	}	
-	comboKey = PSP_CTRL_LTRIGGER|PSP_CTRL_CROSS;
-	if ((allKeyDown&comboKey)==comboKey && (pspkey&PSP_CTRL_CROSS)) {
-		javacallkey = JAVACALL_KEY_CLEAR;
-		javanotify_key_event(javacallkey, type);
-		pspkey &= ~comboKey;
-	}	
-	if (pspkey&PSP_CTRL_UP) {
-		javacallkey = JAVACALL_KEY_2;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_RIGHT) {
-		javacallkey = JAVACALL_KEY_6;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_DOWN) {
-		javacallkey = JAVACALL_KEY_8;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_LEFT) {
-		javacallkey = JAVACALL_KEY_4;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_CROSS) {
-		javacallkey = JAVACALL_KEY_0;
-		javanotify_key_event(javacallkey, type);
-	}	
-	if (pspkey&PSP_CTRL_CIRCLE) {
-		javacallkey = JAVACALL_KEY_5;
-		javanotify_key_event(javacallkey, type);
-		//pspDebugScreenPrintf("pspkey pressed: PSP_CTRL_CIRCLE\n"); 
-	}
-	if (pspkey&PSP_CTRL_SQUARE) {
-		javacallkey = JAVACALL_KEY_1;
-		javanotify_key_event(javacallkey, type);
-		//pspDebugScreenPrintf("pspkey pressed: PSP_CTRL_CIRCLE\n"); 
-	}
-	if (pspkey&PSP_CTRL_TRIANGLE) {
-		javacallkey = JAVACALL_KEY_3;
-		javanotify_key_event(javacallkey, type);
-		//pspDebugScreenPrintf("pspkey pressed: PSP_CTRL_CIRCLE\n"); 
-	}	
-	if (pspkey&PSP_CTRL_LTRIGGER) {
-		javacallkey = JAVACALL_KEY_ASTERISK;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_RTRIGGER) {
-		javacallkey = JAVACALL_KEY_POUND;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_SELECT) {
-		javacallkey = JAVACALL_KEY_SOFT1;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_START) {
-		javacallkey = JAVACALL_KEY_SOFT2;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_ANALOG_LEFT) {
-		javacallkey = JAVACALL_KEY_LEFT;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_ANALOG_RIGHT) {
-		javacallkey = JAVACALL_KEY_RIGHT;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_ANALOG_UP) {
-		javacallkey = JAVACALL_KEY_UP;
-		javanotify_key_event(javacallkey, type);
-	}
-	if (pspkey&PSP_CTRL_ANALOG_DOWN) {
-		javacallkey = JAVACALL_KEY_DOWN;
-		javanotify_key_event(javacallkey, type);
-	}	
-
-}
-
-#define analogThresholdValue 85
-#define analogZeroValue 128
-int analogLeft = analogZeroValue - analogThresholdValue;
-int analogRight = analogZeroValue + analogThresholdValue;
-int analogUp = analogZeroValue - analogThresholdValue;
-int analogDown = analogZeroValue + analogThresholdValue;
-unsigned char oldLx = analogZeroValue, oldLy = analogZeroValue;
-static void processAnalogKey(unsigned char Lx, unsigned char Ly) {
-	u32 newAnalogKeys = 0;
-	u32 keyDown, keyUp;
-	if (Lx < analogLeft){
-		newAnalogKeys |= PSP_CTRL_ANALOG_LEFT;
-	}
-	if (Lx > analogRight){
-		newAnalogKeys |= PSP_CTRL_ANALOG_RIGHT;
-	}
-	if (Ly < analogUp){
-		newAnalogKeys |= PSP_CTRL_ANALOG_UP;
-	}
-	if (Ly > analogDown){
-		newAnalogKeys |= PSP_CTRL_ANALOG_DOWN;
-	}
-	keyUp = oldAnalogKeys&(~newAnalogKeys);
-	processKey(JAVACALL_KEYRELEASED, keyUp);
-	keyDown = newAnalogKeys&(~oldAnalogKeys);
-	processKey(JAVACALL_KEYPRESSED, keyDown);
-	oldAnalogKeys = newAnalogKeys;
-}
-
-static void UpdateEvents() {
-	u32 keyDown, keyUp;
-	SceCtrlData ctrlPad;
-	//sceKernelDelayThread(0);
-       if (!sceCtrlReadBufferPositive(&ctrlPad, 1)){
-         return;
-       }
-	//sceCtrlPeekBufferPositive(&ctrlPad, 1);
-	keyUp = oldDigitalKeys&(~ctrlPad.Buttons);
-	processKey(JAVACALL_KEYRELEASED, keyUp);
-	keyDown = ctrlPad.Buttons&(~oldDigitalKeys);
-	processKey(JAVACALL_KEYPRESSED, keyDown);
-	oldDigitalKeys = ctrlPad.Buttons;
-	processAnalogKey(ctrlPad.Lx, ctrlPad.Ly);
-}
-
-int KeyThread(SceSize args, void *argp)
-{
-    	sceCtrlSetSamplingCycle(10);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-	while(!done){
-		UpdateEvents();
-	}
-}
-*/
-#else
 
 #define MULTITASK_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_TRIANGLE)
 #define EXIT_KEY (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_CROSS)
@@ -204,6 +29,12 @@ int KeyThread(SceSize args, void *argp)
 #define REPEAT_THRESHOLD 20
 #define REPEAT_THRESHOLD1 5
 
+// Externs for storage of raw analogue values -- exposed in 
+// ext/pspkvm/src/native/rawstate.c
+
+extern unsigned char ext_pspkvm_rawstate_lx;
+extern unsigned char ext_pspkvm_rawstate_ly;
+
 static int KeyThread(SceSize args, void *argp)
 {
 	SceCtrlData pad;
@@ -212,7 +43,7 @@ static int KeyThread(SceSize args, void *argp)
 	static int hold = 0, raw_hold = 0;
 	static int repeat_threshold = REPEAT_THRESHOLD, raw_repeat_threshold = REPEAT_THRESHOLD;
 	static javacall_key lastPressedJavakey = 0;
-	
+
 	sceCtrlSetSamplingCycle(25);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 	while(!done){
@@ -241,7 +72,9 @@ static int KeyThread(SceSize args, void *argp)
 
 		pspKey = 0;
 		lx = pad.Lx;
+		ext_pspkvm_rawstate_lx = lx;
 		ly = pad.Ly;
+		ext_pspkvm_rawstate_ly = ly;
 		if (lx < 5) {
 			if (ly < 55) {
 				pspKey = PSP_CTRL_ANALOG_LEFT | PSP_CTRL_ANALOG_UP;
@@ -411,7 +244,6 @@ static int KeyThread(SceSize args, void *argp)
 	}
 	return 0;
 }
-#endif
 
 javacall_result javacall_key_init() {
     int thid;
