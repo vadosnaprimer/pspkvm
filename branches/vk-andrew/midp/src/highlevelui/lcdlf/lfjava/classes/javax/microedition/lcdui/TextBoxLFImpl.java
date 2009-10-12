@@ -697,6 +697,17 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
 		public boolean isMultiLine() {
 			return true; }
 
-
+		/** Reports the quadrant (quarter screen) the caret is in
+		 * within the textfield -- used by the virtual keyboards
+		 * to stay out of the way while you're typing */
+		public int getQuadrant() {
+		 	if (cursor==null) {
+			 	// Default
+				 return QUAD_TOPLFT; }
+			boolean r = cursor.x > (contentBounds[WIDTH]/2);
+			boolean b = cursor.y > (contentBounds[HEIGHT]/2);
+			if (b) {
+				return r ? QUAD_BOTRGT : QUAD_BOTLFT; }
+			return r ? QUAD_TOPRGT : QUAD_TOPLFT; }
 
 }
