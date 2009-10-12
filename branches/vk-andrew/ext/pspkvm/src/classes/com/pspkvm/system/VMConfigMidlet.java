@@ -10,6 +10,7 @@ package com.pspkvm.system;
 
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
+import com.sun.midp.installer.GraphicalInstaller;
 
 public class VMConfigMidlet extends MIDlet implements CommandListener {
 
@@ -31,8 +32,10 @@ public class VMConfigMidlet extends MIDlet implements CommandListener {
 		
 	void setupSelector() {
 		selector = new List("VM configuration", Choice.IMPLICIT);
-		selector.append("Virtual keyboards", null);
-		selector.append("Font subsystem", null);
+		selector.append("Virtual keyboards",
+			GraphicalInstaller.getImageFromInternalStorage("confkb"));
+		selector.append("Font subsystem",
+			GraphicalInstaller.getImageFromInternalStorage("conffonts"));
 		selector.addCommand(launchFormCmd);
 		selector.addCommand(exitCmd);
 		selector.setCommandListener(this); }
