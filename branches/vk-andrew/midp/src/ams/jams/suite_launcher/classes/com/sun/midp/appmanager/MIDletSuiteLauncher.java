@@ -111,6 +111,9 @@ public class MIDletSuiteLauncher extends MIDlet implements ApplicationManager {
 
     public void launchWifiManager() {
     }
+    
+    public void launchVMConfigPanel() {
+    }
 
     /**
      * Launches a suite.
