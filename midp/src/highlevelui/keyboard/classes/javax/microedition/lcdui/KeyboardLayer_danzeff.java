@@ -36,6 +36,10 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
   char tmpchrarray[];
 
 	String layerID = null;
+	/** State--tracks the quadrant we're drawing the board in -- we move it to
+	 * keep it in the quadrant furthest from the caret at all times
+	 */
+	int current_quad;	 		
 
     /**
      * Constructs a text tfContext sub-popup layer, which behaves like a
@@ -55,10 +59,18 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 	    if (vk==null) {
 	      vk = new VirtualKeyboard_danzeff(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
+			current_quad = -1; // Invalid. Forces reset in setBounds.
 			setBounds();
 			monitorThread=null;
 			startCtrlMonitor();
 			setupCommands(); }
+	
+	// Get the quadrant the caret is in
+	int getCaretQuad() {
+		if (tfContext!=null) {
+			return tfContext.getQuadrant(); }
+		// For all others, fake it
+		return TextFieldLFImpl.QUAD_TOPLFT; }
 		
 	/**
      * Setup as a command listener for external events.
@@ -119,9 +131,8 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
         if (vk==null) {
             vk = new VirtualKeyboard_danzeff(this, getAvailableWidth(),getAvailableHeight());
         }
-
+			current_quad = -1; // Invalid. Forces reset in setBounds.
 			setBounds();
-
 			// Command to dismiss
       Command keypadClose = new Command("Close", Command.OK, 1);
       setCommands(new Command[] { keypadClose }); }
@@ -208,18 +219,46 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
      * Initializes the popup layer.
      */
     protected void initialize() {
-        super.initialize(); }        
-
+        super.initialize(); }
+    
+    
+    void requestFullScreenRepaint() {
+			Display disp = null;
+			if (tfContext != null) {
+				tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
+				return; }
+			if (cvContext != null) {
+				cvContext.currentDisplay.requestScreenRepaint(); } }
+        
     /**
      * Sets the bounds of the popup layer.
      *
      */
     protected void setBounds() {
+    	int upd_caret_quad = getCaretQuad();
+    	if (upd_caret_quad == current_quad) {
+				return; }
+			current_quad = upd_caret_quad;
     	int w = vk.getWidth();
     	int h = vk.getHeight();
-    	int x = getAvailableWidth()-w;
-    	int y = getAvailableHeight()-h;
-      super.setBounds(x, y, w, h); }
+    	int aw = getAvailableWidth();
+    	int ah = getAvailableHeight();
+    	switch(current_quad) {
+				case TextFieldLFImpl.QUAD_TOPLFT:
+					super.setBounds(aw-w, ah-h, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_TOPRGT:
+					super.setBounds(0, ah-h, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTLFT:
+					super.setBounds(aw-w, 0, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTRGT:
+					super.setBounds(0, 0, w, h);
+					break;
+				default:
+					super.setBounds(aw-w, ah-h, w, h); }
+			requestFullScreenRepaint(); }
 
     /**
      * get the height of the Virtual Keyboard.
@@ -304,6 +343,10 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 		public void virtualMetaKeyEntered(int m) {
 			if (tfContext == null) {
 				return; }
+			_virtualMetaKeyEntered(m);
+			setBounds(); }
+				
+		void _virtualMetaKeyEntered(int m) {
 			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
 			switch(m) {
 				case SC_Keys.CPY:
@@ -430,7 +473,8 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
     		// go through on uCallKeyPressed.
     		tfContext.uCallKeyPressed(c); }
       if (cvContext != null) {
-				cvContext.uCallKeyPressed(c); } }
+				cvContext.uCallKeyPressed(c); }
+			setBounds(); }
 
     /**
      * paint text only
