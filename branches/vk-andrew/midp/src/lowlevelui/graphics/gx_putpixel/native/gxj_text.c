@@ -94,7 +94,7 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned short CJK = c0;
     if (needs_cjk_transform(c0)) {
     	// Transform doesn't work for Unicode pages 0 through 4,
-    	// and we also want to protected the user space at e000-e100
+    	// and we also want to protect the user space at e000-e100
     	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 		                     ((short*)UNI_CJK)[c0]:
 	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }

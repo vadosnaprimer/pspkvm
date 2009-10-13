@@ -36,10 +36,12 @@ public class VMConfigMidlet extends MIDlet implements CommandListener {
 			GraphicalInstaller.getImageFromInternalStorage("confkb"));
 		selector.append("Font subsystem",
 			GraphicalInstaller.getImageFromInternalStorage("conffonts"));
+		selector.append("Keymap settings",
+			GraphicalInstaller.getImageFromInternalStorage("keymaps"));
 		selector.addCommand(launchFormCmd);
 		selector.addCommand(exitCmd);
 		selector.setCommandListener(this); }
-		
+
 	public VMConfigMidlet() {
 		setupSelector(); }
 		
@@ -77,6 +79,9 @@ public class VMConfigMidlet extends MIDlet implements CommandListener {
 				return;
 			case 1:
 				launchSettingsForm(new FontSettingsForm());
+				return; 
+			case 2:
+				launchSettingsForm(new KeymapSettingsForm());
 				return; 
 			default:
 				return; } }
