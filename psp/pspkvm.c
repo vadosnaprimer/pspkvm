@@ -381,18 +381,16 @@ static void setup_gu() {
 
 int suspend_key_input = 0;
 
+// Declared extern. TODO: Use proper header
+extern int vmsettings_key_equals(const char* k, const char* cmp);
+
 int netDialog(int status)
 {
 	int state;
 	int buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
 	char* res;
-	
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.acceptcross", 
-		                                                              JAVACALL_INTERNAL_PROPERTY, 
-		                                                              &res) && res != NULL &&
-		                                                               (res[0] == 'y' || res[0] == 'Y')) {
-		buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
-	}
+	if (vmsettings_key_equals("com.pspkvm.default_keymap", "western")) {
+		buttonSwap = PSP_UTILITY_ACCEPT_CROSS; }
 
 #if _PSP_FW_VERSION >= 200
 
@@ -480,12 +478,8 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	int buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
 	char* res;
 	
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.acceptcross", 
-		                                                              JAVACALL_INTERNAL_PROPERTY, 
-		                                                              &res) && res != NULL &&
-		                                                               (res[0] == 'y' || res[0] == 'Y')) {
-		buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
-	}
+	if (vmsettings_key_equals("com.pspkvm.default_keymap", "western")) {
+		buttonSwap = PSP_UTILITY_ACCEPT_CROSS; }
 
 	suspend_key_input = 1;
 	//printf("oskDialog: inlen=%d\n", inlen);
