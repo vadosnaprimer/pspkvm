@@ -193,7 +193,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
     		vkl.virtualMetaKeyEntered(SC_Keys.CDN);
     		return; } }
      	
-    	// Display colours
+  // Display colours
 	private static final int WHITE = 0xffffff;
 	private static final int BLACK = 0x000000;
 	private static final int DKBLUE = 0x000040;
