@@ -32,12 +32,12 @@ $n =~ s/png$//;
 # Generate the Java
 my $t = `ls -l $s`;
 my @a = split /\s+/, $t;
-print "static final int ", $n, "_segpad = " , get_segpad($a[4]), ";\n";
-print "static final long[] ", $n, "_seg = {\n"; 
+print "public static final int ", $n, "_segpad = " , get_segpad($a[4]), ";\n";
+print "public static final long[] ", $n, "_seg = {\n"; 
 my $l = `hexdump -f longformat.txt $s`;
 $l =~ s/0x\s+l,//g;
 $l =~ s/\s+$//;
 $l =~ s/,+$//g;
 chomp $l;
 print $l;
-print "\n };\n";
+print "\n};\n";
