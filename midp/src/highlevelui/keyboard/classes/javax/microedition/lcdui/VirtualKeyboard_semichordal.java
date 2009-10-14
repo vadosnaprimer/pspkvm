@@ -347,10 +347,16 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 					return; } }
 					
 		int getWidth() {
-			return lg_dim_width+1; }
+			switch(display_chords_mode) {
+				case NO_DISP: return 1;
+				case SM_DISP: return key_bg_img.getWidth()+8;
+				case LG_DISP: default: return lg_dim_width+1; } }
 			
 		int getHeight() {
-			return lg_dim_height+1; }
+			switch(display_chords_mode) {
+				case NO_DISP: return 1;
+				case SM_DISP: return key_bg_img.getHeight()+4+IMGPAD+c_lock_img.getHeight();
+				case LG_DISP: default: return lg_dim_height+1; } }
 			
 	  /**
 	   * paint a single key from the live chord
@@ -413,10 +419,10 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
      * 
      */
     protected void paintCurrentChord(Graphics g) {
-    	int h = key_bg_img.getHeight()+4+IMGPAD+c_lock_img.getHeight();
-    	int y = getHeight()-h-1;
-    	int w = key_bg_img.getWidth()+8;
-    	int x = getWidth()-w-1;
+    	int h = getHeight();
+    	int y = 0;
+    	int w = getWidth();
+    	int x = 0;
     	g.setColor(WHITE);
     	g.fillRect(x, y, w, h);
 			g.setColor(BLK);
