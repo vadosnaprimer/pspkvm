@@ -2,6 +2,7 @@ package javax.microedition.lcdui;
 
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.pspkvm.system.VMSettings;
+import com.sun.midp.chameleon.input.*;
 
 abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 
@@ -75,4 +76,28 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
             return KeyboardLayer_semichordal.getInstance(canvas); }
 				return KeyboardLayer_awf.getInstance(canvas);
     }
+    
+  // Generally helpful method for inserting strings in textfields
+  // (as in, from the clipboard)
+	void tfPutString(String s, TextFieldLFImpl tfContext) {
+		if (tfContext == null) {
+			return; }
+		int c = tfContext.getConstraints();
+			switch (c & TextField.CONSTRAINT_MASK) {
+			case TextField.PHONENUMBER:
+			case TextField.DECIMAL:
+			case TextField.NUMERIC:
+			case TextField.EMAILADDR:
+			case TextField.URL:
+				char[] a = s.toCharArray();
+				for (int i = 0; i < a.length; i++) {
+					tfContext.uCallKeyPressed(a[i]); }
+				break;
+			default:
+			  // We have to use the insert call because
+  			// a lot of the more exotic characters won't 
+  			// go through on uCallKeyPressed.
+  			tfContext.tf.insert(s, tfContext.tf.getCaretPosition());
+				tfContext.tf.getString(); } }
+  
 }

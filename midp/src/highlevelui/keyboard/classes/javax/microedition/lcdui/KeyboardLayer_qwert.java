@@ -842,8 +842,7 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
         } else if (metaKey == vk.PST_META_KEY) {
         	if (tfContext != null) {
         		eraseSelection();
-						tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
-						tfContext.tf.getString(); }
+        		tfPutString(Clipboard.get(), tfContext); }
 
         } else if (metaKey == vk.IM_CHANGED_KEY) {
             if (tfContext != null) {

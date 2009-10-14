@@ -530,8 +530,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 					break;
 				case VirtualKeyboard_awf.PST_COMMAND:
 					eraseSelection();
-					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
-					tfContext.tf.getString();
+					tfPutString(Clipboard.get(), tfContext);
 					break;
 				case VirtualKeyboard_awf.NODIFY_IM_CHANGE_COMMAND:
 					getNextKeyBoard();
