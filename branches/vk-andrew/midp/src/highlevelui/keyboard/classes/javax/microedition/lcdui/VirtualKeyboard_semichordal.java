@@ -8,6 +8,7 @@ import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
 import com.pspkvm.keypad.PSPCtrlCodes;
 import com.pspkvm.system.VMSettings;
+import com.sun.midp.installer.GraphicalInstaller;
 
 /**
  * Semichordal virtual keyboard, specific to PSP platform, for PSPKVM.
@@ -61,7 +62,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// Colors for drawing the key glyphs
 		static final int FONT_BLUE = 0x4040c0;
 		static final int FONT_RED = 0xc04040;
-    
+		
     // Useful field
     /** Union of all chordal keys */
 		static final int CHORDAL_KEYS = PSPCtrlCodes.LTRIGGER | PSPCtrlCodes.RTRIGGER
@@ -172,7 +173,11 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		key_bg_img = LongArrayHandler.createImage(Imgs_misc.psp_keys_off_seg,
 			Imgs_misc.psp_keys_off_segpad);
 		key_bg_img_on = LongArrayHandler.createImage(Imgs_misc.psp_keys_on_seg,
-			Imgs_misc.psp_keys_on_segpad); }
+			Imgs_misc.psp_keys_on_segpad);
+		kheight = key_bg_img.getHeight();
+		kwidth = key_bg_img.getWidth(); }
+			
+	int kwidth, kheight;
 
 	// Initialize the various display variables--called at construction
 	void initDisplayVars() {
@@ -224,96 +229,71 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			 */
 		public void setLargeDisplay() {
 			display_chords_mode = LG_DISP; }			 			
+
+		// Raw offsets into chord table, by DPAD offset, starting at centre, then right, then
+		// counter clockwise
+		static final int[] offsets  =  { 0, 48, 128, 32, 80, 16, 112, 64, 96 };
+		 
+	 	// Letter offsets within key displays
+		private final static int[] ltr_x = { 0, -12, 0, 12 };
+		private final static int[] ltr_y = { 0, 12, 24, 12 };
+		// Special x for the single-chord display
+		private final static int[] ltr_x_wd = { 0, -15, 0, 15 };
+		// Key offsets from origin
+		private final static int[] key_x = {
+			1, 2, 2, 1, 0, 0, 0, 1, 2 };
+		private final static int[] key_y = {
+			1, 1, 0, 0, 0, 1, 2, 2, 2 };
 			
-		final static int lg_dim_width = 210;
-		final static int lg_dim_height = 150;
+		final static int GRPWIDTH = 44;
+		final static int HGRPWIDTH = 22;
+		final static int GRPHEIGHT = 42;
+		final static int GAPSIZE = 2;
+
 		/**
 		 * Method called to paint the 'lg' or halfboard display, when in that mode.
 		 * 
 		 * @param g -- the graphics context		 		 		
-		 */		
+		 */	
 		protected void paintLgDisplay(Graphics g) {
-			g.setColor(WHITE);
-			g.fillRect(0, 0, lg_dim_width, lg_dim_height);
+			g.setColor(BGCOLOR);
+			g.fillRect(0, 0, getWidth(), getHeight());
+			g.setColor(DKBLUE);
+			g.fillRect(0, getHeight()-c_lock_img.getHeight(),
+				getWidth(), c_lock_img.getHeight());
 			for (int idx=0; idx<9; idx++) {
-				g.drawImage(idx==live_dpad ? key_bg_img_on : key_bg_img,
-					keypad_posn_x[idx], keypad_posn_y[idx], g.TOP|g.LEFT); }
+				g.setColor(idx==live_dpad ? DKRED : DKBLUE);
+				g.fillRect(key_x[idx]*(GRPWIDTH+GAPSIZE),
+					key_y[idx]*(GRPHEIGHT+GAPSIZE),
+					GRPWIDTH, GRPHEIGHT); }
 			// Draw keys
 			int ls_offset = ls_set ? 8 : 0;
-			// g.setFont(utility_font);
+			int rs_os = rs_set ? 4 : 0;
+			g.setColor(WHITE);
 			for (int idx=0; idx<9; idx++) {
-				paintChordStacked(g, 
-					keypad_posn_x[idx], keypad_posn_y[idx], offsets[idx]+ls_offset,
-					(idx==live_dpad) && (!rs_set));
-				paintChordStacked(g,
-					keypad_posn_x[idx], keypad_posn_y[idx]-10, offsets[idx]+ls_offset+4,
-					(idx==live_dpad) && (rs_set)); }
-			// g.setFont(sys_font);
-			g.setColor(BLK);
-			g.drawRect(0, 0, lg_dim_width, lg_dim_height);
+				paintChord(g, 
+					HGRPWIDTH+(key_x[idx]*(GRPWIDTH+GAPSIZE)), 1+key_y[idx]*(GRPHEIGHT+GAPSIZE),
+					offsets[idx]+ls_offset+rs_os); }
 			paintMiscState(g); }
-			
-		// Draws the appropriate icon for the key--whichever it might be.
+
+	  /**
+	   * paint a single key
+	   * 
+	   * @param g The graphics context to which to paint
+	   * @param x X coordinate of the string (center)
+	   * @param y Y coordinate of the string (top)
+	   * @param o The offset into the chord of the key
+	   */
 		void paintIcon(Graphics g, int x, int y, int o, boolean active) {
 			String s=crt_map.getDisplayString(caps_lock_set, o);
 			g.setColor(active ? FONT_RED : FONT_BLUE );
 			int offset = utility_font.stringWidth(s)/2;
 			g.drawUtilityString(s, x-offset, y, g.TOP|g.LEFT); }
 
-		/**
-		 *	Method called to paint a key in a 'stacked' array--in the large graphics context
-		 *	Logic is involved to avoid painting duplicate keys when they're the same shifted and
-		 *	not, and for alpha characters, where the shift is pretty obvious, and doesn't need
-		 *	to be displayed at the same time.
-		 *	
-		 * @param g the graphics context
-		 * @param f the soft font to use
-		 * @param x the x coordinate
-		 * @param y the y coordinate
-		 * @param o the offset into the key array		 		 		 		 		 		 		 
-		 */
-		void paintKeyStacked(Graphics g, int x, int y, int o, boolean active) {
-			if (crt_map.isLSMatchedMeta(o)) {
-				if (rs_set) {
-					return; }
-				y-=4; }
-			else if (crt_map.isUSMatchedMeta(o)) {
-				if (!rs_set) {
-					return; }
-				y+=5; }
-			else if (crt_map.isLCAlpha(caps_lock_set, o)) {
-				if (rs_set ^ caps_lock_set) {
-					return; }
-				// !(rs_set ^ caps_lock_set). UC won't be printed.
-				if (caps_lock_set) {
-					y+=5; }
-				else {
-					y-=4; } }
-			else if (crt_map.isUCAlpha(caps_lock_set, o)) {
-				if (!(rs_set ^ caps_lock_set)) {
-					return; }
-				// (rs_set ^ caps_lock_set). LC won't be printed.
-				if (caps_lock_set) {
-					y-=4; }
-				else {
-					y+=5; } }
-			paintIcon(g, x, y, o, active); }
-			
-		/** Paint the 'stacked' chord displays in the large graphics context
-		 * Most of the logic is in paintKeyStacked
-		 * @param g the graphics context
-		 * @param f the soft font
-		 * @param x the x coordinate
-		 * @param y the y coordinate
-		 * @param offset the base offset of the chord
-		 */
-		void paintChordStacked(Graphics g, int x, int y, int offset, boolean active) {
-			x+= 28;
-			y+= 10;
-			paintKeyStacked(g, x+ltr_x[0], y+ltr_y[0], offset+0, active);
-			paintKeyStacked(g, x+ltr_x[1], y+ltr_y[1], offset+1, active);
-			paintKeyStacked(g, x+ltr_x[2], y+ltr_y[2], offset+2, active);
-			paintKeyStacked(g, x+ltr_x[3], y+ltr_y[3], offset+3, active); }
+		void paintIcon(Graphics g, int x, int y, int o) {
+			String s=crt_map.getDisplayString(caps_lock_set, o);
+			int offset = utility_font.stringWidth(s)/2;
+			g.drawUtilityString(s, x-offset, y, g.TOP|g.LEFT); }
 
 		/** Paint the 'simple' unstacked chord displays, in the small graphics context
 		 * @param g the graphics context
@@ -323,12 +303,16 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 * @param offset the base offset of the chord
 		 */		 		 		 		 		 		 		
 		void paintChord(Graphics g, int x, int y, int offset, boolean active) {
-			// g.setFont(utility_font);
-			paintKey(g, x+ltr_x[0], y+ltr_y[0], offset+0, active);
-			paintKey(g, x+ltr_x[1], y+ltr_y[1], offset+1, active);
-			paintKey(g, x+ltr_x[2], y+ltr_y[2], offset+2, active);
-			paintKey(g, x+ltr_x[3], y+ltr_y[3], offset+3, active);
-			/* g.setFont(sys_font); */ }
+			paintIcon(g, x+ltr_x_wd[0], y+ltr_y[0], offset+0, active);
+			paintIcon(g, x+ltr_x_wd[1], y+ltr_y[1], offset+1, active);
+			paintIcon(g, x+ltr_x_wd[2], y+ltr_y[2], offset+2, active);
+			paintIcon(g, x+ltr_x_wd[3], y+ltr_y[3], offset+3, active); }
+
+		void paintChord(Graphics g, int x, int y, int offset) {
+			paintIcon(g, x+ltr_x[0], y+ltr_y[0], offset+0);
+			paintIcon(g, x+ltr_x[1], y+ltr_y[1], offset+1);
+			paintIcon(g, x+ltr_x[2], y+ltr_y[2], offset+2);
+			paintIcon(g, x+ltr_x[3], y+ltr_y[3], offset+3); }
 
     /**
      * paint the virtual keyboard on the screen
@@ -350,25 +334,14 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			switch(display_chords_mode) {
 				case NO_DISP: return 1;
 				case SM_DISP: return key_bg_img.getWidth()+8;
-				case LG_DISP: default: return lg_dim_width+1; } }
+				case LG_DISP: default: return (GRPWIDTH*3)+(GAPSIZE*2); } }
 			
 		int getHeight() {
 			switch(display_chords_mode) {
 				case NO_DISP: return 1;
-				case SM_DISP: return key_bg_img.getHeight()+4+IMGPAD+c_lock_img.getHeight();
-				case LG_DISP: default: return lg_dim_height+1; } }
+				case SM_DISP: return key_bg_img.getHeight()+4+GAPSIZE+c_lock_img.getHeight();
+				case LG_DISP: default: return (GRPHEIGHT*3)+(GAPSIZE*3)+c_lock_img.getHeight(); } }
 			
-	  /**
-	   * paint a single key from the live chord
-	   * 
-	   * @param g The graphics context to which to paint
-	   * @param x X coordinate of the string (center)
-	   * @param y Y coordinate of the string (top)
-	   * @param o The offset into the chord of the key
-	   */
-		void paintKey(Graphics g, int x, int y, int o, boolean active) {
-			paintIcon(g, x, y, o, active); }
-		
 		/**
 		 * Display caps lock state -- just paint one image or another
 		 * @param g the graphics object passed into the paint method
@@ -401,19 +374,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			paintCapsLockState(g);
 			paintSelectionState(g); }		 		
 
-		// TODO: Allow them to toggle it up to TL
 		
-		// Letter positions within chord displays
-		private final static int IMGPAD = 1;
-		private final static int[] ltr_x = { 0, -17, 0, 17 };
-		private final static int[] ltr_y = { 0, 12, 24, 12 };
-		// Keypad positions in the main display (generated)
-		final static int[] keypad_posn_x = { 76, 153, 128, 76, 25, 1, 25, 76, 128 };
-		final static int[] keypad_posn_y = { 53, 53, 16, 2, 16, 53, 89, 103, 89 };
-		// Raw offsets into chord table, by DPAD offset, starting at centre, then right, then
-		// counter clockwise
-		static final int[] offsets  =  { 0, 48, 128, 32, 80, 16, 112, 64, 96 };
-
     /**
      * draw the keys the current chord makes available
      * 
@@ -425,7 +386,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     	int x = 0;
     	g.setColor(WHITE);
     	g.fillRect(x, y, w, h);
-			g.setColor(BLK);
+			g.setColor(BLACK);
     	g.drawRect(x, y, w, h);
     	y+=3;
     	x+=4;
@@ -493,10 +454,12 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			live_dpad=lc_live_dpad;
 			return paint_req; }
 
-    // ********* attributes ********* //
-
-    private final static int WHITE = 0xffffff;
-    private final static int BLK = 0x000000;
+	private static final int WHITE = 0xffffff;
+	private static final int BLACK = 0x000000;
+	private static final int DKBLUE = 0x000040;
+	private static final int DKRED = 0x400000;
+	private static final int GREY = 0xc0c0c0;
+	private static final int BGCOLOR = WHITE;
     
   /**
    *	Call this with incoming standard key events. Currently,

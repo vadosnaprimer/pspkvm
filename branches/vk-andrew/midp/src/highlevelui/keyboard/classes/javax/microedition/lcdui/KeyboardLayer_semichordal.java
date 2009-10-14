@@ -235,6 +235,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		if (cvContext != null) {
 			cvContext.currentDisplay.requestScreenRepaint(); } }
         
+    static final int EPAD = 2;
 		/**
 		 * Sets the bounds of the popup layer.
 		 *
@@ -250,19 +251,19 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			int ah = getAvailableHeight();
 			switch(current_quad) {
 				case TextFieldLFImpl.QUAD_TOPLFT:
-					super.setBounds(aw-w, ah-h, w, h);
+					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
 					break;
 				case TextFieldLFImpl.QUAD_TOPRGT:
-					super.setBounds(0, ah-h, w, h);
+					super.setBounds(EPAD, ah-h-EPAD, w, h);
 					break;
 				case TextFieldLFImpl.QUAD_BOTLFT:
-					super.setBounds(aw-w, 0, w, h);
+					super.setBounds(aw-w-EPAD, EPAD, w, h);
 					break;
 				case TextFieldLFImpl.QUAD_BOTRGT:
-					super.setBounds(0, 0, w, h);
+					super.setBounds(EPAD, EPAD, w, h);
 					break;
 				default:
-					super.setBounds(aw-w, ah-h, w, h); }
+					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
 			requestFullScreenRepaint(); }
 
     /**
