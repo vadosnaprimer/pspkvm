@@ -33,8 +33,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_danzeff vk = null;
-  /** Once cell character array--useful for various inserts */
-  char tmpchrarray[];
 
 	String layerID = null;
 	/** State--tracks the quadrant we're drawing the board in -- we move it to
@@ -53,7 +51,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 	    super((Image)null, -1); // don't draw a background  
 	
 	    this.layerID  = "KeyboardLayer";
-	    tmpchrarray = new char[1];
 	    tfContext = tf;
 	    // backupString is set to original text before the kbd was used
 	    backupString = tfContext.tf.getString();
@@ -125,7 +122,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
-        tmpchrarray = new char[1];
         tfContext = null;
         cvContext = canvas;
         if (vk==null) {
@@ -357,8 +353,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 					return;
 				case SC_Keys.PST:
 					eraseSelection();
-					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
-					tfContext.tf.getString();
+					tfPutString(Clipboard.get(), tfContext);
 					return;
 				case SC_Keys.ESC:
           closeKeyEntered(false);
@@ -372,7 +367,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 						// in the constraint mask, it does.
 						return; }
 					eraseSelection();
-					tfContext.tf.insert("\n", tfContext.tf.getCaretPosition());
+					tfPutString("\n", tfContext);
 	      	tfContext.tf.getString();
 					return;
         case SC_Keys.CLF:
@@ -464,9 +459,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
     public void virtualKeyEntered(int type, char c) {
     	eraseSelection();
     	if (tfContext != null) {
-    		// We have to use the insert call because
-    		// a lot of the more exotic characters won't 
-    		// go through on uCallKeyPressed.
     		tfContext.uCallKeyPressed(c); }
       if (cvContext != null) {
 				cvContext.uCallKeyPressed(c); } }

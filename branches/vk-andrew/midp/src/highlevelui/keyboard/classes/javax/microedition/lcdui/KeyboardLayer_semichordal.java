@@ -370,8 +370,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					return;
 				case SC_Keys.PST:
 					eraseSelection();
-					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
-					tfContext.tf.getString();
+					tfPutString(Clipboard.get(), tfContext);
 					return;
 				case SC_Keys.ESC:
           closeKeyEntered(false);
@@ -385,8 +384,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 						// in the constraint mask, it does.
 						return; }
 					eraseSelection();
-					tfContext.tf.insert("\n", tfContext.tf.getCaretPosition());
-	      	tfContext.tf.getString();
+					tfPutString("\n", tfContext);
 					return;
         case SC_Keys.CLK:
           vk.caps_lock_set = ! vk.caps_lock_set;
@@ -512,16 +510,13 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return; }
 			char a = tfContext.tf.getString().charAt(p-2);
 			char b = tfContext.tf.getString().charAt(p-1);
-			// Annoyingly, to use insert, you need either a String or a char[]...
-			// so far as I can see.
-			tmpchrarray[0] = Diacriticals.getLigature(a, b);
-			if (tmpchrarray[0]==Diacriticals.NOLIGATURE) {
+			char c = Diacriticals.getLigature(a, b);
+			if (c==Diacriticals.NOLIGATURE) {
 				return; }
 			// Delete the existing characters, place the ligature in:
 			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
 			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
-			tfContext.tf.getString(); }
+			tfPutKey(c); }
 
 		/**
 		 * Called to add a diacritical to the character before the
@@ -539,10 +534,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			char a = tfContext.tf.getString().charAt(p-1);
 			// Annoyingly, to use insert, you need either a String or a char[]...
 			// so far as I can see.
-			tmpchrarray[0] = Diacriticals.getDiacritical(a, d);
+			char c = Diacriticals.getDiacritical(a, d);
 			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
-			tfContext.tf.getString(); }
+			tfPutKey(c); }
 
 	 // Called to close the thing
 	 void closeKeyEntered(boolean ok_sent) {
@@ -592,15 +586,32 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      */
     public void virtualKeyEntered(int type, char c) {
     	eraseSelection();
-    	if (tfContext != null) {
-    		// We have to use the insert call because
-    		// a lot of the more exotic characters won't 
-    		// go through on uCallKeyPressed.
-    		tmpchrarray[0]=c;
-    		tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
-      	tfContext.tf.getString(); }
+    	tfPutKey(c);
       if (cvContext != null) {
 				cvContext.uCallKeyPressed(c); } }
+		
+		// Wrapper method--allows entering 'exotic' characters
+		// in the 'any' contexts, prevents crashes in constrained
+		// contexts due to disallowed input slipping through.
+		void tfPutKey(char a) {
+			if (tfContext == null) {
+				return; }
+			int c = tfContext.getConstraints();
+				switch (c & TextField.CONSTRAINT_MASK) {
+				case TextField.PHONENUMBER:
+				case TextField.DECIMAL:
+				case TextField.NUMERIC:
+				case TextField.EMAILADDR:
+				case TextField.URL:
+					tfContext.uCallKeyPressed(a);
+					break;
+				default:
+				  // We have to use the insert call because
+    			// a lot of the more exotic characters won't 
+    			// go through on uCallKeyPressed.
+					tmpchrarray[0]=a;
+    			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
+					tfContext.tf.getString(); } }
 
     /**
      * paint text only
