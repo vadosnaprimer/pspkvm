@@ -51,7 +51,11 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     int currentKeyboard = 1; // abc
     
     // The board images
-    Image c_lock_img, key_bg_img, key_bg_img_on, sel_img;
+    Image c_lock_img, key_bg_img, key_bg_img_on, sel_img,
+    	roman_img, greek_img, cyrillic_img, symbols_img;
+    // Ordered array of the regular map images--to match
+		// the order of mapset
+    Image[] map_imgs;
     // Utility font (NB: DO *NOT* call setFont with this 
 		// as an argument--use drawUtilityString instead--this
 		// is to avoid confusing client code which might get 
@@ -71,8 +75,9 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// The keymaps, including the pointer to the crt_map.
 		SC_Keymap crt_map;
 		int crt_map_idx;
-		// Whether the transient symbols set is up
-		boolean symbols_transient;
+		// Whether the transient symbols set is up,
+		// and whether the symbols map is up.
+		boolean symbols_transient, symbols_up;
 
 		final static SC_Keymap roman_map = new SC_Keymap_Roman();
 		final static SC_Keymap cyrillic_map = new SC_Keymap_Cyrillic();
@@ -101,20 +106,23 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		// Called whenever the keyboard sends 'SLK' (Symbol lock)
 		void lock_symbols() {
 			// TODO: Handle Cyrillic, Greek symbol maps (when we've got these)
-			crt_map = roman_sym_map; 
+			crt_map = roman_sym_map;
+			symbols_up = true; 
 			symbols_transient=false; }
 
 		// Called whenever the keyboard sends 'SYM' (Transient symbol set)
 		void set_symbols_transient() {
 			// TODO: Handle Cyrillic, Greek symbol maps (when we've got these)
 			crt_map = roman_sym_map;
+			symbols_up = true;
 			symbols_transient=true; }
 
 		// Called whenever the keyboard sends 'CNC' (Symbol lock)
 		void cancel_symbols() {
 			symbols_transient=false;
+			symbols_up = false;
 			crt_map = mapset[crt_map_idx];; }
-			
+
 		// Called (from w/i the board) on all character emits--
 		// makes sure the transient board gets killed properly
 		void checkTransientCancel(int o) {
@@ -174,9 +182,22 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			Imgs_misc.psp_keys_off_segpad);
 		key_bg_img_on = LongArrayHandler.createImage(Imgs_misc.psp_keys_on_seg,
 			Imgs_misc.psp_keys_on_segpad);
+		roman_img = LongArrayHandler.createImage(Imgs_misc.roman_seg,
+			Imgs_misc.roman_segpad);
+		greek_img = LongArrayHandler.createImage(Imgs_misc.greek_seg,
+			Imgs_misc.greek_segpad);
+		cyrillic_img = LongArrayHandler.createImage(Imgs_misc.cyrillic_seg,
+			Imgs_misc.cyrillic_segpad);
+		symbols_img = LongArrayHandler.createImage(Imgs_misc.symbols_seg,
+			Imgs_misc.symbols_segpad);
+		// Order of this array must match that of mapset
+		map_imgs = new Image[3];
+		map_imgs[0] = roman_img;
+		map_imgs[1] = cyrillic_img;
+		map_imgs[2] = greek_img;
 		kheight = key_bg_img.getHeight();
 		kwidth = key_bg_img.getWidth(); }
-			
+
 	int kwidth, kheight;
 
 	// Initialize the various display variables--called at construction
@@ -258,9 +279,9 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		protected void paintLgDisplay(Graphics g) {
 			g.setColor(BGCOLOR);
 			g.fillRect(0, 0, getWidth(), getHeight());
-			g.setColor(DKBLUE);
+			g.setColor(DKRED);
 			g.fillRect(0, getHeight()-c_lock_img.getHeight(),
-				getWidth(), c_lock_img.getHeight());
+				getWidth(), c_lock_img.getHeight()+1);
 			for (int idx=0; idx<9; idx++) {
 				g.setColor(idx==live_dpad ? DKRED : DKBLUE);
 				g.fillRect(key_x[idx]*(GRPWIDTH+GAPSIZE),
@@ -351,7 +372,17 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				return; }
 			g.drawImage(c_lock_img ,
 				getWidth()-c_lock_img.getWidth()-1,
-				getHeight()-c_lock_img.getHeight()-1,
+				getHeight()-c_lock_img.getHeight(),
+				g.LEFT|g.TOP); }
+				
+		/**
+		 * Display map state -- just paint one image or another
+		 * @param g the graphics object passed into the paint method
+		 */		 		 		
+		void paintKeymapState(Graphics g) {
+			g.drawImage(symbols_up ? symbols_img : map_imgs[crt_map_idx],
+				0,
+				getHeight()-c_lock_img.getHeight(),
 				g.LEFT|g.TOP); }
 				
 		/**
@@ -363,7 +394,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 				return; }
 			g.drawImage(sel_img,
 				getWidth()-c_lock_img.getWidth()-sel_img.getWidth()-1,
-				getHeight()-sel_img.getHeight()-1,
+				getHeight()-sel_img.getHeight(),
 				g.LEFT|g.TOP); }
 
 		/**
@@ -372,8 +403,8 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 		 */
 		void paintMiscState(Graphics g) {
 			paintCapsLockState(g);
-			paintSelectionState(g); }		 		
-
+			paintSelectionState(g);
+			paintKeymapState(g); }		 		
 		
     /**
      * draw the keys the current chord makes available
