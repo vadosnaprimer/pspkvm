@@ -18,6 +18,7 @@ package javax.microedition.lcdui;
 import com.sun.midp.lcdui.*;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.MIDPWindow;
+import com.sun.midp.chameleon.CWindow;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -352,11 +353,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		public void virtualMetaKeyEntered(int m) {
 			if (tfContext == null) {
 				return; }
-			_virtualMetaKeyEntered(m);
-			setBounds(false); }
-				
-
-		void _virtualMetaKeyEntered(int m) {
 			if (tfContext == null) {
 				return; }
 			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
@@ -603,8 +599,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     		tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
       	tfContext.tf.getString(); }
       if (cvContext != null) {
-				cvContext.uCallKeyPressed(c); }
-			setBounds(false); }
+				cvContext.uCallKeyPressed(c); } }
 
     /**
      * paint text only
@@ -656,5 +651,58 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      */
     public void repaintVK() {
         requestRepaint(); }
+
+		/** Thread monitoring the board position -- moves it when needed */
+		class PosnMonitorThread extends Thread {
+		
+		boolean stopped;
+		PosnMonitorThread() {
+			stopped = false; }
+	
+		/**
+		* Check the position of the board -- move 
+		* if necessary		
+		*/
+		public final void run() {
+			while (!stopped) {
+				setBounds(false);
+				try {
+					sleep(MONITOR_DELAY); }
+				catch(InterruptedException e) {} } } }
+		
+		// End PosnMonitorThread
+
+		static final int MONITOR_DELAY = 100;
+		PosnMonitorThread monitorThread = null;
+
+		void startPosnMonitor() {
+			if (monitorThread==null) {
+				monitorThread = new PosnMonitorThread(); }
+			monitorThread.stopped=false;
+			try {
+				monitorThread.start(); }
+			catch(IllegalThreadStateException e) {} }
+
+		void stopPosnMonitor() {
+			if (monitorThread == null) {
+				return; }
+			monitorThread.stopped=true;
+			monitorThread=null; }
+		
+    /**
+     *	Overridden to control the thread
+     *	monitoring the control state
+     */
+		public void removeNotify(CWindow w) {
+			stopPosnMonitor();
+			super.removeNotify(w); }
+					 		     
+    /**
+     *	Overridden to control the thread
+     *	monitoring the control state
+     */
+		public void addNotify() {
+			startPosnMonitor();
+			super.addNotify(); }
 
 }
