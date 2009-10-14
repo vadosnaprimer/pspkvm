@@ -164,7 +164,9 @@ int size_param_to_pixels(javacall_font_size s) {
 // Call to find out if we need the utility font
 // Right now, this is just if they're using the semichordal board
 int get_need_utility_font_vmconfig() {
-	return vmsettings_key_equals("com.pspkvm.inputmethod", "semichordal"); }
+	if (vmsettings_key_equals("com.pspkvm.inputmethod", "semichordal")) {
+		return 1; }
+	return vmsettings_key_equals("com.pspkvm.inputmethod", "danzeff"); }
 
 // Call to find out if the internal font is set
 int get_internal_font_set_vmconfig() {
