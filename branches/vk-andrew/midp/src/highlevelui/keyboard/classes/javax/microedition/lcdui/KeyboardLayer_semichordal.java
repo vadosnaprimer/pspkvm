@@ -58,15 +58,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	    if (vk==null) {
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
-			current_quad = -1; // Invalid. Forces reset in setBounds.
-			setBounds();
 			setupCommands();
 			if (tfContext.isMultiLine() &&
 				(getAvailableWidth()>=vk.getWidth()) &&
 				(getAvailableHeight()>=vk.getHeight())) {
 					// If it's a multiline text field, and if there's room,
 					// start with the large display.
-				vk.setLargeDisplay(); } }
+				vk.setLargeDisplay(); }
+			current_quad = -1; // Invalid. Forces reset in setBounds.
+			setBounds(true); }
 		
 	/**
      * Setup as a command listener for external events.
@@ -128,7 +128,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
             vk = new VirtualKeyboard_semichordal(this, getAvailableWidth(),getAvailableHeight());
         }
 			current_quad = -1; // Invalid. Forces reset in setBounds.
-			setBounds();
+			setBounds(true);
 
 			// Command to dismiss
       Command keypadClose = new Command("Close", Command.OK, 1);
@@ -228,7 +228,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		return TextFieldLFImpl.QUAD_TOPLFT; }
 		
   void requestFullScreenRepaint() {
-		Display disp = null;
 		if (tfContext != null) {
 			tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
 			return; }
@@ -239,9 +238,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		 * Sets the bounds of the popup layer.
 		 *
 		 */
-		protected void setBounds() {
+		protected void setBounds(boolean schange) {
 			int upd_caret_quad = getCaretQuad();
-			if (upd_caret_quad == current_quad) {
+			if ((upd_caret_quad == current_quad) && (!schange)) {
 				return; }
 			current_quad = upd_caret_quad;
 			int w = vk.getWidth();
@@ -354,7 +353,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			if (tfContext == null) {
 				return; }
 			_virtualMetaKeyEntered(m);
-			setBounds(); }
+			setBounds(false); }
 				
 
 		void _virtualMetaKeyEntered(int m) {
@@ -455,6 +454,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					return; }
 				case SC_Keys.DSP:
 					setVisible(vk.toggleDisplayChords());
+					setBounds(true);
 					disp.requestScreenRepaint();
 					return;
 				case SC_Keys.SWM:
@@ -604,7 +604,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
       	tfContext.tf.getString(); }
       if (cvContext != null) {
 				cvContext.uCallKeyPressed(c); }
-			setBounds(); }
+			setBounds(false); }
 
     /**
      * paint text only
