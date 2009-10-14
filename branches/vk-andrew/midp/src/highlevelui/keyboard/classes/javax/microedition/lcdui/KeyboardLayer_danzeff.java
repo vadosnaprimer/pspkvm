@@ -18,6 +18,7 @@ package javax.microedition.lcdui;
 import com.sun.midp.lcdui.*;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.MIDPWindow;
+import com.sun.midp.chameleon.CWindow;
 import java.lang.Thread;
 
 /**
@@ -62,7 +63,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 			current_quad = -1; // Invalid. Forces reset in setBounds.
 			setBounds();
 			monitorThread=null;
-			startCtrlMonitor();
 			setupCommands(); }
 	
 	// Get the quadrant the caret is in
@@ -343,10 +343,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 		public void virtualMetaKeyEntered(int m) {
 			if (tfContext == null) {
 				return; }
-			_virtualMetaKeyEntered(m);
-			setBounds(); }
-				
-		void _virtualMetaKeyEntered(int m) {
 			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
 			switch(m) {
 				case SC_Keys.CPY:
@@ -473,8 +469,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
     		// go through on uCallKeyPressed.
     		tfContext.uCallKeyPressed(c); }
       if (cvContext != null) {
-				cvContext.uCallKeyPressed(c); }
-			setBounds(); }
+				cvContext.uCallKeyPressed(c); } }
 
     /**
      * paint text only
@@ -540,6 +535,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 		public final void run() {
 			while (!stopped) {
 				if (vk!=null) {
+					setBounds();
 					vk.checkAnalogStick(); }
 				try {
 					sleep(CTRL_DELAY); }
@@ -565,19 +561,21 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 			monitorThread.stopped=true;
 			monitorThread=null; }
 		
-    void startStopCtrlMonitor(boolean visible) {
-			if (!visible) {
-				stopCtrlMonitor();
-				return; }
-			startCtrlMonitor(); }
-        
     /**
      *	Overridden to control the thread
      *	monitoring the control state
      */
-		public void setVisible(boolean visible) {
-			startStopCtrlMonitor(visible);
-			super.setVisible(visible); }
+		public void removeNotify(CWindow w) {
+			stopCtrlMonitor();
+			super.removeNotify(w); }
 					 		     
+    /**
+     *	Overridden to control the thread
+     *	monitoring the control state
+     */
+		public void addNotify() {
+			startCtrlMonitor();
+			super.addNotify(); }
+ 
 
 }
