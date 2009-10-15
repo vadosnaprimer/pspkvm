@@ -12,8 +12,8 @@ public class KeymapSettingsForm extends VMSettingsForm {
 	// Default keymap 
 	static final String DEFKMLABEL="Default keymap";
 	static final String[] DEFKMTYPES = {
-		"Eastern (X is cancel) (PSPKVM default)",
-		"Western (X is confirm)" };
+		"Eastern (O for confirm) (PSPKVM default)",
+		"Western (X for confirm)" };
 	static final String[] DEFKMTYPES_V = {
 		"eastern", "western"};
 	static final String DEFKMTYPES_PNAME = "com.pspkvm.default_keymap";
