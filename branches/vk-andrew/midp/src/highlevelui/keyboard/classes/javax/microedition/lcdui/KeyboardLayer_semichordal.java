@@ -33,7 +33,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
   /** Once cell character array--useful for various inserts */
-  char tmpchrarray[];
+  static char tmpchrarray[];
 
 	String layerID = null;
 	/** State--tracks the quadrant we're drawing the board in -- we move it to

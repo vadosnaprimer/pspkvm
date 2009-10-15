@@ -51,7 +51,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     int currentKeyboard = 1; // abc
     
     // The board images
-    Image c_lock_img, key_bg_img, key_bg_img_on, sel_img,
+    Image c_lock_img, key_bg_img, sel_img,
     	roman_img, greek_img, cyrillic_img, symbols_img;
     // Ordered array of the regular map images--to match
 		// the order of mapset
@@ -180,8 +180,6 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 			Imgs_misc.sel_segpad);
 		key_bg_img = LongArrayHandler.createImage(Imgs_misc.psp_keys_off_seg,
 			Imgs_misc.psp_keys_off_segpad);
-		key_bg_img_on = LongArrayHandler.createImage(Imgs_misc.psp_keys_on_seg,
-			Imgs_misc.psp_keys_on_segpad);
 		roman_img = LongArrayHandler.createImage(Imgs_misc.roman_seg,
 			Imgs_misc.roman_segpad);
 		greek_img = LongArrayHandler.createImage(Imgs_misc.greek_seg,
@@ -425,7 +423,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
     	x += (key_bg_img.getWidth()/2);
     	y+=6;
     	paintChord(g, x, y, chordal_offset, true); }
-			
+
 		/**
 		 *	Translate the control state into a DPAD direction for display
 		 */		 		 		
@@ -491,7 +489,7 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
 	private static final int DKRED = 0x400000;
 	private static final int GREY = 0xc0c0c0;
 	private static final int BGCOLOR = WHITE;
-    
+
   /**
    *	Call this with incoming standard key events. Currently,
    *	it just processes analog stick commands, since these are the
