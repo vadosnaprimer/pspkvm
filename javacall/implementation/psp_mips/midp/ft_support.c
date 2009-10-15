@@ -58,7 +58,7 @@ const char* _typeface_filenames[] = {
 const char* _fallback_fn = "fallback.ttf";
 
 /** Utility font filename */
-const char* _utility_typeface_fn = "utility.ttf";
+const char* _utility_typeface_fn = "utility.sym";
 /** Utility font size */
 const int _UTILITY_PIXEL_SIZE = 13;
 
