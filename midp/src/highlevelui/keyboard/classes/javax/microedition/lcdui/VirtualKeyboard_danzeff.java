@@ -102,7 +102,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 			if (y < LTHRESHOLDA) { live_key = 3; return; }
 			if (y > HTHRESHOLDA) { live_key = 7; return; }
 			live_key = 0; }
-			
+
 		boolean handleMetaKey(int o) {
 			if (o==0) {
 				// Delete
@@ -132,20 +132,19 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 					return false; } }
 
 		void handleVKPress(int o) {
-			int offset = (4*live_key)+o;
-			// Special handling for certain offsets
-			if (handleMetaKey(offset)) {
+	  	char c = cmaps[cboard][(4*live_key)+o];
+	  	if (c==MTA) {
+				handleMetaKey((4*live_key)+o);
 				return; }
-	  	String s = maps[cboard][offset];
-			if (s.length()==0) {
+			if (c==NUL) {
 				return; }
-			vkl.virtualKeyEntered(EventConstants.PRESSED, s.charAt(0)); }
-			
+			vkl.virtualKeyEntered(EventConstants.PRESSED, c); }
+
+		// TODO: Tighten
 		void setLiveMap(int p) {
 			int nboard = cboard;
-			if ((nboard%2)==1) {
-				// Get back to the unshifted board
-				nboard--; }
+			// Get back to the unshifted board
+			nboard &= 2;
 			// Now, see if it's shifted now.
 			nboard += ((p & PSPCtrlCodes.RTRIGGER)!=0) ? 1 : 0;
 			boolean n_lshift = ((p & PSPCtrlCodes.LTRIGGER)!=0);
@@ -158,7 +157,27 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 			cboard = nboard;
 			if (redraw) {
 				vkl.repaintVK(); } }
-	
+
+	// Lookup array to speed along handle_symbol.
+	final static int[] of_lkup = { 0, 0, 3, 0, 2, 0, 0, 0, 1 };
+
+	void handle_symbol(int p) {
+		// Get the symbol code into the set 1, 2, 4, 8
+		// (Forgive the arcane code. Optimizing. See
+		// PSPCtrlCodes re the values of the symbol keys
+		// in this field.)
+		p >>= 12;
+		if (p>8) {
+			return; }
+		int o = of_lkup[p];
+		char c = cmaps[cboard][(4*live_key)+o];
+  	if (c==MTA) {
+			handleMetaKey((4*live_key)+o);
+			return; }
+		if (c==NUL) {
+			return; }
+		vkl.virtualKeyEntered(EventConstants.PRESSED, c); }
+
 	/**
 	 *
 	 * Call this with the incoming raw stroke--board will process and return
@@ -170,34 +189,33 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
     public void processRawStroke(int p) {
     	// Handle shoulder button shifts here
     	setLiveMap(p);
-    	if ((p & PSPCtrlCodes.CROSS)!=0) {
-    		handleVKPress(2);
-    		return; }
-    	if ((p & PSPCtrlCodes.TRIANGLE)!=0) {
-    		handleVKPress(0);
-    		return; }
-    	if ((p & PSPCtrlCodes.SQUARE)!=0) {
-    		handleVKPress(1);
-    		return; }
-    	if ((p & PSPCtrlCodes.CIRCLE)!=0) {
-    		handleVKPress(3);
-    		return; }
-    	if ((p & PSPCtrlCodes.LEFT)!=0) {
-    		vkl.virtualMetaKeyEntered(SC_Keys.CLF);
-    		return; }
-    	if ((p & PSPCtrlCodes.RIGHT)!=0) {
-    		vkl.virtualMetaKeyEntered(SC_Keys.CRT);
-    		return; }
-    	if ((p & PSPCtrlCodes.UP)!=0) {
-    		vkl.virtualMetaKeyEntered(SC_Keys.CUP);
-    		return; }
-    	if ((p & PSPCtrlCodes.DOWN)!=0) {
-    		vkl.virtualMetaKeyEntered(SC_Keys.CDN);
-    		return; } }
+    	// Short circuit
+    	if (p==0) {
+				return; }
+    	int s = (p & PSPCtrlCodes.SYMBOLS);
+    	int d = (p & PSPCtrlCodes.DPAD_MASK);
+    	if (s != 0) {
+				handle_symbol(s);
+				return; }
+			if (d == 0) {
+				return; }
+			switch(d) {
+    		case PSPCtrlCodes.LEFT:
+    			vkl.virtualMetaKeyEntered(SC_Keys.CLF);
+    			return;
+    		case PSPCtrlCodes.RIGHT:
+    			vkl.virtualMetaKeyEntered(SC_Keys.CRT);
+    			return;
+    		case PSPCtrlCodes.UP:
+    			vkl.virtualMetaKeyEntered(SC_Keys.CUP);
+    			return;
+    		case PSPCtrlCodes.DOWN:
+    			vkl.virtualMetaKeyEntered(SC_Keys.CDN);
+    			return; 
+				default: } }
      	
   // Display colours
 	private static final int WHITE = 0xffffff;
-	private static final int BLACK = 0x000000;
 	private static final int DKBLUE = 0x000040;
 	private static final int DKRED = 0x400000;
 	private static final int GREY = 0xc0c0c0;
@@ -214,6 +232,9 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 	// Utility font--used to draw the key glyphs
 	static final Font utility_font =
 		Font.getFont(Font.FACE_UTILITY, Font.STYLE_BOLD, Font.SIZE_SMALL);
+		
+	static final char MTA = (char)1;
+	static final char NUL = (char)0;
 	
 	// Display map
 	static final String[] map_0 = {
@@ -226,7 +247,20 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		"(", "r", "s", "t",
 		":", "u", "v", "w",
 		")", "x", "y", "z" };
-		
+	
+	// Char map
+	static final char[] cmap_0 = {
+		MTA, 'm', ' ', 'n', 
+		'?', 'o', 'p', 'q',
+		'!', 'g', 'h', 'i',
+		'.', 'd', 'e', 'f',
+		',', 'a', 'b', 'c',
+		'-', 'j', 'k', 'l',
+		'(', 'r', 's', 't',
+		':', 'u', 'v', 'w',
+		')', 'x', 'y', 'z' };
+	
+	// Display map
 	static final String[] map_1 = {
 		BSPG, "M", SPCG, "N", 
 		"\"", "O", "P", "Q",
@@ -237,6 +271,18 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		"=", "R", "S", "T",
 		";", "U", "V", "W",
 		"/", "X", "Y", "Z" };
+		
+	// Char map
+	static final char[] cmap_1 = {
+		MTA, 'M', ' ', 'N', 
+		'"', 'O', 'P', 'Q',
+		'*', 'G', 'H', 'I',
+		'@', 'D', 'E', 'F',
+		'^', 'A', 'B', 'C',
+		'_', 'J', 'K', 'L',
+		'=', 'R', 'S', 'T',
+		';', 'U', 'V', 'W',
+		'/', 'X', 'Y', 'Z' };
 		
 	// Display map
 	static final String[] map_2 = {
@@ -250,6 +296,19 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		"", "", "", "8",
 		"", "", "0", "9" };
 
+	// Char map
+	static final char[] cmap_2 = {
+		MTA, NUL, ' ', '5', 
+		NUL, NUL, MTA, '6',
+		NUL, NUL, MTA, '3',
+		NUL, NUL, MTA, '2',
+		NUL, NUL, MTA, '1',
+		NUL, NUL, NUL, '4',
+		NUL, NUL, NUL, '7',
+		NUL, NUL, NUL, '8',
+		NUL, NUL, '0', '9' };
+
+	// Display map
 	static final String[] map_3 = {
 		BSPG, "", SPCG, "", 
 		"+", "\\", "=", "/",
@@ -261,7 +320,20 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		"~", "$", "`", "%",
 		"*", "^", "|", "&" };
 		
+	// Char map
+	static final char[] cmap_3 = {
+		MTA, NUL, ' ', NUL, 
+		'+', '\\', '=', '/',
+		'-', '[', '_', ']',
+		'"', '<', '\'', '>',
+		',', '(', '.', ')',
+		'!', '{', '?', '}',
+		':', '@', ';', '#',
+		'~', '$', '`', '%',
+		'*', '^', '|', '&' };
+
 	static final String[][] maps = {map_0, map_1, map_2, map_3};
+	static final char[][] cmaps = {cmap_0, cmap_1, cmap_2, cmap_3};
 
 	// Letter offsets within key displays
 	private final static int[] ltr_x = { 0, -12, 0, 12 };

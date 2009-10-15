@@ -33,6 +33,8 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_danzeff vk = null;
+  /** Once cell character array--useful for various inserts */
+  static char tmpchrarray[];
 
 	String layerID = null;
 	/** State--tracks the quadrant we're drawing the board in -- we move it to
@@ -51,6 +53,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 	    super((Image)null, -1); // don't draw a background  
 	
 	    this.layerID  = "KeyboardLayer";
+	    tmpchrarray = new char[1];
 	    tfContext = tf;
 	    // backupString is set to original text before the kbd was used
 	    backupString = tfContext.tf.getString();
@@ -122,6 +125,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
+        tmpchrarray = new char[1];
         tfContext = null;
         cvContext = canvas;
         if (vk==null) {
@@ -447,6 +451,32 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 
     /** the original text field string in case the user cancels */
     String backupString;
+    
+    // Wrapper method--allows entering 'exotic' characters
+		// in the 'any' contexts, prevents crashes in constrained
+		// contexts due to disallowed input slipping through.
+		// NB: A compelling reason for using this is: it's faster.
+		// But we really should optimize the actual character screening.
+		// (TODO)
+		void tfPutKey(char a) {
+			if (tfContext == null) {
+				return; }
+			int c = tfContext.getConstraints();
+				switch (c & TextField.CONSTRAINT_MASK) {
+				case TextField.PHONENUMBER:
+				case TextField.DECIMAL:
+				case TextField.NUMERIC:
+				case TextField.EMAILADDR:
+				case TextField.URL:
+					tfContext.uCallKeyPressed(a);
+					break;
+				default:
+				  // We have to use the insert call because
+    			// a lot of the more exotic characters won't 
+    			// go through on uCallKeyPressed.
+					tmpchrarray[0]=a;
+    			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
+					tfContext.tf.getString(); } }
 
     /**
      * VirtualKeyboardListener interface
@@ -459,8 +489,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
      */
     public void virtualKeyEntered(int type, char c) {
     	eraseSelection();
-    	if (tfContext != null) {
-    		tfContext.uCallKeyPressed(c); }
+    	tfPutKey(c);
       if (cvContext != null) {
 				cvContext.uCallKeyPressed(c); } }
 
