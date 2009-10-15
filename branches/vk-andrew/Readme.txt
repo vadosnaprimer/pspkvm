@@ -1,5 +1,5 @@
 pspkvm v0.5.4 test 9
-12 October 2009
+14 October 2009
 Author: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -11,41 +11,109 @@ Project home on SF:
 Wiki--has most current help in English and Chinese:
 	http://sourceforge.net/apps/trac/pspkvm/wiki/WikiStart 
 
-*** Make sure utility.ttf is installed if using the Danzeff and/or semichordal virtual board. ***
+------------------------------
+Note--official release pending
+------------------------------
 
-NB: The Danzeff and semichordal boards in this branch build now require the TrueType system be functional for proper display of their layout. Make sure com.pspkvm.font.internal is *NOT* set and that the utility.ttf font in the psp/ directory is placed in the folder with the EBOOT.PBP file on the memory stick, if using the Danzeff or semichordal boards.
+Barring any severe bugs reported in this test build, this will in all
+probability be our last test build before the official release of 0.5.4.
+Thanks to all users who tested and commented and made this release better.
+Official release should be Oct. 18, 2009.
 
 ---------------------------------------
 Changes in release (relative to Test 8)
 ---------------------------------------
 
-The X/O keys are now fully switchable system-wide, for Western-style accept/cancel use. Use the VM Configuration midlet -> Keymap settings menu to set these keys. The settings take effect immediately after you exit the midlet.
+Summary: X/O key use can be switched to 'Western' standard system-wide,
+virtual keyboard fixes/optimizations.
 
-Note that for midlets whose keymaps or device settings you've customized, you'll have to set the accept key yourself in the Device Settings screen if you wish them to change too (and if you haven't changed them already). Set 'Select' to 'Cross' and 'Num0' to 'Circle' to emulate the default Western layout, in this case. Midlets whose device settings you have not customized will use the default ones, and so will pick up the change without additional tweaking.
+ * The X/O keys are now fully switchable system-wide, for Western-style
+accept/cancel use. Use the VM Configuration midlet -> Keymap settings menu
+to set these keys. The settings take effect immediately after you exit the
+configuration midlet.
 
-Note also that the old com.pspkvm.acceptcross setting for native dialogs is gone. The setting in the VM config midlet will affect these dialogs, the AMS, and the default keymap setting. Set it to 'Western' to use X=accept, to 'Eastern' to use O=accept.
+Note that for midlets whose keymaps or device settings you've customized, you'll
+have to set the accept key yourself in the Device Settings screen if you wish
+them to change too (and if you haven't changed them already). Set 'Select' to
+'Cross' and 'Num0' to 'Circle' to emulate the default Western layout, in this
+case. Midlets whose device settings you have not customized will use the default
+ones, and so will pick up the change without additional tweaking.
+
+Note also that the old com.pspkvm.acceptcross setting for native dialogs is
+gone. The setting in the VM config midlet will affect these dialogs, the AMS,
+and the default keymap setting. Set it to 'Western' to use X=accept, to 'Eastern'
+to use O=accept.
+
+ * Keystroke handling in the Danzeff board has been tightened for faster
+response.
+
+ * The 'smart display' feature in the semichordal and Danzeff boards, wherein the
+board displays move to stay out of your way when you're typing, has been optimized,
+streamlined, and some bugs have been removed.
+
+ * Live display in the semichordal board now places the small layout correctly.
+
+ * The semichordal display has been greatly reduced in size, and its appearance
+brought more into line with the Danzeff display. Status display for the live
+keymap has also been added (Cyrillic/Greek/Roman).
+
+ * The Danzeff board now has a status bar which displays selection state.
+
+ * The diacritics (accents) deadkey glyphs for the semichordal display have been
+modified to make them easier to read.
+
+ * Bugfix: smart display-capable boards now move properly on all key entries.
+
+ * Bugfix: the Danzeff board now displays correctly when the system is using
+the internal  font.
+
+ * Bugfix: thread shutdown for the Danzeff board's analog stick monitor has been
+fixed; threads previously remained around when the board was absent. They now
+start when the board appears, and exit when the board disappears.
+
+ * Bugfix: prevented all virtual boards from crashing constrained fields
+(numerical, URL, etc.) due to pasting in of text containing constrained
+characters. Internal interfaces now sift input correctly.
+
+ * Renamed utility.ttf to utility.sym so people stop assuming they can just 
+delete it.
+
+ * Bugfix: the Danzeff board should now work correctly with 'use internal font'
+turned on. 
 
 -------------------------------------
 Changes in branch (relative to 0.5.3)
 -------------------------------------
 
-There's a Danzeff-style virtual keyboard available now. See the VM Configuration midlet to enable it.
+There's a Danzeff-style virtual keyboard available now. See the VM Configuration
+midlet to enable it.
 
 The AMS supports folders.
 
 The semichordal board supports Greek and Cyrillic scripts, and you can customize which one you want to come up by default in the VM Config midlet.
 
-The semichordal board now uses a custom TrueType utility font (utility.ttf) for its help display/nav display.
+The semichordal board now uses a custom TrueType utility font (utility.ttf) for its
+help display/nav display.
 
-The FreeType font system now supports all three fonts (proportional, monospace, system) and bold, italic, bold/italic faces for all three, in addition to a utility font for speeding up certain system GUI displays, a 'fallback font' useful for large Han (CJK) fonts, and uses the FreeType portable cache manager to speed rendering and allow loading much larger font files than previously. It has been tested with 18 MB of fonts loaded with no errors.
+The FreeType font system now supports all three fonts (proportional, monospace,
+system) and bold, italic, bold/italic faces for all three, in addition to a
+utility font for speeding up certain system GUI displays, a 'fallback font'
+useful for large Han (CJK) fonts, and uses the FreeType portable cache manager
+to speed rendering and allow loading much larger font files than previously. It
+has been tested with 18 MB of fonts loaded with no errors.
 
-There are fixes to network setup that *should* prevent unrecoverable network dropout issue in previous builds. Generally, reconnecting from the Wifi Manager midlet should now work. Test users please report if this is the case.
+There are fixes to network setup that *should* prevent unrecoverable network
+dropout issue in previous builds. Generally, reconnecting from the Wifi Manager
+midlet should now work. Test users please report if this is the case.
 
-The Danzeff and semichordal boards support a 'smart display' feature, in which they move out of the way of the active input area in large text boxes.
+The Danzeff and semichordal boards support a 'smart display' feature, in which
+they move out of the way of the active input area in large text boxes.
 
 The Danzeff board display is slightly reduced in size from the previous build.
 
-There are additional icons in the AMS, VM configuration and network setup screens--the hope is to make thing a little easier on non-English speakers until we can get some proper translation going here.
+There are additional icons in the AMS, VM configuration and network setup
+screens--the hope is to make thing a little easier on non-English speakers
+until we can get some proper translation going here.
 
 Virtual keyboards and Freetype setup are now configured in the GUI, not in the .ini.
 
@@ -53,7 +121,10 @@ Virtual keyboards and Freetype setup are now configured in the GUI, not in the .
 Note re building
 ----------------
 
-You must link against a newer version of FreeType than is typically available in pspsdk toolchains to build this project. See the tools/freetype_239_patch directory (README.TXT within) for a patch to add the FreeType 2.3.9 distribution to your toolchain. 
+You must link against a newer version of FreeType than is typically
+available in pspsdk  toolchains to build this project. See the
+tools/freetype_239_patch directory (README.TXT within) for a patch to add the
+FreeType 2.3.9 distribution to your toolchain. 
 	 
 --------------------------------
 General information
@@ -116,6 +187,11 @@ Extract the .tgz to your PSP's /PSP/GAME/ or /PSP/GAME150 folder.
 --------------------------------
 Building instructions
 --------------------------------
+
+These are brief notes. Note that additional building instructions can be found in the
+Wiki at:
+	http://sourceforge.net/apps/trac/pspkvm/wiki/BuildingPSPKVM
+
 For those interested in the source code:
 
 1. You have to prepare the build environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup*
@@ -151,7 +227,6 @@ Requirements (pspsdk-specific libraries, also available from pspdev.org)
 
 Note that the PSPKVM is homebrew, and will not run on recent, stock PSP firmware, as these firmwares only run signed code. To run the PSPKVM binary, you need either a PSP with version 1.5 firmware, or a PSP with custom firmware, as with all homebrew.
 
-    
 --------------------------------
 Running tips
 --------------------------------
