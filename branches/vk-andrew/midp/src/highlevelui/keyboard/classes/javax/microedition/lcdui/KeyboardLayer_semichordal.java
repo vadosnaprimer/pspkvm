@@ -234,8 +234,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			return; }
 		if (cvContext != null) {
 			cvContext.currentDisplay.requestScreenRepaint(); } }
-        
-    static final int EPAD = 2;
+
+		final static int EPAD = 2;
 		/**
 		 * Sets the bounds of the popup layer.
 		 *

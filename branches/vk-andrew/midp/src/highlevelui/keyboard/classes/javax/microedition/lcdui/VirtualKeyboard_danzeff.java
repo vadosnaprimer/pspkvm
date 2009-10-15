@@ -30,8 +30,8 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
     /** instance of the virtual keyboard listener */
     VirtualKeyboardListener vkl;
     
-    // Chordal display state, transient entry state
-    boolean caps_lock_set, select_on;
+    // Select state
+    boolean select_on;
 
 		// Keyboard state--may not need
     int currentKeyboard = 1; // abc
@@ -51,6 +51,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		cboard = 0;           
 		select_on = false;
 		lshift = false;
+		constructImages();
     this.vkl = vkl; }
 
   public VirtualKeyboard_danzeff(int kbtype,
@@ -62,7 +63,8 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		live_key = 0;
 		cboard = 0;
 		select_on = false;
-		lshift = false;           
+		lshift = false;
+		constructImages();         
 		this.vkl = vkl;	}
 		
 		void checkAnalogStick() {
@@ -70,7 +72,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 			handleStickMovement();
 			if (o_live_key != live_key) {
 				vkl.repaintVK(); } }
-				
+
 		// Thresholds for when we call the stick left, right, up, down
 		final static int LTHRESHOLDA = 35;
 		final static int HTHRESHOLDA = 221;
@@ -286,18 +288,51 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		return (GRPWIDTH*3)+(GAPSIZE*2); }
 	// Get where to start drawing the board--y
 	int getHeight() {
-		return (GRPHEIGHT*3)+(GAPSIZE*2); }
-	
+		return (GRPHEIGHT*3)+(GAPSIZE*3)+sel_img.getHeight(); }
+		
+	// The board images
+  Image sel_img, dnzf_img;
+  
+	void constructImages() {
+		sel_img = LongArrayHandler.createImage(Imgs_misc.sel_seg,
+			Imgs_misc.sel_segpad);
+		dnzf_img = LongArrayHandler.createImage(Imgs_misc.dnzf_seg,
+			Imgs_misc.dnzf_segpad); }
+
+	/**
+	 * Display the selection state
+	 * @param g the graphics object passed into the paint method
+	 */
+	void paintSelectionState(Graphics g) {
+		if (!select_on) {
+			return; }
+		g.drawImage(sel_img,
+			getWidth()-sel_img.getWidth()-1,
+			getHeight()-sel_img.getHeight(),
+			g.LEFT|g.TOP); }
+
+	/**
+	 * Display misc state info
+	 * @param g the graphics object passed into the paint method
+	 */
+	void paintMiscState(Graphics g) {
+		paintSelectionState(g);
+		g.drawImage(dnzf_img, 0, getHeight()-sel_img.getHeight(), g.LEFT|g.TOP); }		 		
+
 	// Main paint method
 	public void paint(Graphics g) {
 		g.setColor(BGCOLOR);
 		g.fillRect(0, 0, getWidth(), getHeight());
+		g.setColor(DKRED);
+		g.fillRect(0, getHeight()-sel_img.getHeight(),
+			getWidth(), sel_img.getHeight()+1);
 		for(int i=0; i<9; i++) {
 			draw_key(g, maps[cboard], i*4, 
 				(key_x[i]*(GRPWIDTH+GAPSIZE)),
 				(key_y[i]*(GRPHEIGHT+GAPSIZE)),
-				i == live_key); } }
-	
+				i == live_key); }
+		paintMiscState(g); }
+
 	// Draw a single key
 	void draw_key(Graphics g, String[] k, int o, int x, int y, boolean live) {
 		g.setColor(live ? DKRED : DKBLUE);
@@ -310,5 +345,4 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 			int w = utility_font.stringWidth(k[o]);
 			g.drawUtilityString(k[o], x+ltr_x[i]-(w/2), y+ltr_y[i], g.TOP|g.LEFT);
 			o++; } }
-
 }
