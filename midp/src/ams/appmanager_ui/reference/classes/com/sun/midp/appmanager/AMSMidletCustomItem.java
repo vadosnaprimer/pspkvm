@@ -98,7 +98,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 		textLen = msi.displayName.length(); }
 		
 	// Helper for constructors--creates and inits the msi
-	void createMSI(int suiteID) throws IOException {
+	void createMSI(int suiteID) throws IOException, IllegalArgumentException {
 		MIDletSuiteInfo temp =
 			MIDletSuiteStorage.getMIDletSuiteStorage().getMIDletSuiteInfo(suiteID);
 		msi = new RunningMIDletSuiteInfo(temp, MIDletSuiteStorage.getMIDletSuiteStorage(), true) {
@@ -108,7 +108,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	// Used to read from the stream (assumes type specifier has already
 	// been read)
 	AMSMidletCustomItem(DataInputStream istream, AppManagerUI ams,
-		AMSFolderCustomItem p) throws IOException {
+		AMSFolderCustomItem p) throws IOException, IllegalArgumentException {
 		super(null, ams, p.depth+1);
 		String n = istream.readUTF();
 		int sid = istream.readInt();

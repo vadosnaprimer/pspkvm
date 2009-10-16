@@ -220,9 +220,14 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		for(int i=0; i<sfsize; i++) {
 			subfolders[i] = new AMSFolderCustomItem(this, di, owner, depth+1); }
 		int isize = di.readInt();
-		items = new AMSMidletCustomItem[isize];
+		Vector titems = new Vector(isize);
 		for(int i=0; i<isize; i++) {
-			items[i] = new AMSMidletCustomItem(di, owner, this); }
+			try {
+       	titems.addElement(new AMSMidletCustomItem(di, owner, this)); }
+      catch(Exception e) {
+      	// TODO: Recovery code ... for now, ignore. Odd state 
+				} }
+		setItemsFromVector(titems);
 		if (parent == null) {
 			// You can't remove, rename, or mark the root
 			removeCommand(markCmd);
