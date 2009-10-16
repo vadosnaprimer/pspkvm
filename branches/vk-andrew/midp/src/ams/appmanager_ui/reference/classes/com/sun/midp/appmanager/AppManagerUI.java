@@ -298,6 +298,8 @@ class AppManagerUI extends Form
 			// TODO: For now, we should also put up
 			// a warning.
 			return; }
+		if (f.marked) {
+			markedItems.removeElement(f); }
 		f.remove(); }
 
 	// Rename an item
@@ -911,9 +913,12 @@ class AppManagerUI extends Form
 				try {
 					// Remove the midlet from storage
 					midletSuiteStorage.remove(suiteInfo.suiteId);
+					// If the item was marked remove it from the markedItems vector
+					if (mci.marked) {
+						markedItems.removeElement(mci); }
 					// Remove the midlet from its parent folder
 					// and the display
-					mci.remove(); }
+					mci.remove();  }
 				catch (Throwable t) {
 					if (t instanceof MIDletSuiteLockedException) {
 						String[] val = new String[1];
