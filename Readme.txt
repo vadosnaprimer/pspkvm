@@ -1,5 +1,5 @@
 pspkvm v0.5.4 test 9
-14 October 2009
+15 October 2009
 Author: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -90,7 +90,8 @@ midlet to enable it.
 
 The AMS supports folders.
 
-The semichordal board supports Greek and Cyrillic scripts, and you can customize which one you want to come up by default in the VM Config midlet.
+The semichordal board supports Greek and Cyrillic scripts, and you can customize
+which one you want to come up by default in the VM Config midlet.
 
 The semichordal board now uses a custom TrueType utility font (utility.ttf) for its
 help display/nav display.
