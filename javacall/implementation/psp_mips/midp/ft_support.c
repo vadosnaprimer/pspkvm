@@ -24,6 +24,8 @@ static int _ftc_initialized=0;
 static int _ftc_use_internal_font = 0;
 /* State: need utility font (important if _ftc_use_internal_font is 0) */
 static int _ftc_need_utility_font = 0;
+/* State -- utility font present */
+static int _ftc_utility_font_present = 0;
 /* State: static font sizes */
 static int _ftc_small = 0;
 static int _ftc_medium = 0;
@@ -126,6 +128,11 @@ FTC_FaceID get_face_id(javacall_font_face face,
 /* Call to reset the cache manager--called to 
 	prevent dropped glyphs after sleep/resume cycle */
 void invalidate_ftc_manager() {
+	// Setting these to zero forces a whole
+	// init/config read regardless of the entry point
+	// into these calls after this one.
+	_ftc_use_internal_font = 0;
+	_ftc_need_utility_font = 0;
 	if (!_ftc_initialized) {
 		return; }
 	FTC_Manager_Done(cache_manager);
@@ -244,6 +251,7 @@ FT_Error init_font_cache_subsystem() {
 		return 1; }
 	initialize_face_ids();
 	initialize_fallback_system();
+	_ftc_utility_font_present = (access(_utility_typeface_fn, R_OK) == 0) ? 1 : 0;
 	set_scaler_rec(&current_ic, JAVACALL_FONT_FACE_SYSTEM,
 					JAVACALL_FONT_STYLE_PLAIN,
 					JAVACALL_FONT_SIZE_MEDIUM);
@@ -387,6 +395,8 @@ int _ftc_check_init(javacall_font_face lface) {
 			return 0; } }
 	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) {
 		return 0; }
+	if ((!_ftc_utility_font_present) && (lface == JAVACALL_FONT_FACE_UTILITY)) {
+		return 0; }
 	return 1; }
 
 // Same as above, when we don't know the face
@@ -436,6 +446,9 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
 		return JAVACALL_FAIL; }
   if ((current_ic.face_id)==NULL) {
   	return JAVACALL_FAIL; }
+  if ((current_ic.face_id == _utility_typeface_fn) &&
+  	(!_ftc_utility_font_present)) {
+			return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
 	FTC_SBit irec;
 	FTC_ScalerRec* selected_ic;
