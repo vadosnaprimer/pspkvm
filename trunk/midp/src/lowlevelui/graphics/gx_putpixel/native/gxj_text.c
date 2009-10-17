@@ -58,6 +58,18 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts) {
     return pfonts[1];
 }
 
+// Quick inline to isolate the CJK characters and Yi syllables
+// (0x4e00 - 0x9fff,  a000-a48f
+inline int needs_cjk_transform(jchar c) {
+	if (c < 0x4e00) {
+		return 0; }
+	if (c > 0xa48f) {
+		return 0; }
+	if (c > 0x9fff) {
+		if (c < 0xa000) {
+			return 0; } }
+	return 1; }
+
 /**
  * @file
  *
@@ -80,8 +92,9 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
     unsigned short CJK = c0;
-    if (c0 >= 0x0500) {
-    	// Transform doesn't work for Unicode pages 0 through 4
+    if (needs_cjk_transform(c0)) {
+    	// Transform doesn't work for Unicode pages 0 through 4,
+    	// and we also want to protect the user space at e000-e100
     	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 		                     ((short*)UNI_CJK)[c0]:
 	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
@@ -142,7 +155,7 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 // Replacement function for macro ... this is getting more complicated
 // Unicode pages 0 and 1 are 8 bits wide, Cyrillic (page 04) is 9 bits,
 // all the rest (Chinese, right now) are 16.
-inline char_width(jchar i) {
+inline int char_width(jchar i) {
 	// Unicode pages 0 and 1
 	if (i<512) { return 8; }
 	// Page 04 (Cyrillic)
