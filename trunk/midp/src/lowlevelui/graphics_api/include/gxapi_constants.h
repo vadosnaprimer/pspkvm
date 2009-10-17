@@ -113,6 +113,7 @@
 #define FACE_SYSTEM         0
 #define FACE_MONOSPACE     32
 #define FACE_PROPORTIONAL  64
+#define FACE_UTILITY		   512
 /** @} */
 
 #endif /* _GXAPI_CONSTANTS_H_ */
