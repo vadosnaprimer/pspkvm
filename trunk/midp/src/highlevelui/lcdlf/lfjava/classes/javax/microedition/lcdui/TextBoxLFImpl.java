@@ -696,7 +696,33 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
      */
 		public boolean isMultiLine() {
 			return true; }
+			
+		// Size caching system for getQuadrant -- optimization
+		boolean dhsizes_valid = false;
+		int dhheight, dhwidth, lheight;
+		
+		void setdhsizes() {
+			dhwidth = (((DisplayableLFImpl)tf.owner.getLF()).
+				getDisplayableWidth() / 2) - TextFieldSkin.BOX_MARGIN;
+			dhheight = (((DisplayableLFImpl)tf.owner.getLF()).
+				getDisplayableHeight() / 2) - TextFieldSkin.BOX_MARGIN;
+			lheight = ScreenSkin.FONT_INPUT_TEXT.getHeight();
+			dhsizes_valid = true; }
 
-
+		/** Reports the quadrant (quarter screen) the caret is in
+		 * within the textfield -- used by the virtual keyboards
+		 * to stay out of the way while you're typing */
+		public int getQuadrant() {
+		 	if (cursor==null) {
+			 	// Default
+				 return QUAD_TOPLFT; }
+			if (!dhsizes_valid) {
+				setdhsizes(); }
+			int y = cursor.y - (lheight * myInfo.topVis);
+			boolean r = cursor.x > dhwidth;
+			boolean b = y > dhheight;
+			if (b) {
+				return r ? QUAD_BOTRGT : QUAD_BOTLFT; }
+			return r ? QUAD_TOPRGT : QUAD_TOPLFT; }
 
 }
