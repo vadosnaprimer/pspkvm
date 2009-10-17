@@ -28,8 +28,7 @@ import java.lang.Thread;
 class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandListener {
 
 	// Commands handled in the menu bar
- 	  private Command cmdOK, cmdCancel, cmdToggleDisplay,
-  	cmdClear, cmdCopyAll, cmdRotateMap;
+ 	  private Command cmdOK, cmdCancel, cmdClear, cmdCopyAll;
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_danzeff vk = null;
@@ -79,12 +78,9 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 	void setupCommands() {
 		cmdOK = new Command("OK", Command.OK, 1);
 		cmdCancel = new Command("Cancel", Command.CANCEL, 2);
-		cmdToggleDisplay = new Command("Toggle Display", Command.HELP, 3);
-		cmdRotateMap = new Command("Rotate Map", Command.HELP, 3);
 		cmdClear = new Command("Clear", Command.HELP, 3);
 		cmdCopyAll = new Command("Copy All", Command.HELP, 3);
-		Command commands[]={cmdOK, cmdCancel, cmdToggleDisplay,
-			cmdRotateMap, cmdClear, cmdCopyAll };
+		Command commands[]={cmdOK, cmdCancel, cmdClear, cmdCopyAll };
 		setCommandListener(this);
 		setCommands(commands); }
 		       
@@ -107,12 +103,7 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 				return; }
 			if (cmd == cmdClear) {
 				virtualMetaKeyEntered(SC_Keys.CLR);
-				return; }
-			if (cmd == cmdRotateMap) {
-				virtualMetaKeyEntered(SC_Keys.SWM);
-				return; }
-      if (cmd == cmdToggleDisplay) {
-				virtualMetaKeyEntered(SC_Keys.DSP); } }
+				return; } }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
