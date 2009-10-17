@@ -1230,8 +1230,8 @@ class TextFieldLFImpl extends ItemLFImpl implements
      * @param keyCode the code for the key which was pressed
      */
     void uCallKeyPressed(int keyCode) {
-        String im = Configuration.getProperty("com.pspkvm.inputmethod");
-        if(im != null && im.equals("sony-osk")){
+        String im = com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod");
+        if(im != null && im.equals("osk")){
        	if (launchNativeTextField0(keyCode, tf.buffer, tf.owner.getTitle()) == 0) {
        		System.out.println("launchNativeTextField0 return");
             
@@ -2075,11 +2075,35 @@ class TextFieldLFImpl extends ItemLFImpl implements
     
     /**
      * Returns true to indicate this field accepts enter characters.
-     * Overridden to return true in TextBoxLFImpl.java
+     * Overridden to return true in TextBoxLFIumpl.java
      */
 		public boolean isMultiLine() {
-			return false; }		 		     
+			return false; }
 
+		/**
+		 * Returns the x coordinate of the cursor (in the local coord system)
+		 */
+		public int getCursorX() {
+			return cursor.x; }
+
+		/**
+		 * Returns the y coordinate of the cursor (in the local coord system)
+		 */
+		public int getCursorY() {
+			return cursor.y; }
+			
+		/* Field vals for the quadrant system */
+		public static final int QUAD_TOPLFT = 0;
+		public static final int QUAD_TOPRGT = 1;
+		public static final int QUAD_BOTLFT = 2;
+		public static final int QUAD_BOTRGT = 3;
+			
+		/** Reports the quadrant (quarter screen) the caret is in
+		 * within the textfield -- used by the virtual keyboards
+		 * to stay out of the way while you're typing */
+		public int getQuadrant() {
+			// This one just sez toplft for now... working on it
+			return QUAD_TOPLFT; }
     
 } // TextFieldLFImpl
 
