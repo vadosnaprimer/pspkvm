@@ -1,5 +1,5 @@
-pspkvm v0.5.4 test 9
-15 October 2009
+pspkvm v0.5.4 test 10
+17 October 2009
 Author: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -21,11 +21,58 @@ Thanks to all users who tested and commented and made this release better.
 Official release should be Oct. 18, 2009.
 
 ---------------------------------------
-Changes in release (relative to Test 8)
+Changes in release (relative to Test 9)
 ---------------------------------------
 
-Summary: X/O key use can be switched to 'Western' standard system-wide,
-virtual keyboard fixes/optimizations.
+Summary: critical bugfixes, few minor cleanups
+
+ * Bugfix: 'zombie midlet' bug in which marked, removed midlets would reappear
+on a subsequent move has been fixed. Loading code has also been modified to allow
+loading of the folder system in the AMS even after a crash due to this bug. If
+you got locked out of your VM because of this, using this build will let you back
+in.
+
+ * Bugfix: missing utility/symbols file no longer brings down the VM when
+opening virtual keyboards using it.
+
+ * Bugfix: unused menu items removed from Danzeff board.     
+
+-------------------------------------
+Changes in branch (relative to 0.5.3)
+-------------------------------------
+
+There's a Danzeff-style virtual keyboard available now. See the VM Configuration
+midlet to enable it.
+
+The AMS supports folders.
+
+The semichordal board supports Greek and Cyrillic scripts, and you can customize
+which one you want to come up by default in the VM Config midlet.
+
+The semichordal board now uses a custom TrueType utility font (utility.ttf) for its
+help display/nav display.
+
+The FreeType font system now supports all three fonts (proportional, monospace,
+system) and bold, italic, bold/italic faces for all three, in addition to a
+utility font for speeding up certain system GUI displays, a 'fallback font'
+useful for large Han (CJK) fonts, and uses the FreeType portable cache manager
+to speed rendering and allow loading much larger font files than previously. It
+has been tested with 18 MB of fonts loaded with no errors.
+
+There are fixes to network setup that *should* prevent unrecoverable network
+dropout issue in previous builds. Generally, reconnecting from the Wifi Manager
+midlet should now work. Test users please report if this is the case.
+
+The Danzeff and semichordal boards support a 'smart display' feature, in which
+they move out of the way of the active input area in large text boxes.
+
+The Danzeff board display is slightly reduced in size from the previous build.
+
+There are additional icons in the AMS, VM configuration and network setup
+screens--the hope is to make thing a little easier on non-English speakers
+until we can get some proper translation going here.
+
+Virtual keyboards and Freetype setup are now configured in the GUI, not in the .ini.
 
  * The X/O keys are now fully switchable system-wide, for Western-style
 accept/cancel use. Use the VM Configuration midlet -> Keymap settings menu
@@ -80,43 +127,6 @@ delete it.
 
  * Bugfix: the Danzeff board should now work correctly with 'use internal font'
 turned on. 
-
--------------------------------------
-Changes in branch (relative to 0.5.3)
--------------------------------------
-
-There's a Danzeff-style virtual keyboard available now. See the VM Configuration
-midlet to enable it.
-
-The AMS supports folders.
-
-The semichordal board supports Greek and Cyrillic scripts, and you can customize
-which one you want to come up by default in the VM Config midlet.
-
-The semichordal board now uses a custom TrueType utility font (utility.ttf) for its
-help display/nav display.
-
-The FreeType font system now supports all three fonts (proportional, monospace,
-system) and bold, italic, bold/italic faces for all three, in addition to a
-utility font for speeding up certain system GUI displays, a 'fallback font'
-useful for large Han (CJK) fonts, and uses the FreeType portable cache manager
-to speed rendering and allow loading much larger font files than previously. It
-has been tested with 18 MB of fonts loaded with no errors.
-
-There are fixes to network setup that *should* prevent unrecoverable network
-dropout issue in previous builds. Generally, reconnecting from the Wifi Manager
-midlet should now work. Test users please report if this is the case.
-
-The Danzeff and semichordal boards support a 'smart display' feature, in which
-they move out of the way of the active input area in large text boxes.
-
-The Danzeff board display is slightly reduced in size from the previous build.
-
-There are additional icons in the AMS, VM configuration and network setup
-screens--the hope is to make thing a little easier on non-English speakers
-until we can get some proper translation going here.
-
-Virtual keyboards and Freetype setup are now configured in the GUI, not in the .ini.
 
 ----------------
 Note re building
