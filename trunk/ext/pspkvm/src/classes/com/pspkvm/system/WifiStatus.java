@@ -69,7 +69,7 @@ public class WifiStatus {
 	//	PSP_EAP_TYPE_EAP_MD5
 	public static native int getEAPType();
 	
-	// Autostart browser on conect
+	// Autostart browser on connect
 	public static native int getStartBrowser();
 	
 	// Use WiFi service provider hotspots

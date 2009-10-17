@@ -19,7 +19,14 @@ JPP_DEFS      += -DENABLE_PSPKVM_EXT
 SUBSYSTEM_PSPKVM_EXT_JAVA_FILES += \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/WifiStatus.java \
     $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/Power.java \
-    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VMSettings.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VMSettingsForm.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VKSettingsForm.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/VMConfigMidlet.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/FontSettingsForm.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/system/KeymapSettingsForm.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/PSPCtrlCodes.java \
+    $(PSPKVM_EXT_DIR)/src/classes/com/pspkvm/keypad/RawState.java
 
 #
 # Native
@@ -33,7 +40,10 @@ vpath % $(PSPKVM_EXT_DIR)/src/native
 
 SUBSYSTEM_PSPKVM_EXT_NATIVE_FILES += \
     wifistatus.c \
-    power.c
+    power.c \
+    vmsettings.c \
+    vmsettings_store.cpp \
+    rawstate.c
 
 # Append PSPKVM EXT source bundle creation to target
 source_bundle:: pspkvm_ext_source_bundle
