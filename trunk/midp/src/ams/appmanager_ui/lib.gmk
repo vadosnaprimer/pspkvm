@@ -50,6 +50,16 @@ MIDP_JAVADOC_SOURCEPATH += $(APPMANAGER_UI_DIR)/classes
 SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppInfo.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppManagerUI.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSFolderCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSSystemFolderCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_WifiManager.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_VMConfigPanel.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_Installer.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSCustomItemRenameForm.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/QuicksortAlg.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/Sortable.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AppSettings.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/DisplayError.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/MIDletSelector.java \
@@ -63,5 +73,4 @@ SUBSYSTEM_AMS_JAVA_FILES += \
 vpath % $(APPMANAGER_UI_DIR)/native
 
 SUBSYSTEM_AMS_NATIVE_FILES += \
-    wifiselector.c
-
+    wifiselector.c 

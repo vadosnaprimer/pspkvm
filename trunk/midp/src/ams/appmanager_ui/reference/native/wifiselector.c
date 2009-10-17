@@ -62,4 +62,3 @@ KNIDECL(com_sun_midp_appmanager_WifiSelector_disconnect) {
     javacall_network_disconnect();
 #endif
 }
-
