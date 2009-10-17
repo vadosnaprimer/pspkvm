@@ -1,5 +1,7 @@
 package com.pspkvm.keypad;
 
+// NB: Not currently used, as far as I know. See PSPCtrlCodes.java
+
 public class PspCtrlData {
   public static int PSP_CTRL_SELECT = 0x000001; 
   public static int PSP_CTRL_START = 0x000008; 
