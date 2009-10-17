@@ -23,6 +23,7 @@
 #include <psputility.h>
 #include <psputility_netparam.h>
 #include <pspgu.h>
+#include <psppower.h>
 
 #if _PSP_FW_VERSION >= 200
 #include <pspusb.h>
@@ -64,13 +65,30 @@ int exit_callback(int arg1, int arg2, void *common)
 	return 0;
 }
 
+// Forward declare for the power callback
+void invalidate_ftc_manager();
+
+/* Power callback */
+static int powerCallback(int unknown, int powerInfo, void* common) {
+	if (powerInfo & PSP_POWER_CB_RESUMING) {
+		// We just invalidate it. This forces
+		// everything to reload once we need it.
+		invalidate_ftc_manager(); }
+	return 0; }
+
+
 /* Callback thread */
 int CallbackThread(SceSize args, void *argp)
 {
 	int cbid;
 
+	// Exit callback
 	cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
 	sceKernelRegisterExitCallback(cbid);
+	// Power callback.
+	const SceUID powerCallbackID = sceKernelCreateCallback("powerCallback", powerCallback, NULL);
+	scePowerRegisterCallback(0, powerCallbackID);
+
 	sceKernelSleepThreadCB();
 
 	return 0;
@@ -363,18 +381,16 @@ static void setup_gu() {
 
 int suspend_key_input = 0;
 
+// Declared extern. TODO: Use proper header
+extern int vmsettings_key_equals(const char* k, const char* cmp);
+
 int netDialog(int status)
 {
 	int state;
 	int buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
 	char* res;
-	
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.acceptcross", 
-		                                                              JAVACALL_INTERNAL_PROPERTY, 
-		                                                              &res) && res != NULL &&
-		                                                               (res[0] == 'y' || res[0] == 'Y')) {
-		buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
-	}
+	if (vmsettings_key_equals("com.pspkvm.default_keymap", "western")) {
+		buttonSwap = PSP_UTILITY_ACCEPT_CROSS; }
 
 #if _PSP_FW_VERSION >= 200
 
@@ -462,12 +478,8 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	int buttonSwap = PSP_UTILITY_ACCEPT_CIRCLE;
 	char* res;
 	
-	if (JAVACALL_OK == javacall_get_property("com.pspkvm.acceptcross", 
-		                                                              JAVACALL_INTERNAL_PROPERTY, 
-		                                                              &res) && res != NULL &&
-		                                                               (res[0] == 'y' || res[0] == 'Y')) {
-		buttonSwap = PSP_UTILITY_ACCEPT_CROSS;
-	}
+	if (vmsettings_key_equals("com.pspkvm.default_keymap", "western")) {
+		buttonSwap = PSP_UTILITY_ACCEPT_CROSS; }
 
 	suspend_key_input = 1;
 	//printf("oskDialog: inlen=%d\n", inlen);
@@ -500,7 +512,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 
 	SceUtilityOskData data;
 	memset(&data, 0, sizeof(data));
-	data.language = PSP_UTILITY_OSK_LANGUAGE_DEFAULT;			// key glyphs: 0-1=hiragana, 2+=western/whatever the other field says
+	data.language = PSP_UTILITY_OSK_LANGUAGE_DEFAULT;
 	data.lines = 1;				// just one line
 	data.unk_24 = 1;			// set to 1
 	data.desc = titletext;
@@ -514,8 +526,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 	osk.base.size = sizeof(osk);
 	// dialog language: 0=Japanese, 1=English, 2=French, 3=Spanish, 4=German,
 	// 5=Italian, 6=Dutch, 7=Portuguese, 8=Russian, 9=Korean, 10-11=Chinese, 12+=default
-	//osk.base.language = 1;
-	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &osk.base.language); 
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &osk.base.language);
 	osk.base.buttonSwap = buttonSwap;		// X button: 1
 	osk.base.graphicsThread = 17;	// gfx thread pri
 	osk.base.accessThread = 19;			
