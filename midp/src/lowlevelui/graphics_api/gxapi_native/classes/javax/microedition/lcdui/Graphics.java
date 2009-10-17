@@ -1233,6 +1233,22 @@ public class Graphics {
                                   int x, int y, int anchor);
 
     /**
+     * Draws the specified <code>String</code> using the utility font and
+     * current color.
+     * The <code>x,y</code> position is the position of the anchor point.
+     * See <a href="#anchor">anchor points</a>.
+     * @param str the <code>String</code> to be drawn
+     * @param x the x coordinate of the anchor point
+     * @param y the y coordinate of the anchor point
+     * @param anchor the anchor point for positioning the text
+     * @throws NullPointerException if <code>str</code> is <code>null</code>
+     * @throws IllegalArgumentException if anchor is not a legal value
+     * @see #drawChars(char[], int, int, int, int, int)
+     */
+    public native void drawUtilityString(java.lang.String str,
+                                  int x, int y, int anchor);
+
+    /**
      * Draws the specified <code>String</code> using the current font and color.
      * The <code>x,y</code> position is the position of the anchor point.
      * See <a href="#anchor">anchor points</a>.
