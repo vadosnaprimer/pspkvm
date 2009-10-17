@@ -11,8 +11,8 @@ import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.*;
 import com.sun.midp.chameleon.layers.PopupLayer;
-import com.sun.midp.main.Configuration;
 import com.pspkvm.midp.lcdui.vk.awf.IMCandidateBar;
+import com.pspkvm.system.VMSettings;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -75,12 +75,12 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
     public VirtualKeyboard_awf(char[][] keys, 
                            VirtualKeyboardListener vkl,
                            int neededColumns, int neededRows) throws VirtualKeyboardException {
-       if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
+    if ("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
 
-       String im = Configuration.getProperty("com.pspkvm.inputmethod");
-       if(im != null && im.equals("sony-osk")){
+    String im = VMSettings.get("com.pspkvm.inputmethod");
+    if(im != null && im.equals("osk")){
            USE_VIRTUAL_KEYBOARD = false;
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return;
@@ -158,12 +158,12 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 		  	VirtualKeyboardListener vkl,
 		  	int w,
 		  	int h) throws VirtualKeyboardException {
-       if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
+    if ("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
 
-       String im = Configuration.getProperty("com.pspkvm.inputmethod");
-       if(im != null && im.equals("sony-osk")){
+    String im = com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod");
+    if(im != null && im.equals("osk")){
            USE_VIRTUAL_KEYBOARD = false;
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return;
@@ -244,15 +244,14 @@ class VirtualKeyboard_awf extends VirtualKeyboardInterface {
 					vkl.virtualMetaKeyEntered(OK_COMMAND);
 					break;
 				case EventConstants.SOFT_BUTTON1:
-					//isShowHelp=!isShowHelp;
-					//vkl.repaintVK();
-					vkl.virtualMetaKeyEntered(CANCEL_COMMAND);
+					isShowHelp=!isShowHelp;
+					vkl.repaintVK();
 					break;
 				default:
 					break;
 				}	
 		}else if(EventConstants.RELEASED!=type){
-			if("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.direction"))){
+			if("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.direction"))){
 				//\u5207\u6362\u6447\u6746\u548c\u65b9\u5411\u952e\u7684\u4f5c\u7528
 				keyCode=transfDirectionKeyCode(keyCode);
 			}

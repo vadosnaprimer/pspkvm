@@ -11,8 +11,7 @@ import com.sun.midp.lcdui.*;
 import com.sun.midp.configurator.Constants;
 import com.sun.midp.chameleon.skins.*;
 import com.sun.midp.chameleon.layers.PopupLayer;
-import com.sun.midp.main.Configuration;
-
+import com.pspkvm.system.VMSettings;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -71,12 +70,12 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
     public VirtualKeyboard_qwert(char[][] keys, 
                            VirtualKeyboardListener vkl,
                            boolean displayTextArea, int neededColumns, int neededRows) throws VirtualKeyboardException {
-       if ("true".equals(Configuration.getProperty("com.pspkvm.virtualkeyboard.autoopen"))) {
+    if ("on".equals(com.pspkvm.system.VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
 
-       String im = Configuration.getProperty("com.pspkvm.inputmethod");
-       if(im != null && im.equals("sony-osk")){
+    String im = com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod");
+    if(im != null && im.equals("osk")){
            USE_VIRTUAL_KEYBOARD = false;
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
            return;

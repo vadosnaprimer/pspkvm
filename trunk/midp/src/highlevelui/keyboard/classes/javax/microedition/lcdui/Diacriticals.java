@@ -1,15 +1,17 @@
 /**
  * Diacriticals maps for use by the semichordal board (and others, eventually).
  * Maps unicode characters to the same character with a given diacritical added.
- * Supports all diacritical marks added to Roman bases specified in ENV 1973:1995,
+ * Supports all diacritical marks added to page 0 Latin bases specified in ENV 1973:1995,
  * Minimum European Subset of ISO/IEC 10646-1. Boards supporting this set are
- * probably useable for the vast majority of European languages.  
+ * probably useable for the vast majority of European languages. Also supports all
+ * characters in Unicode page 0x0400-0x04ff (Cyrillic) and in Unicode page
+ * 0x03700-0x037ff (Greek/Coptic) for which combining characters exist.  
  *  
- * TODO: Add support for full set, incl. ENV 1973:1995 for Greek and Cyrillic
- * annotations, and remaining (non-minimal) Roman alphabet additions.
+ * TODO: Add support for full set, incl. remaining Latin extensions (unusual Latin set
+ * characters)
  * 
  */
-// breve macron stroke caron ogonek middle_dot, dot_above
+
 package javax.microedition.lcdui;
 
 public class Diacriticals {
@@ -35,10 +37,51 @@ public class Diacriticals {
 			case SC_Keys.MDT: return getMiddleDot(a);
 			case SC_Keys.UDT: return getDotAbove(a);
 			default: return a; } }
+			
+	// Return from getLigature() if there isn't one
+	// for this combination.
+	public static final char NOLIGATURE = 0;
+
+	// Top level handler for ligatures. Hand in two characters--
+	// if we know a ligature for those, you get it back. Otherwise,
+	// zero (NOLIGATURE) is returned
+	public static char getLigature(char a, char b) {
+		int c = (((int)a)<<16) | ((int)b);
+		switch (c) {
+			// AE, ae:
+			case 0x00410045: return '\u00c6';
+			case 0x00610065: return '\u00e6';
+			// ij, IJ
+			case 0x0049004a: return '\u0132';
+			case 0x0069006a: return '\u0133';
+			// OE, oe
+			case 0x004f0045: return '\u0152';
+			case 0x006f0065: return '\u0153';
+			// Croation digraphs
+			case 0x0044017d: return '\u01c4';
+			case 0x0044017e: return '\u01c5';
+			case 0x0064017e: return '\u01c6';
+			case 0x004c004a: return '\u01c7';
+			case 0x004c006a: return '\u01c8';
+			case 0x006c006a: return '\u01c9';
+			case 0x004e004a: return '\u01ca';
+			case 0x004e006a: return '\u01cb';
+			case 0x006e006a: return '\u01cc';
+			// Aficanist linguistics
+			case 0x00640062: return '\u0238';
+			case 0x00710070: return '\u0239';
+			// Cyrillic digraphs, ligatures
+			case 0x041e0443: return '\u0478';
+			case 0x043d0443: return '\u0479';
+			case 0x043d0433: return '\u04a5';
+			case 0x041d0413: return '\u04a4';
+			default: return NOLIGATURE; } }
 
 	// Receive a character, return the same character with
 	// an acute accent added, if appropriate. If not appropriate,
 	// or we have no map, return the same character back.
+	// NB: Greek and Coptic sets call this 'Tonos'. It's the same
+	// modifier (u0301) however.
 	static char getAcute(char a) {
 		switch(a) {
 			case 'A': return '\u00c1';
@@ -65,6 +108,32 @@ public class Diacriticals {
 			// Make U,u acute U,u double acute
 			case '\u00da': return '\u0170';
 			case '\u00fa': return '\u0171';
+			// AE, ae
+			case '\u00c6': return '\u01fc';
+			case '\u00e6': return '\u01fd';
+			// Cyrillic encodings
+			case '\u0413': return '\u0403';
+			case '\u041a': return '\u040c';
+			case '\u0433': return '\u0453';
+			case '\u043a': return '\u045c';
+			// Greek/Coptic encodings
+			case '\u0391': return '\u0386';
+			case '\u0395': return '\u0388';
+			case '\u0397': return '\u0389';
+			case '\u0399': return '\u038a';
+			case '\u039f': return '\u038c';
+			case '\u03a5': return '\u038e';
+			case '\u03a9': return '\u038f';
+			case '\u03ca': return '\u0390';
+			case '\u03b1': return '\u03ac';
+			case '\u03b5': return '\u03ad';
+			case '\u03b7': return '\u03ae';
+			case '\u03b9': return '\u03af';
+			case '\u03cb': return '\u03b0';
+			case '\u03bf': return '\u03cc';
+			case '\u03c5': return '\u03cd';
+			case '\u03c9': return '\u03ce';
+			case '\u03d2': return '\u03d3';
 			default: return a; } }
 
 		// Same as for getAcute, but with ring
@@ -96,6 +165,11 @@ public class Diacriticals {
 			case 'w': return '\u1e81';
 			case 'Y': return '\u1ef2';
 			case 'y': return '\u1ef3';
+			// Cyrillic encodings
+			case '\u0415': return '\u0400';
+			case '\u0418': return '\u040d';
+			case '\u0435': return '\u0450';
+			case '\u0438': return '\u045d';
 			default: return a; } }
 			
 		// Same as for getAcute, but with tilde
@@ -141,8 +215,9 @@ public class Diacriticals {
 			default: return a; } }
 			
 	// Same as for getAcute, but with diaeresis
-	// NB: In Unicode, umlaut and diaeresis are encoded
-	// (and thus rendered) identically
+	// NB: In Unicode, umlaut, diaeresis, and (Greek)
+	// dialytika are encoded (and thus rendered)
+	// identically
 	static char getDiaeresis(char a) {
 		switch(a) {
 			case 'A': return '\u00c4';
@@ -162,6 +237,20 @@ public class Diacriticals {
 			// Add diaeresis to A,a with macron
 			case '\u0100': return '\u01de'; 
 			case '\u0101': return '\u01df';
+			// Cyrillic encodings
+			case '\u0415': return '\u0401';
+			case '\u0406': return '\u0407';
+			case '\u0435': return '\u0451';
+			case '\u0456': return '\u0457';
+			// Greek/Coptic encodings
+			case '\u0399': return '\u03aa';
+			case '\u03a5': return '\u03ab';
+			case '\u03b9': return '\u03ca';
+			case '\u03c5': return '\u03cb';
+			case '\u03d2': return '\u03d4';
+			// Add diaeresis to lower-case accent acute iota and upsilon
+			case '\u03af': return '\u0390';
+			case '\u03cd': return '\u03b0';
 			default: return a; } }
 
 		// Same as for getAcute, but with cedille
@@ -202,6 +291,16 @@ public class Diacriticals {
 			case 'o': return '\u014f';
 			case 'U': return '\u016c';
 			case 'u': return '\u016d';
+			// Cyrillic encodings
+			case '\u0423': return '\u040e';
+			case '\u0418': return '\u0419';
+			case '\u0438': return '\u0439';
+			case '\u0443': return '\u045e';
+			case '\u0416': return '\u04c1';
+			case '\u0410': return '\u04d0';
+			case '\u0430': return '\u04d1';
+			case '\u0415': return '\u04d6';
+			case '\u0435': return '\u04d7';
 			default: return a; } }
 
 	// Same as for getAcute, but with macron
@@ -221,6 +320,9 @@ public class Diacriticals {
 			// Add macron to A,a with diaeresis
 			case '\u00c4': return '\u01de'; 
 			case '\u00e4': return '\u01df';
+			// AE, ae:
+			case '\u00c6': return '\u01e2';
+			case '\u00e6': return '\u01e3';
 			// Greek support -- alpha
 			case '\u03b1': return '\u1fb1';
 			case '\u0391': return '\u1fb9';
@@ -235,6 +337,14 @@ public class Diacriticals {
 	// Same as for getAcute, but with stroke
 	static char getStroke(char a) {
 		switch(a) {
+			case 'B': return '\u0243';
+			case 'b': return '\u0180';
+			case 'C': return '\u023b';
+			case 'c': return '\u023c';
+			case 'E': return '\u0246';
+			case 'e': return '\u0247';
+			case 'J': return '\u0248';
+			case 'j': return '\u0249';
 			case 'O': return '\u00d8';
 			case 'o': return '\u00f8';
 			case 'D': return '\u0110';

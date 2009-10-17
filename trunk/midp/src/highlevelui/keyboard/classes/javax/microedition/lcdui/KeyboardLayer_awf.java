@@ -13,7 +13,6 @@ import com.sun.midp.chameleon.skins.DateEditorSkin;
 import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
-import com.sun.midp.main.Configuration;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -52,10 +51,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 
 		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
 	
-		keyboardClose = new Command("OK", Command.SCREEN, 2);
+		keyboardClose = new Command("OK", Command.SCREEN, 1);
 		keyboardHelp = new Command("Back", Command.SCREEN, 1);
 		keyboardaBack = new Command("Help", Command.EXIT, 1);
-		Command commads[]={keyboardClose,keyboardHelp/*,keyboardaBack*/};
+		Command commads[]={keyboardClose,keyboardHelp,keyboardaBack};
 		setCommandListener(this);
 		setCommands(commads);
     }       
@@ -163,7 +162,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 					vk.currentKeyboard=LOWERCASE;
 					break;
 				case KEYBOARD_INPUT_ANY://+ú+ÝPSPKVM.INI +S+++öÝ¨-¬+--S+d+¨+a--
-					if("vk-chinese".equals(Configuration.getProperty("com.pspkvm.inputmethod"))){
+					if("awf_chinese".equals(com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod"))){
 						vk.currentKeyboard=PINYIN;
 					}else{
 						vk.currentKeyboard=LOWERCASE;
@@ -531,8 +530,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 					break;
 				case VirtualKeyboard_awf.PST_COMMAND:
 					eraseSelection();
-					tfContext.tf.insert(Clipboard.get(), tfContext.tf.getCaretPosition());
-					tfContext.tf.getString();
+					tfPutString(Clipboard.get(), tfContext);
 					break;
 				case VirtualKeyboard_awf.NODIFY_IM_CHANGE_COMMAND:
 					getNextKeyBoard();
