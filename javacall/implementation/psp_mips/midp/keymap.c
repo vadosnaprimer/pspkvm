@@ -10,9 +10,9 @@
 #define PSP_KEY_NUMBER 25
 
 static const javacall_keymap default_keymap[PSP_KEY_NUMBER] = {
-       {0,                  JAVACALL_KEY_INVALID, 0},  //dummy
-       /** Shift not pressed */
-       {PSP_CTRL_UP , JAVACALL_KEY_2, 0},	
+  {0,                  JAVACALL_KEY_INVALID, 0},  //dummy
+  /** Shift not pressed */
+  {PSP_CTRL_UP , JAVACALL_KEY_2, 0},	
 	{PSP_CTRL_DOWN , JAVACALL_KEY_8, 0},
 	{PSP_CTRL_LEFT , JAVACALL_KEY_4, 0},
 	{PSP_CTRL_RIGHT , JAVACALL_KEY_6, 0},
@@ -23,7 +23,7 @@ static const javacall_keymap default_keymap[PSP_KEY_NUMBER] = {
 	{PSP_CTRL_SELECT, JAVACALL_KEY_SOFT1, 0},
 	{PSP_CTRL_START, JAVACALL_KEY_SOFT2, 0},	
 	
-       /** Shift pressed */	
+  /** Shift pressed */	
 	{PSP_CTRL_UP , JAVACALL_KEY_INVALID, 1},	
 	{PSP_CTRL_DOWN , JAVACALL_KEY_INVALID, 1},
 	{PSP_CTRL_LEFT , JAVACALL_KEY_INVALID, 1},
@@ -36,12 +36,48 @@ static const javacall_keymap default_keymap[PSP_KEY_NUMBER] = {
 	{PSP_CTRL_START, JAVACALL_KEY_POUND, 1},
 
 	/** Analog */
-       {PSP_CTRL_ANALOG_UP , JAVACALL_KEY_UP, 0},
+  {PSP_CTRL_ANALOG_UP , JAVACALL_KEY_UP, 0},
 	{PSP_CTRL_ANALOG_DOWN , JAVACALL_KEY_DOWN, 0},
 	{PSP_CTRL_ANALOG_LEFT, JAVACALL_KEY_LEFT, 0},
 	{PSP_CTRL_ANALOG_RIGHT, JAVACALL_KEY_RIGHT, 0},
 	
 };
+
+// A Western keymap (X/O are accept/cancel respectively)
+static const javacall_keymap default_keymap_western[PSP_KEY_NUMBER] = {
+	{0,                  JAVACALL_KEY_INVALID, 0},  //dummy
+	/** Shift not pressed */
+	{PSP_CTRL_UP , JAVACALL_KEY_2, 0},	
+	{PSP_CTRL_DOWN , JAVACALL_KEY_8, 0},
+	{PSP_CTRL_LEFT , JAVACALL_KEY_4, 0},
+	{PSP_CTRL_RIGHT , JAVACALL_KEY_6, 0},
+	{PSP_CTRL_SQUARE, JAVACALL_KEY_1, 0},
+	{PSP_CTRL_TRIANGLE, JAVACALL_KEY_3, 0},
+	{PSP_CTRL_CROSS, JAVACALL_KEY_SELECT, 0},
+	{PSP_CTRL_CIRCLE , JAVACALL_KEY_0, 0},
+	{PSP_CTRL_SELECT, JAVACALL_KEY_SOFT1, 0},
+	{PSP_CTRL_START, JAVACALL_KEY_SOFT2, 0},	
+	
+  /** Shift pressed */	
+	{PSP_CTRL_UP , JAVACALL_KEY_INVALID, 1},	
+	{PSP_CTRL_DOWN , JAVACALL_KEY_INVALID, 1},
+	{PSP_CTRL_LEFT , JAVACALL_KEY_INVALID, 1},
+	{PSP_CTRL_RIGHT , JAVACALL_KEY_INVALID, 1},
+	{PSP_CTRL_SQUARE, JAVACALL_KEY_7, 1},
+	{PSP_CTRL_TRIANGLE, JAVACALL_KEY_9, 1},	
+	{PSP_CTRL_CROSS, JAVACALL_KEY_CLEAR, 1},
+	{PSP_CTRL_CIRCLE , JAVACALL_KEY_5, 1},
+	{PSP_CTRL_SELECT, JAVACALL_KEY_ASTERISK, 1},
+	{PSP_CTRL_START, JAVACALL_KEY_POUND, 1},
+
+	/** Analog */
+	{PSP_CTRL_ANALOG_UP , JAVACALL_KEY_UP, 0},
+	{PSP_CTRL_ANALOG_DOWN , JAVACALL_KEY_DOWN, 0},
+	{PSP_CTRL_ANALOG_LEFT, JAVACALL_KEY_LEFT, 0},
+	{PSP_CTRL_ANALOG_RIGHT, JAVACALL_KEY_RIGHT, 0},
+	
+};
+
 
 static javacall_key java_key_table[] = {
 	JAVACALL_KEY_UP,
@@ -70,10 +106,16 @@ static javacall_key java_key_table[] = {
 
 static javacall_keymap current_keymap[PSP_KEY_NUMBER];
 
+// Declared extern. TODO: Use proper header
+extern int vmsettings_key_equals(const char* k, const char* cmp);
+
 void javacall_keymap_init() {
     int i;
+    const javacall_keymap* ref = 
+			(vmsettings_key_equals("com.pspkvm.default_keymap", "western")) ?
+				default_keymap_western : default_keymap;
     for (i = 0; i < PSP_KEY_NUMBER; i++ ) {
-        current_keymap[i] = default_keymap[i];
+        current_keymap[i] = ref[i];
     }
 }
 
@@ -107,18 +149,24 @@ void javacall_keymap_setDefaultKeymap(){
 
 void javacall_keymap_resetKeymap(){
     int i;
+    const javacall_keymap* ref = 
+			(vmsettings_key_equals("com.pspkvm.default_keymap", "western")) ?
+				default_keymap_western : default_keymap;
     printf("javacall_keymap_resetKeymap\n");
     for (i = 0; i < PSP_KEY_NUMBER; i++ ) {
-        current_keymap[i] = default_keymap[i];
+        current_keymap[i] = ref[i];
         current_keymap[i].javaKey = JAVACALL_KEY_INVALID;
     }
 }
 
 int javacall_keymap_getDefaultKey(int iJavakey) {
     int i;
+    const javacall_keymap* ref = 
+			(vmsettings_key_equals("com.pspkvm.default_keymap", "western")) ?
+				default_keymap_western : default_keymap;
     if (iJavakey >= 0 && iJavakey < javacall_keymap_javakey_number()) {
         for (i = 0; i < PSP_KEY_NUMBER; i++ ) {
-            if (default_keymap[i].javaKey== java_key_table[iJavakey]) {
+            if (ref[i].javaKey== java_key_table[iJavakey]) {
                 return i;
             }
         }
