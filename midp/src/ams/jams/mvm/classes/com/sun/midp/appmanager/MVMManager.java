@@ -71,6 +71,9 @@ public class MVMManager extends MIDlet
     private static final String WIFI_SELECTOR_APP =
     	 "com.sun.midp.appmanager.WifiSelector";
 
+    private static final String VM_CONFIG_APP =
+    	 "com.pspkvm.system.VMConfigMidlet";
+
     /** True until constructed for the first time. */
     private static boolean first = true;
 
@@ -271,6 +274,17 @@ public class MVMManager extends MIDlet
             MIDletSuiteUtils.execute(MIDletSuite.INTERNAL_SUITE_ID,
                 WIFI_SELECTOR_APP,
                 "Wifi Manager");
+        } catch (Exception ex) {
+            displayError.showErrorAlert(Resource.getString(
+                ResourceConstants.CA_MANAGER_APP), ex, null, null);
+        }
+    }
+
+    public void launchVMConfigPanel() {
+        try {
+            MIDletSuiteUtils.execute(MIDletSuite.INTERNAL_SUITE_ID,
+                VM_CONFIG_APP,
+                "VM Config Panel");
         } catch (Exception ex) {
             displayError.showErrorAlert(Resource.getString(
                 ResourceConstants.CA_MANAGER_APP), ex, null, null);
