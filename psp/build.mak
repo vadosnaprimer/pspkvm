@@ -94,7 +94,7 @@ else
 PSPSDK_LIBS = -lpspdebug -lpspdisplay -lpspge -lpspctrl -lpspsdk
 LIBS     := $(LIBS) $(PSPSDK_LIBS) $(PSPSDK_LIBC_LIB) -lpspnet \
 			-lpspnet_inet -lpspnet_apctl -lpspnet_resolver -lpsputility \
-			-lpspuser -lpspkernel
+			-lpspuser -lpsppower -lpspkernel
 endif
 endif
 
