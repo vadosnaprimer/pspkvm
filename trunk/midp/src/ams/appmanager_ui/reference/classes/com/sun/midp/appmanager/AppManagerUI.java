@@ -264,9 +264,31 @@ class AppManagerUI extends Form
 	void moveMidlet(AMSFolderCustomItem t, AMSMidletCustomItem s) {
 		s.remove();
 		t.append(s); }
+		
+	// Check if a requested move can be done.
+	boolean isLegalMove(AMSFolderCustomItem t) {
+		for (int j=0; j < markedItems.size(); j++) {
+			Object i = markedItems.elementAt(j);
+			if (t==i) {
+				// Can't move something into itself
+				return false; }
+			if (i instanceof AMSFolderCustomItem) {
+				if (t.hasParent((AMSFolderCustomItem)i)) {
+					// Can't move a parent into its own child 
+					return false; } } }
+		return true; }
+	
+	static final String ILLEGAL_MOVE = "You cannot move a folder into its own child, nor into itself.";
+	
+	void launchIllegalMoveAlert() {
+		Alert a = new Alert(null, ILLEGAL_MOVE, null, AlertType.ERROR);
+    display.setCurrent(a, this); }	
 
 	// Move all the marked items to the target folder
 	void moveTo(AMSFolderCustomItem t) {
+		if (!isLegalMove(t)) {
+			launchIllegalMoveAlert();
+			return; }
 		while (markedItems.size()>0) {
 			Object i = markedItems.elementAt(0);
 			unmarkItem((AMSCustomItem)i);
