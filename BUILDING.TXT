@@ -1,0 +1,77 @@
+Current to post version 0.5.4 Test 10
+18 October 2009
+Authors: Sleepper, M@x, Anweifeng, AJ Milne
+Email: pspkvm@gmail.com
+Project website: 
+	http://www.pspkvm.org
+	http://www.pspkvm.com 
+	http://www.pspkvm.cn
+Project home on SF:
+	https://sourceforge.net/projects/pspkvm
+Project wiki:
+	http://sourceforge.net/apps/trac/pspkvm/wiki/WikiStart
+
+
+--------------------------------
+Building instructions
+--------------------------------
+
+Additional documentation
+------------------------
+
+ * See Readme.txt for user tips and general project information.
+ * See CHANGELOG.TXT for a record of updates and bugfixes.
+
+
+These are brief notes. Additional building instructions can be found in the
+Wiki at:
+	http://sourceforge.net/apps/trac/pspkvm/wiki/BuildingPSPKVM
+
+For those interested in the source code:
+
+1. You have to prepare the build environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup*. 
+
+Now assuming you have installed the build environment by following the above instructions, in Cygwin:
+
+2. Retrieve the source code via svn to a local directory**
+3. cd ${your_source_dir}
+4. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
+5. ./build-psp-cldc.sh
+Now you should see the success message following the building of the phoneME libs.
+6. cd psp
+7. Make the executable:***
+- If building for the 1.50 kernel:
+    make kxploit
+    You should get pspkvm and pspkvm% directories in this directory, just copy them to your PSP's /PSP/GAME or /PSP/GAME150 directory.
+- If building for 3.xx OE:
+    make BUILD_SLIM=true
+    This will build an EBOOT.PBP binary in this directory. Copy it to your PSP's /PSP/GAME/pspkvm directory.
+8. Copy the "lib" and "appdb" directories from ${your_source_dir}/midp/build/javacall_psp/output/ into your PSP's /PSP/GAME/pspkvm directory
+9. unzip midi_res.zip to your PSP's /PSP/GAME/pspkvm directory (If you need MIDI support)
+
+* Note: you do not necessarily have to use the prepared Cygwin distribution suggested by these instructions, but this is probably the easiest approach if you do not already have a Cygwin distribution installed. If you wish to attempt to build the project with your current Cygwin installation, however, you will probably at least have to roll back your make binary to version 3.80 (assuming you have a more recent version), as make 3.81 and later do not handle DOS-style paths correctly in makefiles, and the phoneME build system requires a make that does.
+
+** Note: you may have difficulty building the port with certain directory arrangements, due to Windows-based Java code failing properly to parse Posix-style Cygwin file paths. To avoid/correct this, place your pspkvm installation in a high or root directory, and mount it in Cygwin in such a fashion that the Posix and DOS paths wind up being the same thing. For example, place the dpspkvm directory in the root of the C: drive (as in, in C:\pspkvm), then mount this directory on /pspkvm in Cygwin, with a command such as mount c:/pspkvm /pspkvm . Then run build-psp-cldc.sh from /pspkvm within Cywgin--the project root directory should default to /pspkvm, and building should proceed correctly.
+
+*** Note: you will also need the PSP homebrew development toolchain and the pspsdk to build the binary for the PSP (step 7). As of this writing, both are available from http://ps2dev.org/psp/Tools/Toolchain/.
+
+Requirements (pspsdk-specific libraries, also available from pspdev.org)
+    SDL_mixer
+    libvorbis
+    libogg
+    
+-----------------
+Note re FreeType2
+-----------------
+
+You must link against a newer version of FreeType than is currently
+available in the pspsdk svn repository to build this project. See the
+tools/freetype_239_patch directory (README.TXT within) for a patch to add the
+FreeType 2.3.9 distribution to your toolchain. 
+
+-------------------------------------
+Note re running homewbrew on your PSP
+-------------------------------------
+
+The PSPKVM is homebrew, and will not run on recent, stock PSP firmware, as these firmwares only run signed code. To run the PSPKVM binary, you need either a PSP with version 1.5 firmware, or a PSP with custom firmware, as with all homebrew. See also the notes in the Wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/RunningPSPHomebrew
+
