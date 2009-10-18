@@ -22,7 +22,15 @@ Additional documentation
 
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
+ * 
 
+--------------------
+Changes post-release
+--------------------
+
+ * AMS warns when you attempt to move a folder into itself or into its own child.
+ * Changed Config midlet 'Exit' to 'Done'.
+ * AMS allows deleting of non-empty folders.  
 
 ---------------------------------------
 Changes in release (relative to Test 9)
