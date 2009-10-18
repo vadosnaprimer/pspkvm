@@ -19,7 +19,7 @@ public class VMConfigMidlet extends MIDlet implements CommandListener {
 	static final Command settingsFormConfirmCmd = new Command("OK", Command.OK, 1);
 	// Launch config form command
 	static final Command launchFormCmd = new Command("Configure", Command.SCREEN, 1);
-	static final Command exitCmd = new Command("Exit", Command.EXIT, 1);
+	static final Command exitCmd = new Command("Done", Command.EXIT, 1);
 	
 	// The selector list
 	List selector;
