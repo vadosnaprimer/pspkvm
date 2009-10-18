@@ -353,6 +353,28 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		v.removeElement(m);
 		setItemsFromVector(v); }
 		
+	// Place all the contents of this folder and all subfolders in the root
+	// -- pass the root through in 'root'.
+	// RECURSIVE--used to place all midlets in a folder tree
+	// in the root prior to delete.
+	// Also places each in a Vector which is a list
+	// of midlets to delete after completing this operation.
+	void moveAllMidletsToRootForDelete(Vector l, AMSFolderCustomItem root) {
+		while(items.length>0) {
+			AMSMidletCustomItem i = items[0];
+			i.remove();
+			root.append(i);
+			l.addElement(i); }
+		for(int j=0; j<subfolders.length; j++) {
+			subfolders[j].moveAllMidletsToRootForDelete(l, root); } }
+			
+	// Recursively removes all the subfolders of this folder--used when
+	// removing the folder.
+	void removeAllSubfolders() {
+		for(int i=subfolders.length-1; i>=0; i--) {
+			subfolders[i].removeAllSubfolders();
+			owner.removeFolder(subfolders[i]); } }
+		
 	// Remove this item from its parent
 	void remove() {
 		if (parent==null) {

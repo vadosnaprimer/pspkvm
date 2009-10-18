@@ -311,14 +311,46 @@ class AppManagerUI extends Form
 		AMSCustomItemRenameForm rnb = new AMSCustomItemRenameForm(this, f, true);
 		display.setCurrent(rnb); }
 		
+	static final String DELETE_NONEMPTY_FOLDER = "Do you wish to remove the folder and all its contents? Any midlets contained within will have to be reinstalled if you wish to use them again.";
+	static final String DELETE_FAILURES = "There were errors deleting some midlets contained within the folder or its children. Midlets which could not be deleeted will be found in the root folder.";
+	
+	static final Command confirmRemoveFolderCmd = new Command("OK", Command.OK, 1);
+	static final Command cancelRemoveFolderCmd = new Command("Cancel", Command.CANCEL, 1);
+	AMSFolderCustomItem folderToDelete = null;
+	int failedMidletDeletes=0;
+	boolean removingMultipleMidlets=false;
+	
+	void launchNonEmptyRemoveFolderAlert(AMSFolderCustomItem f) {
+		Alert a = new Alert(null, DELETE_NONEMPTY_FOLDER, null, AlertType.WARNING);
+		a.addCommand(confirmRemoveFolderCmd);
+		a.addCommand(cancelRemoveFolderCmd);
+		folderToDelete = f;
+		a.setCommandListener(this);
+    display.setCurrent(a, this); }
+    
+  void removeNonEmptyFolder() {
+  	if (folderToDelete==null) {
+			// Really shouldn't happen. 
+			return; }
+		Vector midletsToDelete = new Vector();
+		folderToDelete.moveAllMidletsToRootForDelete(midletsToDelete, rootFolder);
+		folderToDelete.removeAllSubfolders();
+		removeFolder(folderToDelete);
+		failedMidletDeletes=0;
+		removingMultipleMidlets=true;
+		for(int i=0; i<midletsToDelete.size(); i++) {
+			remove(((AMSMidletCustomItem)(midletsToDelete.elementAt(i))).msi); }
+		if (failedMidletDeletes>0) {
+			rootFolder.updateContentDisplay();
+			Alert a = new Alert(null, DELETE_FAILURES, null, AlertType.ERROR);
+	    display.setCurrent(a, this);
+	    return; }
+	  display.setCurrent(this); }
+
 	// Remove a folder
 	void removeFolder(AMSFolderCustomItem f) {
 		if (!f.isEmpty()) {
-			// TODO: Eventually, we should allow this--and
-			// recursively tear out everything within--useful for 
-			// rapid removal of contents
-			// TODO: For now, we should also put up
-			// a warning.
+			launchNonEmptyRemoveFolderAlert(f);
 			return; }
 		if (f.marked) {
 			markedItems.removeElement(f); }
@@ -529,32 +561,39 @@ class AppManagerUI extends Form
      */
     public void commandAction(Command c, Displayable s) {
     
+    	if (c == confirmRemoveFolderCmd) {
+    		removeNonEmptyFolder();
+    		return; }
+
+			if (c == cancelRemoveFolderCmd) {
+				display.setCurrent(this);
+				return; }
+
     	if (c == unmarkAllCmd) {
 				unmarkAll();
 				return; }
-			
+
 			if (c == AMSCustomItemRenameForm.cancelCmd) {
 				display.setCurrent(this);
 				return; }
-   	
+
 			if (c == AMSCustomItemRenameForm.doneCmd) {
 				AMSCustomItemRenameForm f = (AMSCustomItemRenameForm)s;
 				f.commitChanges();
 				display.setCurrent(this);
 				return; }
-    
-        if (c == exitCmd) {
-            if (s == this) {
-                manager.shutDown();
-            }
-            return;
-        }
+
+     if (c == exitCmd) {
+        if (s == this) {
+            manager.shutDown(); }
+        return; }
 
         // for the rest of the commands
         // we will have to request AppSelector to be displayed
         if (c == removeOkCmd) {
 
             // suite to remove was set in confirmRemove()
+            removingMultipleMidlets=false;
             try {
                 remove(removeMsi);
             } catch (Throwable t) {
@@ -942,6 +981,9 @@ class AppManagerUI extends Form
 					// and the display
 					mci.remove();  }
 				catch (Throwable t) {
+					if (removingMultipleMidlets) {
+						failedMidletDeletes++;
+						return; }
 					if (t instanceof MIDletSuiteLockedException) {
 						String[] val = new String[1];
 						val[0] = suiteInfo.displayName;
@@ -966,7 +1008,8 @@ class AppManagerUI extends Form
 					}
 				
 				removeMsi = null;
-				display.setCurrent(this); }
+				if (!removingMultipleMidlets) {
+					display.setCurrent(this); } }
 
     /**
      * Alert the user that an action was successful.
@@ -1002,7 +1045,7 @@ class AppManagerUI extends Form
         String extraConfirmMsg;
         String[] values = new String[1];
         MIDletSuiteImpl midletSuite = null;
-
+        
         try {
             midletSuite = midletSuiteStorage.getMIDletSuite(suiteInfo.suiteId,
                                                             false);
