@@ -1,5 +1,5 @@
-pspkvm v0.5.3
-31 July 2009
+Current to post version 0.5.4 Test 10
+17 October 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -8,49 +8,27 @@ Project website:
 	http://www.pspkvm.cn
 Project home on SF:
 	https://sourceforge.net/projects/pspkvm
+Project wiki:
+	http://sourceforge.net/apps/trac/pspkvm/wiki/WikiStart
 
------------------------------------------------
-Changes since release (in current trunk source)
------------------------------------------------
+	
+--------------
+General README
+--------------
 
-- Tools for built-in font manipulation (midp/src/tools/fontgen/...) updated to work with current bitmap files.
-- Built-in font now supports basic Cyrillic characters in Unicode range 0x0400 to 0x045f (should support Russian, Ukrainian, Macedonian, Byelorussian). 
-	 
---------------------------------
-Change log (0.5.3)
---------------------------------
-- Bugfix for 'Default CPU speed setting doesn't work' (tracker ID 2812036)
-- Bugfix for Sony Ericsson 480x272 profile issue (tracker ID 2812032)
-- Bugfix for 'QWERTY board opens allcaps' (tracker ID 2806367)
-- Bugfix makes available missing top half of Unicode page 0 in built-in font
-	(Adds common accents incl. acute, grave, circumflex, umlaut over Roman characters)
-- Added most of Unicode page 1 (Latin Extended 1) to built-in font
-	(Adds less common accents and characters for most languages using Roman alphabets)
-- Added clipboard/text selection support to the virtual keyboards
-- Added interface so MIDlets can request and receive events signalling raw PSP control state
-- Added a semichordal virtual keyboard implementation (fast input, diacritics support). See notes below re use.
-- Improved alpha blending for TrueType font rendering--smoother blends.
-- Support multi-language in Sony OSK input method
+Additional documentation
+------------------------
 
------------------------------------
-Changes in previous release (0.5.2)
------------------------------------
-- Large memory support
-- New Chinese Input Method: Stroke IM
-- Chinese localized menu
-- Some bug fixes
-- New screen resolution: 352x416
-- Default CPU speed is configuable by pspkvm.ini
-- Support daylight-saving time
-- Old QWERTY virtual keyboard is supported again, configurable by pspkvm.ini
+ * See CHANGELOG.TXT for changes in this and previous releases.
+ * See BUILDING.TXT for notes on building this software.
 
-
---------------------------------
+---------------------------------
 General information
---------------------------------
+---------------------------------
+
 PSPKVM is a PSP port of Sun's open-source JavaME implementation phoneMEFeature. The project description below is as it appears on the phoneME website:
 
-	The objective of the phoneME project is to further expand the usage of Java Platform, Micro Edition (Java ME platform) technology in the mobile handset market. The project scope includes a focus on the mainstream feature phone segment with phoneME Feature software, and the emerging advanced phone segment with phoneME Advanced software. Our goal in making these technologies available to the Mobile & Embedded Community is to reduce implementation variation, increase the rate of innovation and enable new devices to leverage the power of the Java ME platform.
+The objective of the phoneME project is to further expand the usage of Java Platform, Micro Edition (Java ME platform) technology in the mobile handset market. The project scope includes a focus on the mainstream feature phone segment with phoneME Feature software, and the emerging advanced phone segment with phoneME Advanced software. Our goal in making these technologies available to the Mobile & Embedded Community is to reduce implementation variation, increase the rate of innovation and enable new devices to leverage the power of the Java ME platform.
 	
 The phoneME website is at: https://phoneme.dev.java.net/
 
@@ -60,6 +38,7 @@ The goal of the pspkvm project is to port the phoneMEFeature project to the Sony
 --------------------------------
 Features
 --------------------------------
+
 - Nokia UI APIs (partial)
 - WMA1.1(JSR120) stub
 - Networking (via the PSP's WiFi connection)
@@ -98,9 +77,10 @@ Known issues:
 - LocationProvider.getState() will always return AVAILABLE once the GPS is initialized, so LocationListener.providerStateChanged() doesn't work as expected.
 
 
---------------------------------
-Run from binary bundle
---------------------------------
+----------------------------------
+Running PSPKM from a binary bundle
+----------------------------------
+
 1. Download the correct binary bundle:
 - If you have a 1.50 kernel PSP and have installed pspkvm 0.4.2:
    Download pspkvm-bin-x.x.x-150-upgrade.zip
@@ -113,57 +93,32 @@ Run from binary bundle
 2. Extract the zip to your PSP's /PSP/GAME/ or /PSP/GAME150 folder
 3. Here we go!
 
-
---------------------------------
-Building instructions
---------------------------------
-For those interested in the source code:
-
-1. You have to prepare the build environment for phoneME first. Please read the document at https://phoneme.dev.java.net/content/mr2/buildenv_feature.html#win_setup*
-
-Now assuming you have installed the build environment by following the above instructions, in Cygwin:
-2. Retrieve the source code via svn to a local directory**
-3. cd ${your_source_dir}
-4. export JDK_DIR=${your_jdk_dir} (example: export JDK_DIR=c:/j2sdk1.4.2_16)
-5. ./build-psp-cldc.sh
-Now you should see the success message following the building of the phoneME libs.
-6. cd psp
-7. Make the executable:***
-- If building for the 1.50 kernel:
-    make kxploit
-    You should get pspkvm and pspkvm% directories in this directory, just copy them to your PSP's /PSP/GAME or /PSP/GAME150 directory.
-- If building for 3.xx OE:
-    make BUILD_SLIM=true
-    This will build an EBOOT.PBP binary in this directory. Copy it to your PSP's /PSP/GAME/pspkvm directory.
-8. Copy the "lib" and "appdb" directories from ${your_source_dir}/midp/build/javacall_psp/output/ into your PSP's /PSP/GAME/pspkvm directory
-9. unzip midi_res.zip to your PSP's /PSP/GAME/pspkvm directory (If you need MIDI support)
-
-* Note: you do not necessarily have to use the prepared Cygwin distribution suggested by these instructions, but this is probably the easiest approach if you do not already have a Cygwin distribution installed. If you wish to attempt to build the project with your current Cygwin installation, however, you will probably at least have to roll back your make binary to version 3.80 (assuming you have a more recent version), as make 3.81 and later do not handle DOS-style paths correctly in makefiles, and the phoneME build system requires a make that does.
-
-** Note: you may have difficulty building the port with certain directory arrangements, due to Windows-based Java code failing properly to parse Posix-style Cygwin file paths. To avoid/correct this, place your pspkvm installation in a high or root directory, and mount it in Cygwin in such a fashion that the Posix and DOS paths wind up being the same thing. For example, place the pspkvm directory in the root of the C: drive (as in, in C:\pspkvm), then mount this directory on /pspkvm in Cygwin, with a command such as mount c:/pspkvm /pspkvm . Then run build-psp-cldc.sh from /pspkvm within Cywgin--the project root directory should default to /pspkvm, and building should proceed correctly.
-
-*** Note: you will also need the PSP homebrew development toolchain and the pspsdk to build the binary for the PSP (step 7). As of this writing, both are available from http://ps2dev.org/psp/Tools/Toolchain/.
-
-Requirements (pspsdk-specific libraries, also available from pspdev.org)
-    SDL_mixer
-    libvorbis
-    libogg
-    freetype2
-
-Note that the PSPKVM is homebrew, and will not run on recent, stock PSP firmware, as these firmwares only run signed code. To run the PSPKVM binary, you need either a PSP with version 1.5 firmware, or a PSP with custom firmware, as with all homebrew.
-
-    
 --------------------------------
 Running tips
 --------------------------------
-- To run a MIDlet from the memory stick:
+
+To install and run a MIDlet from the memory stick:
+--------------------------------------------------
+
 	1) Select "Find Application" in the AMS (the item on the top)
 	2) Select "Install from memory stick (ms0:/)"
 	3) Browse the file system of your memory stick, and select the jad or jar to run
 	4) After it's been selected, the jad/jar will be automatically installed and run. You can choose the installed application from the AMS the next time you want to run it.
 	
-- Text input:
-	The PSP lacks a standard keyboard, but the PSPKVM provides other input methods. In any text input context, you can pop up a menu by pressing Right Soft-button, allowing you to change to another input method. We suggest using "abc" for entering alphabetic characters--this enulates the standard method of entering text on a standard cellphone keypad, allowing the input of English characters by pressing 0~9,#, and *. The phone keypad mapping for the PSP is, by default:
+
+To install and run a MIDlet from the web:
+-----------------------------------------
+
+	1) Select "Find Application" in the AMS (the item on the top)
+	2) Select "Install from http"
+	3) Enter the address of the jad or jar file to run
+	4) After it's been selected, the jad/jar will be automatically installed and run. You can choose the installed application from the AMS the next time you want to run it.
+
+
+Text input:
+-----------
+
+The PSP lacks a standard keyboard, but the PSPKVM provides other input methods. In any text input context, you can pop up a menu by pressing Right Soft-button, allowing you to change to another input method. We suggest using "abc" for entering alphabetic characters--this emulates the standard method of entering text on a standard cellphone keypad, allowing the input of English characters by pressing 0~9,#, and *. The phone keypad mapping for the PSP is, by default:
 	
 	NUM0: Cross
 	NUM1: Square
@@ -184,28 +139,41 @@ Running tips
 	UP/DOWN/LEFT/RIGHT: Analog joy stick
 	(* "Shift" = holding Left Trigger or Right Trigger)
 	
-	In addition to these, PSPKVM provides the following functions hard-mapped to key combinations:
+In addition to these, PSPKVM provides the following functions hard-mapped to key combinations:
 
 	Left Trigger + Right Trigger + Triangle: Multi-tasking key (Click to return AMS and put MIDlet to background)
 	Left Trigger + Right Trigger + Cross:    Exit current running MIDlet
 
-	In addition, most MIDlets will invoke your selected 'virtual keyboard' for involved text entry tasks, as these provide for much easier text input. See notes on virtual keyboards below.
-	
-- Multitasking
-	In any application, pressing Left Trigger+Right Trigger+Triangle will send the currently running MIDlet to the background, and the AMS screen will be shown. The backgrounded MIDlet is shown highlighted, and you can choose another MIDlet to run without stopping the previous MIDlet. To bring a midlet running in the background to the foreground, just click the MIDlet item from AMS.
+In addition, most MIDlets will invoke your selected 'virtual keyboard' for involved text entry tasks, as these provide for much easier text input. See notes on virtual keyboards below and in the wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/VirtualKeyboards , and additional notes below.
 
 	
-- Connect to network
-	Before a Java MIDlet can use the network, you need to connect your PSP to a WiFi hub. To do this, select "Network Setup" in the AMS (the second item in the AMS MIDlets list). All the WiFi connections you've set up on your PSP will be listed. Select one and wait for an alert popup telling you the connection attempt has been successful. Once the message "Successfully connected by profile xxx" appears, your network is ready, and you can go back to the AMS and run MIDlets that use the network.
+Multitasking
+------------
+
+In any application, pressing Left Trigger+Right Trigger+Triangle will send the currently running MIDlet to the background, and the AMS screen will be shown. The backgrounded MIDlet is shown highlighted, and you can choose another MIDlet to run without stopping the previous MIDlet. To bring a midlet running in the background to the foreground, just click the MIDlet item from AMS.
+
+	
+Connecting to the network
+-------------------------
+
+Before a Java MIDlet can use the network, you need to connect your PSP to a WiFi hub. To do this, select "Network Setup" in the AMS (the second item in the AMS MIDlets list). All the WiFi connections you've set up on your PSP will be listed. Select one and wait for an alert popup telling you the connection attempt has been successful. Once the message "Successfully connected by profile xxx" appears, your network is ready, and you can go back to the AMS and run MIDlets that use the network.
 	*Tips for 3.xx OE users: you don't have to set up network in the "Network Setup" menu. When the first MIDlet want to access the network, a PSP network setup dialog will popup and prompt you to start a connection. And also, you can press "L+R+Square" at any time to call up the network setup dialog.
+
 	
-- Select device to emulate
-	When the user selects a jad/jar file from the memory stick to run, a "Device Select" menu will appear. Choose your preferred device size and model here, and press the CIRCLE key to select it. If you want to change the preferred device setting, go back to the AMS and move the highlight onto the MIDlet whose setting you want to change, then select "Select Device" from the menu.
+Selecting a device to emulate
+-----------------------------
+
+When the user installs a Midlet, a "Device Select" menu will appear. Choose your preferred device size and model here, and press the CIRCLE key to select it. If you want to change the preferred device setting, go back to the AMS and move the highlight onto the MIDlet whose setting you want to change, then select "Select Device" from the menu.
 	
-- Change default key assignment for specified game
-	If the default key assignment does not fit your game, you can go to the AMS and move the highlight onto the MIDlet whose key assignment you want to change, then select "Select Device" from the menu. Change the key setting to what you want. REMEMBER:"Shift" means Left Trigger or Right Trigger.
+
+Changing the default key assignment for specified midlet
+--------------------------------------------------------
+
+If the default key assignment does not fit your game, you can go to the AMS and move the highlight onto the MIDlet whose key assignment you want to change, then select "Select Device" from the menu. Change the key setting to what you want. REMEMBER:"Shift" means Left Trigger or Right Trigger.
 	
-- Change defualt JSR75 Fileconnection root directories mapping in pspkvm.ini.
+Changing default JSR75 Fileconnection root directories mapping in pspkvm.ini
+----------------------------------------------------------------------------
+
 	The default root directories mapping is as following:
          	/root -> ms0:/pspkvm/
 		/music -> ms0:/PSP/MUSIC/
@@ -215,9 +183,19 @@ Running tips
 		/tones -> ms0:/pspkvm/
 		/graphics -> ms0:/pspkvm/
 		/private -> ms0:/pspkvm_pri/
-	However, you can change the default mapping in pspkvm.ini. To do this, open pspkvm.ini in the PSPKVM install directory, and change the values in the [jsr75] section. If the value is left blank, the default value is applied.
+
+However, you can change the default mapping in pspkvm.ini. To do this, open pspkvm.ini in the PSPKVM install directory, and change the values in the [jsr75] section. If the value is left blank, the default value is applied.
+
+
+Selecting a virtual keyboard
+----------------------------
+
+When a MIDlet requests text input, generally a 'virtual keyboard' will be popped up. You can choose from a range of keyboards on PSPKVM. See the 'Virtual keyboards' menu in the VM Configuration midlet to choose one. More information on the available boards is in the wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/VirtualKeyboards
+
 	
-- Default Virtual Keyboard and Chinese Input tips:
+Default virtual keyboard and Chinese input (AWF virtual keyboard) tips
+----------------------------------------------------------------------
+
 	Confirm key (SHIFT+CIRCLE by default)   -> Switch input methods
 	"*" (SHIFT+SELECT by default)           -> Switch input methods (same as above)
 	2/4/6/8 (UP/LEFT/RIGHT/DOWN by default) -> Move focus on Virtual Keyboard
@@ -225,23 +203,53 @@ Running tips
 	CLEAR (SHIFT+CROSS by default)          -> Backspace
 	0 (CROSS by default)                    -> Delete Pinyin (in Chinese input method)
 	SEL, CPY, and PST (Select, copy, and paste) may be found in the 'Edit' key grouping. Select behaviour is 'latching'--press select once to begin a selection, move the cursor to shape it; the selection will be between wherever you were when you first pressed select and the current position of the cursor. Press SEL again to cancel the selection without editing it/overwriting it/deleting it, etc.
+	General information on the virtual keyboards may be found in the wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/VirtualKeyboards
+
 	
-- Semichordal virtual keyboard input tips
+Danzeff virtual keyboard input tips
+-----------------------------------
 
-	Set com.pspkvm.inputmethod = vk-semichordal in pspkvm.ini to enable the semichordal board.
+	You can enable the semichordal board in the VM Config midlet in the System Midlets folder.
+	The analog stick selects your live keygroup. Press the symbol keys to do entry.
+	The arrow keys (DPAD) direct the cursor.
+	The right shoulder button acts as a shift key.
+	The left shoulder button toggles a symbol keypad on and off.
+	General information on the virtual keyboards may be found in the wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/VirtualKeyboards
+
+	
+Semichordal virtual keyboard input tips
+---------------------------------------
+
+	You can enable the semichordal board in the VM Config midlet in the System Midlets folder.
 	D-pad (arrow) and shoulder buttons set the 'live' chord; right-pad (triangle, square, circle, and cross keys) enter characters/execute editing functions. For alphabetic characters, the right shoulder acts as a shift key.
-	Characters are generally grouped according to their frequency of usage, with the more commonly used ones (using English character frequencies) in the easier positions.
-	'Toggle display mode' in the right hand menu, and the DSP key (Left-shoulder-up-right DPAD-circle) toggle between display modes, two of which offer instant feedback on which keys are currently 'live'. The 'large' display shows half the board at once (the half corresponding to the current position of the left shoulder button), and highlights your live chord. The 'small' display shows the currently live chord only. You can also hide the display entirely if you know the board well enough. Feedback in all the displays is instant--as you shift on the chordal keys, the display will change to show you what's live. Caps lock and selection status are shown in both the large and small displays.
-	BSP and DEL (Backspace and delete) are on the centre chord (no D-Pad buttons pressed), with the left shoulder button down.
-	Simple cursor controls (arrow keys) are on the left chord with the left shoulder button down (Left-shoulder-left-DPAD). Additional cursor controls (HME, END) are on the bottom left with left shoulder (Left-shoulder-down-left-DPAD). Turn on the large display (use DSP or 'Toggle display mode' in the menu to find them initially, until you get used to them.
-	SEL (select) is latching. Press it once to turn select mode on; the selection will be between the current cursor and where you where when you pressed it. Press it a second time to kill the selection without doing anything with it. Editing 'on top' of a selection (copying into it, or entering text with the selection live, or hitting delete or backspace) will also kill the selection, as in normal word processing usage.
-	DEL deletes to the right of the cursor, BSP to the left, as in normal word processing usage.
-	For accents and other diacritical marks, enter the base character, and then the diacritical. As in, for e with an acute accent, enter an e, and then press the acute accent diacritical key--this is the key (on Left-shoulder-top-left-dpad-square) with the accent over an 'x'. All the diacritical keys are currently in this area--acute, grave, circumflex, umlaut/diaeresis, tilde, ring, and cedilla are currently supported, and can also be 'stacked' for characters for which this is supported in the Unicode character set (ie. multiple accents on the same character).
-	The clipboard is supported in the semichordal board--see CPY and PST (copy and paste).
+	Characters are generally grouped according to their frequency of usage, with the more commonly used ones (using English character frequencies for the Roman board, Russian for Cyrillic, and modern Greek for Greek) in the easier positions.
+	'Toggle display mode' in the right hand menu, and the display key (Left-shoulder-up-right DPAD-circle) toggle between display modes, two of which offer instant feedback on which keys are currently 'live'. The 'large' display shows half the board at once (the half corresponding to the current position of the left shoulder button), and highlights your live chord. The 'small' display shows the currently live chord only. You can also hide the display entirely if you know the board well enough. Feedback in all the displays is instant--as you shift on the chordal keys, the display will change to show you what's live. Caps lock and selection status are shown in both the large and small displays.
+	The backspace and delete keys are on the centre chord (no D-Pad buttons pressed), with the left shoulder button down.
+	Simple cursor controls (arrow keys) are on the left chord with the left shoulder button down (Left-shoulder-left-DPAD). Additional cursor controls (analagous to Home and End) are on the bottom left with left shoulder (Left-shoulder-down-left-DPAD). Turn on the large display (use the display key or 'Toggle display mode' in the menu to find them initially, until you get used to them.
+	The select key is latching. Press it once to turn select mode on; the selection will be between the current cursor and where you where when you pressed it. Press it a second time to kill the selection without doing anything with it. Editing 'on top' of a selection (copying into it, or entering text with the selection live, or hitting delete or backspace) will also kill the selection, as in normal word processing usage.
+	The delete key deletes to the right of the cursor, backspace to the left, as in normal word processing usage.
+	For accents and other diacritic marks, enter the base character, and then the diacritic. As in, for e with an acute accent, enter an e, and then press the acute accent diacritical key--this is the key (on Left-shoulder-top-left-dpad-square) with the accent over an 'x'. All the diacritic keys are currently in this area--acute, grave, circumflex, umlaut/diaeresis, tilde, ring, and cedilla are currently supported, and can also be 'stacked' for characters for which this is supported in the Unicode character set (ie. multiple accents on the same character).
+	The clipboard is supported in the semichordal board.
+	See the wiki at https://sourceforge.net/apps/trac/pspkvm/wiki/UsingTheSemichordalBoard for more information on using the semichordal board.
+	
+	
+Using FreeType2 font files
+--------------------------
 
-	- Use FreeType2 font files
-	You can have 3 type of fonts: System, Proportional and Monospace. Copy your .ttf files into ms0:/PSP/GAME/PSPKVM and rename them as below:
-	System font: sys.ttf
-	Proportional font: pro.ttf
-	Monospace font: mono.ttf
-	If pro.ttf or mono.ttf is not found, sys.ttf will be used automatically; If none of the three font files are found, the internal built-in font will be used.
+	You can have 13 fonts installed: System, proportional and monospace, each in normal, italic, bold, and bold-italic, and a fallback font. Copy your .ttf files into ms0:/PSP/GAME/PSPKVM and rename them as below:
+	System font: sys.ttf, sys_i.ttf, sys_b.ttf, sys_ib.ttf (normal, italic, bold, italic-bold)
+	Proportional font: prop.ttf, prop_i.ttf, prop_b.ttf, prop_ib.ttf (normal, italic, bold, italic-bold)
+	Monospace font: mono.ttf, mono_i.ttf, mono_b.ttf, mono_ib.ttf (normal, italic, bold, italic-bold)
+	Fallback font: fallback.ttf (this is a good place for a large pan-Unicode or Han character font --since these tend not to have italic and bold faces anyway--its glyphs will fill in when none are found in the above fonts)
+	Generally, the system will fall back intelligently if some of these are missing. If you have 	only one font, just call it sys.ttf. If no fonts are present, the internal built-in font will be used.
+	Note that there's a difference between how the system falls back through the system, proportional, and monospace fonts, and how it falls back to the fallback font. It falls back per font through system, proportional, and monospace, and it falls back per glyph to the fallback font. That is: at startup, it will assign a font file to each of main twelve slots, attempting to assign the best match for each from the existing files you provide. Then during rendering, if a glyph is not found for a given character in the proper font file, it will attempt to find it in the fallback font, if it is present.
+	The first set set of three fonts and four weights/styles corresponds to the J2ME MIDP API specification--midlet authors writing code for J2ME devices will frequently write code with the expectation that these are the available fonts in the system.
+	Midlet authors also can specify three font sizes when drawing fonts--small, medium, and large. You can specify the pixel sizes of these in the 'Font subystem' dialogue in the VM configuration midlet.
+	You can also turn off FreeType2 rendering entirely in the Font subsystem dialogue, by specifying 'Use internal font'. If you do this, a non-scalable built-in bitmap font will be used for drawing text.
+	For additional information on font support, see the wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/ConfiguringFourteenFont
+
+
+Note re running homewbrew on your PSP
+-------------------------------------
+
+Note that the PSPKVM is homebrew, and will not run on recent, stock PSP firmware, as these firmwares only run signed code. To run the PSPKVM binary, you need either a PSP with version 1.5 firmware, or a PSP with custom firmware, as with all homebrew. See also the notes in the Wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/RunningPSPHomebrew

@@ -1,0 +1,167 @@
+Current to post version 0.5.4 Test 10
+18 October 2009
+Authors: Sleepper, M@x, Anweifeng, AJ Milne
+Email: pspkvm@gmail.com
+Project website: 
+	http://www.pspkvm.org
+	http://www.pspkvm.com 
+	http://www.pspkvm.cn
+Project home on SF:
+	https://sourceforge.net/projects/pspkvm
+Project wiki:
+	http://sourceforge.net/apps/trac/pspkvm/wiki/WikiStart
+
+
+---------
+Changelog 
+---------
+
+
+Additional documentation
+------------------------
+
+ * See Readme.txt for user tips and general project information.
+ * See BUILDING.TXT for notes on building this software.
+
+
+---------------------------------------
+Changes in release (relative to Test 9)
+---------------------------------------
+
+Summary: critical bugfixes, few minor cleanups
+
+ * Bugfix: 'zombie midlet' bug in which marked, removed midlets would reappear
+on a subsequent move has been fixed. Loading code has also been modified to allow
+loading of the folder system in the AMS even after a crash due to this bug. If
+you got locked out of your VM because of this, using this build will let you back
+in.
+
+ * Bugfix: missing utility/symbols file no longer brings down the VM when
+opening virtual keyboards using it.
+
+ * Bugfix: unused menu items removed from Danzeff board.     
+
+----------------------------------------
+Changes in previous 0.5.4 interim builds
+----------------------------------------
+
+There's a Danzeff-style virtual keyboard available now. See the VM Configuration
+midlet to enable it.
+
+The AMS supports folders.
+
+The semichordal board supports Greek and Cyrillic scripts, and you can customize
+which one you want to come up by default in the VM Config midlet.
+
+The semichordal board now uses a custom TrueType utility font (utility.ttf) for its
+help display/nav display.
+
+The FreeType font system now supports all three fonts (proportional, monospace,
+system) and bold, italic, bold/italic faces for all three, in addition to a
+utility font for speeding up certain system GUI displays, a 'fallback font'
+useful for large Han (CJK) fonts, and uses the FreeType portable cache manager
+to speed rendering and allow loading much larger font files than previously. It
+has been tested with 18 MB of fonts loaded with no errors.
+
+There are fixes to network setup that *should* prevent unrecoverable network
+dropout issue in previous builds. Generally, reconnecting from the Wifi Manager
+midlet should now work. Test users please report if this is the case.
+
+The Danzeff and semichordal boards support a 'smart display' feature, in which
+they move out of the way of the active input area in large text boxes.
+
+The Danzeff board display is slightly reduced in size from the previous build.
+
+There are additional icons in the AMS, VM configuration and network setup
+screens--the hope is to make thing a little easier on non-English speakers
+until we can get some proper translation going here.
+
+Virtual keyboards and Freetype setup are now configured in the GUI, not in the .ini.
+
+ * The X/O keys are now fully switchable system-wide, for Western-style
+accept/cancel use. Use the VM Configuration midlet -> Keymap settings menu
+to set these keys. The settings take effect immediately after you exit the
+configuration midlet.
+
+Note that for midlets whose keymaps or device settings you've customized, you'll
+have to set the accept key yourself in the Device Settings screen if you wish
+them to change too (and if you haven't changed them already). Set 'Select' to
+'Cross' and 'Num0' to 'Circle' to emulate the default Western layout, in this
+case. Midlets whose device settings you have not customized will use the default
+ones, and so will pick up the change without additional tweaking.
+
+Note also that the old com.pspkvm.acceptcross setting for native dialogs is
+gone. The setting in the VM config midlet will affect these dialogs, the AMS,
+and the default keymap setting. Set it to 'Western' to use X=accept, to 'Eastern'
+to use O=accept.
+
+ * Keystroke handling in the Danzeff board has been tightened for faster
+response.
+
+ * The 'smart display' feature in the semichordal and Danzeff boards, wherein the
+board displays move to stay out of your way when you're typing, has been optimized,
+streamlined, and some bugs have been removed.
+
+ * Live display in the semichordal board now places the small layout correctly.
+
+ * The semichordal display has been greatly reduced in size, and its appearance
+brought more into line with the Danzeff display. Status display for the live
+keymap has also been added (Cyrillic/Greek/Roman).
+
+ * The Danzeff board now has a status bar which displays selection state.
+
+ * The diacritics (accents) deadkey glyphs for the semichordal display have been
+modified to make them easier to read.
+
+ * Bugfix: smart display-capable boards now move properly on all key entries.
+
+ * Bugfix: the Danzeff board now displays correctly when the system is using
+the internal  font.
+
+ * Bugfix: thread shutdown for the Danzeff board's analog stick monitor has been
+fixed; threads previously remained around when the board was absent. They now
+start when the board appears, and exit when the board disappears.
+
+ * Bugfix: prevented all virtual boards from crashing constrained fields
+(numerical, URL, etc.) due to pasting in of text containing constrained
+characters. Internal interfaces now sift input correctly.
+
+ * Renamed utility.ttf to utility.sym so people stop assuming they can just 
+delete it.
+
+ * Bugfix: the Danzeff board should now work correctly with 'use internal font'
+turned on. 
+
+ * Tools for built-in font manipulation (midp/src/tools/fontgen/...) updated to work with current bitmap files.
+
+ * Built-in font now supports basic Cyrillic characters in Unicode range 0x0400 to 0x045f (should support Russian, Ukrainian, Macedonian, Byelorussian). 
+	 
+--------------------------------
+Change log (0.5.3)
+--------------------------------
+- Bugfix for 'Default CPU speed setting doesn't work' (tracker ID 2812036)
+- Bugfix for Sony Ericsson 480x272 profile issue (tracker ID 2812032)
+- Bugfix for 'QWERTY board opens allcaps' (tracker ID 2806367)
+- Bugfix makes available missing top half of Unicode page 0 in built-in font
+	(Adds common accents incl. acute, grave, circumflex, umlaut over Roman characters)
+- Added most of Unicode page 1 (Latin Extended 1) to built-in font
+	(Adds less common accents and characters for most languages using Roman alphabets)
+- Added clipboard/text selection support to the virtual keyboards
+- Added interface so MIDlets can request and receive events signalling raw PSP control state
+- Added a semichordal virtual keyboard implementation (fast input, diacritics support). See notes below re use.
+- Improved alpha blending for TrueType font rendering--smoother blends.
+- Support multi-language in Sony OSK input method
+
+-----------------------------------
+Changelog (0.5.2)
+-----------------------------------
+- Large memory support
+- New Chinese Input Method: Stroke IM
+- Chinese localized menu
+- Some bug fixes
+- New screen resolution: 352x416
+- Default CPU speed is configuable by pspkvm.ini
+- Support daylight-saving time
+- Old QWERTY virtual keyboard is supported again, configurable by pspkvm.ini
+
+
