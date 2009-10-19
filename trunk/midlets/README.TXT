@@ -39,4 +39,7 @@ limitation: Compiled inner classes probably won't get preverified or jarred
 up properly--you'll probably have to do this by hand if you go and add those
 to midlets built under this system.
 
-
+If you have issues with midlets built under this system, generally, the
+problem is preverification. You can usually fix it just by running
+preverify directly (as in, from the midlet directory, run ../preverify.sh
+CLASSNAME) then running make again.
