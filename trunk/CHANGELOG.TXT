@@ -22,15 +22,19 @@ Additional documentation
 
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
- * 
 
 --------------------
 Changes post-release
 --------------------
 
  * AMS warns when you attempt to move a folder into itself or into its own child.
+
  * Changed Config midlet 'Exit' to 'Done'.
- * AMS allows deleting of non-empty folders.  
+
+ * AMS allows deleting of non-empty folders.
+
+ * Improvements to smart positioning system in virtual keyboards, so they move properly around one-line textfields in forms.
+
 
 ---------------------------------------
 Changes in release (relative to Test 9)
@@ -124,7 +128,7 @@ modified to make them easier to read.
  * Bugfix: smart display-capable boards now move properly on all key entries.
 
  * Bugfix: the Danzeff board now displays correctly when the system is using
-the internal  font.
+the internal font.
 
  * Bugfix: thread shutdown for the Danzeff board's analog stick monitor has been
 fixed; threads previously remained around when the board was absent. They now
