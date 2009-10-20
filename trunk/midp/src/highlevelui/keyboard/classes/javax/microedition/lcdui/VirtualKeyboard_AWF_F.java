@@ -21,53 +21,51 @@ import com.pspkvm.system.VMSettings;
 
 class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 
-		/** instance of the virtual keyboard listener */
-		VirtualKeyboardListener vkl;
-		
-		// keyboard dimensions
-		int kbX, kbY, kbWidth, kbHeight;
-		static int kbLayout=0; //W>H or H>W
-		
-		int fontW;       // width of 'M'
-		int fontH;       // height of 'M'
-		int buttonW;     // width of keyboard
-		int buttonH;     // height of keyboard
-		int fontWCenter; // placement of text inside button
-		int fontHTop;    // placement of text inside button
-		int maxRows;     // horizontal keyboard rows
-		int maxColumns;  // vertical keyboard columns
-		int fullColumns; // number of columns that are completely full with keys
-		
-		int currentChar = 0;
-		int currentKeyboard = 1; // abc
-		
-		char itemIndexWhenPressed;
-		char PRESS_OUT_OF_BOUNDS = 0;
-		
-		static final int DISP_W = 200;
-		static final int DISP_H = 160;
-		
-		/** array of all available keys n the keyboard */
-		char[][] keys;
-		Font f;
-		
-		boolean isShowHelp=false;
-		
-		int mainKeyOffsetX=5;
-		int mainKeyOffsetY=5;
-		
-		boolean select_on;
-		
-		/** Candidate bar */
-		IMCandidateBar candidateBar = new IMCandidateBar(20,25);
-		
-	// Bounds
-	void setBounds() {
-		kbWidth = DISP_W;
-		kbHeight = DISP_H;
-		kbX = vkl.getAvailableWidth()-kbWidth;
-		kbY = vkl.getAvailableHeight()-kbHeight; }
+	/** instance of the virtual keyboard listener */
+	VirtualKeyboardListener vkl;
+	
+	int getWidth() {
+		return kbWidth; }
+	int getHeight() {
+		return kbHeight; }
 
+
+	
+	static int kbLayout=0; //W>H or H>W
+	
+	int fontW;       // width of 'M'
+	int fontH;       // height of 'M'
+	int buttonW;     // width of keyboard
+	int buttonH;     // height of keyboard
+	int fontWCenter; // placement of text inside button
+	int fontHTop;    // placement of text inside button
+	int maxRows;     // horizontal keyboard rows
+	int maxColumns;  // vertical keyboard columns
+	int fullColumns; // number of columns that are completely full with keys
+	
+	int currentChar = 0;
+	int currentKeyboard = 1; // abc
+	
+	char itemIndexWhenPressed;
+	char PRESS_OUT_OF_BOUNDS = 0;
+	
+	static final int kbWidth = 200;
+	static final int kbHeight = 160;
+	
+	/** array of all available keys n the keyboard */
+	char[][] keys;
+	Font f;
+	
+	boolean isShowHelp=false;
+	
+	int mainKeyOffsetX=5;
+	int mainKeyOffsetY=5;
+	
+	boolean select_on;
+	
+	/** Candidate bar */
+	IMCandidateBar candidateBar = new IMCandidateBar(20,25);
+	
 	/**
 	* Virtual Keyboard constructor.
 	* 
@@ -86,7 +84,6 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 		PADDING = 2;
 		currentKeyboard = 0;
 		this.vkl = vkl;
-		setBounds();
 		
 		f = Font.getFont(Font.FACE_SYSTEM, // or SYSTEM
 		Font.STYLE_PLAIN, 
@@ -102,8 +99,6 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 		maxRows = (kbHeight - PADDING) / (buttonH + PADDING);
 		
 		maxColumns = 7;  //verify         
-		// kbWidth = maxColumns * (buttonW + PADDING) + PADDING + 1;
-		kbX = 0;
 		
 		if (neededRows == 0) {
 			int tmpMax = 0; // will hold the longest keyboard.
@@ -120,7 +115,6 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 	
 		neededHeight = maxRows * (buttonH + PADDING) +
 			3 * PADDING;
-		kbY = vkl.getAvailableHeight()-neededHeight;
 	
 		this.keys = keys;
 		
@@ -142,7 +136,6 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 		
 		PADDING = 1;
 		this.vkl = vkl;
-		setBounds();
 		
 		prepareKeyMap(); }
 
@@ -804,7 +797,7 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 				break;
 		}
 	}
-
+	
 	String getSelect(){
 		if(currentKeyboard==AbstractKeyboardLayer.PINYIN){
 			return kmap[2].getKeyName();

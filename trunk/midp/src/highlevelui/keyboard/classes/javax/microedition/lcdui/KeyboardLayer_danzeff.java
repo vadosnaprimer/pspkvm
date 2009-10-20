@@ -534,61 +534,15 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
      */
     public void repaintVK() {
         requestRepaint(); }
-        
-		/** Thread monitoring the analogue stick */
-		class ASMonitorThread extends Thread {
-		
-		boolean stopped;
-		ASMonitorThread() {
-			stopped = false; }
-	
-		/**
-		* Check the analog stick
-		*/
-		public final void run() {
-			while (!stopped) {
-				if (vk!=null) {
-					setBounds();
-					vk.checkAnalogStick(); }
-				try {
-					sleep(CTRL_DELAY); }
-				catch(InterruptedException e) {} } }
-		}
-		
-		// End ASMonitorThread
+			
+		// Overridden to make sure we get a monitor thread that it
+		// monitors the bounds against the content below and keeps
+		// the analogue stick updated
+		void doThreadJob() {
+			if (vk!=null) {
+				setBounds();
+				vk.checkAnalogStick(); } }
 
-		static final int CTRL_DELAY = 100;
-		ASMonitorThread monitorThread = null;
-
-		void startCtrlMonitor() {
-			if (monitorThread==null) {
-				monitorThread = new ASMonitorThread(); }
-			monitorThread.stopped=false;
-			try {
-				monitorThread.start(); }
-			catch(IllegalThreadStateException e) {} }
-
-		void stopCtrlMonitor() {
-			if (monitorThread == null) {
-				return; }
-			monitorThread.stopped=true;
-			monitorThread=null; }
-		
-    /**
-     *	Overridden to control the thread
-     *	monitoring the control state
-     */
-		public void removeNotify(CWindow w) {
-			stopCtrlMonitor();
-			super.removeNotify(w); }
-					 		     
-    /**
-     *	Overridden to control the thread
-     *	monitoring the control state
-     */
-		public void addNotify() {
-			startCtrlMonitor();
-			super.addNotify(); }
- 
-
+		boolean needsMonitorThread() {
+			return true; }
 }
