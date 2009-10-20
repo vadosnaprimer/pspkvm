@@ -59,6 +59,9 @@ public class SC_Keys {
 	// Document start, document end
 	public static final int DCS=30;
 	public static final int DCE=31;
+	// OK
+	public static final int OK =32;
+
 	
 	// Enum for use in uppercase/lowercase/non-case maps
 	// in symbol sets where it's inconvenient just to use
@@ -135,8 +138,10 @@ public class SC_Keys {
 	static final String SYMS = "\u221e";
 	// Symbols lock mode string (infinity symbol w/ a hollow up arrow)
 	static final String SLKS = "\u221e\ue027";
-	// CNC mode string (a next to a hollow down arrow)
-	static final String CNCS = "a\ue026";
+	// CNC mode string (x in a circle)
+	static final String CNCS = "\ue030";
+	// OK string (thick hooked arrow)
+	static final String OKST = "\ue02f";
 	
 	// Display gliph
 	static final String DSPG = "\ue028";
@@ -146,6 +151,6 @@ public class SC_Keys {
 	static final String SELG = "\ue02a";
 	// Space glyph
 	static final String SPCG = "\ue02b";
-	// Escape string (x with a hollow down arrow)
-	static final String ESCS = "x\ue026";
+	// Escape string (same as CNCS)
+	static final String ESCS = "\ue030";
 }

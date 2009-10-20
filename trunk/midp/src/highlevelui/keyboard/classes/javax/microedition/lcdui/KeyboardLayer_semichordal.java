@@ -50,15 +50,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      */
     private KeyboardLayer_semichordal(TextFieldLFImpl tf) throws VirtualKeyboardException {
 	    super((Image)null, -1); // don't draw a background  
-	
 	    this.layerID  = "KeyboardLayer";
 	    tmpchrarray = new char[1];
 	    tfContext = tf;
-	    //backupstring is set to original text before the kbd was used
+	    // backupstring is set to original text before the kbd was used
 	    backupString = tfContext.tf.getString();
 	    if (vk==null) {
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
+			setupCommandReflections(tf);
 			setupCommands();
 			if (tfContext.isMultiLine() &&
 				(getAvailableWidth()>=vk.getWidth()) &&
@@ -68,7 +68,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				vk.setLargeDisplay(); }
 			current_quad = -1; // Invalid. Forces reset in setBounds.
 			setBounds(true); }
-		
+	
 	/**
      * Setup as a command listener for external events.
      *
@@ -80,11 +80,18 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		cmdRotateMap = new Command("Rotate Map", Command.HELP, 3);
 		cmdClear = new Command("Clear", Command.HELP, 3);
 		cmdCopyAll = new Command("Copy All", Command.HELP, 3);
-		Command commands[]={cmdOK, cmdCancel, cmdToggleDisplay,
-			cmdRotateMap, cmdClear, cmdCopyAll };
+		Command commands[]= new Command[6 + creflectors.length];
+		commands[0]=cmdOK;
+		commands[1]=cmdCancel;
+		commands[2]=cmdToggleDisplay;
+		commands[3]=cmdRotateMap;
+		commands[4]=cmdClear;
+		commands[5]=cmdCopyAll;
+		for(int i=0; i<creflectors.length; i++) {
+			commands[6+i]=creflectors[i].loc; }
 		setCommandListener(this);
 		setCommands(commands); }
-		       
+
 	/**
      * Handle a command action.
      *
@@ -109,7 +116,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				virtualMetaKeyEntered(SC_Keys.SWM);
 				return; }
       if (cmd == cmdToggleDisplay) {
-				virtualMetaKeyEntered(SC_Keys.DSP); } }
+				virtualMetaKeyEntered(SC_Keys.DSP); }
+			reflectCommand(cmd); }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -183,6 +191,12 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			if (vk == null) {
 				return null; }
 			return vk.getMapSName(); }
+			
+		boolean cached_ok, cached_cancel;
+		
+		void clearCachedCommands() {
+			cached_ok=false;
+			cached_cancel=false; }
 
     /**
      * get TextField Keyboard layer instance
@@ -280,6 +294,21 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      */
     public boolean supportsRawKeyInput() {
         return true; }
+        
+    void handleCachedCommand() {
+    	if (cached_ok) {
+				if (ok_below!=null) {
+					closeKeyEntered(true);
+					ok_below.reflect();
+					return; }
+				closeKeyEntered(true);
+				return; }
+			// cached_cancel
+			if (cancel_below!=null) {
+				closeKeyEntered(true);
+				cancel_below.reflect();
+				return; }
+			closeKeyEntered(false); }
     
     /**
      * Handles key event in the open popup.
@@ -289,12 +318,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      * @return true except for keys heading for the menus (Soft 1 and 2)     
      */
     public boolean keyInput(int type, int code) {
-
+    	
     	if ((tfContext == null) && (cvContext == null)) {
 				return true; }
       if (type == EventConstants.RAWKEYSTATE) {
       		processRawStroke(code);
 					return true; }
+			if (cached_ok || cached_cancel) {
+				handleCachedCommand();
+				return true; }
       // The two soft buttons go to the menus. Let them.
       if (code == EventConstants.SOFT_BUTTON1) {
 				return false; }
@@ -373,18 +405,14 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 					tfPutString(Clipboard.get(), tfContext);
 					return;
 				case SC_Keys.ESC:
-          closeKeyEntered(false);
+					cached_cancel=true;
           return;
 				case SC_Keys.ENT: 
-					// TODO/FIXME--if this is a one line textfield, it would 
-					// be nice to call closeKeyEntered(true) here instead.
-					if (!tfContext.isMultiLine()) {
-						// TODO: Fix. This probably doesn't work for TextField types
-						// that do allow \n. Technically, if TextField.ANY is set
-						// in the constraint mask, it does.
-						return; }
 					eraseSelection();
 					tfPutString("\n", tfContext);
+					return;
+				case SC_Keys.OK:
+					cached_ok=true;
 					return;
         case SC_Keys.CLK:
           vk.caps_lock_set = ! vk.caps_lock_set;
@@ -540,7 +568,8 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 
 	 // Called to close the thing
 	 void closeKeyEntered(boolean ok_sent) {
-      Display disp = null;
+	 		Display disp = null;
+      open = false;
       if (tfContext != null) {
         disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
         if (!ok_sent) {
@@ -551,7 +580,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
           System.out.println("Could not find display - Can't hide popup"); }
 			else {
           disp.hidePopup(this); }
-      open = false;
       justOpened = false; }
       
     /**
@@ -620,15 +648,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      * @param width width of screen to paint
      * @param height height of screen to paint
      */
-    public void paintTextOnly(Graphics g, int width, int height) {
-        if (tfContext != null) {
-            tfContext.lPaintContent(g, width, height);
-        }        
-    }
+    public void paintTextOnly(Graphics g, int width, int height) { }
 
-    public void paintCandidateBar(Graphics g, int width, int height) {
-        /** Stub. TODO/FIXME: should we just paint the minimal selection? */
-    }
+    public void paintCandidateBar(Graphics g, int width, int height) { }
     
     /**
      * get available width
@@ -714,6 +736,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      *	monitoring the control state
      */
 		public void addNotify() {
+			clearCachedCommands();
 			startPosnMonitor();
 			super.addNotify(); }
 

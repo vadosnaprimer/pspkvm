@@ -61,7 +61,7 @@ class SC_Keymap_Greek extends SC_Keymap {
 	// The metakey mapping to the chordal keyboard
 	public static final int[] chordal_map_meta = {
 		CHR, CHR, CHR, ACU, ENT, CHR, CHR, ACU,
-		NUL, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
+		OK,  BSP, DEL, ESC, NUL, NUL, NUL, NUL,
 		CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 		CUP, CLF, CDN, CRT, CUP, WLF, CDN, WRT,
 		CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
@@ -150,7 +150,7 @@ class SC_Keymap_Greek extends SC_Keymap {
 	// SC_Keys.chordal_map_meta and chordal_map_char arrays.
 	public static final String[] chordal_map_d = {
 		SPCG, "\u03b1", "\u03bf", XACU, ENTG, "\u0391", "\u039f", XACU,
-		" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
+		OKST, BSPG, DELG, ESCS, " ", " ", " ", " ",
 		"\u03b5", "\u03c9", "\u03c5", "\u03b9", "\u0395", "\u03a9", "\u03a5", "\u0399",
 		U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 		"\u03ba", "\u03bc", "\u03c3", "\u03c0", "\u039a", "\u039c", "\u03a3", "\u03a0",
@@ -170,7 +170,7 @@ class SC_Keymap_Greek extends SC_Keymap {
 
    public static final String[] chordal_map_d_caps_lock = {
 		SPCG, "\u03b1", "\u03bf", XACU, ENTG, "\u0391", "\u039f", XACU,
-		" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
+		OKST, BSPG, DELG, ESCS, " ", " ", " ", " ",
 		"\u0395", "\u03a9", "\u03a5", "\u0399", "\u03b5", "\u03c9", "\u03c5", "\u03b9",
 		U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 		"\u039a", "\u039c", "\u03a3", "\u03a0", "\u03ba", "\u03bc", "\u03c3", "\u03c0",

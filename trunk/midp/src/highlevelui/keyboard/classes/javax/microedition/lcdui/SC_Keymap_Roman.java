@@ -61,7 +61,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 	// The metakey mapping to the chordal keyboard
 	public static final int[] chordal_map_meta = {
 			CHR, CHR, CHR, CHR, ENT, CHR, CHR, CHR,
-			NUL, BSP, DEL, ESC, NUL, NUL, NUL, NUL,
+			OK,  BSP, DEL, ESC, NUL, NUL, NUL, NUL,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
 			CUP, CLF, CDN, CRT, CUP, WLF, CDN, WRT,
 			CHR, CHR, CHR, CHR, CHR, CHR, CHR, CHR,
@@ -130,7 +130,7 @@ class SC_Keymap_Roman extends SC_Keymap {
     // SC_Keys.chordal_map_meta and chordal_map_char arrays.
     public static final String[] chordal_map_d = {
 			SPCG, "e", "t", "s", ENTG, "E", "T", "S",
-			" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
+			OKST, BSPG, DELG, ESCS, " ", " ", " ", " ",
 			"o", "a", "u", "i", "O", "A", "U", "I",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 			"n", "p", "d", "h", "N", "P", "D", "H",
@@ -150,7 +150,7 @@ class SC_Keymap_Roman extends SC_Keymap {
 
    public static final String[] chordal_map_d_caps_lock = {
 			SPCG, "E", "T", "S", ENTG, "e", "t", "s",
-			" ", BSPG, DELG, ESCS, " ", " ", " ", " ",
+			OKST, BSPG, DELG, ESCS, " ", " ", " ", " ",
 			"O", "A", "U", "I", "o", "a", "u", "i",
 			U_ARR, L_ARR, D_ARR, R_ARR, U_ARR, L_ARR, D_ARR, R_ARR,
 			"N", "P", "D", "H", "n", "p", "d", "h",
