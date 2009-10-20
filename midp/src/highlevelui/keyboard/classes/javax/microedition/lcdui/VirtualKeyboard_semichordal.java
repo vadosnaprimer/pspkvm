@@ -148,12 +148,6 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
 
-       String im = VMSettings.get("com.pspkvm.inputmethod");
-       if(im != null && im.equals("osk")){
-           USE_VIRTUAL_KEYBOARD = false;
-           USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
-           return; }
-           
     initDisplayVars();
 		currentKeyboard = 0;
     this.vkl = vkl;
@@ -218,12 +212,6 @@ class VirtualKeyboard_semichordal extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
 
-    String im = VMSettings.get("com.pspkvm.inputmethod");
-    if(im != null && im.equals("osk")){
-		   USE_VIRTUAL_KEYBOARD = false;
-		   USE_VIRTUAL_KEYBOARD_OPEN_AUTO = false;
-		   return; }
-		   
 		initDisplayVars();
 		setup_keymaps();
 
