@@ -19,6 +19,7 @@ import com.sun.midp.lcdui.*;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.MIDPWindow;
 import com.sun.midp.chameleon.CWindow;
+import com.sun.midp.chameleon.SubMenuCommand;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -76,21 +77,29 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	void setupCommands() {
 		cmdOK = new Command("OK", Command.OK, 1);
 		cmdCancel = new Command("Cancel", Command.CANCEL, 2);
-		cmdToggleDisplay = new Command("Toggle Display", Command.HELP, 3);
-		cmdRotateMap = new Command("Rotate Map", Command.HELP, 3);
+		cmdToggleDisplay = new Command("Display", Command.HELP, 3);
+		cmdRotateMap = new Command("Next Map", Command.HELP, 3);
 		cmdClear = new Command("Clear", Command.HELP, 3);
 		cmdCopyAll = new Command("Copy All", Command.HELP, 3);
-		Command commands[]= new Command[6 + creflectors.length];
-		commands[0]=cmdOK;
-		commands[1]=cmdCancel;
-		commands[2]=cmdToggleDisplay;
-		commands[3]=cmdRotateMap;
-		commands[4]=cmdClear;
-		commands[5]=cmdCopyAll;
-		for(int i=0; i<creflectors.length; i++) {
-			commands[6+i]=creflectors[i].loc; }
-		setCommandListener(this);
-		setCommands(commands); }
+		if (creflectors.length > 0) {
+			Command commands[] = new Command[1 + creflectors.length];
+			SubMenuCommand sc = new SubMenuCommand("Keyboard", Command.SCREEN, 3);
+			sc.addSubCommand(cmdOK);
+			sc.addSubCommand(cmdCancel);
+			sc.addSubCommand(cmdToggleDisplay);
+			sc.addSubCommand(cmdRotateMap);
+			sc.addSubCommand(cmdClear);
+			sc.addSubCommand(cmdCopyAll);
+			sc.setListener(this);
+			commands[creflectors.length] = sc;
+			for(int i=0; i<creflectors.length; i++) {
+				commands[i]=creflectors[i].loc; }
+			setCommands(commands); }
+		else {
+			Command commands[] = {
+				cmdOK, cmdCancel, cmdToggleDisplay, cmdRotateMap, cmdClear, cmdCopyAll };
+			setCommands(commands); }
+		setCommandListener(this); }
 
 	/**
      * Handle a command action.
@@ -686,58 +695,23 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     public void repaintVK() {
         requestRepaint(); }
 
-		/** Thread monitoring the board position -- moves it when needed */
-		class PosnMonitorThread extends Thread {
-		
-		boolean stopped;
-		PosnMonitorThread() {
-			stopped = false; }
-	
-		/**
-		* Check the position of the board -- move 
-		* if necessary		
-		*/
-		public final void run() {
-			while (!stopped) {
-				setBounds(false);
-				try {
-					sleep(MONITOR_DELAY); }
-				catch(InterruptedException e) {} } } }
-		
-		// End PosnMonitorThread
 
-		static final int MONITOR_DELAY = 100;
-		PosnMonitorThread monitorThread = null;
-
-		void startPosnMonitor() {
-			if (monitorThread==null) {
-				monitorThread = new PosnMonitorThread(); }
-			monitorThread.stopped=false;
-			try {
-				monitorThread.start(); }
-			catch(IllegalThreadStateException e) {} }
-
-		void stopPosnMonitor() {
-			if (monitorThread == null) {
-				return; }
-			monitorThread.stopped=true;
-			monitorThread=null; }
-		
     /**
-     *	Overridden to control the thread
-     *	monitoring the control state
-     */
-		public void removeNotify(CWindow w) {
-			stopPosnMonitor();
-			super.removeNotify(w); }
-					 		     
-    /**
-     *	Overridden to control the thread
-     *	monitoring the control state
+     *	Overridden to clear the 
+     *	cached commands     
      */
 		public void addNotify() {
 			clearCachedCommands();
-			startPosnMonitor();
 			super.addNotify(); }
+			
+		// Overridden to make sure we get a monitor thread that it
+		// monitors the bounds against the content below
+		void doThreadJob() {
+			setBounds(false); }
+
+		boolean needsMonitorThread() {
+			return true; }
+		
+
 
 }

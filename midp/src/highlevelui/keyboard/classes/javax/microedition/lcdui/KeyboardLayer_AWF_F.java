@@ -19,44 +19,48 @@ import com.sun.midp.chameleon.input.*;
  * @author Amir Uval
  */
 class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListener {
-    private int neededColumns = 0;
-    private int neededRows = 0;
+	private int neededColumns = 0;
+	private int neededRows = 0;
 
 	private Command keyboardClose;
 	private Command keyboardHelp;
 	private Command keyboardBack;
 
-    /** the instance of the virtual keyboard */
-    VirtualKeyboard_AWF_F vk = null;
+	/** the instance of the virtual keyboard */
+	VirtualKeyboard_AWF_F vk = null;
+	
+	String layerID = null;
+	/** State--tracks the quadrant we're drawing the board in -- we move it to
+	 * keep it in the quadrant furthest from the caret at all times
+	 */
+	int current_quad;	 		
 
-    String layerID = null;
-
-    /**
-     * Constructs a text tfContext sub-popup layer, which behaves like a
-     * popup-choicegroup, given a string array of elements that constitute
-     * the available list of choices to select from.
-     *
-     * @param tf The TextEditor that triggered this popup layer.
-     */
-    private KeyboardLayer_AWF_F(TextFieldLFImpl tf) throws VirtualKeyboardException {
-        super((Image)null, -1); // don't draw a background  
-
-        this.layerID  = "KeyboardLayer";
-        tfContext = tf;
-        //backupstring is set to original text before the kbd was used
-        backupString = tfContext.tf.getString();
-        if (vk==null) {
-            vk = new VirtualKeyboard_AWF_F(0, this); }
-
-		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
+	/**
+	* Constructs a text tfContext sub-popup layer, which behaves like a
+	* popup-choicegroup, given a string array of elements that constitute
+	* the available list of choices to select from.
+	*
+	* @param tf The TextEditor that triggered this popup layer.
+	*/
+	private KeyboardLayer_AWF_F(TextFieldLFImpl tf) throws VirtualKeyboardException {
+		super((Image)null, -1); // don't draw a background  
+		
+		this.layerID  = "KeyboardLayer";
+		tfContext = tf;
+		//backupstring is set to original text before the kbd was used
+		backupString = tfContext.tf.getString();
+		if (vk==null) {
+			vk = new VirtualKeyboard_AWF_F(0, this); }
+		
+		setBounds();
 	
 		keyboardClose = new Command("OK", Command.SCREEN, 1);
 		keyboardHelp = new Command("Back", Command.SCREEN, 1);
 		keyboardBack = new Command("Help", Command.EXIT, 1);
 		Command commads[]={keyboardClose,keyboardHelp,keyboardBack};
 		setCommandListener(this);
-		setCommands(commads);
-    }       
+		setCommands(commads); }       
+
 	/**
      * Handle a command action.
      *
@@ -93,7 +97,7 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
             vk = new VirtualKeyboard_AWF_F(keys, this, 0, 0);
         }
 
-		setBounds(vk.kbX,vk.kbY,vk.kbWidth,vk.kbHeight);
+		setBounds();
 
         Command keypadClose = new Command("Close", Command.OK, 1);
         setCommands(new Command[] { keypadClose });
@@ -605,5 +609,60 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
     public void repaintVK() {
         requestRepaint();
     }
+
+	// Get the quadrant the caret is in
+	int getCaretQuad() {
+		if (tfContext!=null) {
+			return tfContext.getQuadrant(); }
+		// For all others, fake it
+		return TextFieldLFImpl.QUAD_TOPLFT; }
+		
+	
+    void requestFullScreenRepaint() {
+			Display disp = null;
+			if (tfContext != null) {
+				tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
+				return; }
+			if (cvContext != null) {
+				cvContext.currentDisplay.requestScreenRepaint(); } }
+
+    final static int EPAD = 2;
+    /**
+     * Sets the bounds of the popup layer.
+     *
+     */
+    protected void setBounds() {
+    	int upd_caret_quad = getCaretQuad();
+    	if (upd_caret_quad == current_quad) {
+				return; }
+			current_quad = upd_caret_quad;
+    	int w = vk.getWidth();
+    	int h = vk.getHeight();
+    	int aw = getAvailableWidth();
+    	int ah = getAvailableHeight();
+    	switch(current_quad) {
+				case TextFieldLFImpl.QUAD_TOPLFT:
+					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_TOPRGT:
+					super.setBounds(EPAD, ah-h-EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTLFT:
+					super.setBounds(aw-w-EPAD, EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTRGT:
+					super.setBounds(EPAD, EPAD, w, h);
+					break;
+				default:
+					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
+			requestFullScreenRepaint(); }
+
+		// Overridden to make sure we get a monitor thread that it
+		// monitors the bounds against the content below
+		void doThreadJob() {
+			setBounds(); }
+
+		boolean needsMonitorThread() {
+			return true; }
 
 }

@@ -3,6 +3,7 @@ package javax.microedition.lcdui;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.pspkvm.system.VMSettings;
 import com.sun.midp.chameleon.input.*;
+import com.sun.midp.chameleon.CWindow;
 
 abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
 
@@ -141,7 +142,7 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 			lis = l;
 			rem = c;
 			dis=d;
-			loc = new Command("-> "+c.getLabel(), c.getLongLabel(),
+			loc = new Command(c.getLabel(), c.getLongLabel(),
 				c.getCommandType(), c.getPriority()); }
 		void reflect() {
 			closeKeyEntered(true);
@@ -159,5 +160,71 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 				creflectors[i].reflect();
 				return true; } }
 		return false; }
-  
+		
+			/** Thread monitoring the board position -- moves it when needed,
+			 * does other jobs. */
+		class MonitorThread extends Thread {
+		
+		boolean stopped;
+		MonitorThread() {
+			stopped = false; }
+	
+		/**
+		* Check the position of the board -- move 
+		* if necessary		
+		*/
+		public final void run() {
+			while (!stopped) {
+				doThreadJob();
+				try {
+					sleep(getMonitorDelay()); }
+				catch(InterruptedException e) {} } } }
+				
+		// Override this to change the monitor delay
+		int getMonitorDelay() {
+			return MONITOR_DELAY; }
+			
+		// Override this to give the thread a more involved
+		// job
+		void doThreadJob() {}
+		boolean needsMonitorThread() {
+			return false; }
+		
+		// End MonitorThread
+		static final int MONITOR_DELAY = 100;
+		MonitorThread monitorThread = null;
+
+		void startMonitorThread() {
+			if (!needsMonitorThread()) {
+				return; }
+			if (monitorThread==null) {
+				monitorThread = new MonitorThread(); }
+			monitorThread.stopped=false;
+			try {
+				monitorThread.start(); }
+			catch(IllegalThreadStateException e) {} }
+
+		void stopMonitorThread() {
+			if (!needsMonitorThread()) {
+				return; }
+			if (monitorThread == null) {
+				return; }
+			monitorThread.stopped=true;
+			monitorThread=null; }
+		
+    /**
+     *	Overridden to control the thread
+     *	monitoring the control state
+     */
+		public void removeNotify(CWindow w) {
+			stopMonitorThread();
+			super.removeNotify(w); }
+					 		     
+    /**
+     *	Overridden to control the thread
+     *	monitoring the control state
+     */
+		public void addNotify() {
+			startMonitorThread();
+			super.addNotify(); }
 }
