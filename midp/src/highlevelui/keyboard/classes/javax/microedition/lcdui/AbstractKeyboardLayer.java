@@ -4,8 +4,49 @@ import com.sun.midp.chameleon.layers.PopupLayer;
 import com.pspkvm.system.VMSettings;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.CWindow;
+import com.sun.midp.chameleon.SubMenuCommand;
 
-abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboardListener {
+abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboardListener, CommandListener {
+
+	// ********** critical, common data links *********** //
+	
+	/** Text field look/feel context */
+	TextFieldLFImpl tfContext = null;
+	
+	/** Canvas look/feel context */
+	CanvasLFImpl cvContext = null;
+	
+	/** the original text field string in case the user cancels */
+	String backupString;
+
+  /** Once cell character array--useful for various inserts */
+  char tmpchrarray[];
+
+  // Wrapper method--allows entering 'exotic' characters
+	// in the 'any' contexts, prevents crashes in constrained
+	// contexts due to disallowed input slipping through.
+	// NB: A compelling reason for using this is: it's faster.
+	// But we really should optimize the actual character screening.
+	// (TODO)
+	void tfPutKey(char a) {
+		if (tfContext == null) {
+			return; }
+		int c = tfContext.getConstraints();
+			switch (c & TextField.CONSTRAINT_MASK) {
+			case TextField.PHONENUMBER:
+			case TextField.DECIMAL:
+			case TextField.NUMERIC:
+			case TextField.EMAILADDR:
+			case TextField.URL:
+				tfContext.uCallKeyPressed(a);
+				break;
+			default:
+			  // We have to use the insert call because
+  			// a lot of the more exotic characters won't 
+  			// go through on uCallKeyPressed.
+				tmpchrarray[0]=a;
+  			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
+				tfContext.tf.getString(); } }
 
 	/**
 	 * constants for setState()
@@ -113,11 +154,12 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 		Set up the 'reflection' commands--commands that go straight back
 		to the textbox's listener itself.
 	*/
-	void setupCommandReflections(TextFieldLFImpl t) {
-		if (!(t.tf.owner instanceof TextBox)) {
-			creflectors = new CommandReflector[0];
+	void setupCommandReflections() {
+		if (tfContext == null) {
 			return; }
-		TextBox b = (TextBox)(t.tf.owner);
+		if (!(tfContext.tf.owner instanceof TextBox)) {
+			return; }
+		TextBox b = (TextBox)(tfContext.tf.owner);
 		creflectors = new CommandReflector[b.numCommands];
 		for(int i=0; i<b.numCommands; i++) {
 			creflectors[i] = new CommandReflector(b.commands[i], b.listener, b);
@@ -148,18 +190,58 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 			closeKeyEntered(true);
 			lis.commandAction(rem, dis); } }
 			
-	void closeKeyEntered(boolean ok_sent) { }
+	 // Called to close the thing
+	 void closeKeyEntered(boolean ok_sent) {
+	 		Display disp = null;
+      open = false;
+      if (tfContext != null) {
+        disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
+        if (!ok_sent) {
+					tfContext.tf.setString(backupString); } }
+      else if (cvContext != null) {
+      	disp = cvContext.currentDisplay; }
+      if (disp == null) {
+          System.out.println("Could not find display - Can't hide popup"); }
+			else {
+          disp.hidePopup(this); }
+      justOpened = false; }
+      
 
 	CommandReflector[] creflectors;
 				
 	// Call from a command event handler.
 	// Returns true if it reflects something down.
 	boolean reflectCommand(Command c) {
+		if (creflectors==null) {
+			return false; }
 		for(int i=0; i<creflectors.length; i++) {
 			if (creflectors[i].loc == c) {
 				creflectors[i].reflect();
 				return true; } }
 		return false; }
+		
+	public void commandAction(Command cmd, Displayable s) {
+		reflectCommand(cmd); }
+		
+	// setCommands override--inserts the reflected commands
+	// intelligently, if any are found.
+	public void setCommands(Command[] c) {
+		setupCommandReflections();
+		if (creflectors==null) {
+			super.setCommands(c);
+			return; }
+		if (creflectors.length==0) {
+			super.setCommands(c);
+			return; }
+		Command commands[] = new Command[1 + creflectors.length];
+		SubMenuCommand sc = new SubMenuCommand("Keyboard", Command.SCREEN, 3);
+		for(int i=0; i<c.length; i++) {
+			sc.addSubCommand(c[i]); }
+		commands[creflectors.length] = sc;
+		sc.setListener(this);
+		for(int i=0; i<creflectors.length; i++) {
+			commands[i]=creflectors[i].loc; }
+		super.setCommands(commands); }
 		
 			/** Thread monitoring the board position -- moves it when needed,
 			 * does other jobs. */

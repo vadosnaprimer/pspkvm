@@ -23,8 +23,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
     private int neededRows = 0;
 
 	private Command keyboardClose;
-	private Command keyboardHelp;
-	private Command keyboardaBack;
+	private Command keyboardBack;
 
     /** the instance of the virtual keyboard */
     VirtualKeyboard_awf vk = null;
@@ -51,13 +50,12 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 
 		setBounds(vk.kbX, vk.kbY, vk.kbWidth, vk.kbHeight);
 	
-		keyboardClose = new Command("OK", Command.SCREEN, 1);
-		keyboardHelp = new Command("Back", Command.SCREEN, 1);
-		keyboardaBack = new Command("Help", Command.EXIT, 1);
-		Command commads[]={keyboardClose,keyboardHelp,keyboardaBack};
+		keyboardClose = new Command("OK", Command.OK, 1);
+		keyboardBack = new Command("Back", Command.EXIT, 1);
+		Command commands[]={keyboardClose,keyboardBack};
 		setCommandListener(this);
-		setCommands(commads);
-    }       
+		setCommands(commands); }
+       
 	/**
      * Handle a command action.
      *
@@ -65,16 +63,13 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
      * @param s   The Displayable with the Command
      */
     public void commandAction(Command cmd, Displayable s) {
-    System.out.println("commandAction="+cmd);
-        if (cmd == keyboardClose) {
-			virtualMetaKeyEntered(VirtualKeyboard_awf.CANCEL_COMMAND);
-    	}else if (cmd == keyboardHelp) {
+      if (cmd == keyboardBack) {
+				virtualMetaKeyEntered(VirtualKeyboard_awf.CANCEL_COMMAND);
+				return; }
+    	if (cmd == keyboardClose) {
 	    	virtualMetaKeyEntered(VirtualKeyboard_awf.OK_COMMAND);
-    	}else if (cmd == keyboardaBack) {
-	    	System.out.println("commandAction="+cmd);
-			virtualMetaKeyEntered(VirtualKeyboard_awf.CURSOR_UP_COMMAND);
-    	}
-	}
+	    	return; }
+    	super.commandAction(cmd, s); }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -87,12 +82,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
-        tfContext = null;
-        cvContext = canvas;
+        tfContext = null;        cvContext = canvas;
         if (vk==null) {
             prepareKeyMapCanvas();
-            vk = new VirtualKeyboard_awf(keys, this, 0, 0);
-        }
+            vk = new VirtualKeyboard_awf(keys, this, 0, 0); }
 
         //System.out.println("vk.kbX:"+vk.kbX+",vk.kbY:"+vk.kbY+",vk.kbWidth:"+vk.kbWidth+",vk.kbHeight:"+vk.kbHeight);
 	setBounds(vk.kbX,vk.kbY,vk.kbWidth,vk.kbHeight);
@@ -272,25 +265,29 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
      * @param code - The code of this key event
      * @return true always, since popupLayers swallow all key events
      */
-    public boolean keyInput(int type, int code) {
-        if ((type == EventConstants.PRESSED ||
-             type == EventConstants.RELEASED ||
-             type == EventConstants.REPEATED) && 
-            (tfContext != null || 
-             cvContext != null)) {
-             try{
-	            vk.traverse(type,code);
-         	}catch(IllegalArgumentException e){
-		         System.out.println(e);	
-		 	}catch(NullPointerException e){
-			 	System.out.println(e);	
-	 		}catch(StringIndexOutOfBoundsException e){
-		 		System.out.println(e);	
- 			}	 		
-        }
-        return true;
-    }
-
+	public boolean keyInput(int type, int code) {
+	
+		if ((tfContext == null) && (cvContext == null)) {
+			return true; }
+		// The two soft buttons go to the menus. Let them.
+		if (code == EventConstants.SOFT_BUTTON1) {
+			return false; }
+		if (code == EventConstants.SOFT_BUTTON2) {
+			return false; }
+		// Remaining keypress events go through the vk's standard
+		// event handler
+		if (type == EventConstants.PRESSED ||
+			type == EventConstants.RELEASED ||
+			type == EventConstants.REPEATED) {
+			try{
+				vk.traverse(type,code);
+			}catch(IllegalArgumentException e){
+				System.out.println(e);	
+			}catch(NullPointerException e){
+				System.out.println(e);	
+			}catch(StringIndexOutOfBoundsException e){
+				System.out.println(e); } }
+		return true; }
 
     /**
      * Handle input from a pen tap. Parameters describe
@@ -318,15 +315,6 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 
 
     // ********** package private *********** //
-
-    /** Text field look/feel context */
-    TextFieldLFImpl tfContext = null;
-
-    /** Canvas look/feel context */
-    CanvasLFImpl cvContext = null;
-
-    /** the original text field string in case the user cancels */
-    String backupString;
 
     /** the list of available keys */
     char[][] keys = null;
@@ -387,24 +375,8 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
         int key = c;
 
         if (c == 0) {
-            Display disp = null;
-
-            if (tfContext != null) {
-                disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
-            } else if (cvContext != null) {
-                disp = cvContext.currentDisplay;
-            }
-
-            if (disp == null) {
-                System.out.println("Could not find display - Can't hide popup");
-            } else {
-                disp.hidePopup(this);
-            }
-
-            open = false;
-            justOpened = false;
-            return;
-        }
+        	closeKeyEntered(true);
+          return; }
        
 		if (cvContext != null) {
             switch (c) {

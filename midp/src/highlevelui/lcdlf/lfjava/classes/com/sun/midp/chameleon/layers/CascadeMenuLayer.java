@@ -289,7 +289,7 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
         super.initialize();
         bounds[X] = 0; // set in alignMenu()
         bounds[Y] = 0; // set in alignMenu()
-        bounds[W] = MenuSkin.WIDTH / 2;
+        bounds[W] = MenuSkin.WIDTH * 7 / 8;
         bounds[H] = MenuSkin.HEIGHT - MenuSkin.ITEM_TOPOFFSET;
     }
         

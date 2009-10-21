@@ -19,11 +19,8 @@ import com.sun.midp.chameleon.input.*;
  * @author Amir Uval
  */
 class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListener {
-	private int neededColumns = 0;
-	private int neededRows = 0;
 
 	private Command keyboardClose;
-	private Command keyboardHelp;
 	private Command keyboardBack;
 
 	/** the instance of the virtual keyboard */
@@ -47,19 +44,27 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
 		
 		this.layerID  = "KeyboardLayer";
 		tfContext = tf;
-		//backupstring is set to original text before the kbd was used
+		// backupString is set to original text before the kbd was used
 		backupString = tfContext.tf.getString();
 		if (vk==null) {
 			vk = new VirtualKeyboard_AWF_F(0, this); }
-		
+		current_quad = -1; // Invalid. Forces reset in setBounds.
 		setBounds();
-	
+		monitorThread=null;
 		keyboardClose = new Command("OK", Command.SCREEN, 1);
-		keyboardHelp = new Command("Back", Command.SCREEN, 1);
-		keyboardBack = new Command("Help", Command.EXIT, 1);
-		Command commads[]={keyboardClose,keyboardHelp,keyboardBack};
-		setCommandListener(this);
-		setCommands(commads); }       
+		keyboardBack = new Command("Back", Command.SCREEN, 1);
+		Command commands[]={keyboardClose,keyboardBack};
+		setCommands(commands);
+		setCommandListener(this); }
+
+	// Help screen content (NB: Not currently used)
+	final static String HELPSTR =
+		"1.(L \u6216 R)+O: \u5207\u6362\u8f93\u5165\u6cd5. (Switch Input Method)\n" +
+		"2.(L \u6216 R)+select: \u529f\u80fd\u540c\u4e0a. (Switch Input Method)\n" +
+		"3.(L \u6216 R)+X: \u5220\u9664\u8f93\u5165. (Delete)\n" +
+		"4. X: \u62fc\u97f3\u72b6\u6001\u4e0b\u5220\u9664\u8f93\u5165. (Delete PinYin)\n" +
+		"5.\u65b9\u5411\u952e\u6216\u6447\u6746: \u79fb\u52a8\u5149\u6807\u6216\u5207\u6362\u952e\u76d8\u533a\u57df.\n" +
+		"  Up/Down/Left/Right: Move cursor";
 
 	/**
      * Handle a command action.
@@ -69,39 +74,36 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
      */
     public void commandAction(Command cmd, Displayable s) {
     System.out.println("commandAction="+cmd);
-        if (cmd == keyboardClose) {
-			virtualMetaKeyEntered(VirtualKeyboard_AWF_F.CANCEL_COMMAND);
-    	}else if (cmd == keyboardHelp) {
+    	if (cmd == keyboardBack) {
+				virtualMetaKeyEntered(VirtualKeyboard_AWF_F.CANCEL_COMMAND);
+				return; }
+      if (cmd == keyboardClose) {
 	    	virtualMetaKeyEntered(VirtualKeyboard_AWF_F.OK_COMMAND);
-    	}else if (cmd == keyboardBack) {
-	    	System.out.println("commandAction="+cmd);
-			virtualMetaKeyEntered(VirtualKeyboard_AWF_F.CURSOR_UP_COMMAND);
-    	}
-	}
+	    	return; }
+    	super.commandAction(cmd, s); }
 
-    /**
-     * Constructs a canvas sub-popup layer, which behaves like a
-     * popup-choicegroup, given a string array of elements that constitute
-     * the available list of choices to select from.
-     *
-     * @param canvas The Canvas that triggered this popup layer.
-     */
-    private KeyboardLayer_AWF_F(CanvasLFImpl canvas) throws VirtualKeyboardException {
-        super((Image)null, -1); // don't draw a background  
-
-        this.layerID  = "KeyboardLayer";
-        tfContext = null;
-        cvContext = canvas;
-        if (vk==null) {
-            prepareKeyMapCanvas();
-            vk = new VirtualKeyboard_AWF_F(keys, this, 0, 0);
-        }
-
+	/**
+	* Constructs a canvas sub-popup layer, which behaves like a
+	* popup-choicegroup, given a string array of elements that constitute
+	* the available list of choices to select from.
+	*
+	* @param canvas The Canvas that triggered this popup layer.
+	*/
+	private KeyboardLayer_AWF_F(CanvasLFImpl canvas) throws VirtualKeyboardException {
+		super((Image)null, -1); // don't draw a background  
+		
+		this.layerID  = "KeyboardLayer";
+		tfContext = null;
+		cvContext = canvas;
+		if (vk==null) {
+			prepareKeyMapCanvas();
+			vk = new VirtualKeyboard_AWF_F(keys, this, 0); }
+		current_quad = -1; // Invalid. Forces reset in setBounds.
 		setBounds();
-
-        Command keypadClose = new Command("Close", Command.OK, 1);
-        setCommands(new Command[] { keypadClose });
-    }       
+		monitorThread=null;
+		Command keypadClose = new Command("Close", Command.OK, 1);
+		setCommands(new Command[] { keypadClose }); }
+       
     /**
      * Singleton
      */
@@ -248,18 +250,6 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
     }        
 
     /**
-     * Sets the bounds of the popup layer.
-     *
-     * @param x the x-coordinate of the popup layer location
-     * @param y the y-coordinate of the popup layer location
-     * @param w the width of this popup layer in open state
-     * @param h the height of this popup layer in open state
-     */
-    public void setBounds(int x, int y, int w, int h) {
-        super.setBounds(x, y, w, h);
-    }
-
-    /**
      * get the height of the Virtual Keyboard.
      * @return the height of the virtual keyboard.
      */ 
@@ -267,32 +257,36 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
         return vk.kbHeight + 4;
     }
 
-    /**
-     * Handles key event in the open popup.
-     *
-     * @param type - The type of this key event (pressed, released)
-     * @param code - The code of this key event
-     * @return true always, since popupLayers swallow all key events
-     */
-    public boolean keyInput(int type, int code) {
-        if ((type == EventConstants.PRESSED ||
-             type == EventConstants.RELEASED ||
-             type == EventConstants.REPEATED) && 
-            (tfContext != null || 
-             cvContext != null)) {
-             try{
-	            vk.traverse(type,code);
-         	}catch(IllegalArgumentException e){
-		         System.out.println(e);	
-		 	}catch(NullPointerException e){
-			 	System.out.println(e);	
-	 		}catch(StringIndexOutOfBoundsException e){
-		 		System.out.println(e);	
- 			}	 		
-        }
-        return true;
-    }
-
+	/**
+	* Handles key event in the open popup.
+	*
+	* @param type - The type of this key event (pressed, released)
+	* @param code - The code of this key event
+	* @return true always, since popupLayers swallow all key events
+	*/
+	public boolean keyInput(int type, int code) {
+	
+		if ((tfContext == null) && (cvContext == null)) {
+			return true; }
+		// The two soft buttons go to the menus. Let them.
+		if (code == EventConstants.SOFT_BUTTON1) {
+			return false; }
+		if (code == EventConstants.SOFT_BUTTON2) {
+			return false; }
+		// Remaining keypress events go through the vk's standard
+		// event handler
+		if (type == EventConstants.PRESSED ||
+			type == EventConstants.RELEASED ||
+			type == EventConstants.REPEATED) {
+			try{
+				vk.traverse(type,code);
+			}catch(IllegalArgumentException e){
+				System.out.println(e);	
+			}catch(NullPointerException e){
+				System.out.println(e);	
+			}catch(StringIndexOutOfBoundsException e){
+				System.out.println(e); } }
+		return true; }
 
     /**
      * Handle input from a pen tap. Parameters describe
@@ -320,15 +314,6 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
 
 
     // ********** package private *********** //
-
-    /** Text field look/feel context */
-    TextFieldLFImpl tfContext = null;
-
-    /** Canvas look/feel context */
-    CanvasLFImpl cvContext = null;
-
-    /** the original text field string in case the user cancels */
-    String backupString;
 
     /** the list of available keys */
     char[][] keys = null;
@@ -619,7 +604,6 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
 		
 	
     void requestFullScreenRepaint() {
-			Display disp = null;
 			if (tfContext != null) {
 				tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
 				return; }
@@ -642,19 +626,19 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
     	int ah = getAvailableHeight();
     	switch(current_quad) {
 				case TextFieldLFImpl.QUAD_TOPLFT:
-					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
+					setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
 					break;
 				case TextFieldLFImpl.QUAD_TOPRGT:
-					super.setBounds(EPAD, ah-h-EPAD, w, h);
+					setBounds(EPAD, ah-h-EPAD, w, h);
 					break;
 				case TextFieldLFImpl.QUAD_BOTLFT:
-					super.setBounds(aw-w-EPAD, EPAD, w, h);
+					setBounds(aw-w-EPAD, EPAD, w, h);
 					break;
 				case TextFieldLFImpl.QUAD_BOTRGT:
-					super.setBounds(EPAD, EPAD, w, h);
+					setBounds(EPAD, EPAD, w, h);
 					break;
 				default:
-					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
+					setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
 			requestFullScreenRepaint(); }
 
 		// Overridden to make sure we get a monitor thread that it

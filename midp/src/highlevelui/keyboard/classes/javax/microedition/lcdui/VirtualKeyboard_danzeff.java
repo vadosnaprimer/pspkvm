@@ -128,6 +128,12 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 				case 18:
 					vkl.virtualMetaKeyEntered(SC_Keys.ENT);
 					return true;
+				case 28:
+					vkl.virtualMetaKeyEntered(SC_Keys.OK);
+					return true;
+				case 30:
+					vkl.virtualMetaKeyEntered(SC_Keys.ESC);
+					return true;
 				default:
 					return false; } }
 
@@ -216,7 +222,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
      	
   // Display colours
 	private static final int WHITE = 0xffffff;
-	private static final int DKBLUE = 0x000040;
+	private static final int DKGREY = 0x202020;
 	private static final int DKRED = 0x400000;
 	private static final int GREY = 0xc0c0c0;
 	private static final int BGCOLOR = GREY;
@@ -228,7 +234,11 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 	static final String PSTG = "\ue02e\ue02d";
 	static final String SELG = "\ue02a";
 	static final String ENTG = "\ue020";
-	
+		// CNC mode string (x in a circle)
+	static final String CNCS = "\ue030";
+	// OK string (thick hooked arrow)
+	static final String OKST = "\ue02f";
+
 	// Utility font--used to draw the key glyphs
 	static final Font utility_font =
 		Font.getFont(Font.FACE_UTILITY, Font.STYLE_BOLD, Font.SIZE_SMALL);
@@ -293,7 +303,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		"", "", ENTG, "1",
 		"", "", "", "4",
 		"", "", "", "7",
-		"", "", "", "8",
+		OKST, "", CNCS, "8",
 		"", "", "0", "9" };
 
 	// Char map
@@ -305,7 +315,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		NUL, NUL, MTA, '1',
 		NUL, NUL, NUL, '4',
 		NUL, NUL, NUL, '7',
-		NUL, NUL, NUL, '8',
+		MTA, NUL, MTA, '8',
 		NUL, NUL, '0', '9' };
 
 	// Display map
@@ -407,7 +417,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 
 	// Draw a single key
 	void draw_key(Graphics g, String[] k, int o, int x, int y, boolean live) {
-		g.setColor(live ? DKRED : DKBLUE);
+		g.setColor(live ? DKRED : DKGREY);
 		g.fillRect(x, y, GRPWIDTH, GRPHEIGHT);
 		g.setColor(WHITE);
 		x+=(GRPWIDTH/2);
