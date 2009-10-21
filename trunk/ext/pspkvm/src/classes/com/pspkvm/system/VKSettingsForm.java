@@ -13,16 +13,11 @@ public class VKSettingsForm extends VMSettingsForm
 	// Virtual keyboard type
 	static final String TYPELABEL="Type";
 	static final String[] VKTYPES = {
-		"AWF/Default", "AWF/Chinese", "Danzeff", "QWERTY", "Semichordal", "Sony OSK"};
+		"AWF/Default", "AWF/Chinese", "AWF/Float", "Danzeff", "QWERTY",
+		"Semichordal", "Sony OSK", };
 	static final String[] VKTYPES_V = {
-		"awf", "awf_chinese", "danzeff", "qwerty", "semichordal", "osk"};
-	static final int VKTYPE_AWF = 0;
-	static final int VKTYPE_AWFCHINESE = 1;
-	static final int VKTYPE_DANZEFF = 2;
-	static final int VKTYPE_QWERTY = 3;
-	static final int VKTYPE_SEMICHORDAL = 4;
-	static final int VKTYPE_OSK = 5;
-	static final int VKTYPE_COUNT = 6;
+		"awf", "awf_chinese", "awf_f", "danzeff", "qwerty", "semichordal", "osk" };
+	static final int VKTYPE_SEMICHORDAL = 5;
 	static final String VKTYPES_PNAME = "com.pspkvm.inputmethod";
 
 	// Semichordal default map

@@ -2098,12 +2098,32 @@ class TextFieldLFImpl extends ItemLFImpl implements
 		public static final int QUAD_BOTLFT = 2;
 		public static final int QUAD_BOTRGT = 3;
 			
+		// Size caching system for getQuadrant -- optimization
+		boolean dhsizes_valid = false;
+		int dhheight, dhwidth;
+		
+		void setdhsizes() {
+			dhwidth = getCurrentDisplay().getWindow().getBodyWidth() / 2;
+			dhheight = getCurrentDisplay().getWindow().getBodyHeight() / 2;
+			dhsizes_valid = true; }
+
 		/** Reports the quadrant (quarter screen) the caret is in
 		 * within the textfield -- used by the virtual keyboards
 		 * to stay out of the way while you're typing */
 		public int getQuadrant() {
-			// This one just sez toplft for now... working on it
-			return QUAD_TOPLFT; }
+		 	if (cursor==null) {
+			 	// Default
+				 return QUAD_TOPLFT; }
+			if (!dhsizes_valid) {
+				setdhsizes(); }
+			int[] a = getInputModeAnchor();
+			int x = cursor.x;
+			int y = cursor.y + a[1]; 
+			boolean r = x > dhwidth;
+			boolean b = y > dhheight;
+			if (b) {
+				return r ? QUAD_BOTRGT : QUAD_BOTLFT; }
+			return r ? QUAD_TOPRGT : QUAD_TOPLFT; }
     
 } // TextFieldLFImpl
 

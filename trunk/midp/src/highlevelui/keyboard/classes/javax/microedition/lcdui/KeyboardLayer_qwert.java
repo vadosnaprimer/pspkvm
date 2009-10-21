@@ -15,12 +15,11 @@ import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
 import com.pspkvm.midp.lcdui.vk.qwert.IMCandidateBar;
 
-
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author Amir Uval
  */
-class KeyboardLayer_qwert extends AbstractKeyboardLayer {
+class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListener {
     private int neededColumns = 0;
     private int neededRows = 0;
 
@@ -48,13 +47,20 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
             vk = new VirtualKeyboard_qwert(keys, this, true, neededColumns, neededRows);
         }
 
-	setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
+				setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
 	
-        //candidateBar = new IMCandidateBar(vk.kbWidth, 25);
-
-        Command keyboardClose = new Command("Close", Command.OK, 1);
+        keyboardClose = new Command("Close", Command.OK, 1);
         setCommands(new Command[] { keyboardClose });
-    }       
+        setCommandListener(this);
+    }
+    
+		Command keyboardClose;
+	
+    public void commandAction(Command c, Displayable d) {
+			if (c == keyboardClose) {
+				closeKeyEntered(false);
+				return; }
+			super.commandAction(c, d); }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -216,15 +222,20 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
      */
     public boolean keyInput(int type, int code) {
 
-        if ((type == EventConstants.PRESSED ||
-             type == EventConstants.RELEASED ||
-             type == EventConstants.REPEATED) && 
-            (tfContext != null || 
-             cvContext != null)) {
-            vk.traverse(type,code);
-        }
-        return true;
-    }
+			if ((tfContext == null) && (cvContext == null)) {
+				return true; }
+			// The two soft buttons go to the menus. Let them.
+			if (code == EventConstants.SOFT_BUTTON1) {
+				return false; }
+			if (code == EventConstants.SOFT_BUTTON2) {
+				return false; }
+	    if ((type == EventConstants.PRESSED ||
+	         type == EventConstants.RELEASED ||
+	         type == EventConstants.REPEATED) && 
+	        (tfContext != null || 
+	         cvContext != null)) {
+	        vk.traverse(type,code); }
+	    return true; }
 
 
     /**
@@ -254,17 +265,8 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer {
 
     // ********** package private *********** //
 
-    /** Text field look/feel context */
-    TextFieldLFImpl tfContext = null;
-
-    /** Canvas look/feel context */
-    CanvasLFImpl cvContext = null;
-
     /** Candidate bar */
     IMCandidateBar candidateBar = null;
-
-    /** the original text field string in case the user cancels */
-    String backupString;
 
     /** the list of available keys */
     char[][] keys = null;

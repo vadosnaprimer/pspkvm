@@ -696,10 +696,8 @@ class TextBoxLFImpl extends TextFieldLFImpl implements TextFieldLF {
      */
 		public boolean isMultiLine() {
 			return true; }
-			
-		// Size caching system for getQuadrant -- optimization
-		boolean dhsizes_valid = false;
-		int dhheight, dhwidth, lheight;
+		
+		int lheight;
 		
 		void setdhsizes() {
 			dhwidth = (((DisplayableLFImpl)tf.owner.getLF()).

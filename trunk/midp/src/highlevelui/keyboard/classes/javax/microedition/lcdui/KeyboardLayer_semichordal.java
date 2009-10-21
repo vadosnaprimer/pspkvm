@@ -19,7 +19,6 @@ import com.sun.midp.lcdui.*;
 import com.sun.midp.chameleon.input.*;
 import com.sun.midp.chameleon.MIDPWindow;
 import com.sun.midp.chameleon.CWindow;
-import com.sun.midp.chameleon.SubMenuCommand;
 
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
@@ -33,8 +32,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_semichordal vk = null;
-  /** Once cell character array--useful for various inserts */
-  static char tmpchrarray[];
 
 	String layerID = null;
 	/** State--tracks the quadrant we're drawing the board in -- we move it to
@@ -59,7 +56,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	    if (vk==null) {
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
-			setupCommandReflections(tf);
 			setupCommands();
 			if (tfContext.isMultiLine() &&
 				(getAvailableWidth()>=vk.getWidth()) &&
@@ -77,28 +73,13 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 	void setupCommands() {
 		cmdOK = new Command("OK", Command.OK, 1);
 		cmdCancel = new Command("Cancel", Command.CANCEL, 2);
-		cmdToggleDisplay = new Command("Display", Command.HELP, 3);
-		cmdRotateMap = new Command("Next Map", Command.HELP, 3);
+		cmdToggleDisplay = new Command("Toggle Display", Command.HELP, 3);
+		cmdRotateMap = new Command("Rotate Map", Command.HELP, 3);
 		cmdClear = new Command("Clear", Command.HELP, 3);
 		cmdCopyAll = new Command("Copy All", Command.HELP, 3);
-		if (creflectors.length > 0) {
-			Command commands[] = new Command[1 + creflectors.length];
-			SubMenuCommand sc = new SubMenuCommand("Keyboard", Command.SCREEN, 3);
-			sc.addSubCommand(cmdOK);
-			sc.addSubCommand(cmdCancel);
-			sc.addSubCommand(cmdToggleDisplay);
-			sc.addSubCommand(cmdRotateMap);
-			sc.addSubCommand(cmdClear);
-			sc.addSubCommand(cmdCopyAll);
-			sc.setListener(this);
-			commands[creflectors.length] = sc;
-			for(int i=0; i<creflectors.length; i++) {
-				commands[i]=creflectors[i].loc; }
-			setCommands(commands); }
-		else {
-			Command commands[] = {
-				cmdOK, cmdCancel, cmdToggleDisplay, cmdRotateMap, cmdClear, cmdCopyAll };
-			setCommands(commands); }
+		Command commands[] = {
+			cmdOK, cmdCancel, cmdToggleDisplay, cmdRotateMap, cmdClear, cmdCopyAll };
+		setCommands(commands);
 		setCommandListener(this); }
 
 	/**
@@ -125,8 +106,9 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				virtualMetaKeyEntered(SC_Keys.SWM);
 				return; }
       if (cmd == cmdToggleDisplay) {
-				virtualMetaKeyEntered(SC_Keys.DSP); }
-			reflectCommand(cmd); }
+				virtualMetaKeyEntered(SC_Keys.DSP);
+				return; }
+			super.commandAction(cmd, s); }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -575,22 +557,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
 			tfPutKey(c); }
 
-	 // Called to close the thing
-	 void closeKeyEntered(boolean ok_sent) {
-	 		Display disp = null;
-      open = false;
-      if (tfContext != null) {
-        disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
-        if (!ok_sent) {
-					tfContext.tf.setString(backupString); } }
-      else if (cvContext != null) {
-      	disp = cvContext.currentDisplay; }
-      if (disp == null) {
-          System.out.println("Could not find display - Can't hide popup"); }
-			else {
-          disp.hidePopup(this); }
-      justOpened = false; }
-      
     /**
      * Paints the body of the popup layer.
      *
@@ -599,18 +565,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     public void paintBody(Graphics g) {
         vk.paint(g);
     }
-
-
-    // ********** package private *********** //
-
-    /** Text field look/feel context */
-    TextFieldLFImpl tfContext = null;
-
-    /** Canvas look/feel context */
-    CanvasLFImpl cvContext = null;
-
-    /** the original text field string in case the user cancels */
-    String backupString;
 
     /**
      * VirtualKeyboardListener interface
@@ -627,29 +581,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
       if (cvContext != null) {
 				cvContext.uCallKeyPressed(c); } }
 		
-		// Wrapper method--allows entering 'exotic' characters
-		// in the 'any' contexts, prevents crashes in constrained
-		// contexts due to disallowed input slipping through.
-		void tfPutKey(char a) {
-			if (tfContext == null) {
-				return; }
-			int c = tfContext.getConstraints();
-				switch (c & TextField.CONSTRAINT_MASK) {
-				case TextField.PHONENUMBER:
-				case TextField.DECIMAL:
-				case TextField.NUMERIC:
-				case TextField.EMAILADDR:
-				case TextField.URL:
-					tfContext.uCallKeyPressed(a);
-					break;
-				default:
-				  // We have to use the insert call because
-    			// a lot of the more exotic characters won't 
-    			// go through on uCallKeyPressed.
-					tmpchrarray[0]=a;
-    			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
-					tfContext.tf.getString(); } }
-
     /**
      * paint text only
      * 

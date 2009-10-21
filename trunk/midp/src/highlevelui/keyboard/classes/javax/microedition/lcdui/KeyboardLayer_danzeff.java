@@ -32,8 +32,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 
   /** the instance of the virtual keyboard */
   VirtualKeyboard_danzeff vk = null;
-  /** Once cell character array--useful for various inserts */
-  static char tmpchrarray[];
 
 	String layerID = null;
 	/** State--tracks the quadrant we're drawing the board in -- we move it to
@@ -84,6 +82,12 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 		setCommandListener(this);
 		setCommands(commands); }
 		       
+		boolean cached_ok, cached_cancel;
+		
+		void clearCachedCommands() {
+			cached_ok=false;
+			cached_cancel=false; }
+
 	/**
      * Handle a command action.
      *
@@ -103,7 +107,8 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 				return; }
 			if (cmd == cmdClear) {
 				virtualMetaKeyEntered(SC_Keys.CLR);
-				return; } }
+				return; }
+			super.commandAction(cmd, s); }
 
     /**
      * Constructs a canvas sub-popup layer, which behaves like a
@@ -281,13 +286,14 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
       if (type == EventConstants.RAWKEYSTATE) {
       		processRawStroke(code);
 					return true; }
+			if (cached_ok || cached_cancel) {
+				handleCachedCommand();
+				return true; }
       // The two soft buttons go to the menus. Let them.
       if (code == EventConstants.SOFT_BUTTON1) {
 				return false; }
       if (code == EventConstants.SOFT_BUTTON2) {
 				return false; }
-			// Remaining keypress events go through the vk's standard
-			// event handler
       return true; }
 
 		// Process a raw event into a keystroke
@@ -352,19 +358,14 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 					tfPutString(Clipboard.get(), tfContext);
 					return;
 				case SC_Keys.ESC:
-          closeKeyEntered(false);
+					cached_cancel=true;
           return;
 				case SC_Keys.ENT: 
-					// TODO/FIXME--if this is a one line textfield, it would 
-					// be nice to call closeKeyEntered(true) here instead.
-					if (!tfContext.isMultiLine()) {
-						// TODO: Fix. This probably doesn't work for TextField types
-						// that do allow \n. Technically, if TextField.ANY is set
-						// in the constraint mask, it does.
-						return; }
 					eraseSelection();
 					tfPutString("\n", tfContext);
-	      	tfContext.tf.getString();
+					return;
+				case SC_Keys.OK:
+					cached_ok=true;
 					return;
         case SC_Keys.CLF:
           tfContext.moveCursor(Canvas.LEFT);
@@ -405,23 +406,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
         default:
         	return; } }        	
         	
-
-	 // Called to close the thing
-	 void closeKeyEntered(boolean ok_sent) {
-      Display disp = null;
-      if (tfContext != null) {
-        disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
-        if (!ok_sent) {
-					tfContext.tf.setString(backupString); } }
-      else if (cvContext != null) {
-      	disp = cvContext.currentDisplay; }
-      if (disp == null) {
-          System.out.println("Could not find display - Can't hide popup"); }
-			else {
-          disp.hidePopup(this); }
-      open = false;
-      justOpened = false; }
-      
     /**
      * Paints the body of the popup layer.
      *
@@ -430,44 +414,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
     public void paintBody(Graphics g) {
         vk.paint(g);
     }
-
-
-    // ********** package private *********** //
-
-    /** Text field look/feel context */
-    TextFieldLFImpl tfContext = null;
-
-    /** Canvas look/feel context */
-    CanvasLFImpl cvContext = null;
-
-    /** the original text field string in case the user cancels */
-    String backupString;
-    
-    // Wrapper method--allows entering 'exotic' characters
-		// in the 'any' contexts, prevents crashes in constrained
-		// contexts due to disallowed input slipping through.
-		// NB: A compelling reason for using this is: it's faster.
-		// But we really should optimize the actual character screening.
-		// (TODO)
-		void tfPutKey(char a) {
-			if (tfContext == null) {
-				return; }
-			int c = tfContext.getConstraints();
-				switch (c & TextField.CONSTRAINT_MASK) {
-				case TextField.PHONENUMBER:
-				case TextField.DECIMAL:
-				case TextField.NUMERIC:
-				case TextField.EMAILADDR:
-				case TextField.URL:
-					tfContext.uCallKeyPressed(a);
-					break;
-				default:
-				  // We have to use the insert call because
-    			// a lot of the more exotic characters won't 
-    			// go through on uCallKeyPressed.
-					tmpchrarray[0]=a;
-    			tfContext.tf.insert(tmpchrarray, 0, 1, tfContext.tf.getCaretPosition());
-					tfContext.tf.getString(); } }
 
     /**
      * VirtualKeyboardListener interface
@@ -545,4 +491,28 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 
 		boolean needsMonitorThread() {
 			return true; }
+
+    /**
+     *	Overridden to clear the 
+     *	cached commands     
+     */
+		public void addNotify() {
+			clearCachedCommands();
+			super.addNotify(); }
+
+    void handleCachedCommand() {
+    	if (cached_ok) {
+				if (ok_below!=null) {
+					closeKeyEntered(true);
+					ok_below.reflect();
+					return; }
+				closeKeyEntered(true);
+				return; }
+			// cached_cancel
+			if (cancel_below!=null) {
+				closeKeyEntered(true);
+				cancel_below.reflect();
+				return; }
+			closeKeyEntered(false); }
+
 }

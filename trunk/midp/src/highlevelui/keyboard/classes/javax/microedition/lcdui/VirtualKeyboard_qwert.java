@@ -204,12 +204,6 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
     void traverse(int type, int keyCode) {
         System.out.println("VirtualK: keyCode="+keyCode);
 
-        // Soft button means dismiss to the virtual keyboard
-        if (type == EventConstants.RELEASED && keyCode == EventConstants.SOFT_BUTTON2) {
-            vkl.virtualKeyEntered(type, (char)0);
-            return;
-        }
-
         if (!inMetaKeys) {
             if (type == EventConstants.RELEASED &&
                 keyCode != Constants.KEYCODE_SELECT) {
