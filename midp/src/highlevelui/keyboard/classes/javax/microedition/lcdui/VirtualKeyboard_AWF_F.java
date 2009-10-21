@@ -13,6 +13,7 @@ import com.sun.midp.chameleon.skins.*;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.pspkvm.midp.lcdui.vk.awf.IMCandidateBar;
 import com.pspkvm.system.VMSettings;
+import com.pspkvm.keypad.*;
 
 /*
 	Modified/floated AWF version
@@ -82,6 +83,7 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 		PADDING = 2;
 		currentKeyboard = 0;
 		this.vkl = vkl;
+		readKeyMap();
 		
 		f = Font.getFont(Font.FACE_SYSTEM, // or SYSTEM
 		Font.STYLE_PLAIN, 
@@ -125,6 +127,7 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true; }
 
 		select_on=false;
+		readKeyMap();
 		
 		f = Font.getFont(Font.FACE_SYSTEM, // or SYSTEM
 			Font.STYLE_PLAIN, 
@@ -167,6 +170,18 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 				}
 		return retKeyCode;
 	}
+	
+	// Remapping system--to handle key remapping
+	// (NB: currently, this just handles X/O swapping -- should extend)
+	int sel_target, num0_target;
+	void readKeyMap() {
+		sel_target = 2; num0_target = 3;
+		int x_code = KeyMapInfo.getCurrentKeyMapForNativeControl(
+			PSPCtrlCodes.CROSS, false);
+		if (x_code == Constants.KEYCODE_SELECT) {
+			// Swap
+			sel_target = 3; num0_target = 2; } }
+
     /**
      * traverse the virtual keyboard according to key pressed.
      * 
@@ -197,10 +212,10 @@ class VirtualKeyboard_AWF_F extends VirtualKeyboardInterface {
 					handleSelectKey(1);
 					break;
 				case Constants.KEYCODE_SELECT: //O
-					handleSelectKey(2);
+					handleSelectKey(sel_target);
 				    break;
 				 case Canvas.KEY_NUM0:     //x
-				 	handleSelectKey(3);
+				 	handleSelectKey(num0_target);
 					break;
 				case Canvas.KEY_NUM5://add key7 change input mode
 				case Canvas.KEY_STAR://"*" KEY change input mode

@@ -1,5 +1,5 @@
-Current to post version 0.5.4 Test 10
-18 October 2009
+Current to post version 0.5.4 Test 11
+21 October 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -23,10 +23,16 @@ Additional documentation
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
 
---------------------
-Changes post-release
---------------------
+---------------------------------
+Changes relative to test build 10
+---------------------------------
 
+ * Changed colours of Danzeff/semichordal keys to make distinguishing them easy.
+
+ * Streamlined command handling in Virtual boards--all boards now allow direct entry of commands registered by midlet authors without going through the interim text context layer. Semichordal and Danzeff boards also bind appropriate keys to OK and CANCEL command types if the midlet author registers them correctly. Allows single keystroke return from full-screen text fields in many midlets, including Opera Mini.
+
+ * Added experimental, compact 'floating' version of AWF virtual board.
+ 
  * AMS warns when you attempt to move a folder into itself or into its own child.
 
  * Changed Config midlet 'Exit' to 'Done'.
@@ -35,10 +41,16 @@ Changes post-release
 
  * Improvements to smart positioning system in virtual keyboards, so they move properly around one-line textfields in forms.
 
+ * (non-UI/non-user) added Java interfaces exposing native to J2ME control mapping--necessary to get AWF board operating properly when keys are remapped by user or 'Western' X/O mapping is selected.
 
----------------------------------------
-Changes in release (relative to Test 9)
----------------------------------------
+ * (developer support only) added midlet tree with test midlets, simple midlet build system
+ 
+ * (developer support only) added art, generating scripts to svn tree.
+
+
+----------------------------------
+Previous changeset (test build 10)
+----------------------------------
 
 Summary: critical bugfixes, few minor cleanups
 
