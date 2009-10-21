@@ -16,10 +16,6 @@ abstract class SC_Keymap extends SC_Keys {
 	// Get the metakey at a given position (may be CHR, or NUL)
 	abstract int getMetaKey(int offset);
 	// Is this the lshifted equivalent of a ushifted key?
-	abstract boolean isLSMatchedMeta(int offset);
-	// Is this the ushifted equivalent of an lshifted key?
-	abstract boolean isUSMatchedMeta(int offset);
-	// Get the display string at this location
 	abstract String getDisplayString(boolean caps_lock, int offset);
 	// Is there a character at this position?
 	abstract boolean isChar(int p);		

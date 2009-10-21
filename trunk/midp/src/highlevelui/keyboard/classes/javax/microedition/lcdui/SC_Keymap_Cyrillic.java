@@ -100,51 +100,6 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 		LCS, LCS, NCS, NCS, UCS, UCS, NCS, NCS,
 		NCS, NCS, NCS, NCS, NCS, NCS, NCS, NCS };
 
-	// Helper for drawing -- maps out metakeys matched high
-	// and low -- this one maps those that are low, with high right
-	// above
-	public static final boolean[] ls_matched_meta = {
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, true,  true,  true,  false, false, false, false };
-			
-	// Helper for drawing -- opposite for above--metakeys
-	// that are high, but matched below.
-	public static final boolean[] us_matched_meta = {
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, 
-			false, false, false, false, false, false, false, false,
-			false, false, false, false, false, true,  true,  true };
-
     // The display map--used just to give the user some idea
     // what this chordal combination will do for them. *Not*
     // used in triggering/processing strokes -- see the 
@@ -218,14 +173,6 @@ class SC_Keymap_Cyrillic extends SC_Keymap {
 	// Get the metakey at a given position (may be CHR, or NUL)
 	int getMetaKey(int offset) {
 		return chordal_map_meta[offset]; }
-		
-	// Is this the lshifted equivalent an ushifted key?
-	boolean isLSMatchedMeta(int offset) {
-		return ls_matched_meta[offset]; }
-
-	// Is this the ushifted equivalent of an lshifted key?
-	boolean isUSMatchedMeta(int offset) {
-		return us_matched_meta[offset]; }
 
 	// Get the display string at this location
 	String getDisplayString(boolean caps_lock, int offset) {
