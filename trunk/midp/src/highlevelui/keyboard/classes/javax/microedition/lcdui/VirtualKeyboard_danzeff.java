@@ -35,6 +35,12 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 
 		// Keyboard state--may not need
     int currentKeyboard = 1; // abc
+    // Current map
+    DZ_Keymap crt_map;
+    
+    // We just have the one keymap right now
+		void setupKeymaps() {
+			crt_map = new DZ_Keymap_Roman(); }
     
     /**
      * Virtual Keyboard constructor.
@@ -47,6 +53,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
        if ("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
+    setupKeymaps();
 		live_key = 0;
 		cboard = 0;           
 		select_on = false;
@@ -60,6 +67,7 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
     if ("on".equals(VMSettings.get("com.pspkvm.virtualkeyboard.autoopen"))) {
            USE_VIRTUAL_KEYBOARD_OPEN_AUTO = true;
        }
+    setupKeymaps();
 		live_key = 0;
 		cboard = 0;
 		select_on = false;
@@ -103,49 +111,6 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 			if (y > HTHRESHOLDA) { live_key = 7; return; }
 			live_key = 0; }
 
-		boolean handleMetaKey(int o) {
-			if (o==0) {
-				// Delete
-				vkl.virtualMetaKeyEntered(SC_Keys.BSP);
-				return true; }
-			if (o==2) {
-				// Space
-				vkl.virtualKeyEntered(EventConstants.PRESSED, ' ');
-				return true; }
-			if (cboard != 2) {
-				return false; }
-			// Cboard 2 has a few
-			switch(o) {
-				case 6:
-					vkl.virtualMetaKeyEntered(SC_Keys.CPY);
-					return true;
-				case 10:
-					vkl.virtualMetaKeyEntered(SC_Keys.PST);
-					return true;
-				case 14:
-					vkl.virtualMetaKeyEntered(SC_Keys.SEL);
-					return true;
-				case 18:
-					vkl.virtualMetaKeyEntered(SC_Keys.ENT);
-					return true;
-				case 28:
-					vkl.virtualMetaKeyEntered(SC_Keys.OK);
-					return true;
-				case 30:
-					vkl.virtualMetaKeyEntered(SC_Keys.ESC);
-					return true;
-				default:
-					return false; } }
-
-		void handleVKPress(int o) {
-	  	char c = cmaps[cboard][(4*live_key)+o];
-	  	if (c==MTA) {
-				handleMetaKey((4*live_key)+o);
-				return; }
-			if (c==NUL) {
-				return; }
-			vkl.virtualKeyEntered(EventConstants.PRESSED, c); }
-
 		// TODO: Tighten
 		void setLiveMap(int p) {
 			int nboard = cboard;
@@ -176,13 +141,13 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		if (p>8) {
 			return; }
 		int o = of_lkup[p];
-		char c = cmaps[cboard][(4*live_key)+o];
-  	if (c==MTA) {
-			handleMetaKey((4*live_key)+o);
+		int m = crt_map.getMeta(cboard, (4*live_key)+o);
+		if (m==SC_Keys.NUL) {
 			return; }
-		if (c==NUL) {
-			return; }
-		vkl.virtualKeyEntered(EventConstants.PRESSED, c); }
+  	if (m==SC_Keys.CHR) {
+  		vkl.virtualKeyEntered(EventConstants.PRESSED, crt_map.getChar(cboard, (4*live_key)+o)); 
+  		return; }
+  	vkl.virtualMetaKeyEntered(m); }
 
 	/**
 	 *
@@ -243,108 +208,6 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 	static final Font utility_font =
 		Font.getFont(Font.FACE_UTILITY, Font.STYLE_BOLD, Font.SIZE_SMALL);
 		
-	static final char MTA = (char)1;
-	static final char NUL = (char)0;
-	
-	// Display map
-	static final String[] map_0 = {
-		BSPG, "m", SPCG, "n", 
-		"?", "o", "p", "q",
-		"!", "g", "h", "i",
-		".", "d", "e", "f",
-		",", "a", "b", "c",
-		"-", "j", "k", "l",
-		"(", "r", "s", "t",
-		":", "u", "v", "w",
-		")", "x", "y", "z" };
-	
-	// Char map
-	static final char[] cmap_0 = {
-		MTA, 'm', ' ', 'n', 
-		'?', 'o', 'p', 'q',
-		'!', 'g', 'h', 'i',
-		'.', 'd', 'e', 'f',
-		',', 'a', 'b', 'c',
-		'-', 'j', 'k', 'l',
-		'(', 'r', 's', 't',
-		':', 'u', 'v', 'w',
-		')', 'x', 'y', 'z' };
-	
-	// Display map
-	static final String[] map_1 = {
-		BSPG, "M", SPCG, "N", 
-		"\"", "O", "P", "Q",
-		"*", "G", "H", "I",
-		"@", "D", "E", "F",
-		"^", "A", "B", "C",
-		"_", "J", "K", "L",
-		"=", "R", "S", "T",
-		";", "U", "V", "W",
-		"/", "X", "Y", "Z" };
-		
-	// Char map
-	static final char[] cmap_1 = {
-		MTA, 'M', ' ', 'N', 
-		'"', 'O', 'P', 'Q',
-		'*', 'G', 'H', 'I',
-		'@', 'D', 'E', 'F',
-		'^', 'A', 'B', 'C',
-		'_', 'J', 'K', 'L',
-		'=', 'R', 'S', 'T',
-		';', 'U', 'V', 'W',
-		'/', 'X', 'Y', 'Z' };
-		
-	// Display map
-	static final String[] map_2 = {
-		BSPG, "", SPCG, "5", 
-		"", "", CPYG, "6",
-		"", "", PSTG, "3",
-		"", "", SELG, "2",
-		"", "", ENTG, "1",
-		"", "", "", "4",
-		"", "", "", "7",
-		OKST, "", CNCS, "8",
-		"", "", "0", "9" };
-
-	// Char map
-	static final char[] cmap_2 = {
-		MTA, NUL, ' ', '5', 
-		NUL, NUL, MTA, '6',
-		NUL, NUL, MTA, '3',
-		NUL, NUL, MTA, '2',
-		NUL, NUL, MTA, '1',
-		NUL, NUL, NUL, '4',
-		NUL, NUL, NUL, '7',
-		MTA, NUL, MTA, '8',
-		NUL, NUL, '0', '9' };
-
-	// Display map
-	static final String[] map_3 = {
-		BSPG, "", SPCG, "", 
-		"+", "\\", "=", "/",
-		"-", "[", "_", "]",
-		"\"", "<", "'", ">",
-		",", "(", ".", ")",
-		"!", "{", "?", "}",
-		":", "@", ";", "#",
-		"~", "$", "`", "%",
-		"*", "^", "|", "&" };
-		
-	// Char map
-	static final char[] cmap_3 = {
-		MTA, NUL, ' ', NUL, 
-		'+', '\\', '=', '/',
-		'-', '[', '_', ']',
-		'"', '<', '\'', '>',
-		',', '(', '.', ')',
-		'!', '{', '?', '}',
-		':', '@', ';', '#',
-		'~', '$', '`', '%',
-		'*', '^', '|', '&' };
-
-	static final String[][] maps = {map_0, map_1, map_2, map_3};
-	static final char[][] cmaps = {cmap_0, cmap_1, cmap_2, cmap_3};
-
 	// Letter offsets within key displays
 	private final static int[] ltr_x = { 0, -12, 0, 12 };
 	private final static int[] ltr_y = { 0, 12, 24, 12 };
@@ -409,14 +272,14 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		g.fillRect(0, getHeight()-sel_img.getHeight(),
 			getWidth(), sel_img.getHeight()+1);
 		for(int i=0; i<9; i++) {
-			draw_key(g, maps[cboard], i*4, 
+			draw_key(g, i*4, 
 				(key_x[i]*(GRPWIDTH+GAPSIZE)),
 				(key_y[i]*(GRPHEIGHT+GAPSIZE)),
 				i == live_key); }
 		paintMiscState(g); }
 
 	// Draw a single key
-	void draw_key(Graphics g, String[] k, int o, int x, int y, boolean live) {
+	void draw_key(Graphics g, int o, int x, int y, boolean live) {
 		g.setColor(live ? DKRED : DKGREY);
 		g.fillRect(x, y, GRPWIDTH, GRPHEIGHT);
 		g.setColor(WHITE);
@@ -424,7 +287,9 @@ class VirtualKeyboard_danzeff extends VirtualKeyboardInterface {
 		x+=1;
 		y+=2;
 		for(int i=0; i<4; i++) {
-			int w = utility_font.stringWidth(k[o]);
-			g.drawUtilityString(k[o], x+ltr_x[i]-(w/2), y+ltr_y[i], g.TOP|g.LEFT);
+			String s = crt_map.getDisplay(cboard, o);
+			int w = utility_font.stringWidth(s);
+			g.drawUtilityString(s,
+				x+ltr_x[i]-(w/2), y+ltr_y[i], g.TOP|g.LEFT);
 			o++; } }
 }
