@@ -29,7 +29,7 @@ class AMSCustomItemRenameForm extends TextBox {
 	static final String RENAMING=("Renaming ");
 	static final int MAX_SIZE = 64;
 	static final Command doneCmd = new Command("Done", Command.OK, 1);
-	static final Command cancelCmd = new Command("Cancel", Command.OK, 1);
+	static final Command cancelCmd = new Command("Cancel", Command.CANCEL, 1);
 
 	AMSCustomItem target;
 	boolean createFolder;
