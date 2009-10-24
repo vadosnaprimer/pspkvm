@@ -52,7 +52,8 @@ public class VMConfigMidlet extends MIDlet implements CommandListener {
 	
 	protected void pauseApp() {}
 
-	protected void destroyApp(boolean bool) {}
+	protected void destroyApp(boolean bool) {
+		VMSettings.commit(); }
 			
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == exitCmd) {

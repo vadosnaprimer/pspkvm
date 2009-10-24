@@ -1439,7 +1439,6 @@ class AppManagerUI extends Form
      */
     void cleanUp() {
     	writeFolders();
-			com.pspkvm.system.VMSettings.commit();
       AMSCustomItem.stopTimer(); }
       
 		/**
