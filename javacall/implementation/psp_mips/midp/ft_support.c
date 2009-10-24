@@ -26,6 +26,9 @@ static int _ftc_use_internal_font = 0;
 static int _ftc_need_utility_font = 0;
 /* State -- utility font present */
 static int _ftc_utility_font_present = 0;
+/* State -- set to 1 if no system fonts whatsoever 
+	(not including utility, fallback) are present */
+static int _ftc_no_sys_font_present = 0;
 /* State: static font sizes */
 static int _ftc_small = 0;
 static int _ftc_medium = 0;
@@ -98,8 +101,14 @@ void initialize_face_ids() {
 	// Field for which font files are present--just do one quick lookup for each
 	int font_file_present[_FTC_FACEID_COUNT];
 	int i;
+	_ftc_no_sys_font_present = 1;
 	for(i=0;i<_FTC_FACEID_COUNT;i++) {
-		font_file_present[i]=(access((_typeface_filenames[i]), R_OK) == 0) ? 1 : 0; }
+		font_file_present[i]=(access((_typeface_filenames[i]), R_OK) == 0) ? 1 : 0;
+		if (font_file_present[i]) {
+			_ftc_no_sys_font_present = 0; } }
+	if (_ftc_no_sys_font_present) {
+		// None present anyway. Not much point to doing all this.
+		return; }
 	// Now, for each of the members of ftc_faceids, go through the fallback
 	// routing, and pick the closest match (or NULL, if none)
 	for(i=0;i<_FTC_FACEID_COUNT;i++) {
@@ -250,6 +259,9 @@ FT_Error init_font_cache_subsystem() {
 		// Don't need all this cache stuff, in this case
 		return 1; }
 	initialize_face_ids();
+	if ((_ftc_no_sys_font_present) && (!_ftc_need_utility_font)) {
+		// Don't need them in this case either.
+		return 1; }
 	initialize_fallback_system();
 	_ftc_utility_font_present = (access(_utility_typeface_fn, R_OK) == 0) ? 1 : 0;
 	set_scaler_rec(&current_ic, JAVACALL_FONT_FACE_SYSTEM,
@@ -390,6 +402,8 @@ int _ftc_check_init(javacall_font_face lface) {
 		return 0; }
 	if ((_ftc_use_internal_font) && (lface != JAVACALL_FONT_FACE_UTILITY)) {
 		return 0; }
+	if ((_ftc_no_sys_font_present) && (lface != JAVACALL_FONT_FACE_UTILITY)) {
+		return 0; }
 	if (!_ftc_initialized) {
 		if (init_font_cache_subsystem()) {
 			return 0; } }
@@ -401,7 +415,7 @@ int _ftc_check_init(javacall_font_face lface) {
 
 // Same as above, when we don't know the face
 int _ftc_check_init_noface() {
-	if ((_ftc_use_internal_font) && (!_ftc_need_utility_font)) {
+	if ((_ftc_use_internal_font || _ftc_no_sys_font_present) && (!_ftc_need_utility_font)) {
 		return 0; }
 	if (!_ftc_initialized) {
 		if (init_font_cache_subsystem()) {
