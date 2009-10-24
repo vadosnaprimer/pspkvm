@@ -25,7 +25,7 @@ import java.lang.Thread;
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author AJ Milne, based on originals by Amir Uval
  */
-class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandListener {
+class KeyboardLayer_danzeff extends KeyboardLayer_RichEditing implements CommandListener {
 
 	// Commands handled in the menu bar
  	  private Command cmdOK, cmdCancel, cmdClear, cmdCopyAll;
@@ -34,10 +34,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
   VirtualKeyboard_danzeff vk = null;
 
 	String layerID = null;
-	/** State--tracks the quadrant we're drawing the board in -- we move it to
-	 * keep it in the quadrant furthest from the caret at all times
-	 */
-	int current_quad;	 		
 
     /**
      * Constructs a text tfContext sub-popup layer, which behaves like a
@@ -50,7 +46,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 	    super((Image)null, -1); // don't draw a background  
 	
 	    this.layerID  = "KeyboardLayer";
-	    tmpchrarray = new char[1];
 	    tfContext = tf;
 	    // backupString is set to original text before the kbd was used
 	    backupString = tfContext.tf.getString();
@@ -62,13 +57,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 			monitorThread=null;
 			setupCommands(); }
 	
-	// Get the quadrant the caret is in
-	int getCaretQuad() {
-		if (tfContext!=null) {
-			return tfContext.getQuadrant(); }
-		// For all others, fake it
-		return TextFieldLFImpl.QUAD_TOPLFT; }
-		
 	/**
      * Setup as a command listener for external events.
      *
@@ -82,12 +70,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 		setCommandListener(this);
 		setCommands(commands); }
 		       
-		boolean cached_ok, cached_cancel;
-		
-		void clearCachedCommands() {
-			cached_ok=false;
-			cached_cancel=false; }
-
 	/**
      * Handle a command action.
      *
@@ -121,7 +103,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
-        tmpchrarray = new char[1];
         tfContext = null;
         cvContext = canvas;
         if (vk==null) {
@@ -216,46 +197,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
      */
     protected void initialize() {
         super.initialize(); }
-    
-    
-    void requestFullScreenRepaint() {
-			Display disp = null;
-			if (tfContext != null) {
-				tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
-				return; }
-			if (cvContext != null) {
-				cvContext.currentDisplay.requestScreenRepaint(); } }
-
-    final static int EPAD = 2;
-    /**
-     * Sets the bounds of the popup layer.
-     *
-     */
-    protected void setBounds() {
-    	int upd_caret_quad = getCaretQuad();
-    	if (upd_caret_quad == current_quad) {
-				return; }
-			current_quad = upd_caret_quad;
-    	int w = vk.getWidth();
-    	int h = vk.getHeight();
-    	int aw = getAvailableWidth();
-    	int ah = getAvailableHeight();
-    	switch(current_quad) {
-				case TextFieldLFImpl.QUAD_TOPLFT:
-					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
-					break;
-				case TextFieldLFImpl.QUAD_TOPRGT:
-					super.setBounds(EPAD, ah-h-EPAD, w, h);
-					break;
-				case TextFieldLFImpl.QUAD_BOTLFT:
-					super.setBounds(aw-w-EPAD, EPAD, w, h);
-					break;
-				case TextFieldLFImpl.QUAD_BOTRGT:
-					super.setBounds(EPAD, EPAD, w, h);
-					break;
-				default:
-					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
-			requestFullScreenRepaint(); }
 
     /**
      * get the height of the Virtual Keyboard.
@@ -263,6 +204,12 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
      */ 
     public int getHeight() {
         return vk.getHeight(); }
+
+		int getVKHeight() {
+			return vk.getHeight(); }
+
+		int getVKWidth() {
+			return vk.getWidth(); }
 
     /**
      * Declare this layer supports raw key input events
@@ -305,107 +252,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 				return; }
 			vk.processRawStroke(p); }
 				
-		/**
-		 *	Helper for various actions that move the cursor
-		 *	without changing the select state
-		 */		 		 		
-		void synchSelectEnd(TextField tf) {
-			if (!vk.select_on) {
-				return; }
-			tf.synchSelectionEnd(); }
-
-		/**
-		 *	Helper for various actions that erase the current selection
-		 */
-		void eraseSelection() {
-			if (!vk.select_on) {
-				return; }
-			if (tfContext==null) {
-				return; }
-			vk.select_on=false;
-			repaintVK();
-			if (tfContext.tf.getSelectionLength()==0) {
-				// Nothing to do
-				return; }
-			// Do the delete
-			int a = tfContext.tf.getSelectionLow();
-			tfContext.tf.deleteSelection();
-			tfContext.setCaretPosition(a);
-			tfContext.lRequestPaint(); }
-
-		/**
-		 * VirtualKeyboardListener interface		
-		 * Process incoming metakeys
-		 * @param m the metakey pressed
-		 */		 		 		
-		public void virtualMetaKeyEntered(int m) {
-			if (tfContext == null) {
-				return; }
-			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
-			switch(m) {
-				case SC_Keys.CPY:
-					Clipboard.set(tfContext.tf.getSelection());
-					return;
-				case SC_Keys.CAL:
-					Clipboard.set(tfContext.tf.getString());
-					return;
-				case SC_Keys.CLR:
-					tfContext.tf.setString("");
-					tfContext.tf.getString();
-					return;
-				case SC_Keys.PST:
-					eraseSelection();
-					tfPutString(Clipboard.get(), tfContext);
-					return;
-				case SC_Keys.ESC:
-					cached_cancel=true;
-          return;
-				case SC_Keys.ENT: 
-					eraseSelection();
-					tfPutString("\n", tfContext);
-					return;
-				case SC_Keys.OK:
-					cached_ok=true;
-					return;
-        case SC_Keys.CLF:
-          tfContext.moveCursor(Canvas.LEFT);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.CRT:
-					tfContext.moveCursor(Canvas.RIGHT);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.CDN:
-					tfContext.moveCursor(Canvas.DOWN);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.CUP:
-					tfContext.moveCursor(Canvas.UP);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.BSP: {
-        	boolean del_more = !vk.select_on;
-					eraseSelection();
-					if (!del_more) {
-						return; }
-          tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-					return; }
-        case SC_Keys.DEL: {
-        	boolean del_more = !vk.select_on;
-					eraseSelection();
-					if (!del_more) {
-						return; }
-					tfContext.moveCursor(Canvas.RIGHT);
-          tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-					return; }
-				case SC_Keys.SEL:
-					tfContext.tf.synchSelectionStart();
-					vk.select_on = !vk.select_on;
-					disp.requestScreenRepaint();
-					return;
-        default:
-        	return; } }        	
-        	
     /**
      * Paints the body of the popup layer.
      *
@@ -415,72 +261,6 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
         vk.paint(g);
     }
 
-    /**
-     * VirtualKeyboardListener interface
-     *
-     * MIDlet that wants the receive events from the virtual
-     * keyboard needs to implement this interface, and register as
-     * a listener.
-     * @param c char selected by the user from the virtual keyboard
-     *
-     */
-    public void virtualKeyEntered(int type, char c) {
-    	eraseSelection();
-    	tfPutKey(c);
-      if (cvContext != null) {
-				cvContext.uCallKeyPressed(c); } }
-
-    /**
-     * paint text only
-     * 
-     * @param g The graphics context to paint to
-     * @param width width of screen to paint
-     * @param height height of screen to paint
-     */
-    public void paintTextOnly(Graphics g, int width, int height) {
-        if (tfContext != null) {
-            tfContext.lPaintContent(g, width, height);
-        }        
-    }
-
-    public void paintCandidateBar(Graphics g, int width, int height) {
-        /** Stub. TODO/FIXME: should we just paint the minimal selection? */
-    }
-    
-    /**
-     * get available width
-     * 
-     * @return the available width.
-     */
-    public int getAvailableWidth() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getWidth();
-        } else if (cvContext != null) {
-            return cvContext.owner.getWidth();
-        }
-        return 0;
-    }
-
-    /**
-     * get available height
-     * 
-     * @return the available height.
-     */
-    public int getAvailableHeight() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getHeight();
-        } else if (cvContext != null) {
-            return cvContext.owner.getHeight();
-        }
-        return 0;
-    }
-
-    /**
-     * repaint the virtual keyboard.
-     */
-    public void repaintVK() {
-        requestRepaint(); }
-			
 		// Overridden to make sure we get a monitor thread that it
 		// monitors the bounds against the content below and keeps
 		// the analogue stick updated
@@ -492,27 +272,10 @@ class KeyboardLayer_danzeff extends AbstractKeyboardLayer implements CommandList
 		boolean needsMonitorThread() {
 			return true; }
 
-    /**
-     *	Overridden to clear the 
-     *	cached commands     
-     */
-		public void addNotify() {
-			clearCachedCommands();
-			super.addNotify(); }
-
-    void handleCachedCommand() {
-    	if (cached_ok) {
-				if (ok_below!=null) {
-					closeKeyEntered(true);
-					ok_below.reflect();
-					return; }
-				closeKeyEntered(true);
-				return; }
-			// cached_cancel
-			if (cancel_below!=null) {
-				closeKeyEntered(true);
-				cancel_below.reflect();
-				return; }
-			closeKeyEntered(false); }
+		boolean selectOn() {
+			return vk.select_on; }
+			
+		void setSelectOn(boolean b) {
+			vk.select_on = b; }
 
 }

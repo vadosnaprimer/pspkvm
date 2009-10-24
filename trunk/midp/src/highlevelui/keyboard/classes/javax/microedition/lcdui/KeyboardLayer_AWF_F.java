@@ -343,19 +343,6 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
          keys[0][10] = 'v';
 
          keys[0][11] = ' ';
-
-
-         /*for (char i=0; i<4; i++) {   
-             keys[0][i] = (char)(65+i);
-         }*/
-         /*
-        for (char i=4, j=0; i<14; i++, j++) {  // 0..9
-             keys[0][i] = (char)(j+48);
-         }
-         keys[0][14] = '*';
-         keys[0][15] = '#';              
-         */
-
      }
 
     /**
@@ -428,35 +415,6 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
             }   
         }
     }
-    
-    /**
-		 *	Helper for various actions that move the cursor
-		 *	without changing the select state
-		 */		 		 		
-		void synchSelectEnd(TextField tf) {
-			if (!vk.select_on) {
-				return; }
-			tf.synchSelectionEnd(); }
-			
-		/**
-		 *	Helper for various actions that erase the current selection
-		 */
-		void eraseSelection() {
-			if (!vk.select_on) {
-				return; }
-			if (tfContext==null) {
-				return; }
-			vk.select_on=false;
-			repaintVK();
-			if (tfContext.tf.getSelectionLength()==0) {
-				// Nothing to do
-				return; }
-			// Do the delete
-			int a = tfContext.tf.getSelectionLow();
-			tfContext.tf.deleteSelection();
-			tfContext.setCaretPosition(a);
-			tfContext.lRequestPaint(); }
-
 
     /**
      * VirtualKeyboardListener interface
@@ -559,58 +517,7 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
     public void paintCandidateBar(Graphics g, int width, int height) {
         /** Nothing but a stub */
     }
-    
-    /**
-     * get available width
-     * 
-     * @return the available width.
-     */
-    public int getAvailableWidth() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getWidth();
-        } else if (cvContext != null) {
-            return cvContext.owner.getWidth();
-        }
-        return 0;
-    }
 
-    /**
-     * get available height
-     * 
-     * @return the available height.
-     */
-    public int getAvailableHeight() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getHeight();
-        } else if (cvContext != null) {
-            return cvContext.owner.getHeight();
-        }
-        return 0;
-    }
-
-    /**
-     * repaint the virtual keyboard.
-     */
-    public void repaintVK() {
-        requestRepaint();
-    }
-
-	// Get the quadrant the caret is in
-	int getCaretQuad() {
-		if (tfContext!=null) {
-			return tfContext.getQuadrant(); }
-		// For all others, fake it
-		return TextFieldLFImpl.QUAD_TOPLFT; }
-		
-	
-    void requestFullScreenRepaint() {
-			if (tfContext != null) {
-				tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
-				return; }
-			if (cvContext != null) {
-				cvContext.currentDisplay.requestScreenRepaint(); } }
-
-    final static int EPAD = 2;
     /**
      * Sets the bounds of the popup layer.
      *
@@ -648,5 +555,11 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
 
 		boolean needsMonitorThread() {
 			return true; }
+			
+		boolean selectOn() {
+			return vk.select_on; }
+			
+		void setSelectOn(boolean b) {
+			vk.select_on = b; }
 
 }

@@ -24,7 +24,7 @@ import com.sun.midp.chameleon.CWindow;
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author AJ Milne, based on originals by Amir Uval
  */
-class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements CommandListener {
+class KeyboardLayer_semichordal extends KeyboardLayer_RichEditing implements CommandListener {
 
 	// Commands handled in the menu bar
   private Command cmdOK, cmdCancel, cmdToggleDisplay,
@@ -34,10 +34,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
   VirtualKeyboard_semichordal vk = null;
 
 	String layerID = null;
-	/** State--tracks the quadrant we're drawing the board in -- we move it to
-	 * keep it in the quadrant furthest from the caret at all times
-	 */
-	int current_quad;	 		
 
     /**
      * Constructs a text tfContext sub-popup layer, which behaves like a
@@ -49,7 +45,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     private KeyboardLayer_semichordal(TextFieldLFImpl tf) throws VirtualKeyboardException {
 	    super((Image)null, -1); // don't draw a background  
 	    this.layerID  = "KeyboardLayer";
-	    tmpchrarray = new char[1];
 	    tfContext = tf;
 	    // backupstring is set to original text before the kbd was used
 	    backupString = tfContext.tf.getString();
@@ -121,7 +116,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         super((Image)null, -1); // don't draw a background  
 
         this.layerID  = "KeyboardLayer";
-        tmpchrarray = new char[1];
         tfContext = null;
         cvContext = canvas;
         if (vk==null) {
@@ -183,12 +177,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return null; }
 			return vk.getMapSName(); }
 			
-		boolean cached_ok, cached_cancel;
-		
-		void clearCachedCommands() {
-			cached_ok=false;
-			cached_cancel=false; }
-
     /**
      * get TextField Keyboard layer instance
      * 
@@ -213,7 +201,7 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      * @return a KeyboardLayer instance.
      */
     static KeyboardLayer_semichordal getInstance(CanvasLFImpl canvas) 
-                                                           throws VirtualKeyboardException {
+                throws VirtualKeyboardException {
         if ((instanceCV == null) || (instanceCV.cvContext != canvas)) {
             instanceCV = new KeyboardLayer_semichordal(canvas);
             instanceTF = null; }
@@ -225,51 +213,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
      */
     protected void initialize() {
         super.initialize(); }        
-
-	// Get the quadrant the caret is in
-	int getCaretQuad() {
-		if (tfContext!=null) {
-			return tfContext.getQuadrant(); }
-		// For all others, fake it
-		return TextFieldLFImpl.QUAD_TOPLFT; }
-		
-  void requestFullScreenRepaint() {
-		if (tfContext != null) {
-			tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
-			return; }
-		if (cvContext != null) {
-			cvContext.currentDisplay.requestScreenRepaint(); } }
-
-		final static int EPAD = 2;
-		/**
-		 * Sets the bounds of the popup layer.
-		 *
-		 */
-		protected void setBounds(boolean schange) {
-			int upd_caret_quad = getCaretQuad();
-			if ((upd_caret_quad == current_quad) && (!schange)) {
-				return; }
-			current_quad = upd_caret_quad;
-			int w = vk.getWidth();
-			int h = vk.getHeight();
-			int aw = getAvailableWidth();
-			int ah = getAvailableHeight();
-			switch(current_quad) {
-				case TextFieldLFImpl.QUAD_TOPLFT:
-					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
-					break;
-				case TextFieldLFImpl.QUAD_TOPRGT:
-					super.setBounds(EPAD, ah-h-EPAD, w, h);
-					break;
-				case TextFieldLFImpl.QUAD_BOTLFT:
-					super.setBounds(aw-w-EPAD, EPAD, w, h);
-					break;
-				case TextFieldLFImpl.QUAD_BOTRGT:
-					super.setBounds(EPAD, EPAD, w, h);
-					break;
-				default:
-					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
-			requestFullScreenRepaint(); }
 
     /**
      * get the height of the Virtual Keyboard.
@@ -286,21 +229,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
     public boolean supportsRawKeyInput() {
         return true; }
         
-    void handleCachedCommand() {
-    	if (cached_ok) {
-				if (ok_below!=null) {
-					closeKeyEntered(true);
-					ok_below.reflect();
-					return; }
-				closeKeyEntered(true);
-				return; }
-			// cached_cancel
-			if (cancel_below!=null) {
-				closeKeyEntered(true);
-				cancel_below.reflect();
-				return; }
-			closeKeyEntered(false); }
-    
     /**
      * Handles key event in the open popup.
      *
@@ -341,221 +269,43 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 				return; }
 			vk.processRawStroke(p); }
 				
-		/**
-		 *	Helper for various actions that move the cursor
-		 *	without changing the select state
-		 */		 		 		
-		void synchSelectEnd(TextField tf) {
-			if (!vk.select_on) {
-				return; }
-			tf.synchSelectionEnd(); }
-
-		/**
-		 *	Helper for various actions that erase the current selection
-		 */
-		void eraseSelection() {
-			if (!vk.select_on) {
-				return; }
-			if (tfContext==null) {
-				return; }
-			vk.select_on=false;
-			repaintVK();
-			if (tfContext.tf.getSelectionLength()==0) {
-				// Nothing to do
-				return; }
-			// Do the delete
-			int a = tfContext.tf.getSelectionLow();
-			tfContext.tf.deleteSelection();
-			tfContext.setCaretPosition(a);
-			tfContext.lRequestPaint(); }
-
-		/**
-		 * VirtualKeyboardListener interface		
-		 * Process incoming metakeys
-		 * @param m the metakey pressed
-		 */		 		 		
-		public void virtualMetaKeyEntered(int m) {
-			if (tfContext == null) {
-				return; }
-			if (tfContext == null) {
-				return; }
-			Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
-			switch(m) {
-				case SC_Keys.CPY:
-					Clipboard.set(tfContext.tf.getSelection());
-					return;
-				case SC_Keys.CAL:
-					Clipboard.set(tfContext.tf.getString());
-					return;
-				case SC_Keys.CLR:
-					tfContext.tf.setString("");
-					tfContext.tf.getString();
-					return;
-				case SC_Keys.PST:
-					eraseSelection();
-					tfPutString(Clipboard.get(), tfContext);
-					return;
-				case SC_Keys.ESC:
-					cached_cancel=true;
-          return;
-				case SC_Keys.ENT: 
-					eraseSelection();
-					tfPutString("\n", tfContext);
-					return;
-				case SC_Keys.OK:
-					cached_ok=true;
-					return;
-        case SC_Keys.CLK:
-          vk.caps_lock_set = ! vk.caps_lock_set;
-          repaintVK();
-          return;
-        case SC_Keys.CLF:
-          tfContext.moveCursor(Canvas.LEFT);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.WLF:
-        	TextFieldNav.wordLeft(tfContext);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.CRT:
-					tfContext.moveCursor(Canvas.RIGHT);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.WRT:
-        	TextFieldNav.wordRight(tfContext);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.CDN:
-					tfContext.moveCursor(Canvas.DOWN);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.CUP:
-					tfContext.moveCursor(Canvas.UP);
-          synchSelectEnd(tfContext.tf);
-          return;
-        case SC_Keys.PUP:
-        	tfContext.setCaretPosition(0);
-        	tfContext.lRequestPaint();
-        	synchSelectEnd(tfContext.tf);
-        	return;
-        case SC_Keys.PDN:
-        	tfContext.setCaretPosition(tfContext.tf.buffer.length());
-        	tfContext.lRequestPaint();
-        	synchSelectEnd(tfContext.tf);
-        	return;
-        case SC_Keys.HME:
-        	TextFieldNav.paraLeft(tfContext);
-        	synchSelectEnd(tfContext.tf);
-        	return;
-        case SC_Keys.END:
-        	TextFieldNav.paraRight(tfContext);
-        	synchSelectEnd(tfContext.tf);
-        	return;
-        case SC_Keys.BSP: {
-        	boolean del_more = !vk.select_on;
-					eraseSelection();
-					if (!del_more) {
-						return; }
-          tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-					return; }
-        case SC_Keys.DEL: {
-        	boolean del_more = !vk.select_on;
-					eraseSelection();
-					if (!del_more) {
-						return; }
-					tfContext.moveCursor(Canvas.RIGHT);
-          tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-					return; }
-				case SC_Keys.DSP:
-					setVisible(vk.toggleDisplayChords());
-					setBounds(true);
-					disp.requestScreenRepaint();
-					return;
-				case SC_Keys.SWM:
-					vk.rotate_map();
-					repaintVK();
-					return;
-				case SC_Keys.SLK:
-					vk.lock_symbols();
-					repaintVK();
-					return;
-				case SC_Keys.SYM:
-					vk.set_symbols_transient();
-					repaintVK();
-					return;
-				case SC_Keys.CNC:
-					vk.cancel_symbols();
-					disp.requestScreenRepaint();
-					return;
-				case SC_Keys.SEL:
-					tfContext.tf.synchSelectionStart();
-					vk.select_on = !vk.select_on;
-					disp.requestScreenRepaint();
-					return;
-				case SC_Keys.GRV:
-				case SC_Keys.ACU:
-				case SC_Keys.CIR:
-				case SC_Keys.TIL:
-				case SC_Keys.DIA:
-				case SC_Keys.RIN:
-				case SC_Keys.CED:
-				case SC_Keys.BRV:
-				case SC_Keys.MCR:
-				case SC_Keys.STR:
-				case SC_Keys.CAR:
-				case SC_Keys.OGO:
-				case SC_Keys.MDT:
-				case SC_Keys.UDT:
-					addDiacritical(m);
-					return;
-				case SC_Keys.LIG:
-					addLigature();
-					return;
-        default:
-        	return; } }        	
-        	
-		/**
-		 * Called to combine the two characters before the cursor into
-		 * a ligature
-		 * @param d the diacritical key pressed (from SC_Keys ... GRV et al)
-		 */		 		 
-		void addLigature() {
-			if (tfContext == null) {
-				return; }
-			int p = tfContext.tf.getCaretPosition();
-			if (p<=1) {
-				// You have to be pointed just after 
-				// the characters you're going to combine
-				return; }
-			char a = tfContext.tf.getString().charAt(p-2);
-			char b = tfContext.tf.getString().charAt(p-1);
-			char c = Diacriticals.getLigature(a, b);
-			if (c==Diacriticals.NOLIGATURE) {
-				return; }
-			// Delete the existing characters, place the ligature in:
-			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-			tfPutKey(c); }
-
-		/**
-		 * Called to add a diacritical to the character before the
-		 * 		 selection, when the diacritical modifier metakeys are struck.
-		 * @param d the diacritical key pressed (from SC_Keys ... GRV et al)
-		 */		 		 
-		void addDiacritical(int d) {
-			if (tfContext == null) {
-				return; }
-			int p = tfContext.tf.getCaretPosition();
-			if (p==0) {
-				// You have to be pointed just after 
-				// the character you're going to decorate
-				return; }
-			char a = tfContext.tf.getString().charAt(p-1);
-			// Annoyingly, to use insert, you need either a String or a char[]...
-			// so far as I can see.
-			char c = Diacriticals.getDiacritical(a, d);
-			tfContext.keyClicked(InputMode.KEYCODE_CLEAR);
-			tfPutKey(c); }
+	/**
+	 * VirtualKeyboardListener interface		
+	 * Process incoming metakeys
+	 * @param m the metakey pressed
+	 */		 		 		
+	public void virtualMetaKeyEntered(int m) {
+		if (tfContext == null) {
+			return; }
+		Display disp = tfContext.tf.owner.getLF().lGetCurrentDisplay();
+		switch(m) {
+			case SC_Keys.DSP:
+				setVisible(vk.toggleDisplayChords());
+				setBounds(true);
+				disp.requestScreenRepaint();
+				return;
+			case SC_Keys.SWM:
+				vk.rotate_map();
+				repaintVK();
+				return;
+			case SC_Keys.SLK:
+				vk.lock_symbols();
+				repaintVK();
+				return;
+			case SC_Keys.SYM:
+				vk.set_symbols_transient();
+				repaintVK();
+				return;
+			case SC_Keys.CNC:
+				vk.cancel_symbols();
+				disp.requestScreenRepaint();
+				return;
+      case SC_Keys.CLK:
+        vk.caps_lock_set = ! vk.caps_lock_set;
+        repaintVK();
+        return;
+			default:
+				super.virtualMetaKeyEntered(m); } }
 
     /**
      * Paints the body of the popup layer.
@@ -566,75 +316,6 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
         vk.paint(g);
     }
 
-    /**
-     * VirtualKeyboardListener interface
-     *
-     * MIDlet that wants the receive events from the virtual
-     * keyboard needs to implement this interface, and register as
-     * a listener.
-     * @param c char selected by the user from the virtual keyboard
-     *
-     */
-    public void virtualKeyEntered(int type, char c) {
-    	eraseSelection();
-    	tfPutKey(c);
-      if (cvContext != null) {
-				cvContext.uCallKeyPressed(c); } }
-		
-    /**
-     * paint text only
-     * 
-     * @param g The graphics context to paint to
-     * @param width width of screen to paint
-     * @param height height of screen to paint
-     */
-    public void paintTextOnly(Graphics g, int width, int height) { }
-
-    public void paintCandidateBar(Graphics g, int width, int height) { }
-    
-    /**
-     * get available width
-     * 
-     * @return the available width.
-     */
-    public int getAvailableWidth() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getWidth();
-        } else if (cvContext != null) {
-            return cvContext.owner.getWidth();
-        }
-        return 0;
-    }
-
-    /**
-     * get available height
-     * 
-     * @return the available height.
-     */
-    public int getAvailableHeight() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getHeight();
-        } else if (cvContext != null) {
-            return cvContext.owner.getHeight();
-        }
-        return 0;
-    }
-
-    /**
-     * repaint the virtual keyboard.
-     */
-    public void repaintVK() {
-        requestRepaint(); }
-
-
-    /**
-     *	Overridden to clear the 
-     *	cached commands     
-     */
-		public void addNotify() {
-			clearCachedCommands();
-			super.addNotify(); }
-			
 		// Overridden to make sure we get a monitor thread that it
 		// monitors the bounds against the content below
 		void doThreadJob() {
@@ -643,6 +324,15 @@ class KeyboardLayer_semichordal extends AbstractKeyboardLayer implements Command
 		boolean needsMonitorThread() {
 			return true; }
 		
+		boolean selectOn() {
+			return vk.select_on; }
+			
+		void setSelectOn(boolean b) {
+			vk.select_on = b; }
 
+		int getVKHeight() {
+			return vk.getHeight(); }
 
+		int getVKWidth() {
+			return vk.getWidth(); }
 }

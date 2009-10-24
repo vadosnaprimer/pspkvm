@@ -413,35 +413,6 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
             }   
         }
     }
-    
-    /**
-		 *	Helper for various actions that move the cursor
-		 *	without changing the select state
-		 */		 		 		
-		void synchSelectEnd(TextField tf) {
-			if (!vk.select_on) {
-				return; }
-			tf.synchSelectionEnd(); }
-			
-		/**
-		 *	Helper for various actions that erase the current selection
-		 */
-		void eraseSelection() {
-			if (!vk.select_on) {
-				return; }
-			if (tfContext==null) {
-				return; }
-			vk.select_on=false;
-			repaintVK();
-			if (tfContext.tf.getSelectionLength()==0) {
-				// Nothing to do
-				return; }
-			// Do the delete
-			int a = tfContext.tf.getSelectionLow();
-			tfContext.tf.deleteSelection();
-			tfContext.setCaretPosition(a);
-			tfContext.lRequestPaint(); }
-
 
     /**
      * VirtualKeyboardListener interface
@@ -549,39 +520,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
         /** Nothing but a stub */
     }
     
-    /**
-     * get available width
-     * 
-     * @return the available width.
-     */
-    public int getAvailableWidth() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getWidth();
-        } else if (cvContext != null) {
-            return cvContext.owner.getWidth();
-        }
-        return 0;
-    }
-
-    /**
-     * get available height
-     * 
-     * @return the available height.
-     */
-    public int getAvailableHeight() {
-        if (tfContext != null) {
-            return tfContext.tf.owner.getHeight();
-        } else if (cvContext != null) {
-            return cvContext.owner.getHeight();
-        }
-        return 0;
-    }
-
-    /**
-     * repaint the virtual keyboard.
-     */
-    public void repaintVK() {
-        requestRepaint();
-    }
+		boolean selectOn() {
+			return vk.select_on; }
+			
+		void setSelectOn(boolean b) {
+			vk.select_on = b; }
 
 }
