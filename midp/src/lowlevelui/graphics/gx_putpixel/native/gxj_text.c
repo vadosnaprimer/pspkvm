@@ -160,7 +160,7 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 #define CHAR_WIDTH(c,i)  char_width(c[i])
 
 // Replacement function for macro ... this is getting more complicated
-// Unicode pages 0 and 1 are 8 bits wide, Cyrillic (page 04) is 9 bits,
+// Unicode pages 0, 1, and 20 are 8 bits wide, Cyrillic (page 04) is 9 bits,
 // all the rest (Chinese, right now) are 16. But if we don't have
 // the char, we need to draw it with the default glyph, which is 8 bits
 // wide.
@@ -168,11 +168,11 @@ inline int char_width(jchar i) {
 	if (needs_cjk_transform(i)) {
 		// Han character pages
 		return 0x10; }
-	if (i > 0x0400) {
+	if (i >= 0x0400) {
 		if (i < 0x0460) {
 			// Cyrillic pages
 			return 0x09; } }
-	// Pages 0, 1, and default glyph
+	// Pages 0, 1, x20, and default glyph
 	return 0x08; }
 
 /*
