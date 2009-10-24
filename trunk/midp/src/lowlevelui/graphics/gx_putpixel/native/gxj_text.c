@@ -41,7 +41,7 @@
  * given character code c, return the bitmap table where
  * the encoding for this character is stored.
  */
-static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts) {
+static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts, int* found_bmap) {
     int i=1;
     unsigned char c_hi = (c>>8) & 0xff;
     unsigned char c_lo = c & 0xff;
@@ -50,17 +50,19 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts) {
           && c_lo >= pfonts[i][FONT_CODE_FIRST_LOW]
           && c_lo <= pfonts[i][FONT_CODE_LAST_LOW]
         ) {
+        		*found_bmap = 1;
             return pfonts[i];
         }
         i++;
     } while (i <= (int) pfonts[0]);
     /* the first table must cover the range 0-nn */
+    *found_bmap = 0;
     return pfonts[1];
 }
 
-// Quick inline to isolate the CJK characters and Yi syllables
+// Quick call to isolate the CJK characters and Yi syllables
 // (0x4e00 - 0x9fff,  a000-a48f
-inline int needs_cjk_transform(jchar c) {
+int needs_cjk_transform(jchar c) {
 	if (c < 0x4e00) {
 		return 0; }
 	if (c > 0xa48f) {
@@ -98,8 +100,13 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 		                     ((short*)UNI_CJK)[c0]:
 	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
+	  // Flag telling us if we *really* have a glyph for this
+		int found_bmap = 0;
     unsigned char const * fontbitmap =
-        selectFontBitmap(CJK,pfonts) + FONT_DATA;
+        selectFontBitmap(CJK,pfonts,&found_bmap) + FONT_DATA;
+    if (!found_bmap) {
+    		// Get the default glyph this way
+				CJK = 0; }
     jchar const c = (CJK & 0xff) -
         fontbitmap[FONT_CODE_FIRST_LOW-FONT_DATA];
     unsigned long mapLen =
@@ -154,15 +161,20 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 
 // Replacement function for macro ... this is getting more complicated
 // Unicode pages 0 and 1 are 8 bits wide, Cyrillic (page 04) is 9 bits,
-// all the rest (Chinese, right now) are 16.
+// all the rest (Chinese, right now) are 16. But if we don't have
+// the char, we need to draw it with the default glyph, which is 8 bits
+// wide.
 inline int char_width(jchar i) {
-	// Unicode pages 0 and 1
-	if (i<512) { return 8; }
-	// Page 04 (Cyrillic)
-	if (i<0x04ff) { return 9; }
-	// Remaining pages
-	return 0x10; }
-	
+	if (needs_cjk_transform(i)) {
+		// Han character pages
+		return 0x10; }
+	if (i > 0x0400) {
+		if (i < 0x0460) {
+			// Cyrillic pages
+			return 0x09; } }
+	// Pages 0, 1, and default glyph
+	return 0x08; }
+
 /*
  * Draws the first n characters specified using the current font,
  * color, and anchor point.
