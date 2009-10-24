@@ -22,6 +22,20 @@ Additional documentation
 
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
+  
+--------------------
+Changes post release
+--------------------  
+
+ * Refactored Danzeff keymaps, separated from board implementation for easy addition of support for additional alphabets/scripts/etc.
+
+ * Did heavy, general refactoring of all virtual board implementations--reduced redundant code.  
+
+ * Fixed default glyph handling in built-in font
+ 
+ * Added support for a few columns of Unicode page 0x20 (typographic quotes, dashes, ellipsis) to built-in font.
+
+ * Fixed command semantics in rename/name form for AMS folders     
 
 ---------------------------------
 Changes relative to test build 10
