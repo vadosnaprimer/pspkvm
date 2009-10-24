@@ -71,7 +71,8 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 	public boolean justOpened = false;
 	
 	AbstractKeyboardLayer(Image bgImage, int bgColor) {
-		super(bgImage, bgColor); }
+		super(bgImage, bgColor);
+		tmpchrarray = new char[1]; }
 
     /**
      * Sets the state of the keyboard: NUMERIC or ANY
@@ -205,7 +206,6 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 			else {
           disp.hidePopup(this); }
       justOpened = false; }
-      
 
 	CommandReflector[] creflectors;
 				
@@ -309,4 +309,87 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
 		public void addNotify() {
 			startMonitorThread();
 			super.addNotify(); }
+			
+		// Get the quadrant the caret is in
+	int getCaretQuad() {
+		if (tfContext!=null) {
+			return tfContext.getQuadrant(); }
+		// For all others, fake it
+		return TextFieldLFImpl.QUAD_TOPLFT; }
+		
+  void requestFullScreenRepaint() {
+		if (tfContext != null) {
+			tfContext.tf.owner.getLF().lGetCurrentDisplay().requestScreenRepaint();
+			return; }
+		if (cvContext != null) {
+			cvContext.currentDisplay.requestScreenRepaint(); } }
+
+    /**
+     * get available width
+     * 
+     * @return the available width.
+     */
+    public int getAvailableWidth() {
+        if (tfContext != null) {
+            return tfContext.tf.owner.getWidth();
+        } else if (cvContext != null) {
+            return cvContext.owner.getWidth();
+        }
+        return 0;
+    }
+
+    /**
+     * get available height
+     * 
+     * @return the available height.
+     */
+    public int getAvailableHeight() {
+        if (tfContext != null) {
+            return tfContext.tf.owner.getHeight();
+        } else if (cvContext != null) {
+            return cvContext.owner.getHeight();
+        }
+        return 0;
+    }
+
+		final static int EPAD = 2;
+
+    /**
+     * repaint the virtual keyboard.
+     */
+    public void repaintVK() {
+        requestRepaint();
+    }
+
+		/**
+		 *	Helper for various actions that move the cursor
+		 *	without changing the select state
+		 */		 		 		
+		void synchSelectEnd(TextField tf) {
+			if (!selectOn()) {
+				return; }
+			tf.synchSelectionEnd(); }
+
+		/**
+		 *	Helper for various actions that erase the current selection
+		 */
+		void eraseSelection() {
+			if (!selectOn()) {
+				return; }
+			if (tfContext==null) {
+				return; }
+			setSelectOn(false);
+			repaintVK();
+			if (tfContext.tf.getSelectionLength()==0) {
+				// Nothing to do
+				return; }
+			// Do the delete
+			int a = tfContext.tf.getSelectionLow();
+			tfContext.tf.deleteSelection();
+			tfContext.setCaretPosition(a);
+			tfContext.lRequestPaint(); }
+
+		abstract boolean selectOn();
+			
+		abstract void setSelectOn(boolean b);
 }

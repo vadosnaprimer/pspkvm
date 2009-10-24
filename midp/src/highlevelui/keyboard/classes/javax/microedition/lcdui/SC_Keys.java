@@ -143,7 +143,7 @@ public class SC_Keys {
 	// OK string (thick hooked arrow)
 	static final String OKST = "\ue02f";
 	
-	// Display gliph
+	// Display glyph
 	static final String DSPG = "\ue028";
 	// Caps lock glyph (lock, up arrow)
 	static final String CLKG = "\ue029\ue027";
