@@ -12,4 +12,6 @@ cp usbacc.prx $TGT_DIR
 cp usbgps.prx $TGT_DIR
 cp utility.sym $TGT_DIR
 cp -r midi_install/* $TGT_DIR
+# Remove .svn directories
+rm $TGT_DIR/inst/.svn -rf
 cp fontpkgs/1/* $TGT_DIR
