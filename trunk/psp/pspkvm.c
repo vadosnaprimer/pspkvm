@@ -657,6 +657,20 @@ test_mem("After setup GU");
 	
 
     	printf("Network module loaded\n");
+    	
+    		// Load modules
+	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
+	if (ret_val<0)
+	{
+		printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC) returned 0x%08X\n", ret_val);
+	}
+	
+	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_MP3);
+	if (ret_val<0)
+	{
+		printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_MP3) returned 0x%08X\n", ret_val);
+	}
+	
 
 	ret_val = 0;
     	

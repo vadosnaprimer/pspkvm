@@ -71,9 +71,10 @@ public class DefaultConfiguration extends Configuration {
         {MIME_AUDIO_MIDI_2, "com.sun.mmedia.DirectPlayer"},
         {MIME_AUDIO_SP_MIDI, "com.sun.mmedia.DirectPlayer"},
     // #ifndef ABB [
-/*
+
         {MIME_AUDIO_MP3, "com.sun.mmedia.DirectPlayer"},
         {MIME_AUDIO_MP3_2, "com.sun.mmedia.DirectPlayer"},
+/*
         {MIME_AUDIO_MP4, "com.sun.mmedia.DirectPlayer"},
         {MIME_AUDIO_MP4_2, "com.sun.mmedia.DirectPlayer"},
         {MIME_AUDIO_AAC, "com.sun.mmedia.DirectPlayer"},
@@ -183,7 +184,9 @@ public class DefaultConfiguration extends Configuration {
 						MIME_AUDIO_SP_MIDI,
 						MIME_AUDIO_WAV,
 						MIME_AUDIO_WAV_2,
-						MIME_IMAGE_GIF
+						MIME_IMAGE_GIF,
+						MIME_AUDIO_MP3,
+						MIME_AUDIO_MP3_2
 					};
 				}
 				else
@@ -195,7 +198,9 @@ public class DefaultConfiguration extends Configuration {
 						MIME_AUDIO_SP_MIDI,
 						MIME_AUDIO_WAV,
 						MIME_AUDIO_WAV_2,
-						MIME_IMAGE_GIF
+						MIME_IMAGE_GIF,
+						MIME_AUDIO_MP3,
+						MIME_AUDIO_MP3_2
 					};
 				}
 			}
@@ -210,7 +215,9 @@ public class DefaultConfiguration extends Configuration {
 						MIME_AUDIO_SP_MIDI,
 						MIME_AUDIO_WAV,
 						MIME_AUDIO_WAV_2,
-						MIME_IMAGE_GIF
+						MIME_IMAGE_GIF,
+						MIME_AUDIO_MP3,
+						MIME_AUDIO_MP3_2
 						};
 				}
 				else
@@ -221,7 +228,9 @@ public class DefaultConfiguration extends Configuration {
 						MIME_AUDIO_SP_MIDI,
 						MIME_AUDIO_WAV,
 						MIME_AUDIO_WAV_2,
-						MIME_IMAGE_GIF
+						MIME_IMAGE_GIF,
+						MIME_AUDIO_MP3,
+						MIME_AUDIO_MP3_2
 						};
 				}
 			}
@@ -255,7 +264,9 @@ public class DefaultConfiguration extends Configuration {
 					MIME_AUDIO_SP_MIDI,
 					MIME_AUDIO_WAV,
 					MIME_AUDIO_WAV_2,
-					MIME_IMAGE_GIF
+					MIME_IMAGE_GIF,
+					MIME_AUDIO_MP3,
+					MIME_AUDIO_MP3_2
 					};
 			}
 			else
@@ -266,7 +277,9 @@ public class DefaultConfiguration extends Configuration {
 					MIME_AUDIO_SP_MIDI,
 					MIME_AUDIO_WAV,
 					MIME_AUDIO_WAV_2,
-					MIME_IMAGE_GIF
+					MIME_IMAGE_GIF,
+					MIME_AUDIO_MP3,
+					MIME_AUDIO_MP3_2
 					};
 			}
         }
@@ -284,7 +297,9 @@ public class DefaultConfiguration extends Configuration {
 					MIME_AUDIO_SP_MIDI,
 					MIME_AUDIO_WAV,
 					MIME_AUDIO_WAV_2,
-					MIME_IMAGE_GIF
+					MIME_IMAGE_GIF,
+					MIME_AUDIO_MP3,
+					MIME_AUDIO_MP3_2
 					};
 			}
 			else
@@ -295,7 +310,9 @@ public class DefaultConfiguration extends Configuration {
 					MIME_AUDIO_SP_MIDI,
 					MIME_AUDIO_WAV,
 					MIME_AUDIO_WAV_2,
-					MIME_IMAGE_GIF
+					MIME_IMAGE_GIF,
+					MIME_AUDIO_MP3,
+					MIME_AUDIO_MP3_2
 					};
 			}
         }
@@ -436,24 +453,26 @@ public class DefaultConfiguration extends Configuration {
             return new String[]{
     		// #ifdef AUDIO_CAPTURE [
                 "capture",
-			// #endif
+		// #endif
                 "http",
-            // #ifdef USE_FILE_CONNECTION [
-                "file",
-            // #endif ]
+                "file", //It's not compliant to spec for "file" should be supported only when JSR75 is implemented.
+            //// #ifdef USE_FILE_CONNECTION [
+            ////    "file",
+            //// #endif ]
                 };
         }
-/*
+
         if (content_type.equals(MIME_AUDIO_MP3) ||
             content_type.equals(MIME_AUDIO_MP3_2)) {
             return new String[]{
                 "http",
-            // #ifdef USE_FILE_CONNECTION [
-                "file",
-            // #endif ]
+                "file", //It's not compliant to spec for "file" should be supported only when JSR75 is implemented.
+            //// #ifdef USE_FILE_CONNECTION [
+            ////    "file",
+            //// #endif ]
             };
         }
-
+/*
         if (content_type.equals(MIME_AUDIO_MP4)) {
             return new String[]{
                 "http",

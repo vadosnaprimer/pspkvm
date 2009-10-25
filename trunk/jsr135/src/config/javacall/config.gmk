@@ -63,6 +63,6 @@ DIRECT_RECORD = true
 #
 # If you want to support file:// protocol, turn on USE_FILE_CONNECTION option
 #
-USE_FILE_CONNECTION = false
+USE_FILE_CONNECTION = true
 
 USE_STATIC_LIB = true

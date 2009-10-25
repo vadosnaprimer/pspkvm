@@ -27,7 +27,7 @@ endif
 endif
 LIBDIR = /usr/local/pspdev/psp/lib $(ROOT)/midp/build/javacall_psp/output/bin/mips $(ROOT)/cldc/build/javacall_psp_gcc/target/bin $(ROOT)/pcsl/output/javacall_mips/lib $(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/lib
 #LDFLAGS =  -L$(ROOT)/midp/build/javacall_psp/output/bin/mips -L$(ROOT)/cldc/build/javacall_psp_gcc/target/bin -L$(ROOT)/pcsl/output/javacall_mips/lib -L$(ROOT)/javacall/configuration/phoneMEFeature/psp_mips/output/lib
-LIBS := -lSDL -lSDL_mixer -lvorbis -lvorbisfile -logg -lfreetype -lm -lpsphprm -lpspaudiolib -lpspaudio -lpspwlan -lpspgu -lpspusb -lpsprtc -Wl,--end-group 
+LIBS := -lpspmp3 -lSDL -lSDL_mixer -lvorbis -lvorbisfile -logg -lfreetype -lm -lpsphprm -lpspaudiolib -lpspaudio -lpspwlan -lpspgu -lpspusb -lpsprtc -Wl,--end-group 
 LIBS := -Wl,--start-group -lmidp$(g) -lcldc_vm$(cg) -lstdc++ -lpcsl_file -lpcsl_print -lpcsl_memory -lpcsl_string -lpcsl_network -ljavacall$(g) $(LIBS)
 
 EXTRA_TARGETS = EBOOT.PBP 
