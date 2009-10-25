@@ -32,7 +32,7 @@ $(JARFILE) : $(MANIFEST) $(OBJS)
 
 # Manifest
 $(MANIFEST) :
-	$(MKJAD) "$(PRNAME)" $(ECLASS) "$(DESC)" > $(MANIFEST)
+	$(MKJAD) "$(PRNAME)" $(ECLASS) "$(DESC)" "$(MIDLET_VERSION)" "$(MIDLET_AUTHOR)" "$(MIDLET_URL)" > $(MANIFEST)
 
 .phony : all clean
 

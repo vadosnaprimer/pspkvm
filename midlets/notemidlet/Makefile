@@ -10,6 +10,10 @@ OBJS=NoteMidlet.class
 PRBNAME=notemidlet
 # Description
 DESC=A simple text editor midlet
+# URL, vendor, version
+MIDLET_URL=http://www.pspkvm.org
+MIDLET_AUTHOR=ajmilne
+MIDLET_VERSION=1.1.0
 
 # Std Makefile include
 include ../top.inc
