@@ -15,6 +15,7 @@ import java.util.Vector;
 import java.io.*;
 import javax.microedition.rms.*;
 import java.util.*;
+import javax.microedition.lcdui.Clipboard;
 
 public class NoteMidlet extends MIDlet implements CommandListener {
 
@@ -37,6 +38,8 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 	static final Command moveDownCommand = new Command("Move down", Command.ITEM, 4);
 	static final Command moveTopCommand = new Command("Move to top", Command.ITEM, 5);
 	static final Command moveBottomCommand = new Command("Move to bottom", Command.ITEM, 5);
+	static final Command setFromClipCommand = new Command("Set from clipboard", Command.ITEM, 3);
+	static final Command copyFromNoteCommand = new Command("Copy to clipboard", Command.ITEM, 2);
 	
 	// Constants for field sizes, permanent storage locations
 	static final int MAX_VALUE_SIZE = 8192;
@@ -47,7 +50,6 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 	// GUI components, contents, state
 	List notes;
 	TextField editNameFormTF;
-	TextBox editValueField;
 	Form editNameForm;
 	Vector noteContent;
 	// Set when storage and in-core content are out of synch.
@@ -57,6 +59,7 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 	// we're doing a rename.
 	boolean add_mode;
 	
+	// Helper/utility for updateListCommands()
 	void enableCommand(Command c, boolean e) {
 		if (e) {
 			notes.addCommand(c);
@@ -71,22 +74,27 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 		enableCommand(renameCommand, listHasContent);
 		if (listHasContent) {
 			notes.setSelectCommand(editCommand); }
+		enableCommand(setFromClipCommand, listHasContent);
 		enableCommand(moveUpCommand, listHasContent);
 		enableCommand(moveDownCommand, listHasContent);
 		enableCommand(moveTopCommand, listHasContent);
 		enableCommand(moveBottomCommand, listHasContent);
+		enableCommand(copyFromNoteCommand, listHasContent);
 		enableCommand(saveCommand, modified); }
-		
+
+	// Set the modified flag
 	void setModified() {
 		modified=true;
 		updateListCommands();
 		notes.setTitle("Notes (modified)"); }
 		
+	// Clear the modified flag
 	void clearModified() {
 		modified=false;
 		updateListCommands();
 		notes.setTitle("Notes"); }
 
+	// Set up the form for editing names
 	void setupeditNameForm() {
 		editNameFormTF = new TextField("Name", "new note", MAX_NAME_SIZE, TextField.ANY);
 		editNameForm = new Form("Add note");
@@ -94,21 +102,16 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 		editNameForm.addCommand(editNameFormCancelCmd);
 		editNameForm.addCommand(editNameFormConfirmCmd);
 		editNameForm.setCommandListener(this); }
-		
-	void setupEditBox() {
-		editValueField = new TextBox("Edit field", "", MAX_VALUE_SIZE, TextField.ANY);
-		editValueField.addCommand(doneTBCommand);
-		editValueField.addCommand(cancelTBCommand);
-		editValueField.setCommandListener(this); }
 	
+	// Constructor
 	public NoteMidlet() {
 		setupeditNameForm();
-		setupEditBox();
 		add_mode=true;
 		notes = new List("Notes", Choice.IMPLICIT);
 		noteContent = new Vector();
 		notes.setCommandListener(this); }
-		
+	
+	// Midlet interface method called at start
 	protected void startApp() {
 		notes.addCommand(addCommand);
 		notes.addCommand(saveCommand);
@@ -120,8 +123,10 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 		try{ Thread.currentThread().sleep(2000); }
 		catch(Exception e){} }
 	
+	// Midlet interface method called when resuming
 	protected void pauseApp() {}
 
+	// Midlet interface method called on destroy
 	protected void destroyApp(boolean bool) {
 		if (modified) {
 			writeNotesToStorage(); } }
@@ -187,6 +192,7 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 		noteContent.insertElementAt(o, 0);
 		notes.setSelectedIndex(0, true); }
 	
+	// Command hander
 	public void commandAction(Command cmd, Displayable disp) {
 		if (cmd == editNameFormCancelCmd) {
 			Display.getDisplay(this).setCurrent(notes);
@@ -203,7 +209,7 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 			Display.getDisplay(this).setCurrent(notes);
 			return; }
 		if (cmd == doneTBCommand) {
-			editNote();
+			editNote((TextBox)disp);
 			Display.getDisplay(this).setCurrent(notes);
 			return; }
 		if (cmd == saveCommand) {
@@ -220,6 +226,12 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 			return; }
 		if (cmd == moveUpCommand) {
 			moveUp();
+			return; }
+		if (cmd == copyFromNoteCommand) {
+			copyFromNote();
+			return; }
+		if (cmd == setFromClipCommand) {
+			setFromClip();
 			return; }
 		if (cmd == moveDownCommand) {
 			moveDown();
@@ -240,20 +252,44 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 			destroyApp(false);
 			notifyDestroyed(); } }
 
+	// Launch the name setting form (when adding a new note)
 	void launchEditNameForm_Add() {
 		editNameFormTF.setString("new note");
 		add_mode=true;
 		Display.getDisplay(this).setCurrent(editNameForm); }
 
+	// Launch the name setting form (when renaming a note)
 	void launchEditNameForm_Rename() {
 		editNameFormTF.setString(notes.getString(notes.getSelectedIndex()));
 		add_mode=false;
 		Display.getDisplay(this).setCurrent(editNameForm); }
 
+	// Edit the name of a note
 	void editName() {
 		notes.set(notes.getSelectedIndex(), editNameFormTF.getString(), null);
 		setModified(); }
 
+	// Copy to the clipboard from a note
+	void copyFromNote() {
+		StringBuffer sb = (StringBuffer)(noteContent.elementAt(notes.getSelectedIndex()));
+		Clipboard.set(sb.toString()); }
+		
+	// Error string
+	static final String CLIP_EMPTY = "The clipboard is empty";
+
+	// Set the content of the current note from the clipboard
+	void setFromClip() {
+		String s = Clipboard.get();
+		if (s.length()==0) {
+			Alert a = new Alert(null, CLIP_EMPTY, null, AlertType.ERROR);
+			Display.getDisplay(this).setCurrent(a, notes);
+			return; }
+		StringBuffer sb = (StringBuffer)(noteContent.elementAt(notes.getSelectedIndex()));
+		sb.setLength(0);
+		sb.append(s);
+		setModified(); }
+
+	// Add a note
 	void addNote() {
 		notes.append(editNameFormTF.getString(), null);
 		noteContent.addElement(new StringBuffer());
@@ -262,20 +298,29 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 			updateListCommands(); }
 		notes.setSelectedIndex(notes.size()-1, true); }
 
-	void editNote() {
+	// Edit a note
+	void editNote(TextBox t) {
 		int i = notes.getSelectedIndex();
 		StringBuffer b = (StringBuffer)(noteContent.elementAt(i));
 		b.setLength(0);
-		b.append(editValueField.getString());
+		b.append(t.getString());
 		setModified(); }
 
+	// Lunch the content editing field
 	void launchEdit() {
+		// Get current content
 		int i = notes.getSelectedIndex();
 		StringBuffer b = (StringBuffer)(noteContent.elementAt(i));
+		// Set up editing box
+		TextBox editValueField = new TextBox("Edit field", "", MAX_VALUE_SIZE, TextField.ANY);
+		editValueField.addCommand(doneTBCommand);
+		editValueField.addCommand(cancelTBCommand);
+		editValueField.setCommandListener(this);
 		editValueField.setString(b.toString());
 		editValueField.setTitle(notes.getString(notes.getSelectedIndex()));
 		Display.getDisplay(this).setCurrent(editValueField); }
 	
+	// Delete a note
 	void deleteNote() {
 		int i = notes.getSelectedIndex();
 		notes.delete(i);
@@ -284,6 +329,7 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 		if (notes.size()==0) {
 			updateListCommands(); } }
 			
+	// Write the notes to storage
 	void writeNotesToStorage() {
 		RecordStore noteStore = null;
 		try {
@@ -314,6 +360,7 @@ public class NoteMidlet extends MIDlet implements CommandListener {
 			catch (RecordStoreException e) {
 			/* TODO */ } } } }
 			
+	// Read the notes from storage
 	void readNotesFromStorage() {
 		RecordStore noteStore = null;
 		try {

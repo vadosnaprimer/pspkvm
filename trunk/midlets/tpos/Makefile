@@ -10,6 +10,9 @@ OBJS=TPos.class TPosForm.class
 PRBNAME=tpos
 # Description
 DESC=A simple midlet for testing form entry in the self-moving boards
+MIDLET_URL=http://www.pspkvm.org
+MIDLET_AUTHOR=feedback@pspkvm.org
+MIDLET_VERSION=1.1.0
 
 # Std Makefile include
 include ../top.inc
