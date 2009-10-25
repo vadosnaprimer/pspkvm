@@ -165,12 +165,13 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
 				case KEYBOARD_INPUT_ASCII:
 					vk.currentKeyboard=LOWERCASE;
 					break;
-				case KEYBOARD_INPUT_ANY://+ú+ÝPSPKVM.INI +S+++öÝ¨-¬+--S+d+¨+a--
-					if("awf_chinese".equals(com.pspkvm.system.VMSettings.get("com.pspkvm.inputmethod"))){
-						vk.currentKeyboard=PINYIN;
-					}else{
-						vk.currentKeyboard=LOWERCASE;
-					}
+				case KEYBOARD_INPUT_ANY:
+					String m = com.pspkvm.system.VMSettings.get("com.pspkvm.virtual_keyboard.awf_smap");
+					vk.currentKeyboard = LOWERCASE;
+					if (m.equals("pinyin")) {
+						vk.currentKeyboard=PINYIN; }
+					else if (m.equals("stroke")) {
+						vk.currentKeyboard=STROKE; }
 					break;
 				default:
 					vk.currentKeyboard=NUMERIC;

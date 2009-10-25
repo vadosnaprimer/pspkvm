@@ -1,5 +1,5 @@
-Current to post version 0.5.4 Test 10
-17 October 2009
+Current 0.5.4 release candidate
+24 October 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
@@ -82,16 +82,15 @@ Running PSPKM from a binary bundle
 ----------------------------------
 
 1. Download the correct binary bundle:
-- If you have a 1.50 kernel PSP and have installed pspkvm 0.4.2:
-   Download pspkvm-bin-x.x.x-150-upgrade.zip
-- If you want to run pspkvm on 3.xx OE and have installed pspkvm 0.4.2:
-   Download pspkvm-bin-x.x.x-OE-upgrade.zip
-- If you have a 1.50 kernel PSP and haven't installed pspkvm 0.4.2:
-   Download pspkvm-bin-x.x.x-150-allinone.zip
-- If you want to run pspkvm on 3.xx OE and haven't installed pspkvm 0.4.2:
+- If you have a 1.50 kernel PSP and have installed pspkvm 0.5.3:
+   Download pspkvm-bin-x.x.x-OFW-upgrade.zip
+- If you want to run pspkvm on custom firmware and have installed pspkvm 0.5.3:
+   Download pspkvm-bin-x.x.x-CFW-upgrade.zip
+- If you have a 1.50 kernel PSP and haven't installed pspkvm 0.5.3:
+   Download pspkvm-bin-x.x.x-OFW-allinone.zip
+- If you want to run pspkvm on custom firmware and haven't installed pspkvm 0.5.3:
    Download pspkvm-bin-x.x.x-OE-allinone.zip
 2. Extract the zip to your PSP's /PSP/GAME/ or /PSP/GAME150 folder
-3. Here we go!
 
 --------------------------------
 Running tips
@@ -170,19 +169,20 @@ Changing the default key assignment for specified midlet
 --------------------------------------------------------
 
 If the default key assignment does not fit your game, you can go to the AMS and move the highlight onto the MIDlet whose key assignment you want to change, then select "Select Device" from the menu. Change the key setting to what you want. REMEMBER:"Shift" means Left Trigger or Right Trigger.
+
 	
 Changing default JSR75 Fileconnection root directories mapping in pspkvm.ini
 ----------------------------------------------------------------------------
 
 	The default root directories mapping is as following:
-         	/root -> ms0:/pspkvm/
-		/music -> ms0:/PSP/MUSIC/
-		/photo -> ms0:/PSP/PHOTO/
-		/video -> ms0:/PSP/VIDEO/
-		/recordings -> ms0:/pspkvm/
-		/tones -> ms0:/pspkvm/
-		/graphics -> ms0:/pspkvm/
-		/private -> ms0:/pspkvm_pri/
+	/root -> ms0:/pspkvm/
+	/music -> ms0:/PSP/MUSIC/
+	/photo -> ms0:/PSP/PHOTO/
+	/video -> ms0:/PSP/VIDEO/
+	/recordings -> ms0:/pspkvm/
+	/tones -> ms0:/pspkvm/
+	/graphics -> ms0:/pspkvm/
+	/private -> ms0:/pspkvm_pri/
 
 However, you can change the default mapping in pspkvm.ini. To do this, open pspkvm.ini in the PSPKVM install directory, and change the values in the [jsr75] section. If the value is left blank, the default value is applied.
 
