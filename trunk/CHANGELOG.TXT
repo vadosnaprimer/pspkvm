@@ -1,7 +1,8 @@
-Current to 0.5.4 release candidate
+Current to 0.5.4 release build
 25 October 2009
-Authors: Sleepper, M@x, Anweifeng, AJ Milne
-Email: pspkvm@gmail.com
+Developers: Sleepper, M@x, Anweifeng, AJ Milne
+Testing: Jurgen Konings 
+Email: feedback@pspkvm.org, pspkvm@gmail.com
 Project website: 
 	http://www.pspkvm.org
 	http://www.pspkvm.com 

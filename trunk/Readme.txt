@@ -1,7 +1,8 @@
-Current 0.5.4 release candidate
+PSPKVM 0.5.4 release version
 24 October 2009
-Authors: Sleepper, M@x, Anweifeng, AJ Milne
-Email: pspkvm@gmail.com
+Developers: Sleepper, M@x, Anweifeng, AJ Milne
+Testing: Jurgen Konings 
+Email: feedback@pspkvm.org, pspkvm@gmail.com 
 Project website: 
 	http://www.pspkvm.org
 	http://www.pspkvm.com 
@@ -82,19 +83,47 @@ Running PSPKM from a binary bundle
 ----------------------------------
 
 1. Download the correct binary bundle:
-- If you have a 1.50 kernel PSP and have installed pspkvm 0.5.3:
+- If you have a 1.50 kernel PSP and have installed pspkvm 0.5.3 or a 0.5.4
+test version:
    Download pspkvm-bin-x.x.x-OFW-upgrade.zip
-- If you want to run pspkvm on custom firmware and have installed pspkvm 0.5.3:
+- If you want to run pspkvm on custom firmware and have installed pspkvm
+0.5.3 or a 0.5.4 test version:
    Download pspkvm-bin-x.x.x-CFW-upgrade.zip
-- If you have a 1.50 kernel PSP and haven't installed pspkvm 0.5.3:
+- If you have a 1.50 kernel PSP and haven't installed a recent version:
    Download pspkvm-bin-x.x.x-OFW-allinone.zip
-- If you want to run pspkvm on custom firmware and haven't installed pspkvm 0.5.3:
-   Download pspkvm-bin-x.x.x-OE-allinone.zip
+- If you want to run pspkvm on custom firmware and haven't installed
+a recent version:
+   Download pspkvm-bin-x.x.x-CFW-allinone.zip
+   
+Note that there are also 0.5.4-allinone-minimal packages. These do not
+contain TTF or MIDI files. They are appropriate if you expect to install
+your own fonts, or do not intend to use TTF fonts, and do not intend to
+use MIDI.
+
 2. Extract the zip to your PSP's /PSP/GAME/ or /PSP/GAME150 folder
 
 --------------------------------
 Running tips
 --------------------------------
+
+Using the X key for 'accept' instead of O
+-----------------------------------------
+
+PSPKVM ships with the O key as its 'accept' button, and X as cancel,
+as is common in parts of Asia. If you wish, however, to use X as your
+accept button, you may reconfigure this from the GUI. In
+System midlets->Configure VM->Keymap settings, select 'Western' under
+your default keymap to change this.
+
+
+Font subsystem and virtual keyboard settings are now in the GUI
+---------------------------------------------------------------
+
+In previous versions of pspkvm, you changed your font sizes (and turned
+the internal font on and off) and your virtual keyboard settings in
+pspkvm.ini. This file no longer controls these settings. You may now use
+the Configure VM midlet in the System midlets folder to control these.
+
 
 To install and run a MIDlet from the memory stick:
 --------------------------------------------------
@@ -245,7 +274,7 @@ Using FreeType2 font files
 	Note that there's a difference between how the system falls back through the system, proportional, and monospace fonts, and how it falls back to the fallback font. It falls back per font through system, proportional, and monospace, and it falls back per glyph to the fallback font. That is: at startup, it will assign a font file to each of main twelve slots, attempting to assign the best match for each from the existing files you provide. Then during rendering, if a glyph is not found for a given character in the proper font file, it will attempt to find it in the fallback font, if it is present.
 	The first set set of three fonts and four weights/styles corresponds to the J2ME MIDP API specification--midlet authors writing code for J2ME devices will frequently write code with the expectation that these are the available fonts in the system.
 	Midlet authors also can specify three font sizes when drawing fonts--small, medium, and large. You can specify the pixel sizes of these in the 'Font subystem' dialogue in the VM configuration midlet.
-	You can also turn off FreeType2 rendering entirely in the Font subsystem dialogue, by specifying 'Use internal font'. If you do this, a non-scalable built-in bitmap font will be used for drawing text.
+	You can also turn off FreeType2 rendering entirely in the Font subsystem dialogue, by specifying 'Use internal font' in the VM Settings midlet. If you do this, a non-scalable built-in bitmap font will be used for drawing text.
 	For additional information on font support, see the wiki at http://sourceforge.net/apps/trac/pspkvm/wiki/ConfiguringFourteenFont
 
 
