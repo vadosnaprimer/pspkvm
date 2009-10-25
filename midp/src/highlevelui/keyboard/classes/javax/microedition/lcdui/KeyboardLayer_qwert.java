@@ -27,6 +27,7 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
     VirtualKeyboard_qwert vk = null;
 
     String layerID = null;
+    int current_quad;
 
     /**
      * Constructs a text tfContext sub-popup layer, which behaves like a
@@ -47,17 +48,21 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
             vk = new VirtualKeyboard_qwert(keys, this, true, neededColumns, neededRows);
         }
 
-				setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
+				setBounds(true);
 	
-        keyboardClose = new Command("Close", Command.OK, 1);
-        setCommands(new Command[] { keyboardClose });
+        keyboardClose = new Command("OK", Command.OK, 1);
+        keyboardCancel = new Command("Cancel", Command.CANCEL, 1);
+        setCommands(new Command[] { keyboardClose, keyboardCancel });
         setCommandListener(this);
     }
     
-		Command keyboardClose;
+		Command keyboardClose, keyboardCancel;
 	
     public void commandAction(Command c, Displayable d) {
 			if (c == keyboardClose) {
+				closeKeyEntered(true);
+				return; }
+			if (c == keyboardCancel) {
 				closeKeyEntered(false);
 				return; }
 			super.commandAction(c, d); }
@@ -80,8 +85,7 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
             vk = new VirtualKeyboard_qwert(keys, this, false, 0, 0);
         }
 
-        //System.out.println("vk.kbX:"+vk.kbX+",vk.kbY:"+vk.kbY+",vk.kbWidth:"+vk.kbWidth+",vk.kbHeight:"+vk.kbHeight);
-	setBounds(vk.kbX,vk.kbY,vk.kbWidth,vk.kbHeight);
+				setBounds(true);
 
         Command keypadClose = new Command("Close", Command.OK, 1);
         setCommands(new Command[] { keypadClose });
@@ -192,18 +196,6 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
     protected void initialize() {
         super.initialize();
     }        
-
-    /**
-     * Sets the bounds of the popup layer.
-     *
-     * @param x the x-coordinate of the popup layer location
-     * @param y the y-coordinate of the popup layer location
-     * @param w the width of this popup layer in open state
-     * @param h the height of this popup layer in open state
-     */
-    public void setBounds(int x, int y, int w, int h) {
-        super.setBounds(x, y, w, h);
-    }
 
     /**
      * get the height of the Virtual Keyboard.
@@ -682,8 +674,7 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
 
             	if (!processed) {
             			eraseSelection();
-                  tfContext.uCallKeyPressed(c);
-                  tfContext.tf.getString();
+            			tfPutKey(c);
                   return;
               }
               repaintVK();
@@ -767,6 +758,16 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
              repaintVK();
         } else if (tfContext != null) {
             switch (metaKey) {
+            	    case VirtualKeyboard_qwert.CURSOR_UP_META_KEY:
+            	      tfContext.moveCursor(Canvas.UP);
+            	      synchSelectEnd(tfContext.tf);
+            	      disp.requestScreenRepaint();
+            	      break;
+            	    case VirtualKeyboard_qwert.CURSOR_DOWN_META_KEY:
+            	      tfContext.moveCursor(Canvas.DOWN);
+            	      synchSelectEnd(tfContext.tf);
+            	      disp.requestScreenRepaint();
+            	      break;
             	    case VirtualKeyboard_qwert.CURSOR_LEFT_META_KEY:
             	      tfContext.moveCursor(Canvas.LEFT);
             	      synchSelectEnd(tfContext.tf);
@@ -782,17 +783,20 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
         }
 
         if (metaKey == vk.OK_META_KEY) {
-            // ok   
-            disp.hidePopup(this);
-            open = false;
+					if (ok_below!=null) {
+						closeKeyEntered(true);
+						ok_below.reflect();
+						return; }
+	            closeKeyEntered(true);
+	            return;
 
         } else if (metaKey == vk.CANCEL_META_KEY) {
-            // cancel
-            if (tfContext != null) {
-                tfContext.tf.setString(backupString);
-            }
-            disp.hidePopup(this);
-            open = false;
+					if (cancel_below!=null) {
+						closeKeyEntered(true);
+						cancel_below.reflect();
+						return; }
+						closeKeyEntered(true);
+						return;
 
         } else if (metaKey == vk.BACKSPACE_META_KEY) {
         		
@@ -826,18 +830,24 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
             if (candidateBar == null) {
             	candidateBar = new IMCandidateBar(vk.kbWidth, 25);
             	vk.candidateFieldHeight = 25;
-            	setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight + 25);
+            	setBounds(true);
             	disp.requestScreenRepaint();
             } else {
               candidateBar = null;
               vk.candidateFieldHeight = 0;
-              setBounds(vk.kbX, vk.kbY-25, vk.kbWidth, vk.kbHeight);
+              setBounds(true);
               disp.requestScreenRepaint();
             }
         }
         // comment - customer may want backspace event also for Canvas.
         // in this case, we should handle this case here (else.. cvContext.keyPress(..))
     }
+    
+    int getVKHeight() {
+			return vk.kbHeight + vk.candidateFieldHeight; }
+
+    int getVKWidth() {
+			return vk.kbWidth; }
 
     /**
      * paint text only
@@ -863,5 +873,47 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
 			
 		void setSelectOn(boolean b) {
 			vk.select_active = b; }
+			
+		/**
+		 * Sets the bounds of the popup layer. Set schange
+		 * to indicate the size of the layer has changed
+		 * and you need to force this operation.
+		 * Otherwise, it only moves the board if the caret
+		 * has moved to a new quadrant.		 		 		  		 
+		 *
+		 */
+		protected void setBounds(boolean schange) {
+			int upd_caret_quad = getCaretQuad();
+			if ((upd_caret_quad == current_quad) && (!schange)) {
+				return; }
+			current_quad = upd_caret_quad;
+			int w = getVKWidth();
+			int h = getVKHeight();
+			int aw = getAvailableWidth();
+			int ah = getAvailableHeight();
+			switch(current_quad) {
+				case TextFieldLFImpl.QUAD_TOPLFT:
+					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_TOPRGT:
+					super.setBounds(EPAD, ah-h-EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTLFT:
+					super.setBounds(aw-w-EPAD, EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTRGT:
+					super.setBounds(EPAD, EPAD, w, h);
+					break;
+				default:
+					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
+			requestFullScreenRepaint(); }
+
+		// Overridden to make sure we get a monitor thread that it
+		// monitors the bounds against the content below
+		void doThreadJob() {
+			setBounds(false); }
+
+		boolean needsMonitorThread() {
+			return true; }
 
 }

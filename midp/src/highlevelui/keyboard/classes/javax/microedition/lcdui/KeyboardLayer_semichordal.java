@@ -52,8 +52,7 @@ class KeyboardLayer_semichordal extends KeyboardLayer_RichEditing implements Com
 	      vk = new VirtualKeyboard_semichordal(0,
 				this,getAvailableWidth(),getAvailableHeight()); }
 			setupCommands();
-			if (tfContext.isMultiLine() &&
-				(getAvailableWidth()>=vk.getWidth()) &&
+			if ((getAvailableWidth()>=vk.getWidth()) &&
 				(getAvailableHeight()>=vk.getHeight())) {
 					// If it's a multiline text field, and if there's room,
 					// start with the large display.

@@ -41,8 +41,6 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
     int currentChar = 0;
     int currentKeyboard = 1; // abc
 
-    int textfieldHeight = 0; // height of text field area, including adornments
-
     int candidateFieldHeight = 0; // height of candidate input field
 
     char itemIndexWhenPressed;
@@ -100,7 +98,6 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
 
         
         if (textKbd) {
-            textfieldHeight = fontH + 8 * PADDING;
             buttonW = fontW + 8;
             buttonH = fontH + 8;
             fontHTop = (buttonH - fontH) / 2 ;
@@ -157,13 +154,13 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
              neededHeight = maxRows * (buttonH + PADDING) +
                            4* PADDING + // between the keys and the meta keys
                            IMAGE_SIZE + META_PADDING * 4 + 
-                           textfieldHeight + candidateFieldHeight;
+                           candidateFieldHeight;
              kbY = kbHeight - neededHeight - 4*PADDING;
              kbHeight = neededHeight;
 
         }else{
             neededHeight = maxRows * (buttonH + PADDING) +
-                           3 * PADDING + textfieldHeight;
+                           3 * PADDING;
             kbY = vkl.getAvailableHeight()-neededHeight;
             kbHeight = neededHeight;
         }
@@ -393,42 +390,16 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
 
         g.translate(0,candidateFieldHeight);
 
-        if (textfieldHeight > 0) {
-            drawTextField(g);
-        }
-
-        g.translate(0,textfieldHeight);
         drawKeys(g);
 
         g.translate(0,actualHeight - 
                     (IMAGE_SIZE + 4*PADDING + 2 * META_PADDING) -
-                    textfieldHeight - candidateFieldHeight);
+                    candidateFieldHeight);
         if(textKbd)
             drawMetaKeys(g);
       
     }
 
-    /**
-     * Draw the text field of the virtual keyboard.
-     * 
-     * @param g The graphics context to paint to
-     */
-    void drawTextField(Graphics g) {
-        drawSunkedBorder(g,PADDING,PADDING,
-                         kbWidth - 2*PADDING, textfieldHeight); 
-
-        g.setClip(0,0,
-                         kbWidth - 2*PADDING, textfieldHeight); 
-
-
-        g.translate(PADDING + 1,0);
-
-        vkl.paintTextOnly(g,kbWidth,
-                          textfieldHeight);
-
-        g.translate(-PADDING - 1,0);
-        g.setClip(0,0,kbWidth,kbHeight);
-    }
 
     void drawCandidateBar(Graphics g) {
         
@@ -662,7 +633,7 @@ class VirtualKeyboard_qwert extends VirtualKeyboardInterface {
                 }
 
                 tmpX=x-(j * (PADDING+buttonW) + PADDING);
-                tmpY=y-(i * (PADDING+buttonH) + PADDING)-textfieldHeight;
+                tmpY=y-(i * (PADDING+buttonH) + PADDING);
 
                 if( (tmpX>=0)&&(tmpY>=0) &&(tmpX<buttonW) && (tmpY< buttonH)) {
                     currentChar = tmp;

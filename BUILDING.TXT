@@ -1,5 +1,5 @@
-Current to post version 0.5.4 Test 10
-18 October 2009
+Current to version 0.5.4 release candidate
+24 October 2009
 Authors: Sleepper, M@x, Anweifeng, AJ Milne
 Email: pspkvm@gmail.com
 Project website: 
