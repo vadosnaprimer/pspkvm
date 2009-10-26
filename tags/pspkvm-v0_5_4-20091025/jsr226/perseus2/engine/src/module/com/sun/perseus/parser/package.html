@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+"http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+  <head>
+    <!--
+
+    Copyright  2007  Sun Microsystems, Inc. All rights reserved.
+
+    -->
+    <title>Perseus Parser Package</title>
+  </head>
+
+  <body>
+    <p>The Perseus Parser package provides parsers used to handle complex attributes such as transforms
+       or path data.</p>
+    <p>The main classes are:</p>
+    <ul>
+        <li><code>AbstractParser</code>. This is the base class for all the Perseus parsers. It is a helper
+        class to ease the development of parsers (e.g., it contains common methods for skipping separators).</li>
+        <li><code>ColorParser</code>. Parses CSS 2 color values</li>
+        <li><code>NumberParser</code>. Parses SVG numbers. It is also the base class for parsers that need to 
+        handle lists of numbers or parsers that need to parse numbers as part of their syntax (e.g., 
+        <code>TransformListParser</code>.</li>
+        <li><code>PathParser</code>. Parses SVG path data (e.g., the 'd' attribute on <code>&lt;path&gt;</code></li>
+        <li><code>TransformListParser</code>. Parses transform list values (e.g., the 'transform' attribute)</li>
+        <li><code>ViewBoxParser</code>. Parses the view box values</li> 
+        <li><code>LengthParser</code>. Parses SVG length values (e.g., the 'width' attribute on <code>&lt;svg&gt;</code></li>
+    </ul>
+  </body>
+</html>

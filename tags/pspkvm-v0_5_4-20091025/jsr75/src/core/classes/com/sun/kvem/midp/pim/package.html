@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<!--
+     
+
+   Copyright  2007  Sun Microsystems, Inc. All rights reserved.
+-->
+  <HEAD>
+    <TITLE>PIM implementation (15-Feb-2005)</TITLE>
+    <!-- Created  15-Feb-2005 -->
+    <!-- Changed  15-Feb-2005 -->
+
+
+  </HEAD>
+  <BODY>
+    PIM implementation.<br>
+    <p><strong>Porting information</strong></p>
+    PIM persistent storage is based on FileConnection filesystem in this implementation (PIM and FC are
+    both parts of JSR75). Therefore, JSR 75 porting is not requires aby changes in PIM package in most cases.
+    If it's necessary to use another storage (for instance, any native database), only file <em>PIMDatabase.java</em>
+    should be changed. This file contains the interface to persistent storage.<br>
+     <br>
+     The table below contains methods of the
+    class <em>PIMDatabase</em> which could be redesigned on porting stage.
+    <table frame="border" border="2" width="50%">
+  <thead>
+    <tr>
+      <th>Task</th>
+      <th>Method </th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Persistent storage initialization</td>
+      <td>public PIMDatabase(String dir) throws IOException</td>
+      <td>The initialization code is placed in constructor of the main class that is <em>PIMDatabase</em>. This
+    constructor has one parameter: the root directory for PIM data. Implementation can ignore this
+    parameter if device doesn't support directories. At this stage implementation should check
+    the integrity of PIM data and execute need initialization procedures.</td>
+    </tr>
+    <tr>
+      <td>Getting the set of all list names for the given list type</td>
+      <td><em>public String[] getListNames(int listType)</em></td>
+      <td>Method must contain a code that
+    returns PIM list names for the given PIM list type from PIM persistent storage.</td>
+    </tr>
+    <tr>
+      <td>Default list names</td>
+      <td><em>public String getDefaultListName(int listType)</em></td>
+      <td>Every list type (Contact, Event and Todo) must have a default list name in the PIM persistent storage. 
+      Method must return the default name for the list type.</td>
+    </tr>
+    <tr>
+      <td>Keys table</td>
+      <td><em>public Hashtable getKeys(int listType, String listName)
+        throws PIMException</em></td>
+      <td>Every PIM item in the any list must have an unique key for manipulation. 
+    Method returns a hashtable of keys by giving
+    list type and name. Current implementation uses file names as keys, while porting this code could be changed.</td>
+    </tr>
+    <tr>
+      <td>Getting PIMItem by key</td>
+      <td><em>public byte[] getElement(int listType, String listName, String key)
+        throws PIMException</em></td>
+      <td>Method returns the byte array
+    representation of PIM item by given list type, name and key.</td>
+    </tr>
+    <tr>
+      <td>Commiting PIM item</td>
+      <td><em>public synchronized String commitElement(int listType, String listName,
+    String key, byte[] data) throws PIMException</em></td>
+      <td>Method really saves the byte array representation of PIM item
+    to the persistent storage and assigns a new key value to it. If storage already contains
+    a PIM item of the same type, name and key, it must be overwritten.</td>
+    </tr>
+    <tr>
+      <td>Saving list of categories</td>
+      <td><em>public synchronized void setCategories(int listType, String listName,
+    String categories) throws PIMException</em></td>
+      <td>Method saves (overwrites if it already exists) the list of categories for given
+    list type into PIM persistent storage. Parameter <em>categories</em> of this method contains 
+    symbolic names of categories separated by '\n'.</td>
+    </tr>
+    <tr>
+      <td>Getting list of categories</td>
+      <td><em>public synchronized String getCategories(int listType, String listName) throws PIMException</em></td>
+      <td>Method returns
+    the category list from PIM persistent storage. Format of the returning string must be the same as
+    <em>categories</em> parameter in <em>setCategories</em> method.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+@since PIM1.0
+  </BODY>
+</HTML>
