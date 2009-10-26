@@ -36,9 +36,8 @@ rm -rf $TGT_DIR/inst
 # Package CFW minimal
 zip -r $MINIMALRELEASE $TGT_DIR
 
-# Remove config files
+# Remove .ini file
 rm $TGT_DIR/pspkvm.ini
-rm $TGT_DIR/vmsettings.cfg
 # Package CFW upgrade
 zip -r $UPGRADERELEASE $TGT_DIR
 
