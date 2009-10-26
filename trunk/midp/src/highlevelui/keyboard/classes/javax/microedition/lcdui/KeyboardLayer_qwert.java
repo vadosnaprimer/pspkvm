@@ -891,6 +891,10 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
 			int h = getVKHeight();
 			int aw = getAvailableWidth();
 			int ah = getAvailableHeight();
+			if ((h + (EPAD*2)) < (ah/2)) {
+				// In this case, we can do a vertical/half thing
+				setBoundsVHalf(w, h, aw, ah);
+				return; }
 			switch(current_quad) {
 				case TextFieldLFImpl.QUAD_TOPLFT:
 					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h);
@@ -907,6 +911,23 @@ class KeyboardLayer_qwert extends AbstractKeyboardLayer implements CommandListen
 				default:
 					super.setBounds(aw-w-EPAD, ah-h-EPAD, w, h); }
 			requestFullScreenRepaint(); }
+			
+		void setBoundsVHalf(int w, int h, int aw, int ah) {
+			int l = (aw - w)/2;
+			switch(current_quad) {
+				case TextFieldLFImpl.QUAD_TOPLFT:
+				case TextFieldLFImpl.QUAD_TOPRGT:
+					// Place middle bottom
+					super.setBounds(l, ah-h-EPAD, w, h);
+					break;
+				case TextFieldLFImpl.QUAD_BOTLFT:
+				case TextFieldLFImpl.QUAD_BOTRGT:
+					super.setBounds(l, EPAD, w, h);
+					break;
+				default:
+					super.setBounds(l, ah-h-EPAD, w, h); }
+			requestFullScreenRepaint(); }
+
 
 		// Overridden to make sure we get a monitor thread that it
 		// monitors the bounds against the content below

@@ -27,13 +27,24 @@ Additional documentation
 General information
 ---------------------------------
 
-PSPKVM is a PSP port of Sun's open-source JavaME implementation phoneMEFeature. The project description below is as it appears on the phoneME website:
+PSPKVM is a PSP port of Sun's open-source JavaME implementation
+phoneMEFeature. The project description below is as it appears on the
+phoneME website:
 
-The objective of the phoneME project is to further expand the usage of Java Platform, Micro Edition (Java ME platform) technology in the mobile handset market. The project scope includes a focus on the mainstream feature phone segment with phoneME Feature software, and the emerging advanced phone segment with phoneME Advanced software. Our goal in making these technologies available to the Mobile & Embedded Community is to reduce implementation variation, increase the rate of innovation and enable new devices to leverage the power of the Java ME platform.
+The objective of the phoneME project is to further expand the usage of Java
+Platform, Micro Edition (Java ME platform) technology in the mobile handset
+market. The project scope includes a focus on the mainstream feature phone
+segment with phoneME Feature software, and the emerging advanced phone
+segment with phoneME Advanced software. Our goal in making these technologies
+available to the Mobile & Embedded Community is to reduce implementation
+variation, increase the rate of innovation and enable new devices to leverage
+the power of the Java ME platform.
 	
 The phoneME website is at: https://phoneme.dev.java.net/
 
-The goal of the pspkvm project is to port the phoneMEFeature project to the Sony PSP game console. If you're seeking a phoneMEAdvanced port for the PSP, please see the project here: https://sourceforge.net/projects/pspme
+The goal of the pspkvm project is to port the phoneMEFeature project to the
+Sony PSP game console. If you're seeking a phoneMEAdvanced port for the PSP,
+please see the project here: https://sourceforge.net/projects/pspme
 
 
 --------------------------------
@@ -71,11 +82,22 @@ TODO
 Bugs and known issues
 --------------------------------
 Known issues:
+
 - Not running on 5.02 Gen-A firmware
-- javacall_file_truncate isn't ported, so some file truncating operations, including some RMS operations, may not work as expected
-- Multimedia temporary files may be left on your memory stick occasionally, especially after a VM crash. They're usually not big, but if you want to delete them manually, go to your PSP's /PSP/GAME/pspkvm/ directory, find the files whose names look like xxxxxxxx_tmp_mus.mid, and delete them.
+
+- javacall_file_truncate isn't ported, so some file truncating operations,
+including some RMS operations, may not work as expected
+
+- Multimedia temporary files may be left on your memory stick occasionally,
+especially after a VM crash. They're usually not big, but if you want to
+delete them manually, go to your PSP's /PSP/GAME/pspkvm/ directory, find
+the files whose names look like xxxxxxxx_tmp_mus.mid, and delete them.
+
 - Fileconnection rmdir operation may fail for unknown reasons.
-- LocationProvider.getState() will always return AVAILABLE once the GPS is initialized, so LocationListener.providerStateChanged() doesn't work as expected.
+
+- LocationProvider.getState() will always return AVAILABLE once the GPS
+is initialized, so LocationListener.providerStateChanged() doesn't work
+as expected.
 
 
 ----------------------------------
@@ -130,8 +152,11 @@ To install and run a MIDlet from the memory stick:
 
 	1) Select "Find Application" in the AMS (the item on the top)
 	2) Select "Install from memory stick (ms0:/)"
-	3) Browse the file system of your memory stick, and select the jad or jar to run
-	4) After it's been selected, the jad/jar will be automatically installed and run. You can choose the installed application from the AMS the next time you want to run it.
+	3) Browse the file system of your memory stick, and select the jad or jar
+to run
+	4) After it's been selected, the jad/jar will be automatically installed
+and run. You can choose the installed application from the AMS the next time
+you want to run it.
 	
 
 To install and run a MIDlet from the web:
@@ -140,7 +165,9 @@ To install and run a MIDlet from the web:
 	1) Select "Find Application" in the AMS (the item on the top)
 	2) Select "Install from http"
 	3) Enter the address of the jad or jar file to run
-	4) After it's been selected, the jad/jar will be automatically installed and run. You can choose the installed application from the AMS the next time you want to run it.
+	4) After it's been selected, the jad/jar will be automatically installed and
+run. You can choose the installed application from the AMS the next time you
+want to run it.
 
 
 Text input:

@@ -27,13 +27,17 @@ Additional documentation
 Changes for release version (relative to test 11)
 -------------------------------------------------
 
- * Refactored Danzeff keymaps, separated from board implementation for easy addition of support for additional alphabets/scripts/etc.
+ * Refactored Danzeff keymaps, separated from board implementation for
+easy addition of support for additional alphabets/scripts/etc.
 
- * Did heavy, general refactoring of all virtual board implementations--reduced redundant code.  
+ * Did heavy, general refactoring of all virtual board implementations--
+reduced redundant code.  
 
  * Fixed default glyph handling in built-in font
  
- * Added support for a few columns of Unicode page 0x20 (typographic quotes, dashes, ellipsis) to built-in font... means text with typographic style quotes &c. renders correctly with built-in font.  
+ * Added support for a few columns of Unicode page 0x20 (typographic
+quotes, dashes, ellipsis) to built-in font... means text with
+typographic style quotes &c. renders correctly with built-in font.  
 
  * Fixed command semantics in rename/name form for AMS folders
 
@@ -47,7 +51,12 @@ Changes relative to test build 10
 
  * Changed colours of Danzeff/semichordal keys to make distinguishing them easy.
 
- * Streamlined command handling in Virtual boards--all boards now allow direct entry of commands registered by midlet authors without going through the interim text context layer. Semichordal and Danzeff boards also bind appropriate keys to OK and CANCEL command types if the midlet author registers them correctly. Allows single keystroke return from full-screen text fields in many midlets, including Opera Mini.
+ * Streamlined command handling in Virtual boards--all boards now allow
+direct entry of commands registered by midlet authors without going through
+the interim text context layer. Semichordal and Danzeff boards also bind
+appropriate keys to OK and CANCEL command types if the midlet author
+registers them correctly. Allows single keystroke return from full-screen
+text fields in many midlets, including Opera Mini.
 
  * Added experimental, compact 'floating' version of AWF virtual board.
  
@@ -57,11 +66,15 @@ Changes relative to test build 10
 
  * AMS allows deleting of non-empty folders.
 
- * Improvements to smart positioning system in virtual keyboards, so they move properly around one-line textfields in forms.
+ * Improvements to smart positioning system in virtual keyboards, so they move
+properly around one-line textfields in forms.
 
- * (non-UI/non-user) added Java interfaces exposing native to J2ME control mapping--necessary to get AWF board operating properly when keys are remapped by user or 'Western' X/O mapping is selected.
+ * (non-UI/non-user) added Java interfaces exposing native to J2ME control
+mapping--necessary to get AWF board operating properly when keys are remapped
+by user or 'Western' X/O mapping is selected.
 
- * (developer support only) added midlet tree with test midlets, simple midlet build system
+ * (developer support only) added midlet tree with test midlets, simple midlet
+build system
  
  * (developer support only) added art, generating scripts to svn tree.
 
@@ -95,8 +108,8 @@ The AMS supports folders.
 The semichordal board supports Greek and Cyrillic scripts, and you can customize
 which one you want to come up by default in the VM Config midlet.
 
-The semichordal board now uses a custom TrueType utility font (utility.ttf) for its
-help display/nav display.
+The semichordal board now uses a custom TrueType utility font (utility.ttf)
+for its help display/nav display.
 
 The FreeType font system now supports all three fonts (proportional, monospace,
 system) and bold, italic, bold/italic faces for all three, in addition to a
@@ -118,7 +131,8 @@ There are additional icons in the AMS, VM configuration and network setup
 screens--the hope is to make thing a little easier on non-English speakers
 until we can get some proper translation going here.
 
-Virtual keyboards and Freetype setup are now configured in the GUI, not in the .ini.
+Virtual keyboards and Freetype setup are now configured in the GUI, not in
+the .ini.
 
  * The X/O keys are now fully switchable system-wide, for Western-style
 accept/cancel use. Use the VM Configuration midlet -> Keymap settings menu
@@ -174,9 +188,11 @@ delete it.
  * Bugfix: the Danzeff board should now work correctly with 'use internal font'
 turned on. 
 
- * Tools for built-in font manipulation (midp/src/tools/fontgen/...) updated to work with current bitmap files.
+ * Tools for built-in font manipulation (midp/src/tools/fontgen/...)
+updated to work with current bitmap files.
 
- * Built-in font now supports basic Cyrillic characters in Unicode range 0x0400 to 0x045f (should support Russian, Ukrainian, Macedonian, Byelorussian). 
+ * Built-in font now supports basic Cyrillic characters in Unicode range
+0x0400 to 0x045f (should support Russian, Ukrainian, Macedonian, Byelorussian). 
 	 
 --------------------------------
 Change log (0.5.3)
@@ -185,12 +201,15 @@ Change log (0.5.3)
 - Bugfix for Sony Ericsson 480x272 profile issue (tracker ID 2812032)
 - Bugfix for 'QWERTY board opens allcaps' (tracker ID 2806367)
 - Bugfix makes available missing top half of Unicode page 0 in built-in font
-	(Adds common accents incl. acute, grave, circumflex, umlaut over Roman characters)
+	(Adds common accents incl. acute, grave, circumflex, umlaut over Roman
+characters)
 - Added most of Unicode page 1 (Latin Extended 1) to built-in font
 	(Adds less common accents and characters for most languages using Roman alphabets)
 - Added clipboard/text selection support to the virtual keyboards
-- Added interface so MIDlets can request and receive events signalling raw PSP control state
-- Added a semichordal virtual keyboard implementation (fast input, diacritics support). See notes below re use.
+- Added interface so MIDlets can request and receive events signalling raw PSP
+control state
+- Added a semichordal virtual keyboard implementation (fast input, diacritics
+support). See notes below re use.
 - Improved alpha blending for TrueType font rendering--smoother blends.
 - Support multi-language in Sony OSK input method
 
