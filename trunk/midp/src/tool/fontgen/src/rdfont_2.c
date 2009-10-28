@@ -99,7 +99,7 @@ int main()
   height = TheFontBitmap[FONT_HEIGHT];
   printf("# Font parameters:\n");
   printf("# width height ascent descent leading high_code low_code_first low_code_last\n");
-  printf("@ %i %i %i %i %i\n%% %i %x %x\n",width, height,TheFontBitmap[FONT_ASCENT],TheFontBitmap[FONT_DESCENT],TheFontBitmap[FONT_LEADING]
+  printf("@ %i %i %i %i %i\n%% %x %x %x\n",width, height,TheFontBitmap[FONT_ASCENT],TheFontBitmap[FONT_DESCENT],TheFontBitmap[FONT_LEADING]
 		,TheFontBitmap[FONT_CODE_RANGE_HIGH] ,TheFontBitmap[FONT_CODE_FIRST_LOW]
 		,TheFontBitmap[FONT_CODE_LAST_LOW]);
   int lastchar = (sizeof(TheFontBitmap)-FONT_DATA)*8 / (width*height);

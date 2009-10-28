@@ -211,30 +211,34 @@ void print_bitmap()
     " * information or have any questions.\n"
     " */\n"
     "\n"
-    "#include \"gxj_intern_font_bitmap.h\"\n";
+    "#include \"gxj_intern_font_bitmap.h\"\n\n";
 
     printf("%s", heading);
 #if TEST
-    printf("// starts off with width, height, ascent, descent, leading, "
+	printf("// Table covering Unicode range %02x%02x - %02x%02x\n",
+		range_hi, first_lo, range_hi, last_lo);
+	printf("// Starts off with width, height, ascent, descent, leading,\n// "
 #if V!_1
-	   "range_high_byte, first_code_low_byte, last_code_low_byte, "
+	"range_high_byte, first_code_low_byte, last_code_low_byte, "
 #endif
-	   "then data\n"
-	   "unsigned char TheFontBitmap[%i] = {",mapLen);
+	"then data\n"
+	"unsigned char page_%02x%02x_%02x%02x[%i] = {\n", range_hi, first_lo, range_hi, last_lo, mapLen);
 #else
-    printf("// starts off with width, height, ascent, descent, leading, "
+	printf("// Table covering Unicode range %02x%02x - %02x%02x\n",
+		range_hi, first_lo, range_hi, last_lo);
+	printf("// Starts off with width, height, ascent, descent, leading,\n// "
 #if V1_1
-	   "range_high_byte, first_code_low_byte, last_code_low_byte, "
+	"range_high_byte, first_code_low_byte, last_code_low_byte, "
 #endif
-           "then data\n"
-	   "unsigned char TheFontBitmap[%i] = {\n",mapLen);
+	"then data\n"
+	"unsigned char page_%02x%02x_%02x%02x[%i] = {\n", range_hi, first_lo, range_hi, last_lo, mapLen);
 #endif    
     for(i=0;i<mapLen;i++) {
 	if(i==FONT_DATA) {
 #if TEST
-	    printf("/*data starts here */ ");
+	    printf("\n/*data starts here */ ");
 #else
-	    printf("/* data starts here */\n");
+	    printf("\n/* data starts here */\n");
 #endif
 #if !TEST
 	} else if((i-FONT_DATA)%16==0) {
