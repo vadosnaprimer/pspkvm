@@ -3,6 +3,7 @@
 # Simple Perl utility for generating font blanks in which to draw 
 # Syntax: ./gen_blanks page_base font_width font_height ascent descent leading
 # eg. for page one ./gen_blanks 1 8 16 12 4 0
+# eg. for page e0 ./gen_blanks e0 8 16 12 4 0
 # AJ Milne 2008 August
 
 use strict;
@@ -14,6 +15,7 @@ if (scalar(@ARGV)<6) {
 	die; }
 
 my ($page_base, $width, $height, $asc, $desc, $leading) = @ARGV;
+$page_base = hex($page_base);
 
 sub gen_header {
 	print "# Font parameters\n";
