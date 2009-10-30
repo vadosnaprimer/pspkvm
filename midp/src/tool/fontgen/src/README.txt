@@ -15,16 +15,26 @@ MIDP-FONTDEF format file
 
 (Note: rdfont.c is now obsolete, as it expects shorter headers than are
 now standard. It will not work on the current sources. I've left it in for
-historical reasons, but for current tables, see rdfont_c.2.)
+historical reasons, but for current tables, see rdfont_2.c, and 
+rdfont3/rdfont_3.c)
 
 rdfont_2.c -- converts font bitmap from the C sources to a human-editable
 MIDP-FONTDEF format file. This is an updated and modified version--it reads
 format 2 files with longer headers. See also 'Notes about table versions',
 below.
 
+rdfont3/rdfont_3.c -- another version of rdfont, used once to convert and 
+reorder a set of CJK-ordered bitmaps to unicode order. Probably not very
+useful for general purpose work on the fonts.
+
 wrfont.c -- converts a MIDP-FONTDEF file to C source defining the
 corresponding font bitmap. By default, with the V1_1 macro defined, it
 generates the current (version 2, eight byte header) bitmaps.
+
+wrfont2/wfont2.c -- same as above, but switchable--can generate bitmap
+arrays without the standard file header, or just generate the header on
+its own--see build_tables.sh, a shell script which uses it to pipe the
+entire set of tables into build/gxj_font_bitmap.c.
 
 gxj_font_bitmap.c.0 -- taken from the MIDP sources (version 1 table, with 4
 byte header, works only with rdfont.c). Note that to decompile another
@@ -41,6 +51,15 @@ bitmap_to_decompile.c.0, compile rdfont_2 against it, and run it.
 
 gen_blanks.pl--generates empty MIDP-FONTDEF files into which you can use a
 monospaced text editor to enter new glyphs. 
+
+build_tables.sh and write_mother_table.pl -- a shell script and Perl script
+which work together to generate build/gxj_font_bitmap.c from all the 
+page definition files found in ../fontgen_ex/page*--and then copy the 
+result into:
+
+/pspkvm/midp/src/lowlevelui/graphics/gx_putpixel/native/gxj_font_bitmap.c--
+
+...replacing the source file there.
 
 Pre-requisites:
 --------------
@@ -82,6 +101,11 @@ expects, so if you were to do this:
 .. you'd get exactly the same table back out as you put in (fontdef.txt and 
 fontdef_out.txt would be the same).
 
+Compiling rdfont3/rdfont3 and wrfont2/wrfont2
+---------------------------------------------
+
+Just run make from each tool's home directory.
+
 Running wrfont
 --------------
 
@@ -89,10 +113,21 @@ Running wrfont
 
 (Re running rdfont and rdfont_2, see 'Compilation'.)
 
+Running wrfont2/wrfont2
+-----------------------
+
+... to generate the standard header:
+
+./wfont2/wfont2 header > my_font_bitmap_generated.c
+
+... to generate a given font table:
+
+./wrfont2/wrfont2 table < ../fontdef_ex/table_name >> my_font_bitmap_generated.c
+
 MIDPFONTDEF Format
 ==================
 
-... see also sample files in ../fontdef_ex.
+... see also files in ../fontdef_ex.
 
 General Notes
 -------------
