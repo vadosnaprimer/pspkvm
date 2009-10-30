@@ -20,7 +20,7 @@ print "\n\n";
 
 my @f = <$fh>;
 print "// In source:\n\n";
-print "pfontbitmap FontBitmaps[0xff] = { 0 };\n\n";
+print "pfontbitmap FontBitmaps[0x100] = { 0 };\n\n";
 foreach my $l (@f) {
 	if ($l =~ /page_(..)/) {
 		my $hw = $1;
