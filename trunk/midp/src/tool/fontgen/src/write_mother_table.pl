@@ -5,14 +5,13 @@ use FileHandle;
 
 my $fh = new FileHandle('build/tables.txt');
 if (!defined($fh)) {
-	die "Couldn't fine tables list\n"; }
+	die "Couldn't find tables list\n"; }
 
 my @p = ();
 for (my $i=0; $i<256; $i++) {
 	$p[$i] = '(pfontbitmap)0'; }
 
 my @f = <$fh>;
-print "// In source:\n\n";
 foreach my $l (@f) {
 	if ($l =~ /page_(..)/) {
 		my $hw = $1;
@@ -21,6 +20,6 @@ foreach my $l (@f) {
 		$p[$i] = $l; } }
 		
 print "\n\n";
-print "pfontbitmap FontBitmaps[0x100] = {\n{\t";
+print "pfontbitmap FontBitmaps[0x100] = {\n\t";
 print join(",\n\t", @p);
 print "\n};";
