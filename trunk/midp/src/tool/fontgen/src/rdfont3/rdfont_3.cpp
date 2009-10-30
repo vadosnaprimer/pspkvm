@@ -25,7 +25,8 @@
  */
  
 /* NB: This version is built against the whole internal bitmap, placed in
-	installed_tables.c.
+	installed_tables.c. I developed it to rearrange the native CJK tables
+	to the Unicode arrangement rather than doing it runtime with uni2cjk.c.
 	/ AJM
 */
 
@@ -295,7 +296,9 @@ int utable(int n, const char* argv[])
   printf("@ 16 16 16 0 0\n%% %x %x %x\n\n", (l&0xff00)>>8, (l&0x00ff), (h&0x00ff));
 	for(int i=l; i<=h; i++) {
 		if (have_glyph(i)) {
-			char_out_unicode(i); } }
+			char_out_unicode(i); }
+		else {
+			printf("# WARNING: No glyph for codepoint %04x\n", i); } }
 	return 0;
 }
 
