@@ -178,12 +178,12 @@ int char_out_untransformed(int n, const char* argv[])
 		return -1; }
 	return char_out(ch, -1); }
 
-// Quick call to isolate the CJK characters and Yi syllables
-// (0x4e00 - 0xa48f
+// Quick call to isolate the CJK characters
+// (0x4e00 - 0x9fff)
 bool needs_cjk_transform(unsigned int c) {
 	if (c < 0x4e00) {
 		return false; }
-	if (c > 0xa48f) {
+	if (c > 0x9fff) {
 		return false; }
 	return true; }
 
@@ -242,7 +242,7 @@ bool table_range(int ch, int& l, int& h) {
 		if (have_glyph(i)) {
 			l = i;
 			break; } }
-	if (l == ch+0x100) {
+	if (l == (ch+0x100)) {
 		return false; }
 	h = l;
 	for(int i = ch+0xff; i > l; i--) {
@@ -262,7 +262,7 @@ int table_range(int n, const char* argv[])
 		return -1; }
 	ch<<=8;
 	if (!needs_cjk_transform(ch)) {
-		printf("Han range only (0x4e-0xa4).\n");
+		printf("Han range only (0x4e-0x9f).\n");
 		return false; }
 	int l, h;
 	bool r = table_range(ch, l, h);
@@ -283,13 +283,16 @@ int utable(int n, const char* argv[])
 		return -1; }
 	ch<<=8;
 	if (!needs_cjk_transform(ch)) {
-		printf("Han range only (0x4e-0xa4).\n");
+		printf("Han range only (0x4e-0x9f).\n");
 		return -1; }
 	int l, h;
 	bool r = table_range(ch, l, h);
 	if (!r) {
 		printf("No glyphs in range 0x%04x-0x%04x.\n", ch, ch+0xff);
 		return -1; }
+	printf("# Font parameters:\n");
+  printf("# width height ascent descent leading high_code low_code_first low_code_last\n");
+  printf("@ 16 16 16 0 0\n%% %x %x %x\n\n", (l&0xff00)>>8, (l&0x00ff), (h&0x00ff));
 	for(int i=l; i<=h; i++) {
 		if (have_glyph(i)) {
 			char_out_unicode(i); } }
@@ -300,18 +303,19 @@ int main(int n, const char* argv[]) {
 	if (n < 2) {
 		printf ("Need command.\n");
 		return -1; }
-	// Dump a table by index
+	// Dump a table by legacy index
 	if (strcmp(argv[1], "table")==0) {
 		return table_out(n, argv); }
-	// Dump a (non-CJK-transformed) char by code
+	// Dump a char by legacy codepoint (non-CJK-to-Unicode transformed)
 	if (strcmp(argv[1], "char")==0) {
 		return char_out_untransformed(n, argv); }
-	// Dump a (CJK-transformed-to-Unicode) char by code
+	// Dump a char by Unicode codepoint
 	if (strcmp(argv[1], "uchar")==0) {
 		return char_out_unicode(n, argv); }
-	// Find out which characters we have from a given table
+	// Find out which characters we have from a given Unicode table
 	if (strcmp(argv[1], "trange")==0) {
 		return table_range(n, argv); }
+	// Dump a Unicode table (in the Han range)
 	if (strcmp(argv[1], "utable")==0) {
 		return utable(n, argv); }
 	printf("Unrecognized command\n");
