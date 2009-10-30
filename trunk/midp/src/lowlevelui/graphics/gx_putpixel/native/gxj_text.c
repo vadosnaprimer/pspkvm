@@ -45,31 +45,25 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts, int* found_bma
     int i=1;
     unsigned char c_hi = (c>>8) & 0xff;
     unsigned char c_lo = c & 0xff;
-    do {
-        if ( c_hi == pfonts[i][FONT_CODE_RANGE_HIGH]
-          && c_lo >= pfonts[i][FONT_CODE_FIRST_LOW]
-          && c_lo <= pfonts[i][FONT_CODE_LAST_LOW]
-        ) {
+    if (pfonts[c_hi]==0) {
+			// No such table
+    	*found_bmap = 0;
+    	return pfonts[0]; }    	
+    if ( c_lo >= pfonts[c_hi][FONT_CODE_FIRST_LOW]
+      && c_lo <= pfonts[c_hi][FONT_CODE_LAST_LOW] ) {
         		*found_bmap = 1;
-            return pfonts[i];
-        }
-        i++;
-    } while (i <= (int) pfonts[0]);
+            return pfonts[c_hi]; }
     /* the first table must cover the range 0-nn */
     *found_bmap = 0;
-    return pfonts[1];
-}
+    return pfonts[0]; }
 
-// Quick call to isolate the CJK characters and Yi syllables
-// (0x4e00 - 0x9fff,  a000-a48f
-int needs_cjk_transform(jchar c) {
+// Quick call to isolate the CJK characters
+// (0x4e00 - 0x9fff)
+int is_han_char(jchar c) {
 	if (c < 0x4e00) {
 		return 0; }
-	if (c > 0xa48f) {
-		return 0; }
 	if (c > 0x9fff) {
-		if (c < 0xa000) {
-			return 0; } }
+		return 0; }
 	return 1; }
 
 /**
@@ -77,7 +71,6 @@ int needs_cjk_transform(jchar c) {
  *
  * putpixel primitive character drawing. 
  */
-extern const unsigned char UNI_CJK[];
 unsigned char BitMask[8] = {0x80,0x40,0x20,0x10,0x8,0x4,0x2,0x1};
 static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 		     gxj_pixel_type pixelColor, int x, int y,
@@ -94,12 +87,6 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
     unsigned short CJK = c0;
-    if (needs_cjk_transform(c0)) {
-    	// Transform doesn't work for Unicode pages 0 through 4,
-    	// and we also want to protect the user space at e000-e100
-    	CJK = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
-		                     ((short*)UNI_CJK)[c0]:
-	                         ((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
 	  // Flag telling us if we *really* have a glyph for this
 		int found_bmap = 0;
     unsigned char const * fontbitmap =
@@ -165,7 +152,7 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 // the char, we need to draw it with the default glyph, which is 8 bits
 // wide.
 inline int char_width(jchar i) {
-	if (needs_cjk_transform(i)) {
+	if (is_han_char(i)) {
 		// Han character pages
 		return 0x10; }
 	if (i >= 0x0400) {
