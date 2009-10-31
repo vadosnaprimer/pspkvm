@@ -1,5 +1,5 @@
-Current to 0.5.4 release build
-25 October 2009
+PSPKVM 0.5.5 Test 1
+30 October 2009
 Developers: Sleepper, M@x, Anweifeng, AJ Milne
 Testing: Jurgen Konings 
 Email: feedback@pspkvm.org, pspkvm@gmail.com
@@ -22,10 +22,19 @@ Additional documentation
 
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
-  
--------------------------------------------------
-Changes for release version (relative to test 11)
--------------------------------------------------
+ 
+----------------------------------------------------
+Changes for 0.5.5 Test 1 (relative to 0.5.4 release)
+----------------------------------------------------
+
+ * Fix for disappearing built-in font on sleep/wake
+
+ * Accelerations to built-in font handling--eliminated uni2cjk run-time mapping
+and much iterative hunting in lookup code     
+
+-------------------------------------------------------------
+Changes for release version 0.5.4 (relative to 0.5.4 test 11)
+-------------------------------------------------------------
 
  * Refactored Danzeff keymaps, separated from board implementation for
 easy addition of support for additional alphabets/scripts/etc.
