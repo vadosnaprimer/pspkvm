@@ -142,6 +142,7 @@ void invalidate_ftc_manager() {
 	// into these calls after this one.
 	_ftc_use_internal_font = 0;
 	_ftc_need_utility_font = 0;
+	_ftc_config_read = 0;
 	if (!_ftc_initialized) {
 		return; }
 	FTC_Manager_Done(cache_manager);
@@ -462,6 +463,9 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
   	return JAVACALL_FAIL; }
   if ((current_ic.face_id == _utility_typeface_fn) &&
   	(!_ftc_utility_font_present)) {
+			return JAVACALL_FAIL; }
+	if ((current_ic.face_id != _utility_typeface_fn) &&
+		(_ftc_use_internal_font)) {
 			return JAVACALL_FAIL; }
 	unsigned int glyph_idx;
 	FTC_SBit irec;
