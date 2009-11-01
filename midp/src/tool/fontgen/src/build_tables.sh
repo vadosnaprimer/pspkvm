@@ -24,4 +24,4 @@ for file in `ls ../fontdef_ex/page*`; do
 echo >> $TGT
 ./write_mother_table.pl $TGT >> $TGT
 echo >> $TGT
-cp $TGT ../../../../src/lowlevelui/graphics/gx_putpixel/native/
+cp $TGT ../../../lowlevelui/graphics/gx_putpixel/native/
