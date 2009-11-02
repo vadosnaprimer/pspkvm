@@ -40,6 +40,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		super(n, p, ams, 0);
 		removeCommand(moveHereCmd);
 		removeCommand(createSubfolderCmd);
+		removeCommand(markAllCmd);
 		createBuiltInMidlets(); }
 
 	// Create the built-in midlets

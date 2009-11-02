@@ -49,6 +49,8 @@ class AMSFolderCustomItem extends AMSCustomItem {
 			new Command("Move here", Command.ITEM, 7);
 	static final Command addUnattachedCmd =
 			new Command("Add unattached (debug)", Command.ITEM, 7);
+	static final Command markAllCmd = 
+			new Command ("Mark all contents",  Command.ITEM, 7);
 
 	// Constructor for creation in UI, sans content
 	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams, int d) {
@@ -300,6 +302,14 @@ class AMSFolderCustomItem extends AMSCustomItem {
 				return a; } }
 		return null; }
 		
+	void markAllContents() {
+		int c = items.length;
+		for(int i=0; i<c; i++) {
+			owner.markItem(items[i]); }
+		c = subfolders.length;
+		for(int i=0; i<c; i++) {
+			owner.markItem(subfolders[i]); } }
+		
 	// Find the AMSMCI matching a given RunningMidletSuiteInfo in the tree
 	// below this folder, or null, if it's not there.
 	// (Thus, searching from the root initially usually makes sense.)
@@ -467,7 +477,8 @@ class AMSFolderCustomItem extends AMSCustomItem {
 		super.setFixedCommands();
 		addCommand(createSubfolderCmd);
 		addCommand(removeCmd);
-		addCommand(moveHereCmd); }
+		addCommand(moveHereCmd);
+		addCommand(markAllCmd); }
 		
 	// Convenience method for ensuring a folder is open
 	// and its contents are visible by opening from the 

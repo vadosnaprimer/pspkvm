@@ -676,6 +676,9 @@ class AppManagerUI extends Form
 			if (c == AMSFolderCustomItem.createSubfolderCmd) {
 				createSubFolder((AMSFolderCustomItem)item);
 				return; }
+			if (c == AMSFolderCustomItem.markAllCmd) {
+				((AMSFolderCustomItem)item).markAllContents();
+				return; }
 			// Folder-specific command
 			if (c == AMSFolderCustomItem.removeCmd) {
 				removeFolder((AMSFolderCustomItem)item);
