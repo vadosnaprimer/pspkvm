@@ -160,11 +160,11 @@
 <constant_class Package="com.sun.midp.rms" Name="RMSConfig" Scope="public" Comment="/** Constant values in RMS configuration */">
   <constant Type="int"
             Name="STORAGE_SUITE_LIMIT"
-            Value="200000"
+            Value="10000000"
             Comment="Per suite resource limit for storage"/>
   <constant Type="int"
             Name="RMS_CACHE_LIMIT"
-            Value="3072"
+            Value="81920"
             Comment="Global memory limit (in Bytes) for RMS caching"/>
  </constant_class>
 </constants>
