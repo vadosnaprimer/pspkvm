@@ -139,17 +139,10 @@ void midp_check_events(JVMSPI_BlockedThreadInfo *blocked_threads,
             midp_thread_signal_list(blocked_threads, blocked_threads_count, 
                                     PUSH_SIGNAL, 0, 0);
         }
-#if (ENABLE_JSR_120 || ENABLE_JSR_205)
-        else
-            jsr120_check_signal(newSignal.waitingFor, newSignal.descriptor, newSignal.status);
-#endif
         break;
 
     case HOST_NAME_LOOKUP_SIGNAL:
     case NETWORK_WRITE_SIGNAL:
-#if (ENABLE_JSR_120 || ENABLE_JSR_205)
-        if (!jsr120_check_signal(newSignal.waitingFor, newSignal.descriptor, newSignal.status))
-#endif
             midp_thread_signal_list(blocked_threads, blocked_threads_count,
                                     newSignal.waitingFor, newSignal.descriptor,
                                     newSignal.status);
