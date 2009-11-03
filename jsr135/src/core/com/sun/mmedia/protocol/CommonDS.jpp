@@ -136,8 +136,14 @@ public class CommonDS extends BasicDS implements SourceStream {
                                 (FileConnection)Connector.open(locator);
                 if (fileCon.exists() && !fileCon.isDirectory() &&
                     fileCon.canRead()) {
-                    inputStream = fileCon.openInputStream();
-                    contentLength = fileCon.fileSize();
+                    /** M@x:
+                       * For all media types, if it's played via file:// url, always NOT need buffering by Java
+                       *
+                       **/
+                    //inputStream = fileCon.openInputStream();
+                    //contentLength = fileCon.fileSize();
+                    inputStream = null;
+                    contentLength = -1;
                     fileCon.close();
                     goodurl = true;
                 } else {

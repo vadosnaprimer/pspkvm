@@ -33,6 +33,8 @@
 static char mp3Buf[32*1024]  __attribute__((aligned(64)));
 static short pcmBuf[32*(1152/2)]  __attribute__((aligned(64)));
 
+static mp3_player_handle* currentMp3 = NULL;
+
 int fillStreamBuffer( int fd, int handle ){	
 	char* dst = NULL;	
 	int write = 0;	
@@ -44,7 +46,7 @@ int fillStreamBuffer( int fd, int handle ){
 		javacall_printf("ERROR: sceMp3GetInfoToAddStreamData returned 0x%08X\n", status);
 		return -1;
 	}
-
+	
 	if (pos < 0 || write == 0) {
 		javacall_printf("fillStreamBuffer: end of media1\n");
 		return 0;
@@ -75,24 +77,26 @@ int fillStreamBuffer( int fd, int handle ){
 		javacall_printf("ERROR: sceMp3NotifyAddStreamData returned 0x%08X\n", status);	
 		return -4;
 	}
-	
-	return pos;
+
+	return write;
 }
 
 int decodeThread2(SceSize args, void *argp){
    
-   int fd = 0, handle = 0;
+   int fd = 0, handle = -1;
    mp3_player_handle* mp = *(mp3_player_handle**)argp;
    int data_starthm, endpos, numChannels, samplingRate;
    short* buf;
    SceMp3InitArg mp3Init;
    SceInt64 res;
    int channel = -1, volume;
+   int bytesDecoded = -1, lastDecoded = -1;
+   int retries = 0;
 
-   //javacall_printf("[mp3_ME.c]decodeThread2: File to open %s\n", &mp->filename[0]);
+   javacall_printf("[mp3_ME.c]decodeThread2: File to open %s\n", &mp->filename[0]);
 
-   data_starthm = ID3v2TagSize(&(mp->filename[0]));
-   
+   data_starthm = ID3v2TagSize(&(mp->filename[0])) + 10;
+   printf("returned from ID3v2TagSize:%d\n", data_starthm);
    fd = sceIoOpen(&mp->filename[0], PSP_O_RDONLY, 0777 );
 
    if (fd <= 0) {
@@ -102,15 +106,16 @@ int decodeThread2(SceSize args, void *argp){
    	goto fail;
    }
    
-   sceIoChangeAsyncPriority(fd, 0x10);
+   //sceIoChangeAsyncPriority(fd, 0x10);
 
-   // Init mp3 resources
-   sceMp3InitResource();
-   sceIoLseek32Async(fd, 0, PSP_SEEK_SET);
-   sceIoWaitAsync(fd, &res);
-   sceIoLseek32Async( fd, 0, PSP_SEEK_END );
-   sceIoWaitAsync(fd, &res);
-   endpos = res;
+  
+   sceIoLseek32(fd, 0, PSP_SEEK_SET);
+   //sceIoWaitAsync(fd, &res);
+   endpos = sceIoLseek32( fd, 0, PSP_SEEK_END );
+   //sceIoWaitAsync(fd, &res);
+
+   printf("mp3 file open ok\n");
+   //endpos = res;
 
    // Reserve a mp3 handle for our playback
    mp3Init.mp3StreamStart = data_starthm;
@@ -123,12 +128,28 @@ int decodeThread2(SceSize args, void *argp){
    mp3Init.pcmBufSize = sizeof(pcmBuf);
 
    handle = sceMp3ReserveMp3Handle( &mp3Init );
+   printf("sceMp3ReserveMp3Handle return: %d\n", handle);
+   if (handle < 0) {
+   	mp->isPlaying = 0;
+   	mp->isOpen = -1;
+   	goto fail;
+   }
    
    // Fill the stream buffer with some data so that sceMp3Init has something to work with
-   fillStreamBuffer( fd, handle );
+   if (fillStreamBuffer( fd, handle ) <= 0) {
+   	printf("failed when fillStreamBuffer\n");
+   	mp->isPlaying = 0;
+   	mp->isOpen = -1;
+   	goto fail;   	
+   }
    
+   printf("sceMp3Init...\n");
    sceMp3Init( handle );
-   numChannels = sceMp3GetMp3ChannelNum( handle );
+   printf("sceMp3Init ok\n");
+   
+
+   
+
    //kbit = sceMp3GetBitRate(handle);
    //samplingRate = sceMp3GetSamplingRate(handle);
    //lastDecoded = 0;
@@ -137,29 +158,32 @@ int decodeThread2(SceSize args, void *argp){
    //loop = 0;
    volume = PSP_AUDIO_VOLUME_MAX;
    sceMp3SetLoopNum(handle, 0);
-   
+   printf("sceMp3SetLoopNum ok\n");
+
    while(mp->isOpen > 0)
    {
 
       
       while (mp->isPlaying > 0)
       {
-         samplingRate = sceMp3GetSamplingRate(handle);
-
+         
                 // Check if we need to fill our stream buffer
       if (sceMp3CheckStreamDataNeeded( handle )>0)
       {
-          fillStreamBuffer( fd, handle );
+          if (fillStreamBuffer( fd, handle ) <= 0) {
+          	mp->isPlaying = 0;
+          	break;
+          }
       }
+      
+      
          
-         // Decode some samples
-         int bytesDecoded;
-         int retries = 0;
-         // We retry in case it's just that we reached the end of the stream and need to loop
+          // We retry in case it's just that we reached the end of the stream and need to loop
          for (;retries<1;retries++)
          {
+            //printf("sceMp3Decode...\n");
             bytesDecoded = sceMp3Decode( handle, &buf );
-            //printf("bytesDecoded=0x08%x\n", bytesDecoded);
+            //printf("bytesDecoded=0x%x\n", bytesDecoded);
             if (bytesDecoded>0){
                break;
             }
@@ -167,53 +191,133 @@ int decodeThread2(SceSize args, void *argp){
             if (sceMp3CheckStreamDataNeeded( handle )<=0)
                break;
          
-            if (!fillStreamBuffer( fd, handle ))
+            if (fillStreamBuffer( fd, handle ) <= 0)
             {
-               mp->paused = 1;
+               mp->isPlaying = 0;
+               break;
             }
          }
-         // Reserve the Audio channel for our output if not yet done
-         if (channel<0 || 0!=bytesDecoded)
-         {
-            if (channel>=0)
-               sceAudioSRCChRelease();
 
-            channel = sceAudioSRCChReserve( bytesDecoded/(2*numChannels), samplingRate, numChannels );
+         
+         // Reserve the Audio channel for our output if not yet done
+         if (channel<0 || bytesDecoded != lastDecoded)
+         {
+            if (channel>=0) {
+               sceAudioSRCChRelease();
+            }
+
+            if (bytesDecoded > 0) {
+               //printf("sceMp3GetSamplingRate\n");
+               samplingRate = sceMp3GetSamplingRate(handle);
+               //printf("sceMp3GetSamplingRate return %d\n", samplingRate);
+               if (samplingRate < 0) {
+               	    mp->isPlaying = 0;
+               	    printf("sceMp3GetSamplingRate return %d\n", samplingRate);
+               	    javacall_printf("Invalid mp3 file?\n");
+               	    break;
+               }
+      
+               numChannels = sceMp3GetMp3ChannelNum( handle );
+               //printf("sceMp3GetMp3ChannelNum:%d\n", numChannels);
+               if (numChannels <= 0) {
+         	      mp->isPlaying = 0;
+         	      printf("sceMp3GetMp3ChannelNum:%d\n", numChannels);
+         	      javacall_printf("Invalid mp3 file?\n");
+         	      break;
+               }
+               channel = sceAudioSRCChReserve( bytesDecoded/(2*numChannels), samplingRate, numChannels );
+            }
+            lastDecoded = bytesDecoded;
+         }
+
+         if (bytesDecoded > 0) {
+             // Output the decoded samples and accumulate the number of played samples to get the playtime
+             sceAudioSRCOutputBlocking( volume, buf );
+
+             mp->numPlayed += bytesDecoded*1000/samplingRate;
+             
+         } else {
+             printf("sceMp3Decode:0x%x\n", bytesDecoded);
+             mp->isPlaying = 0;
          }
          
-         // Output the decoded samples and accumulate the number of played samples to get the playtime
-         sceAudioSRCOutputBlocking( volume, buf );
-         
       }
+      
+      if (channel>=0) {
+      	   printf("end of mp3\n");
+          sceAudioSRCChRelease();
+          channel = -1;
+      }
+
+      if (!mp->paused) {
+      	   //sceMp3ResetPlayPosition(handle);
+      	   //mp->numPlayed = 0;
+      	   mp->isOpen = 0;
+      	   mp->paused = 1;
+      	   javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, mp->playerId, mp->numPlayed);
+      }
+
       //printf("sceKernelDelayThread...\n");
       sceKernelDelayThread(10000);
       //printf("sceKernelDelayThread ok\n");
    }
 
-   if (channel>=0)
-      sceAudioSRCChRelease();
 
-   sceMp3ReleaseMp3Handle( handle );
-   sceMp3TermResource();
-   
 fail:
+   if (handle >= 0) {
+   	   sceMp3ReleaseMp3Handle( handle );
+   }
+   
    if (fd > 0) {
        sceIoClose( fd );
    }
-   
+
+   if (!mp->paused) {
+       javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, mp->playerId, mp->numPlayed);
+   }
+   mp->mp3thread = -1;
+   printf("mp3 Thread end\n");
    sceKernelExitDeleteThread(0);
 
-   printf("mp3 Thread end\n");
    return 0;
 }
 /* main routine */
+
+void StopMp3(mp3_player_handle* mp)
+{
+   javacall_printf("StopMp3... %x\n", mp);
+   if (mp->isOpen > 0)    mp->isOpen = 0;
+   if (mp->isPlaying > 0) mp->isPlaying = 0;
+   if (mp->mp3thread >= 0) {
+   	sceKernelWaitThreadEnd(mp->mp3thread, NULL);
+   	mp->mp3thread = -1;
+       //sceKernelDeleteThread(mp->mp3thread);
+   }
+
+   if (mp == currentMp3) {
+   	currentMp3 = NULL;
+   }
+   
+   javacall_printf("StopMp3 return\n");
+}
+
 int LoadMp3(mp3_player_handle* mp)
 {
+   printf("LoadMp3>>\n");
+   if (currentMp3 != NULL && currentMp3 != mp) {
+   	StopMp3(currentMp3);
+   }
+
+   if (mp->mp3thread >= 0) {
+   	javacall_printf("The mp3 player is already in playing: %d\n", mp->mp3thread);
+   	return 0;
+   }
    
    mp->mp3thread = sceKernelCreateThread("decodeThread2", decodeThread2, 12, 16*1024, PSP_THREAD_ATTR_USER, NULL);
    if (mp->mp3thread >= 0) {
    	mp->isOpen = 1;
-   	//javacall_printf("LoadMp3: mp=%p, filename=%s\n", mp, &(mp->filename[0]));
+   	mp->paused = 1;
+   	javacall_printf("LoadMp3: mp=%p, filename=%s\n", mp, &(mp->filename[0]));
        if (sceKernelStartThread(mp->mp3thread, 4, &mp) < 0) {
        	javacall_printf("LoadMp3: sceKernelStartThread error\n");
            mp->isOpen = -1;
@@ -227,6 +331,8 @@ int LoadMp3(mp3_player_handle* mp)
        return -1;
    }
 
+   currentMp3 = mp;
+
    return 0;
 }
 void PlayMp3(mp3_player_handle* mp)
@@ -234,6 +340,8 @@ void PlayMp3(mp3_player_handle* mp)
    if (mp->isPlaying == 0) {
        mp->isPlaying = 1;
    }
+
+   mp->paused = 0;
 }
 void PauseMp3(mp3_player_handle* mp)
 {
@@ -242,17 +350,14 @@ void PauseMp3(mp3_player_handle* mp)
     }
 }
 
-void StopMp3(mp3_player_handle* mp)
-{
-   //javacall_printf("StopMp3...\n");
-   if (mp->isOpen > 0)    mp->isOpen = 0;
-   if (mp->isPlaying > 0) mp->isPlaying = 0;
-   if (mp->mp3thread >= 0) {
-   	sceKernelWaitThreadEnd(mp->mp3thread, NULL);
-       //sceKernelDeleteThread(mp->mp3thread);
-   }
-   //javacall_printf("StopMp3 return\n");
+void FinalizeMp3() {
+    if (currentMp3) {
+    	StopMp3(currentMp3);
+    }
+    
+    sceMp3TermResource();
 }
+
 /*
 static void getMP3TagInfo(char *filename, struct fileInfo *targetInfo){
 

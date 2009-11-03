@@ -64,6 +64,7 @@ typedef struct _mp3_player_handle {
 	javacall_int64 playerId;
 	int isOpen;
 	int isPlaying;
+	int numPlayed;
 	SceUID mp3thread;
 } mp3_player_handle;
 
