@@ -209,6 +209,17 @@ public class MenuLayer extends ScrollablePopupLayer {
         // return true always as menuLayer will capture all of the pointer inputs
         return true;  
     }
+    
+		// Helper for keyInput--fixes scrollIndex against the new selI
+		void boundScrollIndex(int selI) {
+			if (selI < scrollIndex && scrollIndex > 0) {
+				scrollIndex--;
+			}
+			if (selI >= scrollIndex + MenuSkin.MAX_ITEMS &&
+					scrollIndex < (menuCmds.length - MenuSkin.MAX_ITEMS)) {
+				scrollIndex++;
+			}
+		}
 
     /**
      * Handles key input from a keypad. Parameters describe
@@ -238,24 +249,21 @@ public class MenuLayer extends ScrollablePopupLayer {
         }
         
         if (keyCode == Constants.KEYCODE_UP || keyCode == Canvas.KEY_NUM2) {
-            if (selI > 0) {
-                selI--;
-                if (selI < scrollIndex && scrollIndex > 0) {
-                    scrollIndex--;
-                }
-                updateScrollIndicator();
-                requestRepaint();
-            }
+        	selI--;
+        	if (selI<0) {
+						selI = menuCmds.length-1; }
+          boundScrollIndex(selI);
+          updateScrollIndicator();
+          requestRepaint();
+
         } else if (keyCode == Constants.KEYCODE_DOWN || keyCode == Canvas.KEY_NUM8) {
-            if (selI < (menuCmds.length - 1)) {
-                selI++;
-                if (selI >= scrollIndex + MenuSkin.MAX_ITEMS &&
-                    scrollIndex < (menuCmds.length - MenuSkin.MAX_ITEMS)) {
-                    scrollIndex++;
-                } 
-                updateScrollIndicator();
-                requestRepaint();
-            }
+        	selI++;
+        	if(selI>=menuCmds.length) {
+						selI=0; }
+          boundScrollIndex(selI);
+          updateScrollIndicator();
+          requestRepaint();
+            
         } else if (keyCode == Constants.KEYCODE_LEFT || keyCode == Canvas.KEY_NUM4) {
             // IMPL_NOTE : Need to add support for a "right popping"
             // sub menu if the system menu is placed on the left

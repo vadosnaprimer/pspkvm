@@ -1,5 +1,5 @@
-PSPKVM 0.5.5 Test 2
-4 November 2009
+PSPKVM 0.5.5 Test 3
+6 November 2009
 Developers: Sleepper, M@x, Anweifeng, AJ Milne
 Testing: Jurgen Konings 
 Email: feedback@pspkvm.org, pspkvm@gmail.com
@@ -24,10 +24,23 @@ Additional documentation
  * See BUILDING.TXT for notes on building this software.
 
 ---------------------------------------------
+Changes for 0.5.5 Test 3 (relative to Test 2)
+---------------------------------------------
+
+ * Made all menus and submenus 'loop' top to bottom/bottom to top when
+scrolling past the end. 
+
+---------------------------------------------
 Changes for 0.5.5 Test 2 (relative to Test 1)
 ---------------------------------------------
 
- * Initial MP3 (JSR 135 Multimedia API) implementation added. This is a MediaEngine (hardware-based) implementation--very fast, and easy on your processor. It is for file-based playback only as of this release (no streaming from the net as yet), and has the following known limitations: there are no shuttle controls, and backgrounded playback, while functional, will break your network connection.
+ * Initial MP3 (JSR 135 Multimedia API) implementation added. This is a
+MediaEngine (hardware-based) implementation--very fast, and easy on your
+processor. It is for file-based playback only as of this release (no
+streaming from the net as yet), and has the following known limitations:
+there are no shuttle controls or volume control, metadata reading is not
+yet supported, and backgrounded playback, while functional, will break
+your network connection.
 
  * Added a 'mark all contents' command to AMS folders
 
@@ -37,8 +50,8 @@ Changes for 0.5.5 Test 1 (relative to 0.5.4 release)
 
  * Fix for disappearing built-in font on sleep/wake
 
- * Accelerations to built-in font handling--eliminated uni2cjk run-time mapping
-and much iterative hunting in lookup code     
+ * Accelerations to built-in font handling--eliminated uni2cjk run-time
+mapping and much iterative hunting in lookup code     
 
 -------------------------------------------------------------
 Changes for release version 0.5.4 (relative to 0.5.4 test 11)
