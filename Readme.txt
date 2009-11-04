@@ -1,5 +1,5 @@
-PSPKVM 0.5.5 Test 1
-30 October 2009
+PSPKVM 0.5.5 Test 2
+2 November 2009
 Developers: Sleepper, M@x, Anweifeng, AJ Milne
 Testing: Jurgen Konings 
 Email: feedback@pspkvm.org, pspkvm@gmail.com 
