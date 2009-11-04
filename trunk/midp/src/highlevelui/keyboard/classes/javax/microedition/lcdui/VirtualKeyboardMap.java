@@ -6,9 +6,7 @@ import com.sun.midp.configurator.Constants;
 
 public class VirtualKeyboardMap
 {
-
-
-        /**
+  /**
 	*add by an for 
 	*fixed virtual keyboard 
 	*
@@ -25,11 +23,6 @@ public class VirtualKeyboardMap
 	  // ********* attributes ********* //
     private final static int WHITE = 0xffffff;
     private final static int COLOR_RED = 0x601010;
-
-    // gray scheme
-    //private final static int DARK_GRAY = 0x555555;
-    //private final static int GRAY = 0x999999;
-    //private final static int LIGHT_GRAY = 0xcccccc;
 
     // blue scheme
     private final static int DARK_GRAY = 0x666699; // dark blue
