@@ -27,7 +27,7 @@ Additional documentation
 Changes for 0.5.5 Test 2 (relative to Test 1)
 ---------------------------------------------
 
- * Initial MP3 (JSR 135 Multimedia API) implementation added. This is a MediaEngine (hardware-based) implementation--very fast, and easy on your processor. It is for file-based playback only as of this release, however (no streaming from the net as yet), and has the following known limitations: there are no shuttle controls, and backgrounded playback, while functional, will break your network connection.
+ * Initial MP3 (JSR 135 Multimedia API) implementation added. This is a MediaEngine (hardware-based) implementation--very fast, and easy on your processor. It is for file-based playback only as of this release (no streaming from the net as yet), and has the following known limitations: there are no shuttle controls, and backgrounded playback, while functional, will break your network connection.
 
  * Added a 'mark all contents' command to AMS folders
 
