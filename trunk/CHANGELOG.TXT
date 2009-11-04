@@ -1,5 +1,5 @@
-PSPKVM 0.5.5 Test 1
-30 October 2009
+PSPKVM 0.5.5 Test 2
+4 November 2009
 Developers: Sleepper, M@x, Anweifeng, AJ Milne
 Testing: Jurgen Konings 
 Email: feedback@pspkvm.org, pspkvm@gmail.com
@@ -22,7 +22,15 @@ Additional documentation
 
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
- 
+
+---------------------------------------------
+Changes for 0.5.5 Test 2 (relative to Test 1)
+---------------------------------------------
+
+ * Initial MP3 (JSR 135 Multimedia API) implementation added. This is a MediaEngine (hardware-based) implementation--very fast, and easy on your processor. It is for file-based playback only as of this release, however (no streaming from the net as yet), and has the following known limitations: there are no shuttle controls, and backgrounded playback, while functional, will break your network connection.
+
+ * Added a 'mark all contents' command to AMS folders
+
 ----------------------------------------------------
 Changes for 0.5.5 Test 1 (relative to 0.5.4 release)
 ----------------------------------------------------

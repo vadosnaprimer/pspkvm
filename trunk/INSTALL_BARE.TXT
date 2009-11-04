@@ -1,0 +1,8 @@
+Install directions for bare eboot packages
+------------------------------------------
+
+This is a minimal 'bare eboot' package, which corrects issues or adds features
+in the binary EBOOT.PBP file only. To use it, unzip it, and replace the
+EBOOT.PBP in your  current PSPKVM installation directory with the one in this
+package.
+
