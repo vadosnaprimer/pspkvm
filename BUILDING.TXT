@@ -11,6 +11,8 @@ Project home on SF:
 	https://sourceforge.net/projects/pspkvm
 Project wiki:
 	http://sourceforge.net/apps/trac/pspkvm/wiki/WikiStart
+Project FAQ:
+	http://sourceforge.net/apps/trac/pspkvm/wiki/FAQ
 
 
 --------------------------------
