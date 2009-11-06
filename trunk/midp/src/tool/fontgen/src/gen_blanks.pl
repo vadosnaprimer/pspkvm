@@ -41,10 +41,40 @@ sub gen_blankline {
 	$r .= ".\n";
 	return $r; }
 
+# Generate the midlines of the
+# 'default glyph' box
+sub gen_sbody {
+	my ($w) = @_;
+	my $r = '';
+	$r .= '*';
+	for(my $i=0; $i<($w-3); $i++) {
+		$r .= ' '; }
+	$r .= "* .\n";
+	return $r; }
+
+# Generate the top or bottom border
+# of the 'default glyph' box
+sub gen_sborder {
+	my ($w) = @_;
+	my $r = '';
+	for(my $i=0; $i<($w-1); $i++) {
+		$r .= '*'; }
+	$r .= " .\n";
+	return $r; }
+
 sub gen_blank {
 	my ($w, $h) = @_;
+	my $bot_blanks = $h - $asc - 1;
+	my $top_blanks = $bot_blanks +1;
+	my $body_height = $h - $bot_blanks - $top_blanks - 2;
 	my $r = gen_sepline($w);
-	for (my $i=0; $i<$h; $i++) {
+	for (my $i=0; $i<$top_blanks; $i++) {
+		$r .= gen_blankline($w); }
+	$r .= gen_sborder($w);
+	for (my $i=0; $i<$body_height; $i++) {
+		$r .= gen_sbody($w); }
+	$r .= gen_sborder($w);
+	for (my $i=0; $i<$bot_blanks; $i++) {
 		$r .= gen_blankline($w); }
 	$r .= gen_sepline($w);
 	return $r; }
