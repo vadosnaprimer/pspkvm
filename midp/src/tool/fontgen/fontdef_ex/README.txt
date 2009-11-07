@@ -12,6 +12,9 @@ Contents (as of this writing)
 page_00.txt -- Unicode page 0x0000-0x00ff (recovered from original bitfields using rdfont_2.c)
 page_01.txt -- Unicode page 0x0100-0x01ff (hand-drawn glyphs)
 page_04.txt -- Unicode page 0x0400-0x045f (hand-drawn glyphs)
+page_20.txt -- Unicode page 0x2010-0x20ac (hand-drawn glyphs) 
+page_4e-page_99.txt -- Unicode pages 0x4e00 to 0x9fa5 (extracted from 0.5.4 release original bitfields--formerly in CJK-map order--and converted to Unicode order using rdfont_3)
+page_e0.txt -- Unicode page 0xe000-x0e030 (hand-drawn glyphs)
 
 Note that while the gen_blanks.pl tool generates full pages (range 00 to ff in the low bit), the framework for these fonts does permit smaller ranges as of this writing (note the 0x0400-0x045f range). Edit low_code_first and low_code_last in the header by hand and delete glyphs outside this range to generate valid tables containing smaller sets. 
 
