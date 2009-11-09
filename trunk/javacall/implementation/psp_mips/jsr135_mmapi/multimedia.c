@@ -39,7 +39,7 @@ extern "C" {
 
 extern int max_patch_memory;
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* str, int strlen);
-
+extern int mp3codec_enabled;
 
 static int is_midi_support = 0;
 static int music_handle_occupied = 0;
@@ -198,7 +198,9 @@ javacall_result javacall_media_initialize(void) {
     Mix_AllocateChannels(CHANNEL_NUM);
     Mix_ChannelFinished(channelDone);
 
-    sceMp3InitResource();
+    if (mp3codec_enabled) {
+        sceMpegInit();
+    }
     
     _javacall_media_initilized = 1;
     return JAVACALL_OK;
@@ -221,7 +223,9 @@ javacall_result javacall_media_finalize(void) {
         music_handle_occupied = 0;
     }
 
-    FinalizeMp3();
+    if (mp3codec_enabled) {
+        FinalizeMp3();
+    }
 
     return JAVACALL_OK;
 }
@@ -1918,6 +1922,10 @@ static mmplayer_handle* create_mp3(javacall_int64 playerId, const javacall_utf16
 
     printf("create_mp3>>\n");
     
+    if (!mp3codec_enabled) {
+    	printf("mp3 modules are not loaded!\n");
+    	return NULL;
+    }
 
     if (uri == NULL || uriLength <= 0) {
     	//Read from stream, need buffer
