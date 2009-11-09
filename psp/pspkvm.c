@@ -138,6 +138,8 @@ static void display_log(int show) {
 	}
 }
 
+int mp3codec_enabled = 1;
+
 int usbgps_enabled = 0;
 
 #if ENABLE_GPS
@@ -658,17 +660,19 @@ test_mem("After setup GU");
 
     	printf("Network module loaded\n");
     	
-    		// Load modules
+    	mp3codec_enabled = 1;
 	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
 	if (ret_val<0)
 	{
 		printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC) returned 0x%08X\n", ret_val);
+		mp3codec_enabled = 0;
 	}
 	
-	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_MP3);
+	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_MPEGBASE);
 	if (ret_val<0)
 	{
 		printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_MP3) returned 0x%08X\n", ret_val);
+		mp3codec_enabled = 0;
 	}
 	
 
