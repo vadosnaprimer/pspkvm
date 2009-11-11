@@ -1,3 +1,6 @@
+#ifndef PSP_MMAPI_H_INCLUDED
+#define PSP_MMAPI_H_INCLUDED
+
 #include <pspkernel.h>
 #include "javacall_multimedia.h"
 #include "javacall_file.h"
@@ -64,8 +67,13 @@ typedef struct _mp3_player_handle {
 	javacall_int64 playerId;
 	int isOpen;
 	int isPlaying;
-	int numPlayed;
 	SceUID mp3thread;
+	unsigned int mp3_data_start;
+	unsigned int mp3_file_size;
+	unsigned int id3HeaderSize;
+	unsigned int ea3HeaderSize;
+	unsigned int totalTime;
+	long set2time;
 } mp3_player_handle;
 
 typedef union {
@@ -77,3 +85,4 @@ typedef union {
 
 #define INVALID_PLAYER_ID (0LL)
 
+#endif

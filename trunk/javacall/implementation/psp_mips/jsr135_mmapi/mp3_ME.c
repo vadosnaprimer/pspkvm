@@ -9,6 +9,7 @@
 #include <pspmpeg.h>
 #include "psp_mmapi.h"
 #include "javacall_logging.h"
+#include "mp3_ME.h"
 
 //#define MP3_DEBUG
 //#define MP3_DEBUG_VERBOSE
@@ -46,12 +47,13 @@ static int samplerates[4][3] = {
 
 static unsigned long mp3_codec_buffer[65] __attribute__ ((aligned (64)));
 static short mp3_mix_buffer[1152 * 2] __attribute__ ((aligned (64)));
-
 static short mp3_output_buffer[4][1152 * 2] __attribute__ ((aligned (64)));
+static char frame_buf[1024] __attribute__ ((aligned (64)));
+
 static int mp3_output_index = 0;
 static mp3_player_handle* currentMp3 = NULL;
 
-static int SeekNextFrame (SceUID fd);
+static int SeekNextFrame (mp3_player_handle* mp, SceUID fd);
 
 
 static int
@@ -84,7 +86,6 @@ Init_codec_buffer ()
 int
 Mp3thread (SceSize args, void *argp)
 {
-  int mp3_data_start;
   SceUID mp3_handle = -1;
   int mp3_samplerate, mp3_sample_per_frame, frame_size;
   int mp3_output_index = 0;
@@ -93,6 +94,7 @@ Mp3thread (SceSize args, void *argp)
   char *mp3_data_buffer = NULL;
   int codec_init;
   int audio_channel_set = -1;
+  unsigned int total_time;
 
   mp3_player_handle *mp = *(mp3_player_handle **) argp;
 
@@ -110,14 +112,17 @@ Mp3thread (SceSize args, void *argp)
       mp->isPlaying = 0;
     }
   else
-    {
+    {    
       MP3_DEBUG_STR1("%s open ok\n", &(mp->filename[0]));
+      mp->mp3_file_size = sceIoLseek32(mp3_handle, 0, PSP_SEEK_END);
+      sceIoLseek32(mp3_handle, 0, PSP_SEEK_SET);
+      MP3_DEBUG_STR1("file size=%d", mp->mp3_file_size);
     }
 
   if (mp->isOpen > 0)
     {
-      mp3_data_start = SeekNextFrame (mp3_handle);
-      if (mp3_data_start < 0)
+      mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
+      if (mp->mp3_data_start < 0)
 	{
 	  MP3_DEBUG_STR("Mp3_load:SeekNextFrame return fail\n");
 	  mp->isOpen = -1;
@@ -131,6 +136,16 @@ Mp3thread (SceSize args, void *argp)
       while (mp->isPlaying > 0)
 	{
 	  unsigned char mp3_header_buf[4];
+
+	  if (mp->set2time >= 0) {
+             int offset;
+             unsigned int percentage = mp->set2time * 100 / mp->totalTime;
+             offset = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) * percentage / 100;
+             offset += mp->id3HeaderSize + mp->ea3HeaderSize;
+             sceIoLseek32 (mp3_handle, offset, PSP_SEEK_SET);
+             mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
+             mp->set2time = -1;
+        }
 	  
 	  memset (mp3_mix_buffer, 0, sizeof (mp3_mix_buffer));
 
@@ -158,8 +173,8 @@ Mp3thread (SceSize args, void *argp)
 
 	  if ((bitrate > 14) || (version == 1) || (mp3_samplerate <= 0) || (bitrate <= 0))	//invalid frame, look for the next one
 	    {
-	      mp3_data_start = SeekNextFrame (mp3_handle);
-	      if (mp3_data_start < 0)
+	      mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
+	      if (mp->mp3_data_start < 0)
 		{
 		  MP3_DEBUG_STR("Mp3thread:SeekNextFrame return fail\n");
 		  mp->isPlaying = 0;
@@ -210,13 +225,34 @@ Mp3thread (SceSize args, void *argp)
        	  if (NULL == (mp3_data_buffer = (char *) memalign (64, frame_size)))
        	    {
        	      mp->isPlaying = 0;
+       	      last_frame_size = 0;
        	      continue;
        	    }
 	  	      
                   last_frame_size = frame_size;
+
+                  total_time = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) / frame_size; //Total frames
+                  total_time = total_time * mp3_sample_per_frame; //Total samples
+                  total_time = total_time * 1000 / mp3_samplerate;
+
+                  if (total_time != mp->totalTime) {
+                  	if (mp->totalTime == 0) {
+                  	    mp->totalTime = total_time;
+                  	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)total_time);
+                  	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated: %d\n", total_time);
+                  	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate,
+	   mp3_samplerate, version);
+                  	} else if (mp->totalTime != (unsigned int)-1 && ((total_time < mp->totalTime*99/100) || (total_time > mp->totalTime*101/100))) {
+                  	    mp->totalTime = (unsigned int)-1;
+                  	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)-1);
+                  	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated to TIME_UNKNOWN (%d)\n", total_time);
+                  	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate,
+	   mp3_samplerate, version);
+                  	}                  	
+                  }
 	  }
 
-	  sceIoLseek32 (mp3_handle, mp3_data_start, PSP_SEEK_SET);	//seek back
+	  sceIoLseek32 (mp3_handle, mp->mp3_data_start, PSP_SEEK_SET);	//seek back
 	  //javacall_printf ("Mp3thread: frame_size=%d, mp3_handle=%x\n",
 	  //	  frame_size, mp3_handle);
 	  if (sceIoRead (mp3_handle, mp3_data_buffer, frame_size) !=
@@ -227,7 +263,7 @@ Mp3thread (SceSize args, void *argp)
 	      continue;
 	    }
 
-	  mp3_data_start += frame_size;
+	  mp->mp3_data_start += frame_size;
 	  mp3_codec_buffer[6] = (unsigned long) mp3_data_buffer;
 	  mp3_codec_buffer[8] = (unsigned long) mp3_mix_buffer;
 	  mp3_codec_buffer[7] = mp3_codec_buffer[10] = frame_size;
@@ -235,8 +271,8 @@ Mp3thread (SceSize args, void *argp)
 	  int res = sceAudiocodecDecode (mp3_codec_buffer, 0x1002);
 	  if (res < 0)
 	    {
-	      mp3_data_start = SeekNextFrame (mp3_handle);
-	      if (mp3_data_start < 0)
+	      mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
+	      if (mp->mp3_data_start < 0)
 		{
 		  MP3_DEBUG_STR("SeekNextFrame failed\n");
 		  mp->isPlaying = 0;
@@ -258,10 +294,11 @@ Mp3thread (SceSize args, void *argp)
  
         if (!mp->paused && mp->isOpen > 0) {
             javacall_print("MP3 stop notification sent.\n");
-            javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, mp->playerId, 0);
+            javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, mp->playerId, 
+            	                                                       (void*)GetTimeMp3(mp));
             mp->isPlaying = 0;
             sceIoLseek32 (mp3_handle, 0, PSP_SEEK_SET);
-            mp3_data_start = SeekNextFrame (mp3_handle);
+            mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
             mp->paused = 1;
         } else {
             if (audio_channel_set >= 0)
@@ -296,7 +333,8 @@ Mp3thread (SceSize args, void *argp)
   
   if (mp->isPlaying == -1) {
     javacall_print("MP3 stop notification sent. Failed to play\n");
-    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, mp->playerId, 0);
+    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_END_OF_MEDIA, mp->playerId, 
+    	                                                     (void*)GetTimeMp3(mp));
   }
 
   mp->mp3thread = -1;
@@ -309,10 +347,10 @@ Mp3thread (SceSize args, void *argp)
 }
 
 static int
-SeekNextFrame (SceUID fd)
+SeekNextFrame (mp3_player_handle* mp, SceUID fd)
 {
   int offset = 0;
-  unsigned char buf[1024];
+  unsigned char* buf = frame_buf;
   unsigned char *pBuffer;
   int i;
   int size = 0;
@@ -321,7 +359,7 @@ SeekNextFrame (SceUID fd)
   MP3_DEBUG_STR("SeekNextFrame>>\n");
 #endif
   offset = sceIoLseek32 (fd, 0, PSP_SEEK_CUR);
-  sceIoRead (fd, buf, sizeof (buf));
+  sceIoRead (fd, buf, sizeof (frame_buf));
   if (!strncmp ((char *) buf, "ID3", 3) || !strncmp ((char *) buf, "ea3", 3))	//skip past id3v2 header, which can cause a false sync to be found
     {
       MP3_DEBUG_STR("Got IDv3 tag\n");
@@ -334,6 +372,7 @@ SeekNextFrame (SceUID fd)
       if (buf[5] & 0x10)	//has footer
 	size += 10;
 
+      mp->id3HeaderSize = size;
       MP3_DEBUG_STR1("IDv3 size:%d\n", size);
     }
 
@@ -341,12 +380,14 @@ SeekNextFrame (SceUID fd)
   while (1)
     {
       offset = sceIoLseek32 (fd, 0, PSP_SEEK_CUR);
-      size = sceIoRead (fd, buf, sizeof (buf));
+      size = sceIoRead (fd, buf, sizeof (frame_buf));
       if (size <= 6)		//at end of file
 	return -1;
       if (!strncmp ((char *) buf, "EA3", 3))	//oma mp3 files have non-safe ints in the EA3 header
 	{
-	  sceIoLseek32 (fd, offset + (buf[4] << 8) + buf[5], PSP_SEEK_SET);
+	  unsigned int ea3_size = ((unsigned int)buf[4] << 8) + (unsigned int)buf[5];
+	  sceIoLseek32 (fd, offset + ea3_size, PSP_SEEK_SET);
+	  mp->ea3HeaderSize = ea3_size;
 	  continue;
 	}
 
@@ -470,6 +511,33 @@ PauseMp3 (mp3_player_handle * mp)
 
 }
 
+long SeekMp3(mp3_player_handle* mp, long ms)
+{
+    printf("SeekMp3 to %dms\n", (int)ms);
+    if (mp->totalTime == 0 || mp->totalTime == (unsigned int)-1) {
+    	return -1;
+    }
+    if (ms < 0) ms = 0;
+    if (ms > mp->totalTime) ms = mp->totalTime;
+    mp->set2time = ms;
+    return ms;
+}
+
+long GetTimeMp3(mp3_player_handle* mp) {
+    int percentage;
+    long value;
+	
+    if (mp->totalTime == 0 || mp->totalTime == (unsigned int)-1) {
+    	return -1;
+    }
+
+    percentage = mp->mp3_data_start * 100 / (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize);
+    value = mp->totalTime * percentage / 100;
+    //MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
+
+    return value;
+}
+	
 void
 FinalizeMp3 ()
 {
