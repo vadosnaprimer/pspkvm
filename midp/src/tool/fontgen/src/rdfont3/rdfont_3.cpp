@@ -50,6 +50,18 @@ char line[23];
 
 void prepline(int w) {
 	strncpy(line, LINE, w); }
+	
+// Draw a 16 x 16 blank character, for the CJK blanks
+// 
+void draw_blank(unsigned int c) {
+	printf("#%s\n", line);
+  printf(": %x\n", c);
+	printf("#%s\n", line);
+	printf("*************** .\n");
+	for(int i=0; i<14; i++) {
+		printf("*             * .\n"); }
+	printf("*************** .\n");
+	printf("#%s\n", line); }
 
 static void intdrawChar(unsigned char c, unsigned char *fontbitmap, unsigned long mapLen,
                      int fontWidth, int fontHeight, unsigned char high_byte,
@@ -178,10 +190,20 @@ int char_out_untransformed(int n, const char* argv[])
 		printf("Range is 0 to 0xffff\n");
 		return -1; }
 	return char_out(ch, -1); }
+	
+// Helper for needs_cjk_transform
+bool is_cjk_punctuation(unsigned int c) {
+	if (c < 0x3000) {
+		return false; }
+	if (c > 0x303f) {
+		return false; }
+	return true; }
 
 // Quick call to isolate the CJK characters
-// (0x4e00 - 0x9fff)
+// (0x4e00 - 0x9fff, punctuation at 0x3000 to 0x3030f)
 bool needs_cjk_transform(unsigned int c) {
+	if (is_cjk_punctuation(c)) {
+		return true; }
 	if (c < 0x4e00) {
 		return false; }
 	if (c > 0x9fff) {
@@ -298,7 +320,8 @@ int utable(int n, const char* argv[])
 		if (have_glyph(i)) {
 			char_out_unicode(i); }
 		else {
-			printf("# WARNING: No glyph for codepoint %04x\n", i); } }
+			printf("# WARNING: No glyph for codepoint %04x\n", i);
+			draw_blank(i); } }
 	return 0;
 }
 
