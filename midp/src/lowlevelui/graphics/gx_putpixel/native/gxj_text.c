@@ -101,10 +101,10 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 		int found_bmap = 0;
     unsigned char const * fontbitmap =
         selectFontBitmap(CJK,pfonts,&found_bmap) + FONT_DATA;
-    if (!found_bmap) {
-    		// Get the default glyph this way
-				CJK = 0; }
-    jchar const c = (CJK & 0xff) -
+    //if (!found_bmap) {
+    //		// Get the default glyph this way
+    //				CJK = 0; }
+    jchar const c = ((!found_bmap?0:CJK) & 0xff) -
         fontbitmap[FONT_CODE_FIRST_LOW-FONT_DATA];
     unsigned long mapLen =
         ((fontbitmap[FONT_CODE_LAST_LOW-FONT_DATA]
@@ -156,12 +156,26 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
 
 #define CHAR_WIDTH(c,i)  char_width(c[i])
 
+static
+#if defined(_MSC_VER)
+__inline
+#else
+inline
+#endif
+int char_width(jchar i);
+
 // Replacement function for macro ... this is getting more complicated
 // Unicode pages 0, 1, and 20 are 8 bits wide, Cyrillic (page 04) is 9 bits,
 // all the rest (Chinese, right now) are 16. But if we don't have
 // the char, we need to draw it with the default glyph, which is 8 bits
 // wide.
-inline int char_width(jchar i) {
+static
+#if defined(_MSC_VER)
+__inline
+#else
+inline
+#endif
+int char_width(jchar i) {
 	if (is_han_char(i)) {
 		// Han character pages
 		return 0x10; }

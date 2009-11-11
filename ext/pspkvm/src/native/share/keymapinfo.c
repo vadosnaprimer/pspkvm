@@ -15,14 +15,19 @@
 // in terms of the J2ME/Javacall standard control
 KNIEXPORT KNI_RETURNTYPE_INT
 KNIDECL(com_pspkvm_keypad_KeyMapInfo_getCurrentKeyMapForNativeControl) {
+       javacall_keymap* c;
+       int i;
 	int pspctrl = (int)KNI_GetParameterAsInt(1);
 	int shift = (int)KNI_GetParameterAsInt(2);
 	if (shift !=0) {
 		shift = 1; }
-	javacall_keymap* c = javacall_keymap_current();
-	int i;
+	c = javacall_keymap_current();
+
+	if (c != NULL) {
+	
 	for(i=0; i <PSP_KEY_NUMBER; i++) {
 		if (c[i].nativeKey == (unsigned int)pspctrl) {
 			if (c[i].shift == shift) {
 				KNI_ReturnInt(c[i].javaKey); } } }
+	}
 	KNI_ReturnInt(JAVACALL_KEY_INVALID); }

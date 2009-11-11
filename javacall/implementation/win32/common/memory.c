@@ -49,7 +49,7 @@ static int max_heap_size = 0;
  *          or <tt>NULL</tt> if not available
  */
 void* javacall_memory_heap_allocate(int size, int* outSize) {
-	int sz=64*1024*1024;
+	int sz=32*1024*1024;
 	int reserved_heap = 4096*1024;
 	char* tmpp=NULL;
 	char* resv=NULL;
