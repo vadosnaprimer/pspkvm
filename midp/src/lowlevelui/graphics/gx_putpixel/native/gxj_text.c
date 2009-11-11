@@ -57,9 +57,19 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts, int* found_bma
     *found_bmap = 0;
     return pfonts[0]; }
 
+// Helper for is_han_char
+int is_cjk_punctuation(unsigned int c) {
+	if (c < 0x3000) {
+		return 0; }
+	if (c > 0x303f) {
+		return 0; }
+	return 1; }
+
 // Quick call to isolate the CJK characters
-// (0x4e00 - 0x9fff)
+// (0x4e00 - 0x9fff, punctuation at 0x3000 to 0x3030f)
 int is_han_char(jchar c) {
+	if (is_cjk_puncutation(c)) {
+		return 1; }
 	if (c < 0x4e00) {
 		return 0; }
 	if (c > 0x9fff) {
