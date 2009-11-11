@@ -68,7 +68,7 @@ int is_cjk_punctuation(unsigned int c) {
 // Quick call to isolate the CJK characters
 // (0x4e00 - 0x9fff, punctuation at 0x3000 to 0x3030f)
 int is_han_char(jchar c) {
-	if (is_cjk_puncutation(c)) {
+	if (is_cjk_punctuation(c)) {
 		return 1; }
 	if (c < 0x4e00) {
 		return 0; }
