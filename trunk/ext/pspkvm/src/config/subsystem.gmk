@@ -33,7 +33,13 @@ SUBSYSTEM_PSPKVM_EXT_JAVA_FILES += \
 # Native
 #
 
-vpath % $(PSPKVM_EXT_DIR)/src/native
+vpath % $(PSPKVM_EXT_DIR)/src/native/share
+
+ifeq ($(TARGET_DEVICE), psp)
+vpath % $(PSPKVM_EXT_DIR)/src/native/psp
+else
+vpath % $(PSPKVM_EXT_DIR)/src/native/stub
+endif
 
 #
 # Native KNI files
@@ -43,9 +49,13 @@ SUBSYSTEM_PSPKVM_EXT_NATIVE_FILES += \
     wifistatus.c \
     power.c \
     vmsettings.c \
-    vmsettings_store.cpp \
     rawstate.c \
     keymapinfo.c
+
+ifeq ($(TARGET_DEVICE), psp)
+SUBSYSTEM_PSPKVM_EXT_NATIVE_FILES += \
+    vmsettings_store.cpp
+endif
 
 # Append PSPKVM EXT source bundle creation to target
 source_bundle:: pspkvm_ext_source_bundle
