@@ -36,6 +36,7 @@ extern "C" {
 #include "SDL/SDL.h"
 #include "SDL/SDL_mixer.h" 
 #include "psp_mmapi.h"
+#include "mp3_ME.h"
 
 extern int max_patch_memory;
 extern char* javacall_UNICODEsToUtf8(const javacall_utf16* str, int strlen);
@@ -104,6 +105,8 @@ static long buffer_mp3(mp3_player_handle* mp, const void* buffer, long length, l
 static void clear_buffer_mp3(mp3_player_handle* mp);
 static javacall_result start_mp3(mp3_player_handle* mp);
 static javacall_result pause_mp3(mp3_player_handle* mp);
+static long setmediatime_mp3(mp3_player_handle* mp, long ms);
+static long getmediatime_mp3(mp3_player_handle* mp);
 
 /** MIDI music finish callback **/
 static void musicFinished() {
@@ -531,6 +534,9 @@ javacall_result javacall_media_resume(javacall_handle handle) {
  * @return          If success return time in ms else return -1
  */
 long javacall_media_get_time(javacall_handle handle) {
+    if (((mp3_player_handle*)handle)->type == MEDIA_TYPE_MP3) {
+    	  return getmediatime_mp3((mp3_player_handle*)handle);
+    }
     return -1;
 }
 
@@ -542,6 +548,10 @@ long javacall_media_get_time(javacall_handle handle) {
  * @return          If success return time in ms else return -1
  */
 long javacall_media_set_time(javacall_handle handle, long ms) {
+    if (((mp3_player_handle*)handle)->type == MEDIA_TYPE_MP3) {
+    	  return setmediatime_mp3((mp3_player_handle*)handle, ms);
+    }
+
     return -1;
 }
  
@@ -1964,6 +1974,7 @@ static mmplayer_handle* create_mp3(javacall_int64 playerId, const javacall_utf16
     handle->type = MEDIA_TYPE_MP3;
     handle->paused = 0;
     handle->mp3thread = -1;
+    handle->set2time = -1;
 
     return (mmplayer_handle*)handle;
 }
@@ -2009,6 +2020,14 @@ static javacall_result pause_mp3(mp3_player_handle* mp) {
 	mp->paused = 1;
 	PauseMp3(mp);
 	return JAVACALL_OK;
+}
+
+static long setmediatime_mp3(mp3_player_handle* mp, long ms) {
+	return SeekMp3(mp, ms);
+}
+
+static long getmediatime_mp3(mp3_player_handle* mp) {
+	return GetTimeMp3(mp);
 }
 
 #ifdef __cplusplus

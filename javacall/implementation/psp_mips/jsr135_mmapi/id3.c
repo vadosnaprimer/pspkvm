@@ -572,6 +572,7 @@ struct ID3Tag ParseID3(char *mp3path)
     ParseID3v1(mp3path, &TmpID3);
     ParseID3v2(mp3path, &TmpID3);
     if (!strlen(TmpID3.ID3Title))
-        strcpy(TmpID3.ID3Title, mp3path);
+        strncpy(TmpID3.ID3Title, mp3path, 100);
+    TmpID3.ID3Title[99] = '\0';
     return TmpID3;
 }
