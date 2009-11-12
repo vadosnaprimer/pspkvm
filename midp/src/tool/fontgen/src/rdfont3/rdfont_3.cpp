@@ -193,6 +193,10 @@ int char_out_untransformed(int n, const char* argv[])
 	
 // Helper for needs_cjk_transform
 bool is_cjk_punctuation(unsigned int c) {
+	if (c > 0xffe5) {
+		return false; }
+	if (c >= 0xff01) {
+		return true; }
 	if (c < 0x3000) {
 		return false; }
 	if (c > 0x303f) {
@@ -212,10 +216,22 @@ bool needs_cjk_transform(unsigned int c) {
 
 extern const unsigned char UNI_CJK[];
 
+bool in_non_16bit_sxn(unsigned short ch) {
+	ch >>= 8;
+	switch(ch) {
+		case 0x00:
+		case 0x01:
+		case 0x04:
+		case 0x20:
+		case 0xe0:
+			return true;
+		default:
+			return false; } }
+
 int char_out_unicode(int ch) {
 	unsigned short c0 = (unsigned short)ch;
 	unsigned short cjk = c0;
-	if (needs_cjk_transform(c0)) {
+	if (!in_non_16bit_sxn(c0)) {
 		cjk = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 			((short*)UNI_CJK)[c0]:
 				((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8); }
@@ -239,7 +255,7 @@ int char_out_unicode(int n, const char* argv[])
 bool have_glyph(int ch) {
 	unsigned short c0 = (unsigned short)ch;
 	unsigned short cjk = c0;
-	if (needs_cjk_transform(c0)) {
+	if (!in_non_16bit_sxn(c0)) {
 		cjk = ((short*)UNI_CJK)[c0] < 256 && ((short*)UNI_CJK)[c0] > 0?
 			((short*)UNI_CJK)[c0]:
 				((((short*)UNI_CJK)[c0] >> 8) & 0xff) | (((short*)UNI_CJK)[c0] << 8);
@@ -284,13 +300,13 @@ int table_range(int n, const char* argv[])
 		printf ("Need table no.\n");
 		return -1; }
 	ch<<=8;
-	if (!needs_cjk_transform(ch)) {
-		printf("Han range only (0x4e-0x9f).\n");
+	if (in_non_16bit_sxn(ch)) {
+		printf ("This dumper is only for 16 bit-wide tables.\n");
 		return false; }
 	int l, h;
 	bool r = table_range(ch, l, h);
 	if (!r) {
-		printf("No glyphs in range 0x%04x-0x%04x.\n", ch, ch+0xff);
+		printf("No glyphs in range.\n", ch, ch+0xff);
 		return 0; }
 	printf("Table defined from 0x%04x-0x%04x.\n", l, h);
 	return 0; }
@@ -305,8 +321,8 @@ int utable(int n, const char* argv[])
 		printf ("Need table no.\n");
 		return -1; }
 	ch<<=8;
-	if (!needs_cjk_transform(ch)) {
-		printf("Han range only (0x4e-0x9f).\n");
+	if (in_non_16bit_sxn(ch)) {
+		printf("Known non-Han range.\n");
 		return -1; }
 	int l, h;
 	bool r = table_range(ch, l, h);
