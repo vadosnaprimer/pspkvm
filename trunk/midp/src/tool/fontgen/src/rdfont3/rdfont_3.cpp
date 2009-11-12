@@ -191,29 +191,6 @@ int char_out_untransformed(int n, const char* argv[])
 		return -1; }
 	return char_out(ch, -1); }
 	
-// Helper for needs_cjk_transform
-bool is_cjk_punctuation(unsigned int c) {
-	if (c > 0xffe5) {
-		return false; }
-	if (c >= 0xff01) {
-		return true; }
-	if (c < 0x3000) {
-		return false; }
-	if (c > 0x303f) {
-		return false; }
-	return true; }
-
-// Quick call to isolate the CJK characters
-// (0x4e00 - 0x9fff, punctuation at 0x3000 to 0x3030f)
-bool needs_cjk_transform(unsigned int c) {
-	if (is_cjk_punctuation(c)) {
-		return true; }
-	if (c < 0x4e00) {
-		return false; }
-	if (c > 0x9fff) {
-		return false; }
-	return true; }
-
 extern const unsigned char UNI_CJK[];
 
 bool in_non_16bit_sxn(unsigned short ch) {
@@ -306,7 +283,7 @@ int table_range(int n, const char* argv[])
 	int l, h;
 	bool r = table_range(ch, l, h);
 	if (!r) {
-		printf("No glyphs in range.\n", ch, ch+0xff);
+		printf("No glyphs in range.\n");
 		return 0; }
 	printf("Table defined from 0x%04x-0x%04x.\n", l, h);
 	return 0; }
