@@ -136,7 +136,7 @@ javacall_result javacall_network_init_start(void) {
 	return JAVACALL_FAIL;
     }
 */
-	if((err = sceNetInit(128*1024, 42, 4*1024, 42, 4*1024))) {
+	if((err = sceNetInit(384*1024, 42, 4*1024, 42, 4*1024))) {
     	printf(": Error, could not sceNetInit the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }
