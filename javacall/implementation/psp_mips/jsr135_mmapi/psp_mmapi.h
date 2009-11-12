@@ -74,6 +74,10 @@ typedef struct _mp3_player_handle {
 	unsigned int ea3HeaderSize;
 	unsigned int totalTime;
 	long set2time;
+	char frame_buffer[1152*60];
+	int frame_buffer_start;
+	int frame_buffer_pos;
+	int frame_buffer_size;
 } mp3_player_handle;
 
 typedef union {

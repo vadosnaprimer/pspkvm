@@ -20,6 +20,8 @@ long GetTimeMp3(mp3_player_handle* mp);
 
 long GetDurationMp3(mp3_player_handle* mp);
 
+void InitializeMp3();
+
 void FinalizeMp3 ();
 
 #ifdef __cplusplus
