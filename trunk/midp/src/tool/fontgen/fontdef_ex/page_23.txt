@@ -1,0 +1,25 @@
+# Font parameters:
+# width height ascent descent leading high_code low_code_first low_code_last
+@ 16 16 16 0 0
+% 23 12 12
+
+#----------------
+: 2312
+#----------------
+                .
+                .
+     ****       .
+   **    **     .
+  *        *    .
+  *        *    .
+ *          *   .
+ *          *   .
+                .
+                .
+                .
+                .
+                .
+                .
+                .
+                .
+#----------------
