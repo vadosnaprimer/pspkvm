@@ -53,7 +53,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	static AMSSystemFolderCustomItem createSystemRoot(AppManagerUI ams) {
 		AMSSystemFolderCustomItem sysroot =
 			new AMSSystemFolderCustomItem("System midlets", null, ams);
-		sysroot.open=true;
+		sysroot.open=false;
 		return sysroot; }
 
 	// Convenience method--called from AMS UI

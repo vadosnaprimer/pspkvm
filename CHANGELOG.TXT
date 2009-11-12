@@ -30,6 +30,7 @@ Additional documentation
 Changes for 0.5.5 Test 3 (relative to Test 2)
 ---------------------------------------------
 
+ * Fixed missing 
  * Made all menus and submenus 'loop' top to bottom/bottom to top when
 scrolling past the end. 
 
