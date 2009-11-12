@@ -50,11 +50,71 @@ static short mp3_mix_buffer[1152 * 2] __attribute__ ((aligned (64)));
 static short mp3_output_buffer[4][1152 * 2] __attribute__ ((aligned (64)));
 static char frame_buf[1024] __attribute__ ((aligned (64)));
 
-static int mp3_output_index = 0;
+static int mp3_output_index = 0, audio_output_index = 0;
 static mp3_player_handle* currentMp3 = NULL;
+static SceUID _mp3_audio_put_sema, _mp3_audio_get_sema;
+static SceUID mp3_audio_thread = -1;
+static int mp3_audio_th_exit = 0;
 
 static int SeekNextFrame (mp3_player_handle* mp, SceUID fd);
 
+static int readfrombuffer(mp3_player_handle* mp, SceUID fd, char* target, int number) {
+	if (mp->frame_buffer_size == 0) {
+		int pos = sceIoLseek32(fd, 0, PSP_SEEK_CUR);
+		int b = sceIoRead(fd, mp->frame_buffer, sizeof(mp->frame_buffer));
+		if (b >= number) {
+			memcpy(target, mp->frame_buffer, number);
+			mp->frame_buffer_size = b;
+			mp->frame_buffer_start = pos;
+			mp->frame_buffer_pos = pos + number;
+			return number;
+		} else {
+			if (b > 0) {
+				memcpy(target, mp->frame_buffer, b);
+			}
+			return b;
+		}
+	} else {
+		if (mp->frame_buffer_pos+ number > mp->frame_buffer_start + mp->frame_buffer_size) {
+			//not in buffer
+			sceIoLseek32(fd, mp->frame_buffer_pos, PSP_SEEK_SET);
+			mp->frame_buffer_size = 0;
+			return readfrombuffer(mp, fd, target, number);
+		} else {
+			//in buffer
+			memcpy(target, mp->frame_buffer+mp->frame_buffer_pos-mp->frame_buffer_start, number);
+			mp->frame_buffer_pos += number;
+			return number;
+		}
+	}
+}
+
+static int seekinbuffer (mp3_player_handle* mp, SceUID fd, int offset, int whence) {
+	int target;
+	if (mp->frame_buffer_size == 0) {
+		return sceIoLseek32(fd, offset, whence);
+	} else {
+		switch (whence) {
+			case PSP_SEEK_SET:
+				target = offset;
+				break;
+			case PSP_SEEK_CUR:
+				target = mp->frame_buffer_pos + offset;
+				break;
+			default:
+				target = mp->mp3_file_size + offset;
+		}
+		if (target >= mp->frame_buffer_start && target <= mp->frame_buffer_start + mp->frame_buffer_size) {
+			//seek in buffer
+			mp->frame_buffer_pos = target;
+			return target;
+		} else {
+			//out of buffer
+			mp->frame_buffer_size = 0;
+			return sceIoLseek32(fd, target, PSP_SEEK_SET);
+		}
+	}
+}
 
 static int
 Init_codec_buffer ()
@@ -83,12 +143,31 @@ Init_codec_buffer ()
   return ret;
 }
 
+int 
+Mp3Audiothread(SceSize args, void *argp)
+{
+    while(!mp3_audio_th_exit) {
+    	 if (mp3_output_index == audio_output_index) {
+    	 	sceKernelWaitSemaCB(_mp3_audio_get_sema, 1, NULL);
+    	 	continue;
+    	 }
+        sceAudioSRCOutputBlocking (PSP_AUDIO_VOLUME_MAX,
+				     mp3_output_buffer[audio_output_index]);
+        audio_output_index = (audio_output_index + 1) % 4;
+        sceKernelSignalSema(_mp3_audio_put_sema, 1);
+    }
+
+    MP3_DEBUG_STR("Mp3Audiothread: exit\n");
+
+    sceKernelExitDeleteThread(1);
+    return 1;
+}
+
 int
 Mp3thread (SceSize args, void *argp)
 {
   SceUID mp3_handle = -1;
   int mp3_samplerate, mp3_sample_per_frame, frame_size;
-  int mp3_output_index = 0;
   int samplesdecoded = 0;
   int last_frame_size = 0;
   char *mp3_data_buffer = NULL;
@@ -143,14 +222,14 @@ Mp3thread (SceSize args, void *argp)
              unsigned int percentage = mp->set2time * 100 / mp->totalTime;
              offset = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) * percentage / 100;
              offset += mp->id3HeaderSize + mp->ea3HeaderSize;
-             sceIoLseek32 (mp3_handle, offset, PSP_SEEK_SET);
+             seekinbuffer(mp, mp3_handle, offset, PSP_SEEK_SET);
              mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
              mp->set2time = -1;
         }
 	  
 	  memset (mp3_mix_buffer, 0, sizeof (mp3_mix_buffer));
 
-	  if (sceIoRead (mp3_handle, mp3_header_buf, 4) != 4)
+	  if (readfrombuffer (mp, mp3_handle, mp3_header_buf, 4) != 4)
 	    {
 	      MP3_DEBUG_STR("Mp3thread:End of media\n");
 	      mp->isPlaying = 0;
@@ -259,10 +338,10 @@ Mp3thread (SceSize args, void *argp)
                   }
 	  }
 
-	  sceIoLseek32 (mp3_handle, mp->mp3_data_start, PSP_SEEK_SET);	//seek back
+	  seekinbuffer (mp, mp3_handle, mp->mp3_data_start, PSP_SEEK_SET);	//seek back
 	  //javacall_printf ("Mp3thread: frame_size=%d, mp3_handle=%x\n",
 	  //	  frame_size, mp3_handle);
-	  if (sceIoRead (mp3_handle, mp3_data_buffer, frame_size) !=
+	  if (readfrombuffer (mp, mp3_handle, mp3_data_buffer, frame_size) !=
 	      frame_size)
 	    {
 	      MP3_DEBUG_STR("Mp3thread:No more frames. End of media.\n");
@@ -288,13 +367,20 @@ Mp3thread (SceSize args, void *argp)
 	      continue;
 	    }
 
+	  while (mp3_output_index == audio_output_index -1 || 
+	  	(mp3_output_index == 3 && audio_output_index == 0)) {
+	  	sceKernelWaitSemaCB(_mp3_audio_put_sema, 1, NULL);
+	  }
+
 	  memcpy (mp3_output_buffer[mp3_output_index], mp3_mix_buffer,
 		  mp3_sample_per_frame * 4);
 
-	  sceAudioSRCOutputBlocking (PSP_AUDIO_VOLUME_MAX,
-				     mp3_output_buffer[mp3_output_index]);
+	  //sceAudioSRCOutputBlocking (PSP_AUDIO_VOLUME_MAX,
+	  //			     mp3_output_buffer[mp3_output_index]);
 
 	  mp3_output_index = (mp3_output_index + 1) % 4;
+
+	  sceKernelSignalSema(_mp3_audio_get_sema, 1);
 	  samplesdecoded = mp3_sample_per_frame;
 	}
 
@@ -365,7 +451,17 @@ SeekNextFrame (mp3_player_handle* mp, SceUID fd)
 #ifdef MP3_DEBUG_VERBOSE
   MP3_DEBUG_STR("SeekNextFrame>>\n");
 #endif
-  offset = sceIoLseek32 (fd, 0, PSP_SEEK_CUR);
+
+  if (mp->frame_buffer_size > 0) {
+  	MP3_DEBUG_STR1("SeekNextFrame:mp->frame_buffer_pos=%d\n", mp->frame_buffer_pos);
+       offset = sceIoLseek32 (fd, mp->frame_buffer_pos, PSP_SEEK_SET);
+  } else {
+  	MP3_DEBUG_STR("SeekNextFrame:No frame buffer\n");
+       offset = sceIoLseek32 (fd, 0, PSP_SEEK_CUR);
+  }
+  
+  mp->frame_buffer_size = 0; //discard frame buffer
+
   sceIoRead (fd, buf, sizeof (frame_buf));
   if (!strncmp ((char *) buf, "ID3", 3) || !strncmp ((char *) buf, "ea3", 3))	//skip past id3v2 header, which can cause a false sync to be found
     {
@@ -423,6 +519,7 @@ void StopMp3(mp3_player_handle* mp)
    MP3_DEBUG_STR1("StopMp3... %x\n", mp);
    if (mp->isOpen > 0)    mp->isOpen = 0;
    if (mp->isPlaying > 0) mp->isPlaying = 0;
+   sceKernelSignalSema(_mp3_audio_get_sema, 1);
    if (mp->mp3thread >= 0) {
    	sceKernelWaitThreadEnd(mp->mp3thread, NULL);
    	mp->mp3thread = -1;
@@ -544,24 +641,45 @@ long GetTimeMp3(mp3_player_handle* mp) {
 
     percentage = mp->mp3_data_start * 100 / (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize);
     value = mp->totalTime * percentage / 100;
-    MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
+    //MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
 
     return value;
 }
 
 long GetDurationMp3(mp3_player_handle* mp) {
-	MP3_DEBUG_STR1("GetDurationMp3 return: %d\n", mp->totalTime);
+	//MP3_DEBUG_STR1("GetDurationMp3 return: %d\n", mp->totalTime);
 	return (long)mp->totalTime;
+}
+
+void InitializeMp3() {
+	if (mp3_audio_thread < 0) {
+         sceMpegInit();
+         _mp3_audio_put_sema = sceKernelCreateSema("Mp3AudioPutMutex", 0, 1, 1, 0);
+         _mp3_audio_get_sema = sceKernelCreateSema("Mp3AudioGetMutex", 0, 1, 1, 0);
+	  mp3_audio_th_exit = 0;
+	  mp3_audio_thread = sceKernelCreateThread ("Mp3Audiothread", Mp3Audiothread, 11, 16 * 1024,
+			   PSP_THREAD_ATTR_USER, NULL);
+	  sceKernelStartThread(mp3_audio_thread, 0, NULL);
+       }
 }
 	
 void
 FinalizeMp3 ()
 {
-  if (currentMp3)
+   if (currentMp3)
     {
-
       StopMp3 (currentMp3);
     }
 
-  sceMpegFinish ();
+   if (mp3_audio_thread >= 0) {   	
+   	mp3_audio_th_exit = 1;
+   	sceKernelSignalSema(_mp3_audio_get_sema, 1);
+   	sceKernelWaitThreadEnd(mp3_audio_thread, NULL);
+   	mp3_audio_thread = -1;
+   }
+
+   sceKernelDeleteSema(_mp3_audio_get_sema);
+   sceKernelDeleteSema(_mp3_audio_put_sema);
+
+   sceMpegFinish ();
 }

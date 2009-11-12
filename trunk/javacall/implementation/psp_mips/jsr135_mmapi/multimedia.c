@@ -203,7 +203,7 @@ javacall_result javacall_media_initialize(void) {
     Mix_ChannelFinished(channelDone);
 
     if (mp3codec_enabled) {
-        sceMpegInit();
+        InitializeMp3();
     }
     
     _javacall_media_initilized = 1;
