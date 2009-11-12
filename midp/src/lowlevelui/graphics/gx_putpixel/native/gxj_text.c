@@ -42,7 +42,6 @@
  * the encoding for this character is stored.
  */
 static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts, int* found_bmap) {
-    int i=1;
     unsigned char c_hi = (c>>8) & 0xff;
     unsigned char c_lo = c & 0xff;
     if (pfonts[c_hi]==0) {
@@ -56,25 +55,6 @@ static pfontbitmap selectFontBitmap(jchar c, pfontbitmap* pfonts, int* found_bma
     /* the first table must cover the range 0-nn */
     *found_bmap = 0;
     return pfonts[0]; }
-
-// Helper for is_han_char
-int is_cjk_punctuation(unsigned int c) {
-	if (c < 0x3000) {
-		return 0; }
-	if (c > 0x303f) {
-		return 0; }
-	return 1; }
-
-// Quick call to isolate the CJK characters
-// (0x4e00 - 0x9fff, punctuation at 0x3000 to 0x3030f)
-int is_han_char(jchar c) {
-	if (is_cjk_punctuation(c)) {
-		return 1; }
-	if (c < 0x4e00) {
-		return 0; }
-	if (c > 0x9fff) {
-		return 0; }
-	return 1; }
 
 /**
  * @file
@@ -96,15 +76,14 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned long pixelIndex;
     unsigned long pixelIndexLineInc;
     unsigned char bitmapByte;
-    unsigned short CJK = c0;
 	  // Flag telling us if we *really* have a glyph for this
 		int found_bmap = 0;
     unsigned char const * fontbitmap =
-        selectFontBitmap(CJK,pfonts,&found_bmap) + FONT_DATA;
-    //if (!found_bmap) {
-    //		// Get the default glyph this way
-    //				CJK = 0; }
-    jchar const c = ((!found_bmap?0:CJK) & 0xff) -
+        selectFontBitmap(c0,pfonts,&found_bmap) + FONT_DATA;
+    if (!found_bmap) {
+    		// Get the default glyph this way
+				c0 = 0; }
+    jchar const c = (c0 & 0xff) -
         fontbitmap[FONT_CODE_FIRST_LOW-FONT_DATA];
     unsigned long mapLen =
         ((fontbitmap[FONT_CODE_LAST_LOW-FONT_DATA]
@@ -164,11 +143,8 @@ inline
 #endif
 int char_width(jchar i);
 
-// Replacement function for macro ... this is getting more complicated
-// Unicode pages 0, 1, and 20 are 8 bits wide, Cyrillic (page 04) is 9 bits,
-// all the rest (Chinese, right now) are 16. But if we don't have
-// the char, we need to draw it with the default glyph, which is 8 bits
-// wide.
+// Replacement function for macro ... now just gets the char
+// from the tables directly.
 static
 #if defined(_MSC_VER)
 __inline
@@ -176,15 +152,14 @@ __inline
 inline
 #endif
 int char_width(jchar i) {
-	if (is_han_char(i)) {
-		// Han character pages
-		return 0x10; }
-	if (i >= 0x0400) {
-		if (i < 0x0460) {
-			// Cyrillic pages
-			return 0x09; } }
-	// Pages 0, 1, x20, and default glyph
-	return 0x08; }
+    unsigned char c_hi = (i>>8) & 0xff;
+    unsigned char c_lo = i & 0xff;
+    if (FontBitmaps[c_hi]!=0) {
+	    if ( c_lo >= FontBitmaps[c_hi][FONT_CODE_FIRST_LOW]
+	      && c_lo <= FontBitmaps[c_hi][FONT_CODE_LAST_LOW] ) {
+	      	return FontBitmaps[c_hi][FONT_WIDTH]; } }
+    // Returning the default glyph
+    return 0x08; }
 
 /*
  * Draws the first n characters specified using the current font,
