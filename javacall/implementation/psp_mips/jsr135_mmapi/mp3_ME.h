@@ -18,6 +18,8 @@ long SeekMp3(mp3_player_handle* mp, long ms);
 
 long GetTimeMp3(mp3_player_handle* mp);
 
+long GetDurationMp3(mp3_player_handle* mp);
+
 void FinalizeMp3 ();
 
 #ifdef __cplusplus

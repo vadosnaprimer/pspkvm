@@ -90,7 +90,7 @@ Mp3thread (SceSize args, void *argp)
   int mp3_samplerate, mp3_sample_per_frame, frame_size;
   int mp3_output_index = 0;
   int samplesdecoded = 0;
-  int last_frame_size = 0, last_mp3_sample_per_frame = 0;
+  int last_frame_size = 0;
   char *mp3_data_buffer = NULL;
   int codec_init;
   int audio_channel_set = -1;
@@ -139,6 +139,7 @@ Mp3thread (SceSize args, void *argp)
 
 	  if (mp->set2time >= 0) {
              int offset;
+             MP3_DEBUG_STR2("set2time:%d / %d\n", mp->set2time, mp->totalTime);
              unsigned int percentage = mp->set2time * 100 / mp->totalTime;
              offset = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) * percentage / 100;
              offset += mp->id3HeaderSize + mp->ea3HeaderSize;
@@ -189,33 +190,33 @@ Mp3thread (SceSize args, void *argp)
 	      mp3_sample_per_frame = 1152;
 	      bitrate_value = bitrates[bitrate];
 	      frame_size =
-		144000 * bitrates[bitrate] / mp3_samplerate + padding;
+		144000 * bitrate_value / mp3_samplerate + padding;
 	    }
 	  else
 	    {
 	      mp3_sample_per_frame = 576;
-	      bitrate_value = bitrates_v2[bitrate] * 1000;
+	      bitrate_value = bitrates_v2[bitrate];
 	      frame_size =
 	         72000 * bitrate_value / mp3_samplerate + padding;
 	    }
 
-	  if (audio_channel_set < 0 || mp3_sample_per_frame != last_mp3_sample_per_frame)
+	  if (audio_channel_set < 0)
 	    {
-	      if (audio_channel_set >= 0) {
-	      	  MP3_DEBUG_STR("sceAudioSRCChRelease\n");
-		  sceAudioSRCChRelease ();
-		  audio_channel_set = 0;
-             }
-	      
-	      if ((audio_channel_set= sceAudioSRCChReserve (mp3_sample_per_frame, mp3_samplerate, 2)) >= 0) {
-	      	  MP3_DEBUG_STR4("sceAudioSRCChReserve OK: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d, numChannel=%d\n",
-	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate, numChannel);
-	      } else {
-	         MP3_DEBUG_STR4("sceAudioSRCChReserve failed: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d, numChannel=%d\n",
-	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate, numChannel);
+	      int retry = 3;
+	      while (retry > 0 && (audio_channel_set= sceAudioSRCChReserve (mp3_sample_per_frame, mp3_samplerate, 2)) < 0) {
+	      	   retry --;
+	      	   sceKernelDelayThread(50000);
+	      	   continue;
 	      }
 
-	      last_mp3_sample_per_frame = mp3_sample_per_frame;
+	      if (audio_channel_set >= 0) {
+      	      	  MP3_DEBUG_STR4("sceAudioSRCChReserve OK: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d, numChannel=%d\n",
+      	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate, numChannel);
+      	      } else {
+      	         MP3_DEBUG_STR4("sceAudioSRCChReserve failed: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d, numChannel=%d\n",
+      	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate, numChannel);
+      	      }
+
 	    }
 
 	  if (frame_size != last_frame_size) {
@@ -228,6 +229,7 @@ Mp3thread (SceSize args, void *argp)
        	  if (NULL == (mp3_data_buffer = (char *) memalign (64, frame_size)))
        	    {
        	      mp->isPlaying = 0;
+       	      MP3_DEBUG_STR("Mp3thread: Memory not enough\n");
        	      last_frame_size = 0;
        	      continue;
        	    }
@@ -244,13 +246,16 @@ Mp3thread (SceSize args, void *argp)
                   	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated: %d\n", total_time);
                   	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate_value,
 	   mp3_samplerate, version);
-                  	} else if (mp->totalTime != (unsigned int)-1 && ((total_time < mp->totalTime*99/100) || (total_time > mp->totalTime*101/100))) {
+                  	}
+                  	/*
+                  	else if (mp->totalTime != (unsigned int)-1 && ((total_time < mp->totalTime*99/100) || (total_time > mp->totalTime*101/100))) {
                   	    mp->totalTime = (unsigned int)-1;
                   	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)-1);
                   	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated to TIME_UNKNOWN (%d)\n", total_time);
                   	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate_value,
 	   mp3_samplerate, version);
-                  	}                  	
+                  	}  
+                  	*/
                   }
 	  }
 
@@ -533,11 +538,20 @@ long GetTimeMp3(mp3_player_handle* mp) {
     	return -1;
     }
 
+    if (mp->set2time >= 0) {
+    	return mp->set2time;
+    }
+
     percentage = mp->mp3_data_start * 100 / (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize);
     value = mp->totalTime * percentage / 100;
-    //MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
+    MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
 
     return value;
+}
+
+long GetDurationMp3(mp3_player_handle* mp) {
+	MP3_DEBUG_STR1("GetDurationMp3 return: %d\n", mp->totalTime);
+	return (long)mp->totalTime;
 }
 	
 void
