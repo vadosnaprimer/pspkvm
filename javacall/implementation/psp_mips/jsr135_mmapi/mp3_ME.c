@@ -160,6 +160,7 @@ Mp3thread (SceSize args, void *argp)
 	  mp3_header = (mp3_header << 8) | mp3_header_buf[2];
 	  mp3_header = (mp3_header << 8) | mp3_header_buf[3];
 
+	  int bitrate_value;
 	  int bitrate = (mp3_header & 0xf000) >> 12;
 	  int padding = (mp3_header & 0x200) >> 9;
 	  int version = (mp3_header & 0x180000) >> 19;
@@ -186,14 +187,16 @@ Mp3thread (SceSize args, void *argp)
 	  if ( version == 3) //mpeg 1
 	    {
 	      mp3_sample_per_frame = 1152;
+	      bitrate_value = bitrates[bitrate];
 	      frame_size =
 		144000 * bitrates[bitrate] / mp3_samplerate + padding;
 	    }
 	  else
 	    {
 	      mp3_sample_per_frame = 576;
+	      bitrate_value = bitrates_v2[bitrate] * 1000;
 	      frame_size =
-	         72000 * bitrates_v2[bitrate] / mp3_samplerate + padding;
+	         72000 * bitrate_value / mp3_samplerate + padding;
 	    }
 
 	  if (audio_channel_set < 0 || mp3_sample_per_frame != last_mp3_sample_per_frame)
@@ -231,22 +234,21 @@ Mp3thread (SceSize args, void *argp)
 	  	      
                   last_frame_size = frame_size;
 
-                  total_time = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) / frame_size; //Total frames
-                  total_time = total_time * mp3_sample_per_frame; //Total samples
-                  total_time = total_time * 1000 / mp3_samplerate;
+                  total_time = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize); //Data size
+                  total_time = total_time/(bitrate_value>>3);
 
                   if (total_time != mp->totalTime) {
                   	if (mp->totalTime == 0) {
                   	    mp->totalTime = total_time;
                   	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)total_time);
                   	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated: %d\n", total_time);
-                  	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate,
+                  	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate_value,
 	   mp3_samplerate, version);
                   	} else if (mp->totalTime != (unsigned int)-1 && ((total_time < mp->totalTime*99/100) || (total_time > mp->totalTime*101/100))) {
                   	    mp->totalTime = (unsigned int)-1;
                   	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)-1);
                   	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated to TIME_UNKNOWN (%d)\n", total_time);
-                  	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate,
+                  	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate_value,
 	   mp3_samplerate, version);
                   	}                  	
                   }
