@@ -107,6 +107,7 @@ static javacall_result start_mp3(mp3_player_handle* mp);
 static javacall_result pause_mp3(mp3_player_handle* mp);
 static long setmediatime_mp3(mp3_player_handle* mp, long ms);
 static long getmediatime_mp3(mp3_player_handle* mp);
+static long getduration_mp3(mp3_player_handle* mp);
 
 /** MIDI music finish callback **/
 static void musicFinished() {
@@ -562,6 +563,9 @@ long javacall_media_set_time(javacall_handle handle, long ms) {
  * @return          If success return time in ms else return -1
  */
 long javacall_media_get_duration(javacall_handle handle) {
+    if (((mp3_player_handle*)handle)->type == MEDIA_TYPE_MP3) {
+    	  return getduration_mp3((mp3_player_handle*)handle);
+    }
     return -1;
 }
 
@@ -1939,10 +1943,12 @@ static mmplayer_handle* create_mp3(javacall_int64 playerId, const javacall_utf16
 
     if (uri == NULL || uriLength <= 0) {
     	//Read from stream, need buffer
+    	printf("create_mp3: read from stream\n");
     	needBuffer = 1;
     } else {
        pszUri = javacall_UNICODEsToUtf8(uri, uriLength);
        if (!strncmp(pszUri, "http://", 7) && strlen(pszUri) < 256) {
+           printf("create_mp3: from url %s\n", pszUri);
            needBuffer = 1;
        } else if (strlen(pszUri) >= 256 || strncmp(pszUri, "file://", 7)) {
            printf("Not supported URI:%s\n", pszUri);
@@ -2024,6 +2030,10 @@ static javacall_result pause_mp3(mp3_player_handle* mp) {
 
 static long setmediatime_mp3(mp3_player_handle* mp, long ms) {
 	return SeekMp3(mp, ms);
+}
+
+static long getduration_mp3(mp3_player_handle* mp) {
+	return GetDurationMp3(mp);
 }
 
 static long getmediatime_mp3(mp3_player_handle* mp) {
