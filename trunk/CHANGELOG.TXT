@@ -31,10 +31,11 @@ Changes for 0.5.5 Test 3 (relative to Test 2)
 ---------------------------------------------
 
  * MP3 support adds seeking support, time display, wider 
-compatibility with varied stream formats, 
-support for ID3 V2 tags.
+compatibility with varied stream formats, support for ID3 V2 tags.
  * Made forms (including AMS) 'loop' top to bottom/bottom to top when
-scrolling past the end.
+scrolling past the end; merged MR4 code.
+ * Made lists (including wifi selector) 'loop' top to bottom/bottom to
+top when scrolling past the end; merged MR4 code.
  * Redrew Unicode page 03 (Greek) for the built-in font entirely by
 hand--glyphs now match general pitch and appearance of Latin, Cyrillic.
 Added accented vowels, terminal sigma; completes modern Greek support

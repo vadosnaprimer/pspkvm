@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# Script to write the 'mother table' in gxj_font_bitmap.c --
+# the table of tables. See build_tables.sh, which calls this
+# script after building each of the child tables.
+
 use strict;
 
 # Collect the table names
