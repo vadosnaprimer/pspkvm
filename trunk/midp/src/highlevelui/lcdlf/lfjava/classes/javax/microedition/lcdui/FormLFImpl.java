@@ -2485,7 +2485,7 @@ class FormLFImpl extends ScreenLFImpl implements FormLF {
     boolean firstShown = true;
 
     /**
-     * flag indicates if the focused item is required to be bisible
+     * flag indicates if the focused item is required to be visible
      * in the current viewport 
      */
     boolean keepFocusOnTheScreen = false;

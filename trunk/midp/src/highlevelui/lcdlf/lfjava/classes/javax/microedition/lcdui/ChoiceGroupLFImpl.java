@@ -1,7 +1,7 @@
 /*
  *   
  *
- * Copyright  1990-2007 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright  1990-2009 Sun Microsystems, Inc. All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
  * 
  * This program is free software; you can redistribute it and/or
@@ -395,6 +395,15 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
         if (cg.numOfEls > 0) {
             int newHeight = visRect[HEIGHT];
             int newHilightedIndex = hilightedIndex;
+            if (isInternalCycle) {
+                if (hilightedIndex == (cg.numOfEls-1) && Canvas.DOWN == dir) {
+                    newHilightedIndex = 0;
+                    lScrollToItem(visRect, newHilightedIndex); 
+                } else if (newHilightedIndex == 0 && Canvas.UP == dir) {
+                    newHilightedIndex = cg.numOfEls-1;
+                    lScrollToItem(visRect, newHilightedIndex); 
+                } 
+            }
             int newY = contentY;
             boolean resetVisRect = false;
 
@@ -497,26 +506,33 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
      * @return
      */
     boolean lScrollToItem(int[] viewport, int[] visRect) {
+        return lScrollToItem(visRect, hilightedIndex ); 
+    }
+
+    /**
+     *  Set visRect as need to pHilightedIndex
+     * @param pHighlightedIndex the index of the highlighted element
+     * @param visRect the in/out rectangle for the internal traversal location
+     * @return true if 
+     */
+    boolean lScrollToItem(int[] visRect, int pHilightedIndex ) {
         int contentY = contentBounds[Y];
 
         if (cg.numOfEls > 0) {
             int newY = contentY + ChoiceGroupSkin.PAD_H;
-
             if (traversedIn) {
-                for (int i = 0; i < hilightedIndex; i++) {
+                for (int i = 0; i < pHilightedIndex; i++) {
                     newY += elHeights[i];
                 }
              
-                if (newY + elHeights[hilightedIndex] > visRect[Y] + visRect[HEIGHT] || newY < visRect[Y]) {
+                if (newY + elHeights[pHilightedIndex] > visRect[Y] + visRect[HEIGHT] || newY < visRect[Y]) {
                     visRect[Y] = bounds[Y] + newY;
-                    visRect[HEIGHT] = elHeights[hilightedIndex];
+                    visRect[HEIGHT] = elHeights[pHilightedIndex];
                     return true;
                 }
-
             }
-
         }
-        return false;
+        return false; 
     }
 
     /**
@@ -632,9 +648,9 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
                 return;
             }
 
-            switch (cg.choiceType) {            
+            switch (cg.choiceType) {
                 case Choice.EXCLUSIVE:
-                    if (hilightedIndex == selectedIndex) {
+                    if (hilightedIndex == selectedIndex || hilightedIndex < 0) {
                         return;
                     }
                     setSelectedIndex(hilightedIndex, true);
@@ -644,6 +660,9 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
                     break;
 
                 case Choice.MULTIPLE:
+                    if (hilightedIndex < 0) {
+                        return;
+                    }
                     setSelectedIndex(hilightedIndex,
                         !cg.cgElements[hilightedIndex].selected);
                     if (cg.owner instanceof Form) {
@@ -819,20 +838,27 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
                                            i == selectedIndex);
             
             if (choiceImg != null) {
-                g.drawImage(choiceImg, 0, 0,
+                if (ScreenSkin.RL_DIRECTION) {
+                    g.drawImage(choiceImg, bounds[WIDTH]
+                            - 2 * ChoiceGroupSkin.PAD_H - choiceImg.getWidth(),
+                            0, Graphics.LEFT | Graphics.TOP);
+                    offSetX = ChoiceGroupSkin.PAD_H;
+                } else {
+                    g.drawImage(choiceImg, 0, 0,
                             Graphics.LEFT | Graphics.TOP);
-                offSetX = ChoiceGroupSkin.PAD_H + choiceImg.getWidth();
+                    offSetX = ChoiceGroupSkin.PAD_H + choiceImg.getWidth();
+                }
             } else {
                 g.setColor(ChoiceGroupSkin.COLOR_FG);
                 switch (cType) {
                     case Choice.MULTIPLE:
                         offSetX = ChoiceGroupSkin.PAD_H +
                             ChoiceGroupSkin.WIDTH_IMAGE;
-                        g.drawRect(1, 1, 
+                        g.drawRect(1, 1,
                                    ChoiceGroupSkin.WIDTH_IMAGE - 3,
                                    ChoiceGroupSkin.HEIGHT_IMAGE - 3);
                         if (cg.cgElements[i].selected) {
-                            g.fillRect(3, 3, 
+                            g.fillRect(3, 3,
                                 ChoiceGroupSkin.WIDTH_IMAGE - 6,
                                 ChoiceGroupSkin.HEIGHT_IMAGE - 6);
                         }
@@ -840,61 +866,69 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
                     case Choice.EXCLUSIVE:
                         offSetX = ChoiceGroupSkin.PAD_H +
                             ChoiceGroupSkin.WIDTH_IMAGE;
-                        g.drawArc(1, 1, 
+                        g.drawArc(1, 1,
                             ChoiceGroupSkin.WIDTH_IMAGE - 2,
                             ChoiceGroupSkin.HEIGHT_IMAGE - 2, 0, 360);
                         if (i == selectedIndex) {
-                            g.fillArc(3, 3, 
+                            g.fillArc(3, 3,
                                 ChoiceGroupSkin.WIDTH_IMAGE - 5,
                                 ChoiceGroupSkin.HEIGHT_IMAGE - 5, 0, 360);
                         }
                         break;
                 }
             }
-            g.translate(offSetX, 0);
+                g.translate(offSetX, 0);
 
             hilighted = (i == hilightedIndex && hasFocus);
 
             if (hilighted) {
                 g.setColor(ScreenSkin.COLOR_BG_HL);
-                g.fillRect(-ChoiceGroupSkin.PAD_H, 0, 
-                           ChoiceGroupSkin.PAD_H + contentW + 
-                           ChoiceGroupSkin.PAD_H, 
+                g.fillRect(-ChoiceGroupSkin.PAD_H, 0,
+                           ChoiceGroupSkin.PAD_H + contentW +
+                           ChoiceGroupSkin.PAD_H,
                            elHeights[i]);
             }
 
-            if (cg.cgElements[i].imageEl == null) {
-                textOffset = 0;
-            } else {
+            textOffset = 0;
+            if (cg.cgElements[i].imageEl != null) {
+
+
                 iX = g.getClipX();
                 iY = g.getClipY();
                 iW = g.getClipWidth();
                 iH = g.getClipHeight();
 
-                g.clipRect(0, 0,
-                           ChoiceGroupSkin.WIDTH_IMAGE, 
+                if (ScreenSkin.RL_DIRECTION) {
+                    if (choiceImg != null) {
+                        textOffset = w - ChoiceGroupSkin.WIDTH_IMAGE - choiceImg.getWidth() - 2 * ChoiceGroupSkin.PAD_H;
+                    } else {
+                        textOffset = w - ChoiceGroupSkin.WIDTH_IMAGE - ChoiceGroupSkin.PAD_H;                        
+                    }
+                }
+                g.clipRect(textOffset, 0,
+                           ChoiceGroupSkin.WIDTH_IMAGE,
                            ChoiceGroupSkin.HEIGHT_IMAGE);
-                g.drawImage(cg.cgElements[i].imageEl, 
-                            0, 0, 
+                g.drawImage(cg.cgElements[i].imageEl,
+                            textOffset , 0,
                             Graphics.LEFT | Graphics.TOP);
                 g.setClip(iX, iY, iW, iH);
                 textOffset = ChoiceGroupSkin.WIDTH_IMAGE +
-                    ChoiceGroupSkin.PAD_H;
+                        ChoiceGroupSkin.PAD_H;
             }
-           
+
             g.translate(0, -1);
-            Text.paint(g, cg.cgElements[i].stringEl, 
+            Text.paint(g, cg.cgElements[i].stringEl,
                        cg.cgElements[i].getFont(),
-                       ChoiceGroupSkin.COLOR_FG, 
+                       ChoiceGroupSkin.COLOR_FG,
                        ScreenSkin.COLOR_FG_HL,
-                       contentW, elHeights[i], textOffset, 
+                       contentW, elHeights[i], textOffset,
                        (hilighted) ? mode | Text.INVERT : mode, null);
             g.translate(-offSetX, elHeights[i] + 1);
             translatedY += elHeights[i];
 
         } // end for
 
-        g.translate(0, -translatedY); 
+        g.translate(0, -translatedY);
     }
 
     /**
@@ -1072,5 +1106,5 @@ class ChoiceGroupLFImpl extends ItemLFImpl implements ChoiceGroupLF {
      */
     boolean traversedIn;
 
-    boolean hasFocusWhenPressed; // = false
+    boolean hasFocusWhenPressed; // = false 
 }
