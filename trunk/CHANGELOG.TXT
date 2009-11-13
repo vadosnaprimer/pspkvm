@@ -30,9 +30,22 @@ Additional documentation
 Changes for 0.5.5 Test 3 (relative to Test 2)
 ---------------------------------------------
 
- * Fixed missing 
+ * MP3 support adds seeking support, time display, wider 
+compatibility with varied stream formats, 
+support for ID3 V2 tags.
+ * Added accented glyphs and terminal sigma to page 0x03 of built-in
+font--completes support for Greek, together with page added
+from legacy CJK-ordered tables (see notes below). Note that the
+built-in Greek support, while now useable, is incredibly ugly,
+as of this release--persons needing Greek language rendering for
+general use and in dense pages (such as in web browsing) are advised
+generally to use the FreeType system, not the built-in font.
+ * Added Unicode pages 03, 21-26, 30-33, f9-fa, fe-ff to built-in
+font from old CJK-ordered tables--lost in previous builds due to
+various changes.
+ * Made system folder closed at startup.
  * Made all menus and submenus 'loop' top to bottom/bottom to top when
-scrolling past the end. 
+scrolling past the end.
 
 ---------------------------------------------
 Changes for 0.5.5 Test 2 (relative to Test 1)
