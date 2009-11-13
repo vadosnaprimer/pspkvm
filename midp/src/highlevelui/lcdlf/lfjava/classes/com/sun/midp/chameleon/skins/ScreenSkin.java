@@ -202,6 +202,9 @@ public class ScreenSkin {
      * should be used.
      */
     public static Image[] IMAGE_HS_BG_WO_TITLE;
+    
+    // Added from MR4 for building purposes for now
+    public final static boolean RL_DIRECTION = false;
 
     // private constructor
     private ScreenSkin() {
