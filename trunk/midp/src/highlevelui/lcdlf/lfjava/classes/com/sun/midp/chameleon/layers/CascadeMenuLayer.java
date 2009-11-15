@@ -184,25 +184,13 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
         return consume;  
     }
    
-		// Helper for keyInput--fixes scrollIndex against the new selI
-		void boundScrollIndex(int selI) {
-			if (selI < scrollIndex && scrollIndex > 0) {
-				scrollIndex--;
-			}
-			if (selI >= scrollIndex + MenuSkin.MAX_ITEMS &&
-					scrollIndex < (menuCmds.length - MenuSkin.MAX_ITEMS)) {
-				scrollIndex++;
-			}
-		}
-
     public boolean keyInput(int type, int keyCode) {
         // The system menu will absorb all key presses except
         // for the soft menu keys - that is, it will always
         // return 'true' indicating it has handled the key
         // event except for the soft button keys for which it
         // returns 'false'
-        
-        if (keyCode == EventConstants.SOFT_BUTTON1 || 
+    	if (keyCode == EventConstants.SOFT_BUTTON1 || 
             keyCode == EventConstants.SOFT_BUTTON2) {
             return false;
         }
@@ -212,61 +200,37 @@ public class CascadeMenuLayer extends ScrollablePopupLayer {
         }
         
         if (keyCode == Constants.KEYCODE_UP || keyCode == Canvas.KEY_NUM2) {
-        	selI--;
-        	if (selI<0) {
-						selI = menuCmds.length-1; }
-          boundScrollIndex(selI);
-          updateScrollIndicator();
-          requestRepaint();
-
+            if (selI > 0) {
+                selI--;
+                if (selI < scrollIndex && scrollIndex > 0) {
+                    scrollIndex--;
+                }
+            } else {
+                selI = menuCmds.length - 1; 
+                scrollIndex = menuCmds.length - MenuSkin.MAX_ITEMS;
+                scrollIndex = (scrollIndex > 0) ? scrollIndex : 0;
+            }
+            updateScrollIndicator();
+            requestRepaint();
         } else if (keyCode == Constants.KEYCODE_DOWN || keyCode == Canvas.KEY_NUM8) {
-        	selI++;
-        	if(selI>=menuCmds.length) {
-						selI=0; }
-          boundScrollIndex(selI);
-          updateScrollIndicator();
-          requestRepaint();
-
+            if (selI < (menuCmds.length - 1)) {
+                selI++;
+                if (selI >= MenuSkin.MAX_ITEMS &&
+                    scrollIndex < (menuCmds.length - MenuSkin.MAX_ITEMS))
+                {
+                    scrollIndex++;
+                }
+                
+            } else {
+                selI = 0;
+                scrollIndex = 0;
+            }
+            updateScrollIndicator();
+            requestRepaint();
         } else if (keyCode == Constants.KEYCODE_RIGHT || keyCode == Canvas.KEY_NUM6) {
             menuLayer.dismissCascadeMenu();
         } else if (keyCode == Constants.KEYCODE_SELECT) {
             menuLayer.subCommandSelected(menuCmds[selI]);
-        } else if (menuCmds.length < 10) {
-            /*
-            int max = 0;
-            switch (keyCode) {
-                case Canvas.KEY_NUM1:
-                    max = 1;
-                    break;
-                case Canvas.KEY_NUM2:
-                    max = 2;
-                    break;
-                case Canvas.KEY_NUM3:
-                    max = 3;
-                    break;
-                case Canvas.KEY_NUM4:
-                    max = 4;
-                    break;
-                case Canvas.KEY_NUM5:
-                    max = 5;
-                    break;
-                case Canvas.KEY_NUM6:
-                    max = 6;
-                    break;
-                case Canvas.KEY_NUM7:
-                    max = 7;
-                    break;
-                case Canvas.KEY_NUM8:
-                    max = 8;
-                    break;
-                case Canvas.KEY_NUM9:
-                    max = 9;
-                    break;
-            }
-            if (max > 0 && menuCmds.length >= max) {
-                menuLayer.subCommandSelected(menuCmds[max - 1]);
-            }
-            */
         }
         return true;
     }
