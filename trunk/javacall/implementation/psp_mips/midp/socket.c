@@ -427,11 +427,7 @@ javacall_result javacall_socket_close_start(void *handle,void **pContext) {
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("javacall_socket_close return %d\n", status);
 #endif
-    if (status == 0) {
-        return JAVACALL_OK;
-    } 
-
-    return JAVACALL_FAIL;
+    return JAVACALL_OK; //always return OK
 }
     
 /**
