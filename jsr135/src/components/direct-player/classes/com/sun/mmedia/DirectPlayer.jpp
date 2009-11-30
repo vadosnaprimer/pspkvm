@@ -560,7 +560,7 @@ public class DirectPlayer extends BasicPlayer
         if( !hasDataSource && !hasToneSequenceSet ) return 0; 
         
         int ret = nGetDuration(hNative);
-        if (ret != TIME_UNKNOWN) {
+        if ((long)ret != TIME_UNKNOWN) {
             return (ret * 1000);    
         }
         return ret;

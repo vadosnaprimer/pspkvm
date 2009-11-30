@@ -53,6 +53,11 @@ typedef struct _wav_player_handle {
 	struct _wav_player_handle* next;
 } wav_player_handle;
 
+typedef struct _VBR {
+    int total_time;
+    char toc[100];
+}VBR;
+
 struct _mp3_player_handle;
 typedef struct _mp3_player_handle {
 	int type;
@@ -78,6 +83,7 @@ typedef struct _mp3_player_handle {
 	int frame_buffer_start;
 	int frame_buffer_pos;
 	int frame_buffer_size;
+	VBR* vbr;
 } mp3_player_handle;
 
 typedef union {

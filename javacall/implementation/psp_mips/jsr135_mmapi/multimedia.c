@@ -354,6 +354,15 @@ javacall_result javacall_media_acquire_device(javacall_handle handle) {
         return JAVACALL_OK;
     }
     */
+    if ( !handle) {
+        return JAVACALL_FAIL;
+    }
+
+    mmplayer_handle* mp = handle;
+    if (mp->type == MEDIA_TYPE_MP3) {
+    	return GetInfoMp3((midi_player_handle*)mp)?JAVACALL_FAIL:JAVACALL_OK;
+    } 
+    
     return JAVACALL_OK;
 }
 
@@ -1644,12 +1653,18 @@ static javacall_result start_midi(midi_player_handle* mp) {
     Mix_Music * music;
     if (!mp->music && !mp->needBuffer) {
         music = Mix_LoadMUS(mp->filename);
+        mp->music = music;
     } else { 
         music = mp->music;
     }
     
     if (music) {
-    	Mix_PlayMusic(music, 1);
+    	if (mp->paused == 1) {
+    	    Mix_ResumeMusic();
+    	    mp->paused = 0;
+    	} else {
+    	    Mix_PlayMusic(music, 1);
+    	}
     	current_playing = mp->playerId;
     	return JAVACALL_OK;
     } else {
@@ -1981,6 +1996,7 @@ static mmplayer_handle* create_mp3(javacall_int64 playerId, const javacall_utf16
     handle->paused = 0;
     handle->mp3thread = -1;
     handle->set2time = -1;
+    handle->totalTime = -1;
 
     return (mmplayer_handle*)handle;
 }
