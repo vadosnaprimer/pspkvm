@@ -116,6 +116,139 @@ static int seekinbuffer (mp3_player_handle* mp, SceUID fd, int offset, int whenc
 	}
 }
 
+static SceUID processMp3Header(mp3_player_handle* mp) {
+  int fileok = 0;
+  SceUID mp3_handle = sceIoOpen (&(mp->filename[0]), PSP_O_RDONLY, 0777);
+  
+  if (!mp3_handle)
+    {
+      MP3_DEBUG_STR1("%s open failed\n", &(mp->filename[0]));
+      mp->isOpen = -1;
+      mp->isPlaying = 0;
+    }
+  else
+    {    
+      MP3_DEBUG_STR1("%s open ok\n", &(mp->filename[0]));
+      mp->mp3_file_size = sceIoLseek32(mp3_handle, 0, PSP_SEEK_END);
+      sceIoLseek32(mp3_handle, 0, PSP_SEEK_SET);
+      MP3_DEBUG_STR1("file size=%d\n", mp->mp3_file_size);
+      fileok = 1;
+    }
+
+  if (fileok)
+    {
+      mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
+      if (mp->mp3_data_start < 0)
+	{
+	  MP3_DEBUG_STR("Mp3_load:SeekNextFrame return fail\n");
+	  mp->isOpen = -1;
+	  mp->isPlaying = 0;
+	}
+    }
+
+  return mp3_handle;
+}
+
+static int processMp3FrameHeader(char* mp3_header_buf, int* mp3_samplerate, int* mp3_sample_per_frame, int* frame_size, int* mp3_numChannel, int* mp3_version, int* mp3_bitrate_value) {
+	  int samplerate;
+	  int mp3_header = mp3_header_buf[0];
+	  mp3_header = mp3_header & 0xff;
+	  mp3_header = (mp3_header << 8) | (((int)mp3_header_buf[1]) & 0xff);
+	  mp3_header = (mp3_header << 8) | (((int)mp3_header_buf[2]) & 0xff);
+	  mp3_header = (mp3_header << 8) | (((int)mp3_header_buf[3]) & 0xff);
+	  
+	  int bitrate_value;
+	  int bitrate = (mp3_header & 0xf000) >> 12;
+	  int padding = (mp3_header & 0x200) >> 9;
+	  int version = (mp3_header & 0x180000) >> 19;
+	  int numChannel = ((mp3_header & 0xC0) >> 6)==3?1:2;
+	  samplerate = samplerates[version][(mp3_header & 0xC00) >> 10];
+
+#ifdef MP3_DEBUG_VERBOSE
+	  MP3_DEBUG_STR4("numChannel: %d, bitrate:%d, samplerate:%d, version:%d\n", numChannel, bitrate,
+	   samplerate, version);
+#endif
+
+	  if ((bitrate > 14) || (version == 1) || (samplerate <= 0) || (bitrate <= 0))	//invalid frame, look for the next one
+	    {
+	      return -1;
+	    }
+
+	  if ( version == 3) //mpeg 1
+	    {
+	      *mp3_sample_per_frame = 1152;
+	      bitrate_value = bitrates[bitrate];
+	      *frame_size =
+		144000 * bitrate_value / samplerate + padding;
+	    }
+	  else
+	    {
+	      *mp3_sample_per_frame = 576;
+	      bitrate_value = bitrates_v2[bitrate];
+	      *frame_size =
+	         72000 * bitrate_value / samplerate + padding;
+	    } 
+
+	  *mp3_samplerate = samplerate;
+         if (mp3_version) *mp3_version = version;
+         if (mp3_numChannel) *mp3_numChannel = numChannel;
+         if (mp3_bitrate_value) *mp3_bitrate_value = bitrate_value;
+
+	  return 0;
+}
+
+static VBR* 
+parseVBR(mp3_player_handle* mp, SceUID mp3_handle, int off, int mp3_sample_per_frame, int mp3_samplerate) {
+    char tmp[4];
+    int frames, bytes;
+    VBR* v;
+    int pos = mp->frame_buffer_pos;
+    MP3_DEBUG_STR2("parseVBR>>:pos=%d, off=%d\n",pos, off);
+    seekinbuffer(mp, mp3_handle, pos + off, PSP_SEEK_SET);
+    readfrombuffer(mp, mp3_handle, tmp, 4);
+    if ((tmp[0] == 'X' && tmp[1] == 'i' && tmp[2] == 'n' && tmp[3] == 'g') || 
+    	 (tmp[0] == 'I' && tmp[1] == 'n' && tmp[2] == 'f' && tmp[3] == 'o')) {
+    	 v = malloc(sizeof(VBR));
+    	 if (v == NULL) {
+    	 	return NULL;
+    	 }
+        readfrombuffer(mp, mp3_handle, tmp, 4);
+        if (tmp[3] & 1) {
+        	readfrombuffer(mp, mp3_handle, &frames, 4);
+        	frames = ((frames & 0x000000ff) << 24) |
+        		       ((frames & 0x0000ff00) << 8) |
+        		       ((frames & 0x00ff0000) >> 8) |
+        		       ((frames & 0xff000000) >> 24);
+        	MP3_DEBUG_STR1("parseVBR:frames=%d\n", frames);
+        	v->total_time = frames * mp3_sample_per_frame / mp3_samplerate * 1000;
+        } else {
+              v->total_time = -1;
+        }
+
+        if (tmp[3] & 2) {
+        	readfrombuffer(mp, mp3_handle, &bytes, 4);
+        	bytes = ((bytes & 0x000000ff) << 24) |
+        		       ((bytes & 0x0000ff00) << 8) |
+        		       ((bytes & 0x00ff0000) >> 8) |
+        		       ((bytes & 0xff000000) >> 24);
+        	MP3_DEBUG_STR1("parseVBR:bytes=%d\n", bytes);
+        }
+
+        if (tmp[3] & 4) {
+        	readfrombuffer(mp, mp3_handle, &(v->toc[0]), 100);
+        }
+        MP3_DEBUG_STR1("return VBR:%d\n", v->total_time);
+
+    } else {
+        MP3_DEBUG_STR("VBR is NULL\n");
+        v = NULL;
+    }
+
+    seekinbuffer(mp, mp3_handle, pos, PSP_SEEK_SET);
+
+    return v;
+}
+
 static int
 Init_codec_buffer ()
 {
@@ -173,8 +306,7 @@ Mp3thread (SceSize args, void *argp)
   char *mp3_data_buffer = NULL;
   int codec_init;
   int audio_channel_set = -1;
-  unsigned int total_time;
-
+  
   mp3_player_handle *mp = *(mp3_player_handle **) argp;
 
   if ((codec_init = Init_codec_buffer ()) != 0)
@@ -183,31 +315,7 @@ Mp3thread (SceSize args, void *argp)
       mp->isPlaying = 0;
     }
 
-  mp3_handle = sceIoOpen (&(mp->filename[0]), PSP_O_RDONLY, 0777);
-  if (!mp3_handle)
-    {
-      MP3_DEBUG_STR1("%s open failed\n", &(mp->filename[0]));
-      mp->isOpen = -1;
-      mp->isPlaying = 0;
-    }
-  else
-    {    
-      MP3_DEBUG_STR1("%s open ok\n", &(mp->filename[0]));
-      mp->mp3_file_size = sceIoLseek32(mp3_handle, 0, PSP_SEEK_END);
-      sceIoLseek32(mp3_handle, 0, PSP_SEEK_SET);
-      MP3_DEBUG_STR1("file size=%d", mp->mp3_file_size);
-    }
-
-  if (mp->isOpen > 0)
-    {
-      mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
-      if (mp->mp3_data_start < 0)
-	{
-	  MP3_DEBUG_STR("Mp3_load:SeekNextFrame return fail\n");
-	  mp->isOpen = -1;
-	  mp->isPlaying = 0;
-	}
-    }
+  mp3_handle = processMp3Header(mp);
 
   while (mp->isOpen > 0)
     {
@@ -216,11 +324,17 @@ Mp3thread (SceSize args, void *argp)
 	{
 	  unsigned char mp3_header_buf[4];
 
-	  if (mp->set2time >= 0) {
+	  if (mp->set2time >= 0 && mp->totalTime > 0) {
              int offset;
              MP3_DEBUG_STR2("set2time:%d / %d\n", mp->set2time, mp->totalTime);
-             unsigned int percentage = mp->set2time * 100 / mp->totalTime;
-             offset = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) * percentage / 100;
+             float percentage;
+             percentage = (float)mp->set2time  / (float)mp->totalTime;
+             if (mp->vbr) {
+             	   int per = (int)(percentage*100);
+             	   if (per >= 100) per = 99;
+                 percentage = (float)mp->vbr->toc[per]/256.0f;
+             }
+             offset = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize) * percentage;
              offset += mp->id3HeaderSize + mp->ea3HeaderSize;
              seekinbuffer(mp, mp3_handle, offset, PSP_SEEK_SET);
              mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
@@ -235,25 +349,11 @@ Mp3thread (SceSize args, void *argp)
 	      mp->isPlaying = 0;
 	      continue;
 	    }
-	  int mp3_header = mp3_header_buf[0];
-	  mp3_header = (mp3_header << 8) | mp3_header_buf[1];
-	  mp3_header = (mp3_header << 8) | mp3_header_buf[2];
-	  mp3_header = (mp3_header << 8) | mp3_header_buf[3];
 
-	  int bitrate_value;
-	  int bitrate = (mp3_header & 0xf000) >> 12;
-	  int padding = (mp3_header & 0x200) >> 9;
-	  int version = (mp3_header & 0x180000) >> 19;
-	  int numChannel = ((mp3_header & 0xC0) >> 6)==3?1:2;
-	  mp3_samplerate = samplerates[version][(mp3_header & 0xC00) >> 10];
-
-#ifdef MP3_DEBUG_VERBOSE
-	  MP3_DEBUG_STR4("numChannel: %d, bitrate:%d, samplerate:%d, version:%d\n", numChannel, bitrate,
-	   mp3_samplerate, version);
-#endif
-
-	  if ((bitrate > 14) || (version == 1) || (mp3_samplerate <= 0) || (bitrate <= 0))	//invalid frame, look for the next one
+	  if (processMp3FrameHeader(mp3_header_buf, &mp3_samplerate, 
+	  	                                          &mp3_sample_per_frame, &frame_size, NULL, NULL, NULL) < 0) //invalid frame, look for the next one
 	    {
+	      
 	      mp->mp3_data_start = SeekNextFrame (mp, mp3_handle);
 	      if (mp->mp3_data_start < 0)
 		{
@@ -264,21 +364,7 @@ Mp3thread (SceSize args, void *argp)
 	      continue;
 	    }
 
-	  if ( version == 3) //mpeg 1
-	    {
-	      mp3_sample_per_frame = 1152;
-	      bitrate_value = bitrates[bitrate];
-	      frame_size =
-		144000 * bitrate_value / mp3_samplerate + padding;
-	    }
-	  else
-	    {
-	      mp3_sample_per_frame = 576;
-	      bitrate_value = bitrates_v2[bitrate];
-	      frame_size =
-	         72000 * bitrate_value / mp3_samplerate + padding;
-	    }
-
+	  
 	  if (audio_channel_set < 0)
 	    {
 	      int retry = 3;
@@ -289,11 +375,11 @@ Mp3thread (SceSize args, void *argp)
 	      }
 
 	      if (audio_channel_set >= 0) {
-      	      	  MP3_DEBUG_STR4("sceAudioSRCChReserve OK: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d, numChannel=%d\n",
-      	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate, numChannel);
+      	      	  MP3_DEBUG_STR3("sceAudioSRCChReserve OK: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d\n",
+      	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate);
       	      } else {
-      	         MP3_DEBUG_STR4("sceAudioSRCChReserve failed: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d, numChannel=%d\n",
-      	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate, numChannel);
+      	         MP3_DEBUG_STR3("sceAudioSRCChReserve failed: %x. mp3_sample_per_frame=%d, mp3_samplerate=%d\n",
+      	         	audio_channel_set, mp3_sample_per_frame, mp3_samplerate);
       	      }
 
 	    }
@@ -314,33 +400,28 @@ Mp3thread (SceSize args, void *argp)
        	    }
 	  	      
                   last_frame_size = frame_size;
-
-                  total_time = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize); //Data size
-                  total_time = total_time/(bitrate_value>>3);
-
+                  /*
                   if (total_time != mp->totalTime) {
-                  	if (mp->totalTime == 0) {
+                  	if (mp->totalTime == (unsigned int)-1) {
                   	    mp->totalTime = total_time;
                   	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)total_time);
                   	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated: %d\n", total_time);
                   	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate_value,
 	   mp3_samplerate, version);
                   	}
-                  	/*
-                  	else if (mp->totalTime != (unsigned int)-1 && ((total_time < mp->totalTime*99/100) || (total_time > mp->totalTime*101/100))) {
+                  	else if (mp->totalTime != (unsigned int)-1 && total_time == (unsigned int)-1) {
                   	    mp->totalTime = (unsigned int)-1;
                   	    javanotify_on_media_notification(JAVACALL_EVENT_MEDIA_DURATION_UPDATED, mp->playerId, (void*)-1);
                   	    MP3_DEBUG_STR1("javanotify_on_media_notification: Media time updated to TIME_UNKNOWN (%d)\n", total_time);
                   	    MP3_DEBUG_STR4("padding: %d, bitrate:%d, samplerate:%d, version:%d\n", padding, bitrate_value,
 	   mp3_samplerate, version);
-                  	}  
-                  	*/
-                  }
+                  	}
+                  }*/
 	  }
 
 	  seekinbuffer (mp, mp3_handle, mp->mp3_data_start, PSP_SEEK_SET);	//seek back
-	  //javacall_printf ("Mp3thread: frame_size=%d, mp3_handle=%x\n",
-	  //	  frame_size, mp3_handle);
+	  //javacall_printf ("Mp3thread: frame_size=%d, mp3_handle=%x, mp->mp3_data_start=%d\n",
+	  //	  frame_size, mp3_handle, mp->mp3_data_start);
 	  if (readfrombuffer (mp, mp3_handle, mp3_data_buffer, frame_size) !=
 	      frame_size)
 	    {
@@ -412,8 +493,6 @@ Mp3thread (SceSize args, void *argp)
       free (mp3_data_buffer);
     }
 
-
-
   if (mp3_handle >= 0)
     {
       sceIoClose (mp3_handle);
@@ -437,6 +516,55 @@ Mp3thread (SceSize args, void *argp)
   sceKernelExitDeleteThread(1);
 
   return 1;
+}
+
+int GetInfoMp3(mp3_player_handle* mp) {
+      int off;
+      unsigned char mp3_header_buf[4];
+      int mp3_samplerate, mp3_sample_per_frame, frame_size, version, numChannel, bitrate_value;
+      SceUID mp3_handle = processMp3Header(mp);
+
+      if (!mp3_handle) {
+      	  javacall_printf("GetInfoMp3:File error\n");
+      	  return -1;
+      }
+
+      
+      if (readfrombuffer (mp, mp3_handle, mp3_header_buf, 4) != 4) {
+	  javacall_printf("GetInfoMp3:End of media\n");
+	  sceIoClose (mp3_handle);
+	  return -2;
+      }
+
+      if (processMp3FrameHeader(mp3_header_buf, &mp3_samplerate, 
+	  	                                          &mp3_sample_per_frame, &frame_size, 
+	  	                                          &numChannel, &version, &bitrate_value) < 0) {
+	  javacall_printf("GetInfoMp3:First frame is invalid\n");
+	  sceIoClose (mp3_handle);
+	  return -3;
+      }
+
+      if (version == 3) {
+      	   off = numChannel==1?17:32;
+      } else {
+          off = numChannel==1?9:17;
+      }
+      
+      VBR* vbr = parseVBR(mp, mp3_handle, off, mp3_sample_per_frame, mp3_samplerate);
+      if (vbr) {
+          mp->totalTime = vbr->total_time;
+          free(vbr);
+      } else {
+          mp->totalTime = (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize); //Data size
+          mp->totalTime = mp->totalTime/(bitrate_value>>3);
+      }
+
+      MP3_DEBUG_STR1("GetInfoMp3:mp_totalTime=%d\n", mp->totalTime);
+
+      sceIoClose (mp3_handle);
+      mp->frame_buffer_size = 0;
+
+      return 0;
 }
 
 static int
@@ -463,6 +591,7 @@ SeekNextFrame (mp3_player_handle* mp, SceUID fd)
   mp->frame_buffer_size = 0; //discard frame buffer
 
   sceIoRead (fd, buf, sizeof (frame_buf));
+  
   if (!strncmp ((char *) buf, "ID3", 3) || !strncmp ((char *) buf, "ea3", 3))	//skip past id3v2 header, which can cause a false sync to be found
     {
       MP3_DEBUG_STR("Got IDv3 tag\n");
@@ -529,6 +658,11 @@ void StopMp3(mp3_player_handle* mp)
    if (0x80268002== sceAudioSRCChRelease ()) { //Need retry
    	sceKernelDelayThread(100000);
    	sceAudioSRCChRelease();
+   }
+
+   if (mp->vbr) {
+   	free(mp->vbr);
+   	mp->vbr = NULL;
    }
    
    if (mp == currentMp3) {
@@ -617,18 +751,28 @@ PauseMp3 (mp3_player_handle * mp)
 
 long SeekMp3(mp3_player_handle* mp, long ms)
 {
-    printf("SeekMp3 to %dms\n", (int)ms);
+    MP3_DEBUG_STR1("SeekMp3 want to seek to %dms\n", (int)ms);
     if (mp->totalTime == 0 || mp->totalTime == (unsigned int)-1) {
     	return -1;
     }
     if (ms < 0) ms = 0;
     if (ms > mp->totalTime) ms = mp->totalTime;
+    if (mp->vbr) {
+    	float percentage;
+    	int per;
+       percentage = (float)ms  / (float)mp->totalTime;
+       per = (int)(percentage*100);
+       if (per >= 100) per = 99;
+       percentage = (float)per/100.0f;
+       ms = (int)((float)mp->totalTime * percentage);
+    }
     mp->set2time = ms;
+    MP3_DEBUG_STR1("SeekMp3 actually seek to %dms\n", (int)ms);
     return ms;
 }
 
 long GetTimeMp3(mp3_player_handle* mp) {
-    int percentage;
+    float percentage, pos;
     long value;
 	
     if (mp->totalTime == 0 || mp->totalTime == (unsigned int)-1) {
@@ -636,18 +780,28 @@ long GetTimeMp3(mp3_player_handle* mp) {
     }
 
     if (mp->set2time >= 0) {
+    	MP3_DEBUG_STR1("GetTimeMp3 return (set2time): %d\n", (int)mp->set2time);
     	return mp->set2time;
     }
 
-    percentage = mp->mp3_data_start * 100 / (mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize);
-    value = mp->totalTime * percentage / 100;
-    //MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
+    if (mp->frame_buffer_size == 0) {
+    	pos = (float)mp->mp3_data_start;
+    } else {
+       pos = (float)mp->frame_buffer_pos;
+    }
 
+    percentage = pos  / (float)(mp->mp3_file_size - mp->id3HeaderSize - mp->ea3HeaderSize);
+    value = mp->totalTime * percentage;
+    MP3_DEBUG_STR1("GetTimeMp3 return: %d\n", (int)value);
+    
     return value;
 }
 
 long GetDurationMp3(mp3_player_handle* mp) {
 	//MP3_DEBUG_STR1("GetDurationMp3 return: %d\n", mp->totalTime);
+	if (mp->totalTime == (unsigned int)-1) {
+		return (long)-1;
+	}
 	return (long)mp->totalTime;
 }
 
