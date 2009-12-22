@@ -30,6 +30,8 @@ import com.sun.midp.installer.GraphicalInstaller;
 import com.sun.midp.midletsuite.*;
 import com.sun.midp.main.*;
 import javax.microedition.lcdui.Command;
+import com.sun.midp.i18n.Resource;
+import com.sun.midp.i18n.ResourceConstants;
 
 class AMSFolderCustomItem extends AMSCustomItem {
 	AMSFolderCustomItem[] subfolders;
@@ -38,19 +40,19 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	AMSFolderCustomItem parent;
 	
 	static final Command openFolderCmd =
-		new Command("Open", Command.ITEM, 7);
+		new Command(Resource.getString(ResourceConstants.OPEN), Command.ITEM, 7);
 	static final Command closeFolderCmd =
-		new Command("Close", Command.ITEM, 7);
+		new Command(Resource.getString(ResourceConstants.CLOSE), Command.ITEM, 7);
 	static final Command createSubfolderCmd =
-		new Command("New subfolder", Command.ITEM, 7);
+		new Command(Resource.getString(ResourceConstants.NEW_SUBFOLDER), Command.ITEM, 7);
 	static final Command removeCmd = 
-		new Command("Remove", Command.ITEM, 7);
+		new Command(Resource.getString(ResourceConstants.REMOVE), Command.ITEM, 7);
 	static final Command moveHereCmd =
-			new Command("Move here", Command.ITEM, 7);
+			new Command(Resource.getString(ResourceConstants.MOVE_HERE), Command.ITEM, 7);
 	static final Command addUnattachedCmd =
 			new Command("Add unattached (debug)", Command.ITEM, 7);
 	static final Command markAllCmd = 
-			new Command ("Mark all contents",  Command.ITEM, 7);
+			new Command (Resource.getString(ResourceConstants.MARK_ALL),  Command.ITEM, 7);
 
 	// Constructor for creation in UI, sans content
 	AMSFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams, int d) {

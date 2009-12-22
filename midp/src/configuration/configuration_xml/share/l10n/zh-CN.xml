@@ -66,6 +66,8 @@
                 Value="&#x66F4;&#x65B0;"/>
 <localized_string Key="APPLICATION_SETTINGS"
                 Value="&#x8BBE;&#x7F6E;"/>
+<localized_string Key="SELECT_DEVICE"
+                Value="&#x6A21;&#x62DF;&#x8BBE;&#x5B9A;"/>
 <localized_string Key="APPLICATIONS"
                 Value="&#x5E94;&#x7528;&#x7A0B;&#x5E8F;"/>
 <localized_string Key="INSTALL_APPLICATION"
@@ -80,7 +82,27 @@
                 Value="&#x7ED3;&#x675F;"/>
 <localized_string Key="OPTIONS"
                 Value="&#x9009;&#x9879;"/>
-
+<localized_string Key="OPEN"
+                Value="&#x6253;&#x5F00;"/>
+<localized_string Key="CLOSE"
+                Value="&#x5173;&#x95ED;"/>
+<localized_string Key="MARK"
+                Value="&#x6807;&#x8BB0;"/>
+<localized_string Key="UNMARK"
+                Value="&#x53D6;&#x6D88;&#x6807;&#x8BB0;"/>
+<localized_string Key="RENAME"
+                Value="&#x91CD;&#x547D;&#x540D;"/>
+<localized_string Key="NEW_SUBFOLDER"
+                Value="&#x65B0;&#x5EFA;&#x6587;&#x4EF6;&#x5939;"/>
+<localized_string Key="MOVE_HERE"
+                Value="&#x79FB;&#x81F3;&#x6B64;&#x5904;"/>
+<localized_string Key="MARK_ALL"
+                Value="&#x6807;&#x8BB0;&#x6240;&#x6709;"/>
+<localized_string Key="CONFIGURE_VM"
+                Value="&#x914D;&#x7F6E;PSPKVM;"/>
+<localized_string Key="NETWORK_SETUP"
+                Value="&#x8FDE;&#x63A5;&#x7F51;&#x7EDC;"/>
+                
 <localized_string Key="MANUFACTURER"
                 Value="&#x5236;&#x9020;&#x5546;"/>
 <localized_string Key="SERVICE_PROVIDER"

@@ -63,7 +63,8 @@ class AMSMidletCustomItem extends AMSCustomItem {
 			Command.ITEM, 5);
 	/** Command object for "Select device". */
 	static final Command deviceSettingCmd =
-		new Command("Select device", Command.ITEM, 6);
+		new Command(Resource.getString(ResourceConstants.SELECT_DEVICE),
+			Command.ITEM, 6);
 
 	/** The MIDletSuiteInfo associated with this MidletCustomItem */
   RunningMIDletSuiteInfo msi; // = null
