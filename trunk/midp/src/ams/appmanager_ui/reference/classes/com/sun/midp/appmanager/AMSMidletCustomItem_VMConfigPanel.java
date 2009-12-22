@@ -77,7 +77,7 @@ class AMSMidletCustomItem_VMConfigPanel extends AMSMidletCustomItem {
 		RunningMIDletSuiteInfo msi =
 			new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
 				VM_CONFIG_APP,
-				"Configure VM",
+				Resource.getString(ResourceConstants.CONFIGURE_VM),
 				true);
 		AMSMidletCustomItem r = new AMSMidletCustomItem_VMConfigPanel(msi, ams, p);
 		r.setDefaultCommand(launchVMCPanelCmd);

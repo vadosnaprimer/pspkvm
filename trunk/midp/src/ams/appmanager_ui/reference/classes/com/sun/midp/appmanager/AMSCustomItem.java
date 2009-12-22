@@ -120,13 +120,16 @@ abstract class AMSCustomItem extends CustomItem implements Sortable {
 	
 	/** Command object for "Mark". */
 	static final Command markCmd =
-		new Command("Mark", Command.ITEM, 7);
+		new Command(Resource.getString
+	 (ResourceConstants.MARK), Command.ITEM, 7);
 	/** Command object for "UnMark". */
 	static final Command unMarkCmd =
-		new Command("Unmark", Command.ITEM, 7);
+		new Command(Resource.getString
+	 (ResourceConstants.UNMARK), Command.ITEM, 7);
 	/** Command object for "Rename". */
 	static final Command renameCmd =
-		new Command("Rename", Command.ITEM, 7);
+		new Command(Resource.getString
+	 (ResourceConstants.RENAME), Command.ITEM, 7);
 		
 	/**
 	 * Required for Sortable */

@@ -77,7 +77,7 @@ class AMSMidletCustomItem_WifiManager extends AMSMidletCustomItem {
 		RunningMIDletSuiteInfo msi =
 			new RunningMIDletSuiteInfo(MIDletSuite.INTERNAL_SUITE_ID,
 				WIFI_SELECTOR_APP,
-				"Network Setup",
+				Resource.getString(ResourceConstants.NETWORK_SETUP),
 				true);
 		AMSMidletCustomItem r = new AMSMidletCustomItem_WifiManager(msi, ams, p);
 		r.setDefaultCommand(launchWifiSetupCmd);
