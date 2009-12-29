@@ -169,6 +169,12 @@
             Name="NETWORK_SETUP"
             Comment="Abstract Commands and other general strings"/>
   <constant Type="int"
+            Name="SYSTEM_MIDLETS"
+            Comment="Abstract Commands and other general strings"/>
+  <constant Type="int"
+            Name="INSTALLED_MIDLETS"
+            Comment="Abstract Commands and other general strings"/>
+  <constant Type="int"
             Name="MANUFACTURER"
             Comment="General strings"/>
   <constant Type="int"
