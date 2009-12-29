@@ -152,7 +152,7 @@ class AMSFolderCustomItem extends AMSCustomItem {
 	// Create the root from a list of installed midlets--usually
 	// just called the first time the folder system runs.
 	static AMSFolderCustomItem createRoot(AppManagerUI ams) {
-		AMSFolderCustomItem userroot = new AMSFolderCustomItem("Installed midlets", null, ams, 0);
+		AMSFolderCustomItem userroot = new AMSFolderCustomItem(Resource.getString(ResourceConstants.INSTALLED_MIDLETS), null, ams, 0);
 		userroot.open=false;
 		userroot.subfolders=new AMSFolderCustomItem[0];
 		userroot.populateRootFromIntalledMidlets();

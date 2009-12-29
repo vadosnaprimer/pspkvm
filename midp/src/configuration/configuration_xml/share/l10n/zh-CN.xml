@@ -99,9 +99,13 @@
 <localized_string Key="MARK_ALL"
                 Value="&#x6807;&#x8BB0;&#x6240;&#x6709;"/>
 <localized_string Key="CONFIGURE_VM"
-                Value="&#x914D;&#x7F6E;PSPKVM;"/>
+                Value="&#x914D;&#x7F6E;PSPKVM"/>
 <localized_string Key="NETWORK_SETUP"
                 Value="&#x8FDE;&#x63A5;&#x7F51;&#x7EDC;"/>
+<localized_string Key="SYSTEM_MIDLETS"
+                Value="&#x7CFB;&#x7EDF;&#x8BBE;&#x7F6E;"/>
+<localized_string Key="INSTALLED_MIDLETS"
+                Value="&#x5DF2;&#x5B89;&#x88C5;&#x5E94;&#x7528;"/>
                 
 <localized_string Key="MANUFACTURER"
                 Value="&#x5236;&#x9020;&#x5546;"/>

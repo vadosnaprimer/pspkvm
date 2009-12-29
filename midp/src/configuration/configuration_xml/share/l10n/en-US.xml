@@ -121,6 +121,10 @@
                 Value="Configure VM"/>
 <localized_string Key="NETWORK_SETUP"
                 Value="Network Setup"/>
+<localized_string Key="SYSTEM_MIDLETS"
+                Value="System midlets"/>
+<localized_string Key="INSTALLED_MIDLETS"
+                Value="Installed midlets"/>
                 
 <localized_string Key="MANUFACTURER"
                 Value="Manufacturer"/>

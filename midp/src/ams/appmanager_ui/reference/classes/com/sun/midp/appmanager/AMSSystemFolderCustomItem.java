@@ -28,6 +28,8 @@ import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import com.sun.midp.midletsuite.*;
 import com.sun.midp.main.*;
+import com.sun.midp.i18n.Resource;
+import com.sun.midp.i18n.ResourceConstants;
 
 class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
@@ -52,7 +54,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	// Create the system folder
 	static AMSSystemFolderCustomItem createSystemRoot(AppManagerUI ams) {
 		AMSSystemFolderCustomItem sysroot =
-			new AMSSystemFolderCustomItem("System midlets", null, ams);
+			new AMSSystemFolderCustomItem(Resource.getString(ResourceConstants.SYSTEM_MIDLETS), null, ams);
 		sysroot.open=false;
 		return sysroot; }
 
