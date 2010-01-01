@@ -384,7 +384,7 @@ Mp3thread (SceSize args, void *argp)
 
 	    }
 
-	  if (frame_size != last_frame_size) {
+	  if (frame_size > last_frame_size) {
 
        	  if (mp3_data_buffer)
        	    {
