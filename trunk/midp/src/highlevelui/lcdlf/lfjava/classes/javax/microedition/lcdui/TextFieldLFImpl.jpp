@@ -1692,13 +1692,14 @@ class TextFieldLFImpl extends ItemLFImpl implements
         if (currentDisplay != null) {
             hidePTILayer();
 	    currentDisplay.hidePopup(inputModeIndicator);
-        }
+        
 
 	// #ifdef ENABLE_KEYBOARD [
             if (currentDisplay.isKeyboardAutoOpen()) {
                 currentDisplay.CloseKeyboard();
             }
         // #endif
+        }
      }
 
             
