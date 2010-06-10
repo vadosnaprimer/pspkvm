@@ -174,6 +174,8 @@ System.out.println("FileInstaller.downloadJAR:"+jarFilename);
     }
 
     public String getUrlPath(String jadUrl, String jarUrl) {
+    	int idx;
+    	
         if (jarUrl == null) {
             return null;
         }
@@ -187,7 +189,12 @@ System.out.println("FileInstaller.downloadJAR:"+jarFilename);
             return jarUrl;
         }
 
-        return jadUrl.substring(0, jadUrl.lastIndexOf('/') + 1) + jarUrl;
+        idx = jadUrl.lastIndexOf('/');
+        if (idx < 0) {
+            idx = jadUrl.lastIndexOf('\\'); //win32 path
+        }
+        
+        return jadUrl.substring(0, idx + 1) + jarUrl;
     }
 
 }

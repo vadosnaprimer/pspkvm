@@ -78,23 +78,32 @@ static void drawChar(gxj_screen_buffer *sbuf, jchar c0,
     unsigned char bitmapByte;
 	  // Flag telling us if we *really* have a glyph for this
 		int found_bmap = 0;
+
+    jchar c;
+    unsigned long mapLen;
+    unsigned long firstPixelIndex;
+    unsigned char * mapend;
+    int destWidth;
+    gxj_pixel_type *dest;
+    int destInc;
+    
     unsigned char const * fontbitmap =
         selectFontBitmap(c0,pfonts,&found_bmap) + FONT_DATA;
     if (!found_bmap) {
     		// Get the default glyph this way
 				c0 = 0; }
-    jchar const c = (c0 & 0xff) -
+    c = (c0 & 0xff) -
         fontbitmap[FONT_CODE_FIRST_LOW-FONT_DATA];
-    unsigned long mapLen =
+    mapLen =
         ((fontbitmap[FONT_CODE_LAST_LOW-FONT_DATA]
         - fontbitmap[FONT_CODE_FIRST_LOW-FONT_DATA]
         + 1) * fontWidth * fontHeight + 7) >> 3;
-    unsigned long const firstPixelIndex = c * fontHeight * fontWidth;
-    unsigned char const * const mapend = fontbitmap + mapLen;
+    firstPixelIndex = c * fontHeight * fontWidth;
+    mapend = fontbitmap + mapLen;
 
-    int destWidth = sbuf->width;
-    gxj_pixel_type *dest = sbuf->pixelData + y*destWidth + x;
-    int destInc = destWidth - xLimit + xSource;
+    destWidth = sbuf->width;
+    dest = sbuf->pixelData + y*destWidth + x;
+    destInc = destWidth - xLimit + xSource;
 
     pixelIndex = firstPixelIndex + (ySource * fontWidth) + xSource;
     pixelIndexLineInc = fontWidth - (xLimit - xSource);
