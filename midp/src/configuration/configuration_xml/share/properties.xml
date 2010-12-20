@@ -94,9 +94,9 @@
   <!-- property Key="com.sun.midp.io.http.persistent_connection_linger_time" 
 				Value="60000" 
 				Scope="internal"/ -->
-  <!-- property Key="com.sun.midp.io.http.input_buffer_size" 
-				Value="256" 
-				Scope="internal"/ -->
+  <property Key="com.sun.midp.io.http.input_buffer_size" 
+				Value="8192" 
+				Scope="internal"/>
   <!-- property Key="com.sun.midp.io.http.output_buffer_size" 
 				Value="2048" 
 				Scope="internal"/ -->
