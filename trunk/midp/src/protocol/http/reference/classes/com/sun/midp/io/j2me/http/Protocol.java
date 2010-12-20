@@ -121,7 +121,7 @@ public class Protocol extends ConnectionBaseAdapter
         SecurityInitializer.requestToken(new SecurityTrusted());
 
     /** Default size for input buffer. */
-    private static int inputBufferSize = 256;
+    private static int inputBufferSize = 8192;
     /** Default size for output buffer. */
     private static int outputBufferSize = 2048;
     /** How much data can be put in the output buffer. */
