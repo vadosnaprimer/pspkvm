@@ -50,6 +50,8 @@ interface ApplicationManager {
     /** Launch the VM configuration panel */
     void launchVMConfigPanel();
 
+    void launchAppGallery();
+
     /**
      * Launches a suite.
      *

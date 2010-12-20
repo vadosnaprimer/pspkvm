@@ -166,6 +166,9 @@
             Name="CONFIGURE_VM"
             Comment="Abstract Commands and other general strings"/>
   <constant Type="int"
+            Name="APP_GALLERY"
+            Comment="Abstract Commands and other general strings"/>
+  <constant Type="int"
             Name="NETWORK_SETUP"
             Comment="Abstract Commands and other general strings"/>
   <constant Type="int"

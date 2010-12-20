@@ -119,6 +119,8 @@
                 Value="Mark all contents"/>
 <localized_string Key="CONFIGURE_VM"
                 Value="Configure VM"/>
+<localized_string Key="APP_GALLERY"
+                Value="Applications Gallery"/>
 <localized_string Key="NETWORK_SETUP"
                 Value="Network Setup"/>
 <localized_string Key="SYSTEM_MIDLETS"

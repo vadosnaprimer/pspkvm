@@ -286,6 +286,11 @@ public class SMMManager extends MIDlet
     	 /** SMMManager is not used in PSP currently **/
     }
 
+    public void launchAppGallery() {
+        /** SMMManager is not used in PSP currently **/
+    }
+
+
 
     /**
      * Launches a suite.

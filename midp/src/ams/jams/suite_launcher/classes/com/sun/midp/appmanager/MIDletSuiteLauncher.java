@@ -115,6 +115,9 @@ public class MIDletSuiteLauncher extends MIDlet implements ApplicationManager {
     public void launchVMConfigPanel() {
     }
 
+    public void launchAppGallery() {
+    }
+
     /**
      * Launches a suite.
      *

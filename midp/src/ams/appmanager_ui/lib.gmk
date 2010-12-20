@@ -56,6 +56,7 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_WifiManager.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_VMConfigPanel.java \
+    $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_AppGallery.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSMidletCustomItem_Installer.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/AMSCustomItemRenameForm.java \
     $(APPMANAGER_UI_DIR)/classes/com/sun/midp/appmanager/QuicksortAlg.java \
