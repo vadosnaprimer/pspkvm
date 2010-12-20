@@ -21,6 +21,7 @@ int javacall_devemu_get_rotation(int id);
 int javacall_devemu_get_displayID(int devid);
 int javacall_devemu_get_deviceID(int dispid);
 char* javacall_devemu_get_device_pid(int id);
+int javacall_devemu_invalid_keycode(int id, int keyCode);
 
 
 #ifdef __cplusplus
