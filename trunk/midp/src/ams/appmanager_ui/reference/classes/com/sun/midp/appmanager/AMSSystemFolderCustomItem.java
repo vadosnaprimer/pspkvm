@@ -35,7 +35,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 
 	// Handy reference to the discovery midlet--having this
 	// explicitly available speeds a few things along in the AMS UI
-	AMSMidletCustomItem discoveryMidlet, wifiMidlet, vmConfigMidlet;
+	AMSMidletCustomItem discoveryMidlet, wifiMidlet, vmConfigMidlet, appGalleryMidlet;
 	
 	// Constructor for creation in UI, sans content
 	AMSSystemFolderCustomItem(String n, AMSFolderCustomItem p, AppManagerUI ams) {
@@ -49,11 +49,13 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 	void createBuiltInMidlets() {
 		discoveryMidlet = AMSMidletCustomItem_Installer.getDiscoveryMidletCI(owner, this);
 		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner, this);
-		vmConfigMidlet = AMSMidletCustomItem_VMConfigPanel.getVMSPanelCI(owner, this); }
+		vmConfigMidlet = AMSMidletCustomItem_VMConfigPanel.getVMSPanelCI(owner, this); 
+		appGalleryMidlet = AMSMidletCustomItem_AppGallery.getAppGalleryCI(owner, this); 
+	}
 
 	// Create the system folder
 	static AMSSystemFolderCustomItem createSystemRoot(AppManagerUI ams) {
-		AMSSystemFolderCustomItem sysroot =
+	       AMSSystemFolderCustomItem sysroot =
 			new AMSSystemFolderCustomItem(Resource.getString(ResourceConstants.SYSTEM_MIDLETS), null, ams);
 		sysroot.open=false;
 		return sysroot; }
@@ -79,6 +81,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		owner.insertAt(idx, wifiMidlet);
 		idx++;
 		owner.insertAt(idx, vmConfigMidlet);
+		idx++;
+		owner.insertAt(idx, appGalleryMidlet);
 		int c = subfolders.length;
 		for(int i=0; i<c; i++) {
 			subfolders[i].updateDisplay();
@@ -98,6 +102,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		discoveryMidlet.hide();
 		wifiMidlet.hide();
 		vmConfigMidlet.hide();
+		appGalleryMidlet.hide();
 		super.setClosed(); }
 		
 	// Override
@@ -107,6 +112,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		discoveryMidlet.updateDisplay();
 		wifiMidlet.updateDisplay();
 		vmConfigMidlet.updateDisplay();
+		appGalleryMidlet.updateDisplay();
+		
 		super.updateDisplayForContents(); }
 
 	// Override
@@ -117,6 +124,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 				return wifiMidlet; }
 			if (vmConfigMidlet.msi.equals(midlet)) {
 				return vmConfigMidlet; }
+			if (appGalleryMidlet.msi.equals(midlet)) {
+				return appGalleryMidlet; }
 		return super.find(midlet); }
 
 }

@@ -53,6 +53,8 @@ public class SuiteSettings {
     /** If true, MIDlet from this suite can be run. */
     boolean enabled;
 
+    boolean loaded;
+
     /**
      * Public constructor for SuiteSettings.
      *
@@ -61,6 +63,7 @@ public class SuiteSettings {
     public SuiteSettings(int id) {
         suiteId = id;
         enabled = true; /* default is to enable a newly installed suite */
+        loaded = false;
         permissions = Permissions.getEmptySet();
     }
 
@@ -151,7 +154,14 @@ public class SuiteSettings {
     /**
      * Gets the suite settings suite from persistent store.
      */
-    native void load();
+    void load() {
+        if (!loaded) {
+            load0();
+            loaded = true;
+        }
+    }
+
+    private native void load0();
 
     /**
      * Saves the suite settings to persistent store. Except the enabled

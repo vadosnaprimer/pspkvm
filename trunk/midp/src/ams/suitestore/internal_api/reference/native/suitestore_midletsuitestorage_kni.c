@@ -735,7 +735,7 @@ KNIDECL(com_sun_midp_midletsuite_InstallInfo_load) {
  * Gets the suite settings suite from persistent store.
  */
 KNIEXPORT KNI_RETURNTYPE_VOID
-KNIDECL(com_sun_midp_midletsuite_SuiteSettings_load) {
+KNIDECL(com_sun_midp_midletsuite_SuiteSettings_load0) {
     SuiteIdType suiteId = UNUSED_SUITE_ID;
     char* pszError;
     jboolean enabled;

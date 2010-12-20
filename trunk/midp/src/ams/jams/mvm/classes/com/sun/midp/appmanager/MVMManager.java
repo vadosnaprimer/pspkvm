@@ -74,6 +74,9 @@ public class MVMManager extends MIDlet
     private static final String VM_CONFIG_APP =
     	 "com.pspkvm.system.VMConfigMidlet";
 
+    private static final String APPGALLERY_APP =
+		"com.sun.midp.installer.AppGallery";
+
     /** True until constructed for the first time. */
     private static boolean first = true;
 
@@ -290,6 +293,18 @@ public class MVMManager extends MIDlet
                 ResourceConstants.CA_MANAGER_APP), ex, null, null);
         }
     }
+
+    public void launchAppGallery() {
+        try {
+            MIDletSuiteUtils.execute(MIDletSuite.INTERNAL_SUITE_ID,
+                APPGALLERY_APP,
+                "Application Gallery");
+        } catch (Exception ex) {
+            displayError.showErrorAlert(Resource.getString(
+                ResourceConstants.CA_MANAGER_APP), ex, null, null);
+        }
+    }
+    
 
     /**
      * Launches a suite.

@@ -708,6 +708,9 @@ class AppManagerUI extends Form
 			if (c == AMSMidletCustomItem_VMConfigPanel.launchVMCPanelCmd) {
 				manager.launchVMConfigPanel();
 				return; }
+			if (c == AMSMidletCustomItem_AppGallery.launchAppGalleryCmd) {
+				manager.launchAppGallery();
+				return; }
 			if (c == AMSMidletCustomItem.launchCmd) {
 				launchMidlet(msi);
 				return; }

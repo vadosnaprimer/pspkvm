@@ -100,6 +100,8 @@
                 Value="&#x6807;&#x8BB0;&#x6240;&#x6709;"/>
 <localized_string Key="CONFIGURE_VM"
                 Value="&#x914D;&#x7F6E;PSPKVM"/>
+<localized_string Key="APP_GALLERY"
+                Value="PSPKVM &#x5E94;&#x7528;&#x4E0B;&#x8F7D;&#x4E2D;&#x5FC3;"/>
 <localized_string Key="NETWORK_SETUP"
                 Value="&#x8FDE;&#x63A5;&#x7F51;&#x7EDC;"/>
 <localized_string Key="SYSTEM_MIDLETS"

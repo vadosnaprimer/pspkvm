@@ -54,7 +54,12 @@ SUBSYSTEM_AMS_JAVA_FILES += \
     $(INSTALLER_DIR)/classes/com/sun/midp/installer/JadProperties.java \
     $(INSTALLER_DIR)/classes/com/sun/midp/installer/ManifestProperties.java \
     $(INSTALLER_DIR)/classes/com/sun/midp/installer/SuiteDownloadInfo.java \
-    $(INSTALLER_DIR)/classes/com/sun/midp/installer/DeviceDesc.java
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/DeviceDesc.java \
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/AppGallery.java \
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/JarEntry.java \
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/FirstPageHandler.java \
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/AppGalleryJarList.java \
+    $(INSTALLER_DIR)/classes/com/sun/midp/installer/AppGalleryLoader.java
 
 
 vpath % $(INSTALLER_DIR)/native/share
