@@ -156,7 +156,7 @@ keymap_get_game_action(int keyCode)
     int id;
     
     REPORT_CALL_TRACE1(LC_LOWUI, "LF:keymap_get_game_action(%d)\n", keyCode);
-
+    
     id = javacall_devemu_get_current_device();
     
      if (keyCode == javacall_devemu_get_keycode(id, JAVACALL_KEY_UP)  ||
@@ -261,6 +261,8 @@ keymap_get_key_name(int keyCode)
 jboolean
 keymap_is_invalid_key_code(int keyCode)
 {
+    int id;
+    
     REPORT_CALL_TRACE1(LC_LOWUI, "LF:keymap_is_invalid_key_code(%d)\n", 
                        keyCode);
 
@@ -269,7 +271,10 @@ keymap_is_invalid_key_code(int keyCode)
      * since they are defined to be invalid
      */
     if ((keyCode <= 0x0) || (keyCode >= 0xFFFF) ) {
-        return KNI_TRUE;
+        id = javacall_devemu_get_current_device();
+    	 if (javacall_devemu_invalid_keycode(id, keyCode)) {
+            return KNI_TRUE;
+    	 }
     }
 
     return KNI_FALSE;

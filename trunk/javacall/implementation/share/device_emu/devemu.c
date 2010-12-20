@@ -287,6 +287,24 @@ int javacall_devemu_get_keycode(int id, javacall_key javacallkey) {
     }
 }
 
+int javacall_devemu_invalid_keycode(int id, int keyCode) {
+    //printf("javacall_devemu_invalid_keycode: %d, %d\n", id, keyCode);
+    if (id < 0 || id >= DEVICE_COUNT) {
+        return 0;
+    }
+    
+    if (keyCode == _devices[id].KEY_UP ||
+    	 keyCode ==  _devices[id].KEY_DOWN ||
+    	 keyCode ==  _devices[id].KEY_LEFT ||
+    	 keyCode ==  _devices[id].KEY_RIGHT ||
+    	 keyCode ==  _devices[id].KEY_SOFT1 ||
+    	 keyCode ==  _devices[id].KEY_SOFT2 ||
+     	 keyCode ==  _devices[id].KEY_CLEAR ||
+    	 keyCode ==  _devices[id].KEY_SELECT
+    	) return 0;
+    else return 1;
+}
+
 int javacall_devemu_get_rotation(int id) {
     if (id < 0 || id >= DEVICE_COUNT) {
         return 0;
