@@ -24,6 +24,10 @@ extern "C" {
 
 //#define DEBUG_JAVACALL_FILE 1
 
+#ifdef DEBUG_JAVACALL_FILE
+static int fileopencount=0;
+#endif
+
 char* javacall_UNICODEsToUtf8(const javacall_utf16* fileName, int fileNameLen) {
     static char result[MAX_FILE_NAME_LEN+1];
     if (fileNameLen >= MAX_FILE_NAME_LEN) {
@@ -115,6 +119,11 @@ javacall_result javacall_file_open(const javacall_utf16 * unicodeFileName, int f
 #endif
 
     *handle = (javacall_handle)fd;
+
+#ifdef DEBUG_JAVACALL_FILE
+    fileopencount++;
+    javacall_printf("javacall_file_open:count=%d\n", fileopencount);
+#endif
     return JAVACALL_OK;
 }
 
@@ -129,6 +138,10 @@ javacall_result javacall_file_close(javacall_handle handle) {
         javacall_printf("javacall_file_close():%d\n", handle);
 #endif
 	int rc = close((int)handle);
+#ifdef DEBUG_JAVACALL_FILE
+    fileopencount--;
+    javacall_printf("javacall_file_close:count=%d\n", fileopencount);
+#endif
     return (rc == 0) ? JAVACALL_OK : JAVACALL_FAIL;
 }
 
@@ -142,7 +155,14 @@ javacall_result javacall_file_close(javacall_handle handle) {
  * @return the number of bytes actually read
  */
 long javacall_file_read(javacall_handle handle, unsigned char *buf, long size) {
-	return read((int)handle, buf, size);
+        long result;
+	 result = read((int)handle, buf, size);
+#ifdef DEBUG_JAVACALL_FILE
+        if (result <= 0) {
+            javacall_printf("javacall_file_read(%d, %p, %d): result=%x\n", handle, buf, (int)size, (int)result);
+        }
+#endif
+	 return result;
 }
 
 /**
@@ -228,12 +248,44 @@ javacall_int64 javacall_file_seek(javacall_handle handle, javacall_int64 offset,
  * @return size of file in bytes if successful, -1 otherwise
  */
 javacall_int64 javacall_file_sizeofopenfile(javacall_handle handle) {
-
+/*
     struct stat stat_buf;
     int status = fstat((int)handle, &stat_buf);
-
+#ifdef DEBUG_JAVACALL_FILE
+        if (status != 0) {
+            javacall_printf("javacall_file_sizeofopenfile(%d): result=%x\n", handle, status);
+        }
+#endif
     return (status == 0) ? stat_buf.st_size : -1;
-
+*/
+    long status, mark, length;
+    status = lseek((int)handle, 0, SEEK_CUR);
+    if (status < 0) {
+#ifdef DEBUG_JAVACALL_FILE
+      javacall_printf("javacall_file_sizeofopenfile(%d): failed. result=%x\n", handle, status);
+#endif
+        return -1;
+    } else {
+        mark = status;
+    }
+    status = lseek((int)handle, 0, SEEK_END);
+    if (status < 0) {
+#ifdef DEBUG_JAVACALL_FILE
+      javacall_printf("javacall_file_sizeofopenfile(%d): failed. result=%x\n", handle, status);
+#endif
+        return -1;
+    } else {
+        length = status;
+    }
+    status = lseek((int)handle, mark, SEEK_SET);
+#ifdef DEBUG_JAVACALL_FILE
+    if (status == 0) {
+        javacall_printf("javacall_file_sizeofopenfile(%d): size=%x\n", handle, length);
+    } else {
+        javacall_printf("javacall_file_sizeofopenfile(%d): failed. result=%x\n", handle, status);
+    }
+#endif
+    return (status == 0) ? length : -1;
 }
 
 /**
