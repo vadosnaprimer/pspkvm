@@ -625,7 +625,11 @@ public class Protocol extends NetworkConnectionBase
      */
     public  String getLocalAddress() throws IOException {
         ensureOpen();
-        return getHost0(true);
+        try {
+            return getHost0(true);
+        } catch (IOException e) {
+            return "0.0.0.0";
+        }
     }
 
     /**
@@ -637,7 +641,11 @@ public class Protocol extends NetworkConnectionBase
      */
     public  int  getLocalPort()  throws IOException {
         ensureOpen();
-        return getPort0(true); 
+        try {
+            return getPort0(true);
+        } catch (IOException e) {
+            return 0;
+        }
     }
 
     /**
@@ -650,7 +658,11 @@ public class Protocol extends NetworkConnectionBase
      */
     public  String getAddress() throws IOException {
         ensureOpen();
-        return getHost0(false);
+        try {
+            return getHost0(false);
+        } catch (IOException e) {
+            return "0.0.0.0";
+        }
     }
     /**
      * Returns the remote port to which this socket is bound.
@@ -660,7 +672,11 @@ public class Protocol extends NetworkConnectionBase
      */
     public  int  getPort() throws IOException {
         ensureOpen();
-        return getPort0(false); 
+        try {
+            return getPort0(false);
+        } catch (IOException e) {
+            return 0;
+        }
     }
 
     /**

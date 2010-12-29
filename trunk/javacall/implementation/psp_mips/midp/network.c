@@ -101,6 +101,7 @@ static DNSHandle* dnsqueue = NULL;
 static DNS_CACHE dns_cache[DNS_CACHE_SIZE]={0};
 
 extern int netDialog(int);
+extern void socket_read_buffer_init();
 
 static int isNetConnected() {
 	int state;
@@ -152,6 +153,8 @@ javacall_result javacall_network_init_start(void) {
     	printf(": Error, could not sceNetApctlInit the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }
+
+    socket_read_buffer_init();
     
     network_initialized = 1;
     return JAVACALL_OK;
@@ -314,7 +317,7 @@ void monitor_timeout(javacall_handle handle) {
 }
 
 int resolve_thread(SceSize args, void *argp) {
-	static char buf[1024];
+	char buf[1024];
 	struct in_addr addr;
        SceUID rid;
 
