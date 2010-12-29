@@ -157,6 +157,9 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
      */
     private boolean isInteractive; // = false;
 
+    private boolean soft_btn1_pressed;
+    private boolean soft_btn2_pressed;
+
     /**
      * Construct a SoftButtonLayer. The layer's background image and color
      * information is obtained directly from the SoftButtonSkin class,
@@ -171,6 +174,8 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         this.tunnel = tunnel;
 
         labels = new String[SoftButtonSkin.NUM_BUTTONS];
+        soft_btn1_pressed = false;
+        soft_btn2_pressed = false;
     }
 
     /**
@@ -395,7 +400,9 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
                 if (type == EventConstants.PRESSED) {
                     setInteractive(true);
                     ret = true;
-                } else if (type == EventConstants.RELEASED) {
+                    soft_btn1_pressed = true;
+                } else if (type == EventConstants.RELEASED && soft_btn1_pressed) {
+                    soft_btn1_pressed = false;
                     soft1();
                     ret = true;
                 }
@@ -405,7 +412,9 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
                 if (type == EventConstants.PRESSED) {
                     setInteractive(true);
                     ret = true;
-                } else if (type == EventConstants.RELEASED) {
+                    soft_btn2_pressed = true;
+                } else if (type == EventConstants.RELEASED && soft_btn2_pressed) {
+                    soft_btn2_pressed = false;
                     soft2();
                     ret = true;
                 }
