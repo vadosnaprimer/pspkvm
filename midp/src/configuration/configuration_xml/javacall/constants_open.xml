@@ -43,7 +43,7 @@
 
   <constant Type="int"
             Name="TCP_CLI_GLOBAL_LIMIT"
-            Value="16"
+            Value="32"
             Comment="Global resource limit for TCP client sockets"/>
   <constant Type="int"
             Name="TCP_CLI_AMS_RESERVED"

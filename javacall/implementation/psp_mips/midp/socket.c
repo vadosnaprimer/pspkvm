@@ -35,6 +35,7 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/fd_set.h>
+#include <sys/select.h>
 #include <sys/time.h>
 #include <netinet/in.h>
 
@@ -49,6 +50,11 @@ extern "C" {
 
 #define SOCKET_ERROR   (-1)
 
+#define MAX_SOCK_NUM 32
+#define SOCKET_READ_BUFFER_SIZE (8192)
+#ifdef DEBUG_JAVACALL_NETWORK
+static int socket_open_count=0;
+#endif
 
 /* Connect to an access point */
 int connect_to_apctl(int config){
@@ -97,6 +103,50 @@ typedef struct {
     int bytesRead;
 }read_param;
 
+typedef struct {
+    int fd; // INVALID_SOCKET if not used
+    unsigned char* pData;
+    int writepos;
+    int readpos;
+    //***
+    int status;
+    //<0 error
+    //=0 EOF
+    //>0 ok
+    //***
+#ifdef DEBUG_JAVACALL_NETWORK
+    int totalread;
+    int totalwrite;
+#endif
+}read_buffer;
+
+static volatile read_buffer buffer_list[MAX_SOCK_NUM];
+
+#define GET_SOCKET_READ_BUFFER(d, p) \
+{ \
+int __i__; \
+p = NULL; \
+for  (__i__ = 0; __i__ < MAX_SOCK_NUM; __i__ ++) { \
+	if (buffer_list[__i__].fd == d) {p = &buffer_list[__i__]; break;} \
+} \
+}
+
+#define GET_FREE_READ_BUFFER(p) \
+{ \
+int __i__; \
+for  (__i__ = 0; __i__ < MAX_SOCK_NUM; __i__ ++) { \
+	if (buffer_list[__i__].fd == INVALID_SOCKET) {p = &buffer_list[__i__]; break;} \
+} \
+}
+
+void socket_read_buffer_init() {
+    int i;
+    memset(buffer_list, 0, sizeof(buffer_list));
+    for (i = 0; i < sizeof(buffer_list)/sizeof(read_buffer); i++) {
+    	buffer_list[i].fd = INVALID_SOCKET;
+    }
+}
+
 static javacall_result socket_open_impl(open_param* arg) {
     struct sockaddr_in* addr = &arg->addr;
     int sockfd = arg->fd;
@@ -107,7 +157,7 @@ static javacall_result socket_open_impl(open_param* arg) {
     int status = connect(sockfd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
 
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("connected return %d\n", status);
+    javacall_printf("connected return %d, errno=%d\n", status, errno);
 #endif
 
     arg->result = status;
@@ -166,7 +216,7 @@ javacall_result javacall_socket_open_start(unsigned char *ipBytes, int port,
            close(sockfd);
            return JAVACALL_FAIL;
        }
-   
+
        open_param* param;
        param = malloc(sizeof(open_param));
        if (!param) {
@@ -212,31 +262,175 @@ javacall_result javacall_socket_open_finish(void *handle, void *context) {
 #endif
     if (((open_param*)context)->result) {
     	 res = JAVACALL_FAIL;
-    }
+    } else {
+        volatile read_buffer* p = NULL;
+        GET_FREE_READ_BUFFER(p);
+        if (p) {
+        	
+              int descriptorFlags = fcntl((int)handle, F_GETFL, 0);
+              fcntl((int)handle, F_SETFL, descriptorFlags | O_NONBLOCK);
+   
+        	
+        	if (p->pData == NULL) {
+        	    p->pData = malloc(SOCKET_READ_BUFFER_SIZE);
+        	}
 
+        	if (p->pData != NULL) {
+#ifdef DEBUG_JAVACALL_NETWORK
+                  p->totalread = 0;
+                  p->totalwrite = 0;
+#endif
+        	    p->readpos = 0;
+        	    p->writepos = 0;
+        	    p->status = 1;
+        	    p->fd = handle;
+#ifdef DEBUG_JAVACALL_NETWORK
+        	    socket_open_count++;
+                  javacall_printf("javacall_socket_open_finish: %d sockets left\n", socket_open_count);
+#endif    
+        	} else {
+        	    res = JAVACALL_OUT_OF_MEMORY;
+        	}
+        	
+        } else {
+            res = JAVACALL_OUT_OF_MEMORY;
+        }
+    }
     free(context);
     return res;
+}
+
+static javacall_result readFromBuffer(int handle, unsigned char* pData, int len, int* pBytesRead) {
+    int i, bytesToRead = 0;
+    volatile read_buffer* p;
+    
+    GET_SOCKET_READ_BUFFER(handle, p);
+    if (p && p->status >= 0) {
+    	 
+        volatile int readpos = p->readpos;
+        volatile int writepos = p->writepos;
+
+        if (p->status == 0 && readpos == writepos) {
+        	//EOF
+        	*pBytesRead = 0;
+        	return JAVACALL_OK;
+        }
+
+        if (readpos < writepos) {
+        	bytesToRead = writepos - readpos;
+        } else if (readpos > writepos) {
+              bytesToRead = SOCKET_READ_BUFFER_SIZE - readpos;
+        } else {
+            //nothing to read, would block...
+            return JAVACALL_WOULD_BLOCK;
+        }
+
+        if (bytesToRead > len) bytesToRead = len;
+
+        memcpy(pData, p->pData + readpos, bytesToRead);
+        readpos += bytesToRead;
+        if (readpos >= SOCKET_READ_BUFFER_SIZE) {
+            readpos = 0;
+        }
+        p->readpos = readpos;
+        *pBytesRead = bytesToRead;
+
+#ifdef DEBUG_JAVACALL_NETWORK
+        javacall_printf("readfrombuffer:%d bytes read\n", bytesToRead);
+        p->totalread += bytesToRead;
+        javacall_printf("totalread:%d, totalwrite:%d\n", p->totalread, p->totalwrite);
+#endif
+
+        return JAVACALL_OK;
+    } else {
+        return JAVACALL_FAIL;
+    }
 }
 
 //originally from pcsl_network_bsd (pcsl_socket.c)
 
 static int socket_read_thread(SceSize args, void *argp) {
-    read_param* param = *(read_param**)argp;
-    javacall_handle sockfd = (javacall_handle)param->fd;
+    int i;
+    fd_set set;
+    struct timeval tv;
+    volatile int sock;
+
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+
+    while (1) {//TODO: Add exit condition
     
+        FD_ZERO(&set);
+        
+        for (i = 0; i < MAX_SOCK_NUM; i++) {
+            sock = buffer_list[i].fd;
+            if (sock != INVALID_SOCKET && buffer_list[i].status > 0) {
+                FD_SET(sock, &set);
+            }
+        }
+        
+        if(select(FD_SETSIZE, &set, NULL, NULL, &tv) >= 0) {
+    	
+            for(sock = 0; sock < FD_SETSIZE; sock++) {
+                 if(FD_ISSET(sock, &set)) {
+		   	
+		    	 
+		    	 volatile read_buffer* p;
+		    	 
+		        GET_SOCKET_READ_BUFFER(sock, p);
+		        if (p != NULL && p->status > 0) {
+		        	int status;
+		        	int bytesToRead;
+		        	volatile int writepos = p->writepos;
+		    	       volatile int readpos = p->readpos;
+		    	
+                            if (writepos < readpos) {
+                                bytesToRead = readpos - writepos - 1;
+                            } else {
+                                bytesToRead = SOCKET_READ_BUFFER_SIZE - writepos;
+                                if (readpos == 0) {
+                                    bytesToRead --;
+                                }
+                            }
+                            
+                            if (bytesToRead > 0) {
+        		        	status = recv(sock, p->pData+writepos, bytesToRead, 0);
+        		        	if (status > 0) {
+        		        	    writepos += status;        		        	    
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("socket  read %d bytes\n", param->len);
+                                       javacall_printf("recv returns %d bytes\n", status);
+                                       p->totalwrite += status;
 #endif
-
-    int status = recv(param->fd ,param->pData , param->len, 0);
+        		        	} else if (status == 0) {
+        		        	    p->status = 0; //EOF
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("read return %d, errono:%d\n", status, status==-1?errno:0);
+        		        	    javacall_printf("recv returns EOF\n");
 #endif
-    param->bytesRead = status;
-    javanotify_socket_event(JAVACALL_EVENT_SOCKET_RECEIVE, sockfd, status>=0?JAVACALL_OK:JAVACALL_FAIL);
-    sceKernelExitDeleteThread(0);
+        		        	} else {
+#ifdef DEBUG_JAVACALL_NETWORK
+        		        	    javacall_printf("recv returns error: %d\n", errno);
+#endif
+        		        	}
+        
+        		        	if (writepos >= SOCKET_READ_BUFFER_SIZE) {
+        		        	    writepos = 0;
+        		        	}
 
-    return 0;
+        		        	p->writepos = writepos;
+        		        	
+        		        	if (status >= 0 || (status < 0 && errno != EWOULDBLOCK && errno != EINPROGRESS)) {
+        		        	    javanotify_socket_event(JAVACALL_EVENT_SOCKET_RECEIVE, sock, status>=0?JAVACALL_OK:JAVACALL_FAIL);
+        		        	}
+                            }
+		           }
+		      }
+              }
+        } else {
+#ifdef DEBUG_JAVACALL_NETWORK
+            javacall_printf("select return Fail\n");
+#endif
+        }
+    }
 }
 
 /**
@@ -258,60 +452,25 @@ static int socket_read_thread(SceSize args, void *argp) {
 javacall_result javacall_socket_read_start(void *handle,unsigned char *pData,int len, 
                                            int *pBytesRead, void **pContext) {
 
+    (void)pContext;
+    static int read_thread_started = 0;
+    
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("javacall_socket_read_start\n");
+    javacall_printf("javacall_socket_read_start: %d bytes to read\n", len);
 #endif
 
-    int descriptorFlags = fcntl(handle, F_GETFL, 0);
-fcntl(handle, F_SETFL, descriptorFlags | O_NONBLOCK);
-    int status = recv(handle ,pData , len, 0);
+    if (!read_thread_started) {
+        SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x30, 16 *1024, PSP_THREAD_ATTR_USER, NULL);	
+        if(thid < 0) {	
+        	javacall_printf("Error, could not create thread for read\n");	
+        	return JAVACALL_FAIL;	
+        }	
 
-    descriptorFlags = fcntl(handle, F_GETFL, 0);
-fcntl(handle, F_SETFL, descriptorFlags & ~O_NONBLOCK);
-
-#ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("read return %d, errono:%d\n", status, status==-1?errno:0);
-#endif
-
-    if (status >= 0) {
-        *pBytesRead = status;
-        return JAVACALL_OK;
-    } else {
-        if (errno != EWOULDBLOCK && errno != EINPROGRESS) {
-#ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("reading error\n");
-#endif
-
-             return JAVACALL_FAIL;
-        }
+    	 read_thread_started = 1;
+        sceKernelStartThread(thid, 0, NULL);
     }
 
-    read_param* param;
-    param = malloc(sizeof(read_param));
-    if (!param) {
-     	return JAVACALL_OUT_OF_MEMORY;
-    }
-    param->fd = (int)handle;
-    param->len = len;
-    param->pData = malloc(len);
-    if (!param->pData) {
-    	free(param);
-     	return JAVACALL_OUT_OF_MEMORY;
-    }
-    param->bytesRead = 0;
-
-    SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x11, 16 *1024, PSP_THREAD_ATTR_USER, NULL);	
-    if(thid < 0) {	
-	javacall_printf("Error, could not create thread for read\n");	
-	free(param->pData);
-	free(param);
-	return JAVACALL_FAIL;	
-    }	
-	
-    sceKernelStartThread(thid, sizeof(&param), &param);
-    *pContext = param;
-	
-    return JAVACALL_WOULD_BLOCK;
+    return readFromBuffer((int)handle, pData, len, pBytesRead);
 }
 
 /**
@@ -330,18 +489,12 @@ fcntl(handle, F_SETFL, descriptorFlags & ~O_NONBLOCK);
  * @retval JAVACALL_INTERRUPTED for an Interrupted IO Exception
  */
 javacall_result javacall_socket_read_finish(void *handle,unsigned char *pData,int len,int *pBytesRead,void *context) {
-    (void)handle;
-    read_param* param = context;
-    if (param->bytesRead> 0) {
-        memcpy(pData, param->pData, param->bytesRead);
-    }
-    *pBytesRead = param->bytesRead;
-    free(param->pData);
-    free(param);
+    (void)context;
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("javacall_socket_read_finish: %d bytes read\n", *pBytesRead);
+    javacall_printf("javacall_socket_read_finish\n");
 #endif
-    return *pBytesRead>=0?JAVACALL_OK:JAVACALL_FAIL;
+
+    return javacall_socket_read_start(handle, pData, len, pBytesRead, NULL);
 }
 
 /**
@@ -423,10 +576,23 @@ javacall_result javacall_socket_close_start(void *handle,void **pContext) {
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("javacall_socket_close\n");
 #endif
+
+    volatile read_buffer* p;
+    GET_SOCKET_READ_BUFFER(handle, p);
+    if (p != NULL) {
+        p->status = -1;
+        p->fd = INVALID_SOCKET;
+#ifdef DEBUG_JAVACALL_NETWORK
+        socket_open_count--;
+        javacall_printf("javacall_socket_close_start: %d sockets open\n", socket_open_count);
+#endif
+    }
+
     int status = close(sockfd);
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("javacall_socket_close return %d\n", status);
 #endif
+
     return JAVACALL_OK; //always return OK
 }
     
@@ -476,35 +642,18 @@ javacall_result /* OPTIONAL*/ javacall_socket_available(javacall_handle handle,i
     javacall_printf("javacall_socket_available\n");
 #endif
     int sockfd = (int)handle;  
-    int ret;
-    fd_set  fdR;  
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 0; 
-
-
-    FD_ZERO(&fdR);  
-    FD_SET(sockfd, &fdR);
-    ret = select(sockfd + 1, &fdR, NULL, NULL, &tv);
+    read_buffer* p;
     
-#ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("javacall_socket_available: select return %d\n", ret);
-#endif
-
-    switch (ret) {  
-                case -1:  
-                        return JAVACALL_FAIL;  
-                case 0:  
-                        *pBytesAvailable = 0;
-                        return JAVACALL_OK;
-                default:  
-                        if (FD_ISSET(sockfd, &fdR)) {
-                        	*pBytesAvailable = 1;
-                        	return JAVACALL_OK;
-                        }  
-    }  
-
-    return JAVACALL_FAIL;
+    GET_SOCKET_READ_BUFFER(sockfd, p);
+    if (p) {
+    	 int readpos = p->readpos;
+    	 int writepos = p->writepos;
+    	 if (writepos >= readpos)  *pBytesAvailable = writepos - readpos;
+    	 else *pBytesAvailable = SOCKET_READ_BUFFER_SIZE - readpos;
+        return JAVACALL_OK;
+    } else {
+        return JAVACALL_FAIL;
+    }
 }
     
 /**
