@@ -52,6 +52,9 @@ extern "C" {
 #include <psputility.h>
 #include <psputility_netparam.h>
 //#define DEBUG_JAVACALL_NETWORK 1
+
+#define BYPASS_CMWAP_GATEWAY 1
+
 struct _DNSHandle;
 #define MAX_HOST_LENGTH 256
 #define MAX_IPBYTES_SIZE 32
@@ -515,6 +518,16 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("javacall_network_gethostbyname_start: %s\n", hostname);
 #endif
+
+#ifdef BYPASS_CMWAP_GATEWAY
+    if (!strcmp(hostname, "10.0.0.172")) {
+#ifdef DEBUG_JAVACALL_NETWORK
+        javacall_print("CMWAP gateway - 10.0.0.172 is not supported!\n");
+#endif
+        return JAVACALL_FAIL;
+    }
+#endif
+
     if(sceNetInetInetAton(hostname, &addr) != 0) {
 #ifdef DEBUG_JAVACALL_NETWORK
     	javacall_printf("sceNetInetInetAton ok\n");
