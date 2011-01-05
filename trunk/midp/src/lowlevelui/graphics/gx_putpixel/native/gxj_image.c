@@ -277,6 +277,35 @@ create_transformed_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, 
   } /* for y */
 }
 
+#define COPY_1BYTE_WITH_ALPHA(n) \
+	do { \
+                    if (sa##n == 0xFF) { \
+                        CHECK_PTR_CLIP(dest, (pDest+n)); \
+                        *(pDest+n) = sp##n; \
+                    } \
+                    else if (sa##n > 0x3) { \
+                    	   gxj_pixel_type pd = *(pDest+n); \
+                        r1 = (sp##n >> 11); \
+                        g1 = ((sp##n >> 5) & 0x3F); \
+                        b1 = (sp##n & 0x1F); \
+                                                     \
+                        r2 = (pd >> 11);     \
+                        g2 = ((pd >> 5) & 0x3F); \
+                        b2 = (pd & 0x1F); \
+                                                     \
+                        a2 = sa##n >> 2;     \
+                        a3 = sa##n >> 3;    \
+                                                   \
+                        r1 = (r1 * a3 + r2 * (31 - a3)) >> 5; \
+                        g1 = (g1 * a2 + g2 * (63 - a2)) >> 6; \
+                        b1 = (b1 * a3 + b2 * (31 - a3)) >> 5; \
+                                                                                \
+                        *(pDest+n) = (gxj_pixel_type)((r1 << 11) | (g1 << 5) | (b1)); \
+                    } \
+        }while(0);            
+
+
+
 /**
  * Renders the contents of the specified region of this
  * mutable image onto the destination specified.
@@ -438,34 +467,35 @@ copy_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, const jshort *
         int srcWidthDiff = src->width - width;
         int r1, g1, b1, a2, a3, r2, b2, g2;
 
+        
+
         if (src->alphaData != NULL) {
-            unsigned char *pSrcAlpha = src->alphaData + (y_src * src->width) + x_src;
+            unsigned char *pSrcAlpha = src->alphaData + (y_src * src->width) + x_src;    
 
             /* copy the source to the destination */
             for (rowsCopied = 0; rowsCopied < height; rowsCopied++) {
-                for (limit = pDest + width; pDest < limit; pDest++, pSrc++, pSrcAlpha++) {
-                    if ((*pSrcAlpha) == 0xFF) {
-                        CHECK_PTR_CLIP(dest, pDest);
-                        *pDest = *pSrc;
-                    }
-                    else if (*pSrcAlpha > 0x3) {
-                        r1 = (*pSrc >> 11);
-                        g1 = ((*pSrc >> 5) & 0x3F);
-                        b1 = (*pSrc & 0x1F);
+            	  limit = pDest + width;
+                for (; pDest < limit - 4; pDest+=4, pSrc+=4, pSrcAlpha+=4) {
+                    unsigned char sa0 = *pSrcAlpha;
+                    unsigned char sa1 = *(pSrcAlpha+1);
+                    unsigned char sa2 = *(pSrcAlpha+2);
+                    unsigned char sa3 = *(pSrcAlpha+3);
+                    gxj_pixel_type sp0 = *pSrc;
+                    gxj_pixel_type sp1 = *(pSrc+1);
+                    gxj_pixel_type sp2 = *(pSrc+2);
+                    gxj_pixel_type sp3 = *(pSrc+3);
 
-                        r2 = (*pDest >> 11);
-                        g2 = ((*pDest >> 5) & 0x3F);
-                        b2 = (*pDest & 0x1F);
+                    COPY_1BYTE_WITH_ALPHA(0);
+                    COPY_1BYTE_WITH_ALPHA(1);
+                    COPY_1BYTE_WITH_ALPHA(2);
+                    COPY_1BYTE_WITH_ALPHA(3);
+                }
 
-                        a2 = *pSrcAlpha >> 2;
-                        a3 = *pSrcAlpha >> 3;
-
-                        r1 = (r1 * a3 + r2 * (31 - a3)) >> 5;
-                        g1 = (g1 * a2 + g2 * (63 - a2)) >> 6;
-                        b1 = (b1 * a3 + b2 * (31 - a3)) >> 5;
-
-                        *pDest = (gxj_pixel_type)((r1 << 11) | (g1 << 5) | (b1));
-                    }
+                for (; pDest < limit; pDest++, pSrc++, pSrcAlpha++) {
+                    unsigned char sa0 = *pSrcAlpha;
+                    gxj_pixel_type sp0 = *pSrc;
+                    
+                    COPY_1BYTE_WITH_ALPHA(0);
                 }
 
                 pDest += destWidthDiff;
@@ -475,9 +505,28 @@ copy_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, const jshort *
         } else {
             /* copy the source to the destination */
             for (rowsCopied = 0; rowsCopied < height; rowsCopied++) {
-                for (limit = pDest + width; pDest < limit; pDest++, pSrc++) {
-                    CHECK_PTR_CLIP(dest, pDest);
-                    *pDest = *pSrc;
+                limit = pDest + width;
+                for (; pDest < limit-4; pDest+=4, pSrc+=4) {
+                    unsigned short sp0 = *(pSrc+0);
+                    unsigned short sp1 = *(pSrc+1);
+                    unsigned short sp2 = *(pSrc+2);
+                    unsigned short sp3 = *(pSrc+3);
+                    
+                    CHECK_PTR_CLIP(dest, (pDest+0));
+                    CHECK_PTR_CLIP(dest, (pDest+1));
+                    CHECK_PTR_CLIP(dest, (pDest+2));
+                    CHECK_PTR_CLIP(dest, (pDest+3));
+                    *(pDest+0) = sp0;
+                    *(pDest+1) = sp1;
+                    *(pDest+2) = sp2;
+                    *(pDest+3) = sp3;
+                }
+
+                for (; pDest < limit; pDest++, pSrc++) {
+                    unsigned short sp0 = *(pSrc+0);
+                    
+                    CHECK_PTR_CLIP(dest, (pDest+0));
+                    *(pDest+0) = sp0;
                 }
 
                 pDest += destWidthDiff;
