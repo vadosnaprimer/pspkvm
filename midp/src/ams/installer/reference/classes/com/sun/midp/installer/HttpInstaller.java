@@ -357,35 +357,45 @@ public class HttpInstaller extends Installer {
                     throw new InvalidJadException(serverNotFoundCode, url);
                 }
 
-                if (responseCode != HttpConnection.HTTP_UNAVAILABLE) {
-                    break;
-                }
-
-                retryAfterField = httpConnection.getHeaderField("Retry-After");
-                if (retryAfterField == null) {
-                    break;
-                }
-
-                try {
-                    /*
-                     * see if the retry interval is in seconds, and
-                     * not an absolute date
-                     */
-                    retryInterval = Integer.parseInt(retryAfterField);
-                    if (retryInterval > 0) {
-                        if (retryInterval > 60) {
-                            // only wait 1 min
-                            retryInterval = 60;
-                        }
-
-                        Thread.sleep(retryInterval * 1000);
+                if (responseCode == HttpConnection.HTTP_MOVED_TEMP) {
+                    String location = httpConnection.getHeaderField("Location");
+                    if (location == null) {
+                        break;
+                    } else {
+                        url = location;
                     }
-                } catch (InterruptedException ie) {
-                    // ignore thread interrupt
-                    break;
-                } catch (NumberFormatException ne) {
-                    // ignore bad format
-                    break;
+                } else {
+
+                    if (responseCode != HttpConnection.HTTP_UNAVAILABLE) {
+                        break;
+                    }
+    
+                    retryAfterField = httpConnection.getHeaderField("Retry-After");
+                    if (retryAfterField == null) {
+                        break;
+                    }
+    
+                    try {
+                        /*
+                         * see if the retry interval is in seconds, and
+                         * not an absolute date
+                         */
+                        retryInterval = Integer.parseInt(retryAfterField);
+                        if (retryInterval > 0) {
+                            if (retryInterval > 60) {
+                                // only wait 1 min
+                                retryInterval = 60;
+                            }
+    
+                            Thread.sleep(retryInterval * 1000);
+                        }
+                    } catch (InterruptedException ie) {
+                        // ignore thread interrupt
+                        break;
+                    } catch (NumberFormatException ne) {
+                        // ignore bad format
+                        break;
+                    }
                 }
 
                 httpConnection.close();
