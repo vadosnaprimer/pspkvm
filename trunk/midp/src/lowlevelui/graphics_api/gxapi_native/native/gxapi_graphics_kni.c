@@ -1121,7 +1121,7 @@ KNIDECL(javax_microedition_lcdui_Graphics_render) {
             IMGAPI_GET_IMAGE_PTR(gImg) =
 	      (struct Java_javax_microedition_lcdui_Image *)
 	      (GXAPI_GET_GRAPHICS_PTR(g)->img);
-            if (KNI_IsSameObject(gImg, img) || !check_anchor(anchor,0)) {
+            if (/*KNI_IsSameObject(gImg, img) || */!check_anchor(anchor,0)) {
                 success = KNI_FALSE; //KNI_ThrowNew(midpIllegalArgumentException, NULL);
             } else if (!normalize_anchor(&x, &y, srcImageDataPtr->width, 
 					       srcImageDataPtr->height, 
