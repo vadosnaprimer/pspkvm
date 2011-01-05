@@ -2457,14 +2457,17 @@ public class Display {
             (((TextField)item).textFieldLF instanceof TextFieldLFImpl)) {
                 TextFieldLF textLF =  ((TextField)item).textFieldLF;
                 TextFieldLFImpl textLFImpl = (TextFieldLFImpl)textLF;
-
-                //Always set current input mode to the first input mode: QWERTY
-                //It really depends on the order of modes
-                InputMode[] modes = textLFImpl.getInputSession().getAvailableModes();
-                textLFImpl.getInputSession().setCurrentInputMode(modes[0]);
-                try {                    
+                try {
+                     //Always set current input mode to the first input mode: QWERTY
+                     //It really depends on the order of modes
+                     InputMode[] modes = textLFImpl.getInputSession().getAvailableModes();
+                     textLFImpl.getInputSession().setCurrentInputMode(modes[0]);
+                                    
                 	keyboardLayer = AbstractKeyboardLayer.getVKInstance(textLFImpl);
                 } catch (VirtualKeyboardException e) {
+                    keyboardLayer = null;
+                } catch (IllegalStateException ise) {
+                    System.out.println(ise.getMessage());
                     keyboardLayer = null;
                 }
             }
