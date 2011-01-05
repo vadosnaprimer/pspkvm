@@ -226,43 +226,49 @@ class CldcPlatformRequest implements PlatformRequest {
 
             httpConnection = (HttpConnection)conn;
 
-    //        httpConnection.setRequestMethod(HttpConnection.HEAD);
-
-            httpConnection.setRequestProperty("Accept", "*/*");
-
-            profile = System.getProperty("microedition.profiles");
-            space = profile.indexOf(' ');
-            if (space != -1) {
-                profile = profile.substring(0, space);
-            }
-
-            configuration = System.getProperty("microedition.configuration");
-
-            String forceReplaceUserAgent = System.getProperty("com.pspkvm.forceReplaceUserAgent");
-            String userAgent = System.getProperty("com.pspkvm.user-agent");
-            if (userAgent != null) {
-                if ("true".equals(forceReplaceUserAgent) ||
-                    httpConnection.getRequestProperty("User-Agent") == null) {
-                    httpConnection.setRequestProperty("User-Agent", userAgent);
-                }
-            }else {
-
-                httpConnection.setRequestProperty("User-Agent",
-                "Profile/" + profile + " Configuration/" + configuration);
-            }
-            httpConnection.setRequestProperty("Accept-Charset",
-                                              "UTF-8, ISO-8859-1");
-
-            /* locale can be null */
-            locale = System.getProperty("microedition.locale");
-            if (locale != null) {
-                httpConnection.setRequestProperty("Accept-Language", locale);
-            }
+            setRequestProperty(httpConnection);
 
             responseCode = httpConnection.getResponseCode();
 
+            System.out.println("responseCode="+responseCode);
+
             if (responseCode != HttpConnection.HTTP_OK) {
-                return false;
+                if (responseCode == HttpConnection.HTTP_MOVED_TEMP) {
+                    try {
+                    	   
+                    	   url = httpConnection.getHeaderField("Location");
+                    	   
+                    	   if (url == null || url.equals("")) {
+                    	       return false;
+                    	   }
+                    	   System.out.println(url);
+                    	   httpConnection.close();
+                        conn = Connector.open(url, Connector.READ);
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    } catch (IOException e) {
+                        return false;
+                    }
+
+                    if (!(conn instanceof HttpConnection)) {
+                        // only HTTP or HTTPS are supported
+                        return false;
+                    }
+
+                    httpConnection = (HttpConnection)conn;
+                    
+                    setRequestProperty(httpConnection);
+                    responseCode = httpConnection.getResponseCode();
+                    
+                    System.out.println("responseCode="+responseCode);
+                    
+                    if (responseCode != HttpConnection.HTTP_OK) {
+                        return false;
+                    }
+                    
+                } else {
+                    return false;
+                }
             }
 
             mediaType = Util.getHttpMediaType(httpConnection.getType());
@@ -317,4 +323,44 @@ class CldcPlatformRequest implements PlatformRequest {
      */
     public native final boolean dispatchPlatformRequest(String url) throws
         ConnectionNotFoundException;
+
+    private final void setRequestProperty(HttpConnection httpConnection) throws IOException{
+    	     String profile;
+            int space;
+            String configuration;
+            String locale;
+
+            httpConnection.setRequestMethod(HttpConnection.GET);
+
+            httpConnection.setRequestProperty("Accept", "*/*");
+
+            profile = System.getProperty("microedition.profiles");
+            space = profile.indexOf(' ');
+            if (space != -1) {
+                profile = profile.substring(0, space);
+            }
+
+            configuration = System.getProperty("microedition.configuration");
+
+            String forceReplaceUserAgent = System.getProperty("com.pspkvm.forceReplaceUserAgent");
+            String userAgent = System.getProperty("com.pspkvm.user-agent");
+            if (userAgent != null) {
+                if ("true".equals(forceReplaceUserAgent) ||
+                    httpConnection.getRequestProperty("User-Agent") == null) {
+                    httpConnection.setRequestProperty("User-Agent", userAgent);
+                }
+            }else {
+
+                httpConnection.setRequestProperty("User-Agent",
+                "Profile/" + profile + " Configuration/" + configuration);
+            }
+            httpConnection.setRequestProperty("Accept-Charset",
+                                              "UTF-8, ISO-8859-1");
+
+            /* locale can be null */
+            locale = System.getProperty("microedition.locale");
+            if (locale != null) {
+                httpConnection.setRequestProperty("Accept-Language", locale);
+            }
+    }
 }
