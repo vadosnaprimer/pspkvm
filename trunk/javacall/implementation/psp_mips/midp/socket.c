@@ -406,10 +406,6 @@ static int socket_read_thread(SceSize args, void *argp) {
 #ifdef DEBUG_JAVACALL_NETWORK
         		        	    javacall_printf("recv returns EOF\n");
 #endif
-        		        	} else {
-#ifdef DEBUG_JAVACALL_NETWORK
-        		        	    javacall_printf("recv returns error: %d\n", errno);
-#endif
         		        	}
         
         		        	if (writepos >= SOCKET_READ_BUFFER_SIZE) {
@@ -460,7 +456,7 @@ javacall_result javacall_socket_read_start(void *handle,unsigned char *pData,int
 #endif
 
     if (!read_thread_started) {
-        SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x30, 16 *1024, PSP_THREAD_ATTR_USER, NULL);	
+        SceUID thid = sceKernelCreateThread("socket_read_thread", socket_read_thread, 0x28, 16 *1024, PSP_THREAD_ATTR_USER, NULL);	
         if(thid < 0) {	
         	javacall_printf("Error, could not create thread for read\n");	
         	return JAVACALL_FAIL;	
