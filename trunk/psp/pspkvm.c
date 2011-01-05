@@ -47,7 +47,7 @@ PSP_MODULE_INFO("pspkvm", 0x1000, 1, 1);
 PSP_MAIN_THREAD_ATTR(0);
 #endif
 
-PSP_HEAP_SIZE_KB(-4096);
+PSP_HEAP_SIZE_KB(-3048);
 
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
@@ -680,7 +680,7 @@ test_mem("After setup GU");
     	
 	/* create user thread */
 	thid = sceKernelCreateThread("Java Thread", java_main,
-											0x2f, // default priority
+											0x25, // default priority
 											512 * 1024, // stack size
 											PSP_THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU, NULL); //# user mode
 
