@@ -50,7 +50,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		discoveryMidlet = AMSMidletCustomItem_Installer.getDiscoveryMidletCI(owner, this);
 		wifiMidlet = AMSMidletCustomItem_WifiManager.getWiFiMidletCI(owner, this);
 		vmConfigMidlet = AMSMidletCustomItem_VMConfigPanel.getVMSPanelCI(owner, this); 
-		appGalleryMidlet = AMSMidletCustomItem_AppGallery.getAppGalleryCI(owner, this); 
+		//appGalleryMidlet = AMSMidletCustomItem_AppGallery.getAppGalleryCI(owner, this); 
 	}
 
 	// Create the system folder
@@ -81,8 +81,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		owner.insertAt(idx, wifiMidlet);
 		idx++;
 		owner.insertAt(idx, vmConfigMidlet);
-		idx++;
-		owner.insertAt(idx, appGalleryMidlet);
+		//idx++;
+		//owner.insertAt(idx, appGalleryMidlet);
 		int c = subfolders.length;
 		for(int i=0; i<c; i++) {
 			subfolders[i].updateDisplay();
@@ -102,7 +102,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		discoveryMidlet.hide();
 		wifiMidlet.hide();
 		vmConfigMidlet.hide();
-		appGalleryMidlet.hide();
+		//appGalleryMidlet.hide();
 		super.setClosed(); }
 		
 	// Override
@@ -112,7 +112,7 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 		discoveryMidlet.updateDisplay();
 		wifiMidlet.updateDisplay();
 		vmConfigMidlet.updateDisplay();
-		appGalleryMidlet.updateDisplay();
+		//appGalleryMidlet.updateDisplay();
 		
 		super.updateDisplayForContents(); }
 
@@ -124,8 +124,8 @@ class AMSSystemFolderCustomItem extends AMSFolderCustomItem {
 				return wifiMidlet; }
 			if (vmConfigMidlet.msi.equals(midlet)) {
 				return vmConfigMidlet; }
-			if (appGalleryMidlet.msi.equals(midlet)) {
-				return appGalleryMidlet; }
+			//if (appGalleryMidlet.msi.equals(midlet)) {
+			//	return appGalleryMidlet; }
 		return super.find(midlet); }
 
 }
