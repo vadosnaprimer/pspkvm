@@ -1035,6 +1035,7 @@ public class Protocol extends ConnectionBaseAdapter
      *            flush after the request has finished.
      */
     public void flush() throws IOException {
+        boolean chunkout = true;
 
         if (bytesToWrite <= 0) {
             return;
@@ -1045,7 +1046,16 @@ public class Protocol extends ConnectionBaseAdapter
                  "Flush attempted after request finished");
         }
 
-        sendRequest(true, false);
+        String content_length = getRequestProperty("Content-Length");
+        try {
+            if (content_length != null && Integer.parseInt(content_length) == bytesToWrite) {
+                chunkout = false;
+            }
+        } catch (NumberFormatException ne) {
+            ne.printStackTrace();
+        }
+        
+        sendRequest(chunkout, false);
     }
 
     /** 
