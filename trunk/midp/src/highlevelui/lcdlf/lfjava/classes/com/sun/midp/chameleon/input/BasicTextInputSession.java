@@ -106,7 +106,7 @@ public class BasicTextInputSession implements
      * @return an array of InputModes which are available to use given the
      *         current TextInputComponent and its input constraints
      */
-    public InputMode[] getAvailableModes() {
+    public InputMode[] getAvailableModes() throws IllegalStateException {
         System.out.println("getAvailableModes");
         if (textComponent == null) {
             throw new IllegalStateException(

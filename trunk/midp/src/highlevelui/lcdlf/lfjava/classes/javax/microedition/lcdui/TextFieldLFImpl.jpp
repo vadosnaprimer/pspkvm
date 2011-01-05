@@ -1124,7 +1124,12 @@ class TextFieldLFImpl extends ItemLFImpl implements
         removeInputCommands();
 
         TextInputSession is = getInputSession();
-        inputModes = is.getAvailableModes();
+        
+        try {
+            inputModes = is.getAvailableModes();
+        } catch (IllegalStateException ise) {
+            ise.printStackTrace();
+        }
         
         InputMode im = is.getCurrentInputMode();
 

@@ -67,7 +67,7 @@ public interface TextInputSession {
      * @return an array of InputModes which are available to use given the
      *         current TextInputComponent and its input constraints
      */
-    public InputMode[] getAvailableModes();
+    public InputMode[] getAvailableModes()  throws IllegalStateException ;
 
     /**
      * Retrieve the InputMode which is the current "active" mode
