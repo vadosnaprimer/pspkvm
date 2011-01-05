@@ -157,11 +157,17 @@ asm volatile(
 #define ASM_LOOPOPTIMIZE 1 /* collapse multiple scanlines to 1 */
 #endif 
 
+#ifdef PSP
+#define MIPS_BLIT 1
+#endif
+
 #if (!UNDER_CE)
 void unclipped_blit(unsigned short *dstRaster, int dstSpan,
 		    unsigned short *srcRaster, int srcSpan,
 		    int height, int width, gxj_screen_buffer *dst) {
     (void)dst;
+
+    //printf("unclipped_blit: height=%d, width=%d, dstSpan=%d, srcSpan=%d\n", height, width, dstSpan, srcSpan);
 
 #if ASM_BLIT
     __asm {
@@ -354,6 +360,101 @@ void unclipped_blit(unsigned short *dstRaster, int dstSpan,
 
     done:
     }
+#elif MIPS_BLIT
+  unsigned short* next_ps;
+  unsigned short* next_pd;
+  int w = width;
+  int flag1 = dstSpan > 8 && srcSpan > 8 && width > 8;
+  unsigned flag2 = (unsigned int)dstRaster | (unsigned int)srcRaster | dstSpan | srcSpan;
+
+  /* single memcpy optimization */
+  if ((width == srcSpan) && (srcSpan == dstSpan)) {
+        width = dstSpan * height;
+        height = 1;
+  }
+      
+  dstSpan >>= 1;
+  srcSpan >>=1;
+  
+  for (; height > 0; height--) {
+    next_ps = srcRaster + srcSpan;
+    next_pd = dstRaster + dstSpan;
+    
+    if (flag1) {
+        if ((flag2 & 0x03) == 0) {
+            //align by 4
+            
+            long * pd = (long*)dstRaster;
+            long * ps = (long*)srcRaster;
+            
+            for (; width >= 32; width -= 32) {
+            	  long t1, t2;
+            	  t1 = *ps++;
+                t2 = *ps++;
+                *pd++ = t1;
+                *pd++ = t2;
+
+                t1 = *ps++;
+                t2 = *ps++;
+
+                *pd++ = t1;
+                *pd++ = t2;   
+
+                t1 = *ps++;
+                t2 = *ps++;
+                *pd++ = t1;
+                *pd++ = t2;
+
+                t1 = *ps++;
+                t2 = *ps++;
+                *pd++ = t1;
+                *pd++ = t2;   
+            }
+
+            dstRaster = (unsigned short*)pd;
+            srcRaster = (unsigned short*)ps;
+        }
+    }
+    
+    for (; width >= 16; width -= 16 ) {
+    	 unsigned short t1, t2;
+
+        t1 = *srcRaster++;
+        t2 = *srcRaster++;
+        *dstRaster++ = t1;
+        *dstRaster++ = t2;
+
+        t1 = *srcRaster++;
+        t2 = *srcRaster++;
+        *dstRaster++ = t1;
+        *dstRaster++ = t2;
+
+        t1 = *srcRaster++;
+        t2 = *srcRaster++;
+        *dstRaster++ = t1;
+        *dstRaster++ = t2;
+        
+        t1 = *srcRaster++;
+        t2 = *srcRaster++;
+        *dstRaster++ = t1;
+        *dstRaster++ = t2;
+    }
+
+    switch (width) {
+    case 14: *dstRaster++ = *srcRaster++;
+    case 12: *dstRaster++ = *srcRaster++;
+    case 10: *dstRaster++ = *srcRaster++;
+    case 8: *dstRaster++ = *srcRaster++;
+    case 6: *dstRaster++ = *srcRaster++;
+    case 4: *dstRaster++ = *srcRaster++;
+    case 2: *dstRaster++ = *srcRaster++;
+    }
+
+    srcRaster = next_ps;
+    dstRaster = next_pd;
+    width = w;
+  }
+  
 #else
   dstSpan >>= 1; srcSpan >>= 1;
   if (((unsigned int)dstRaster | (unsigned int)srcRaster | 
