@@ -440,6 +440,8 @@ copy_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, const jshort *
         width -= diff;
         x_dest = clipX1;
     }
+    
+    if (width <= 0) goto end;
 
     diff = clipY1 - y_dest;
     if (diff > 0) {
@@ -447,6 +449,8 @@ copy_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, const jshort *
         height -= diff;
         y_dest = clipY1;
     }
+
+    if (height <= 0) goto end;
 
     diff = (x_dest + width) - clipX2;
     if (diff > 0) {
@@ -467,7 +471,7 @@ copy_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, const jshort *
         int srcWidthDiff = src->width - width;
         int r1, g1, b1, a2, a3, r2, b2, g2;
 
-        
+        if (destWidthDiff < 0 || srcWidthDiff < 0) goto end; 
 
         if (src->alphaData != NULL) {
             unsigned char *pSrcAlpha = src->alphaData + (y_src * src->width) + x_src;    
@@ -535,6 +539,7 @@ copy_imageregion(gxj_screen_buffer* src, gxj_screen_buffer* dest, const jshort *
         }
     }
 
+end:
     if (newSrc.pixelData != NULL) {
         midpFree(newSrc.pixelData);
     }
