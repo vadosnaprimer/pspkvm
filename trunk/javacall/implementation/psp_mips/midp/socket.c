@@ -51,7 +51,7 @@ extern "C" {
 #define SOCKET_ERROR   (-1)
 
 #define MAX_SOCK_NUM 32
-#define SOCKET_READ_BUFFER_SIZE (8192)
+#define SOCKET_READ_BUFFER_SIZE (16384)
 #ifdef DEBUG_JAVACALL_NETWORK
 static int socket_open_count=0;
 #endif
@@ -114,6 +114,7 @@ typedef struct {
     //=0 EOF
     //>0 ok
     //***
+    int pending_socket_event;
 #ifdef DEBUG_JAVACALL_NETWORK
     int totalread;
     int totalwrite;
@@ -284,6 +285,7 @@ javacall_result javacall_socket_open_finish(void *handle, void *context) {
         	    p->writepos = 0;
         	    p->status = 1;
         	    p->fd = handle;
+        	    p->pending_socket_event = 0;
 #ifdef DEBUG_JAVACALL_NETWORK
         	    socket_open_count++;
                   javacall_printf("javacall_socket_open_finish: %d sockets left\n", socket_open_count);
@@ -322,6 +324,7 @@ static javacall_result readFromBuffer(int handle, unsigned char* pData, int len,
               bytesToRead = SOCKET_READ_BUFFER_SIZE - readpos;
         } else {
             //nothing to read, would block...
+            p->pending_socket_event = 0;
             return JAVACALL_WOULD_BLOCK;
         }
 
@@ -415,7 +418,12 @@ static int socket_read_thread(SceSize args, void *argp) {
         		        	p->writepos = writepos;
         		        	
         		        	if (status >= 0 || (status < 0 && errno != EWOULDBLOCK && errno != EINPROGRESS)) {
-        		        	    javanotify_socket_event(JAVACALL_EVENT_SOCKET_RECEIVE, sock, status>=0?JAVACALL_OK:JAVACALL_FAIL);
+        		        	    if ((status <= 0) || !p->pending_socket_event) {
+                                           if (status > 0) {
+        		        	            p->pending_socket_event = 1;
+        		        	        }
+        		        	        javanotify_socket_event(JAVACALL_EVENT_SOCKET_RECEIVE, sock, status>=0?JAVACALL_OK:JAVACALL_FAIL);
+        		        	    }
         		        	}
                             }
 		           }
