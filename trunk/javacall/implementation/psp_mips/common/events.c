@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#define NUM_MBX 5
+#define NUM_MBX 10
 static int _psp_mailboxID[NUM_MBX];
 static SceUID _psp_semaID;
 
