@@ -158,7 +158,7 @@ typedef enum {
     /** Game Right key */
     JAVACALL_KEY_GAME_RIGHT = -20,
     /** DEBUG TRACE key*/
-    JAVACALL_KEY_DEBUG_TRACE = -21,
+    JAVACALL_KEY_DEBUG_TRACE = -22,
     /** MULTI TASKING key*/
     JAVACALL_KEY_MULTI_TASK = -23
 } javacall_key;
