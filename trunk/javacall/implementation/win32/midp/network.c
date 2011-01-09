@@ -576,6 +576,11 @@ javacall_result javacall_network_setsockopt(void *handle,
     case JAVACALL_SOCK_DELAY: /* DELAY */
         level = IPPROTO_TCP;
         optname = TCP_NODELAY;
+        if (optval == 0) {
+            optval = 1;
+        } else {
+            optval = 0;
+        }
         break;
 
     case JAVACALL_SOCK_LINGER: /* LINGER */
