@@ -635,6 +635,13 @@ javacall_result /*OPTIONAL*/ javacall_network_getsockopt(javacall_handle handle,
     }
 
     if (getsockopt(fd, level,  optname, opttarget, &optsize) == 0 ) {
+    	 if (optname == TCP_NODELAY) {
+    	     if (*pOptval == 0) {
+    	         *pOptval = 1;
+    	     } else {
+    	         *pOptval =0;
+    	     }
+    	 }
 
         if (optname == SO_LINGER) {
             /* If linger is on return the number of seconds. */
@@ -667,13 +674,21 @@ javacall_result /*OPTIONAL*/ javacall_network_setsockopt(javacall_handle handle,
     struct linger lbuf ;
     void * opttarget = (void *) & optval ;
 
-    //int fd = na_get_fd(handle);
     int fd = (int)handle;
+    
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("javacall_network_setsockopt(flag=0x%x, optval=0x%x)\n",  flag, optval);
+#endif
 
     switch (flag) { 
     case JAVACALL_SOCK_DELAY: /* DELAY */
         level = IPPROTO_TCP;
         optname = TCP_NODELAY;
+        if (optval == 0) {
+            optval = 1;
+        } else {
+            optval = 0;
+        }
         break;
     case JAVACALL_SOCK_LINGER: /* LINGER */
         opttarget = (void *) &lbuf ;
@@ -692,15 +707,20 @@ javacall_result /*OPTIONAL*/ javacall_network_setsockopt(javacall_handle handle,
         break;
     case JAVACALL_SOCK_RCVBUF: /* RCVBUF */
         optname = SO_RCVBUF;
+        if (optval < 8192) optval = 8192;
         break;
     case JAVACALL_SOCK_SNDBUF: /* SNDBUF */
         optname = SO_SNDBUF;
+        if (optval < 8192) optval = 8192;
         break;
     default:
         return JAVACALL_INVALID_ARGUMENT;
     }
 
     if (setsockopt(fd, level,  optname, opttarget, optsize) != 0) {
+#ifdef DEBUG_JAVACALL_NETWORK
+    javacall_printf("setsockopt fail.\n");
+#endif
         return JAVACALL_FAIL;
     }
 
