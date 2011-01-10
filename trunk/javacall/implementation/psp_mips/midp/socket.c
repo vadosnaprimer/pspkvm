@@ -501,6 +501,13 @@ javacall_result javacall_socket_read_finish(void *handle,unsigned char *pData,in
     return javacall_socket_read_start(handle, pData, len, pBytesRead, NULL);
 }
 
+static SceUInt socket_write_retey(void *common)
+{
+	int sock = (int)common;
+	javanotify_socket_event(JAVACALL_EVENT_SOCKET_SEND, sock, JAVACALL_OK);
+	return 0;
+}
+
 /**
  * Initiates a write to a platform-specific TCP socket.
  *
@@ -519,19 +526,30 @@ javacall_result javacall_socket_read_finish(void *handle,unsigned char *pData,in
  * @retval JAVACALL_INTERRUPTED for an Interrupted IO Exception
  */
 javacall_result javacall_socket_write_start(void *handle,char *pData,int len,int *pBytesWritten,void **pContext) {
-
     int sockfd = (int) handle;
+    int status, err;
+    
 #ifdef DEBUG_JAVACALL_NETWORK
     javacall_printf("socket_write_common write %d bytes\n", len);
 #endif
-    int status = send(sockfd, pData, len, 0);
+    status = send(sockfd, pData, len, 0);
+    err = errno;
 #ifdef DEBUG_JAVACALL_NETWORK
-    javacall_printf("write retrun %d, errno:%d\n", status, status==-1?errno:0);
+    javacall_printf("write retrun %d, errno:%d\n", status, status==-1?err:0);
 #endif
     if (SOCKET_ERROR == status) {
-        if (EWOULDBLOCK == errno || EINPROGRESS == errno) {
-            //return JAVACALL_WOULD_BLOCK;
-            return JAVACALL_FAIL; //Hum... I assume "write" would never block... is it correct? -M@x
+        if (EWOULDBLOCK == err || EINPROGRESS == err) {
+            if (pContext == NULL) {
+                //Only retry once. If pContext == NULL, it's a reentry, so returns JAVACALL_FAIL without retrying again.
+                return JAVACALL_FAIL;
+            }
+            SceUID id = sceKernelSetAlarm(300000, socket_write_retey, (void*)sockfd);
+	     if (id < 0) {
+	       javacall_print("javacall_socket_write_start: sceKernelSetAlarm error!\n");
+	       return JAVACALL_FAIL;
+	     }
+            return JAVACALL_WOULD_BLOCK;
+            //return JAVACALL_FAIL; //Hum... I assume "write" would never block... is it correct? -M@x
         } else if (EINTR == errno) {
             return JAVACALL_INTERRUPTED;
         } else {
@@ -560,7 +578,7 @@ javacall_result javacall_socket_write_start(void *handle,char *pData,int len,int
  * @retval JAVACALL_INTERRUPTED for an Interrupted IO Exception
  */
 javacall_result javacall_socket_write_finish(void *handle,char *pData,int len,int *pBytesWritten,void *context) {
-    return JAVACALL_FAIL; //Since write_start never blocking, write_finish should never be invoked
+    return javacall_socket_write_start(handle, pData, len, pBytesWritten, NULL); 
 }
     
 /**
