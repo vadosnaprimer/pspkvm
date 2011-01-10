@@ -120,6 +120,10 @@ public class DisplayEventListener implements EventListener {
                       nativeEvent.intParam2 == EventConstants.DEBUG_TRACE1) {
                     // This is a special VM hook to print all stacks
                     if (nativeEvent.intParam1 == EventConstants.PRESSED) {
+                    	 System.out.println("DEBUG INFORMATION:");
+                    	 Runtime runtime = Runtime.getRuntime();
+                    	 System.out.println("Free Java heap="+runtime.freeMemory());
+                    	 System.out.println("Total Java heap="+runtime.totalMemory());
                       System.getProperty("__debug.only.pss");
                     }
                 } else {
