@@ -26,6 +26,15 @@ Additional documentation
  * See Readme.txt for user tips and general project information.
  * See BUILDING.TXT for notes on building this software.
 
+-----------------------------------------------------------------------
+Change log for release version 0.5.5 (relative to 0.5.4 final release)
+-----------------------------------------------------------------------
+- Network optimization. Resolve the randomly network drop issue.
+- Fix platformRequest and HttpInstaller problem, now can handle HTTP 302 response.
+- Enlarge HTTP buffer for better downloading speed.
+- Graphics optimization.
+- Some bug fixes (Please refer to SVN log)
+
 ---------------------------------------------
 Changes for 0.5.5 Test 3 (relative to Test 2)
 ---------------------------------------------

@@ -32,11 +32,11 @@ LIBS := -Wl,--start-group -lmidp$(g) -lcldc_vm$(cg) -lstdc++ -lpcsl_file -lpcsl_
 
 EXTRA_TARGETS = EBOOT.PBP 
 ifeq ($(BUILD_SLIM), true)
-PSP_EBOOT_TITLE = PSPKVM v0.5.5 Test 4 CFW
+PSP_EBOOT_TITLE = PSPKVM v0.5.5 Final Release CFW
 PSP_FW_VERSION = 352
 BUILD_PRX=1
 else
-PSP_EBOOT_TITLE = PSPKVM v0.5.5 Test 4 OFW
+PSP_EBOOT_TITLE = PSPKVM v0.5.5 Final Release OFW
 PSP_FW_VERSION = 150
 BUILD_PRX=0
 endif
