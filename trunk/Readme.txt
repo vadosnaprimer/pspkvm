@@ -1,5 +1,5 @@
-PSPKVM 0.5.5 Test 3
-6 November 2009
+PSPKVM 0.5.5 Final Release
+10 Jan 2011
 Developers: Sleepper, M@x, Anweifeng, AJ Milne
 Testing: Jurgen Konings 
 Email: feedback@pspkvm.org, pspkvm@gmail.com 
@@ -73,6 +73,7 @@ screen sizes and key codes, either at MIDlet installation time or from the
 - FreeType2 font support
 - JSR 226(SVG)
 - JSR 172(Web Service)
+- MP3 playback
 
 
 --------------------------------
@@ -111,14 +112,14 @@ Running PSPKM from a binary bundle
 
 1. Download the correct binary bundle:
 - If you want to run pspkvm on custom firmware and have installed pspkvm
-0.5.3 or a 0.5.4 test version:
+0.5.4 or a 0.5.5 test version:
    Download pspkvm-bin-x.x.x-CFW-upgrade.zip
 
 - If you want to run pspkvm on custom firmware and haven't installed
 a recent version:
    Download pspkvm-bin-x.x.x-CFW-allinone.zip
    
-Note that there are also 0.5.4-allinone-minimal packages. These do not
+Note that there are also 0.5.x-allinone-minimal packages. These do not
 contain TTF or MIDI files. They are appropriate if you expect to install
 your own fonts, or do not intend to use TTF fonts, and do not intend to
 use MIDI.

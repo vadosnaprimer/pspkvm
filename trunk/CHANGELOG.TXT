@@ -1,5 +1,5 @@
-PSPKVM 0.5.5 Test 3
-6 November 2009
+PSPKVM 0.5.5 Final Release
+10 Jan 2011
 Developers: Sleepper, M@x, Anweifeng, AJ Milne
 Testing: Jurgen Konings 
 Email: feedback@pspkvm.org, pspkvm@gmail.com
@@ -29,11 +29,15 @@ Additional documentation
 -----------------------------------------------------------------------
 Change log for release version 0.5.5 (relative to 0.5.4 final release)
 -----------------------------------------------------------------------
+- MP3 support.
+- AMS UI enhancement.
+- Improved i18n support.
+- Truetype font bug fixes.
 - Network optimization. Resolve the randomly network drop issue.
 - Fix platformRequest and HttpInstaller problem, now can handle HTTP 302 response.
 - Enlarge HTTP buffer for better downloading speed.
 - Graphics optimization.
-- Some bug fixes (Please refer to SVN log)
+- Some minor bug fixes (Please refer to SVN log)
 
 ---------------------------------------------
 Changes for 0.5.5 Test 3 (relative to Test 2)
