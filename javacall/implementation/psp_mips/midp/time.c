@@ -191,7 +191,7 @@ static void set_time_offset() {
     int daylightsaving = PSP_SYSTEMPARAM_DAYLIGHTSAVINGS_STD;
     int ret = sceRtcGetCurrentTick(&lt);    
     if (ret == 0) {
-    	 javacall_int64 base = sceKernelGetSystemTimeLow() / 1000L;
+    	 javacall_int64 base = sceKernelGetSystemTimeWide() / 1000LL;
         javacall_int64 pers = sceRtcGetTickResolution();
         lt = lt / pers;
         lt -= 62135596800LL;
@@ -213,7 +213,7 @@ javacall_int64 /*OPTIONAL*/ javacall_time_get_milliseconds_since_1970(void){
     if (time_offset == 0) {
     	 set_time_offset();
     }
-    javacall_int64 ret = (javacall_int64)sceKernelGetSystemTimeLow() / 1000LL + time_offset;
+    javacall_int64 ret = (javacall_int64)sceKernelGetSystemTimeWide() / 1000LL + time_offset;
     //printf("javacall_time_get_milliseconds_since_1970:%d\n",ret);
     return ret;
 }
@@ -227,7 +227,7 @@ javacall_time_seconds /*OPTIONAL*/ javacall_time_get_seconds_since_1970(void){
     if (time_offset == 0) {
     	 set_time_offset();
     }
-    return (javacall_time_seconds)((javacall_int64)sceKernelGetSystemTimeLow() / 1000000LL + time_offset / 1000LL);
+    return (javacall_time_seconds)(((javacall_int64)sceKernelGetSystemTimeWide() / 1000000LL + time_offset / 1000LL)&0xFFFFFFFF);
 }
 
 /**
