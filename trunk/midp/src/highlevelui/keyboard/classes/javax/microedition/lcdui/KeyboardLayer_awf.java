@@ -188,7 +188,7 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 				case AbstractKeyboardLayer.PINYIN:	
 					return "Pinyin";
 				case AbstractKeyboardLayer.STROKE:	
-					return "strok";	
+					return "Stroke";	
             }
         }
         return null;
