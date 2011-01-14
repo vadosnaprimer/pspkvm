@@ -697,6 +697,7 @@ class AppManagerUI extends Form
 				return; }
 		
 			if (c == AMSMidletCustomItem_Installer.launchInstallCmd) {
+				setLastInstalledMIDlet(MIDletSuite.UNUSED_SUITE_ID);
 				manager.installSuite();
 				return; }
 			if (c == launchCaManagerCmd) {
@@ -1229,6 +1230,41 @@ class AppManagerUI extends Form
         }
 
         return ret;
+    }
+
+    private void setLastInstalledMIDlet(int id) {
+        ByteArrayOutputStream bas;
+        DataOutputStream dos;
+        byte[] data;
+        RecordStore settings = null;
+
+        try {
+            bas = new ByteArrayOutputStream();
+            dos = new DataOutputStream(bas);
+            
+            settings = RecordStore.
+                       openRecordStore(GraphicalInstaller.SETTINGS_STORE,
+                                       false);
+
+            dos.writeInt(id);
+            data = bas.toByteArray();
+
+            settings.setRecord(
+                           GraphicalInstaller.SELECTED_MIDLET_RECORD_ID, data, 0, data.length);
+
+        } catch (RecordStoreException e) {
+            // ignore
+        } catch (IOException e) {
+            // ignore
+        } finally {
+            if (settings != null) {
+                try {
+                    settings.closeRecordStore();
+                } catch (RecordStoreException e) {
+                    // ignore
+                }
+            }
+        }
     }
 
 
