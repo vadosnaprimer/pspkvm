@@ -860,7 +860,8 @@ void Java_java_lang_Runtime_exitInternal(JVM_SINGLE_ARG_TRAPS) {
 }
 
 void Java_java_lang_Runtime_gc(JVM_SINGLE_ARG_TRAPS) {
-  ObjectHeap::full_collect(JVM_SINGLE_ARG_NO_CHECK_AT_BOTTOM);
+  //ObjectHeap::full_collect(JVM_SINGLE_ARG_NO_CHECK_AT_BOTTOM);
+  ObjectHeap::_runtime_gc_requested = 1;
 }
 
 jlong Java_java_lang_Runtime_freeMemory() {
