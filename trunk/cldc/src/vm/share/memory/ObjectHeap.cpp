@@ -126,6 +126,8 @@ inline void ObjectHeap::set_task_allocation_start( OopDesc** p ) {
 #endif
 }
 
+int ObjectHeap::_runtime_gc_requested;
+
 #if ENABLE_ISOLATES
 int       ObjectHeap::_current_task_id;
 int       ObjectHeap::_previous_task_id;
@@ -1162,6 +1164,8 @@ bool ObjectHeap::create() {
     }
   }
 #endif
+
+  _runtime_gc_requested = 0;
 
   if (HeapMin > HeapCapacity) { // Just for convenience.
     HeapMin = HeapCapacity;
@@ -2823,6 +2827,12 @@ void ObjectHeap::collect(size_t min_free_after_collection JVM_TRAPS) {
     violations = detect_out_of_memory_tasks(min_free_after_collection);
   unsigned violations;
   bool is_full_collect;
+
+  if (_runtime_gc_requested) {
+      force_full_collect();
+      _runtime_gc_requested = 0;
+  }
+  
   for( ;; force_full_collect() ) {
     is_full_collect = internal_collect(min_free_after_collection JVM_CHECK);
     DETECT_QUOTA_VIOLATIONS

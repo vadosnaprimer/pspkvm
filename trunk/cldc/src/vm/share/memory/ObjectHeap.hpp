@@ -187,6 +187,8 @@ private:
 #endif
 
 public:
+
+  static int _runtime_gc_requested;
   
   static OopDesc* allocate(size_t size JVM_TRAPS);
   // This function implements JVM_GarbageCollect, which is an external
