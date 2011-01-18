@@ -29,6 +29,8 @@ package com.sun.cldc.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
+import java.util.Hashtable;
+import java.lang.ref.WeakReference;
 
 /**
  * Input stream class for accessing resource files in classpath.
@@ -36,6 +38,9 @@ import java.util.Vector;
 public class ResourceInputStream extends InputStream {
     private Object fileDecoder;
     private Object savedDecoder; // used for mark/reset functionality
+    private byte[] buffer;
+    private int pos, mark;
+    private static Hashtable bufferCache;
 
     /**
      * Fixes the resource name to be conformant with the CLDC 1.0
@@ -104,6 +109,24 @@ public class ResourceInputStream extends InputStream {
         return dirName.toString();
     }
 
+    private byte[] createBuffer() {
+    	 byte[] buf;
+    	 
+    	 try {
+            int len = available();
+            buf = new byte[len];
+            pos = 0;
+            mark = -1;
+            len = read(buf, 0, len);
+    	 } catch (IOException ioe) {
+    	     buf = null;
+    	 } catch (OutOfMemoryError oome) {
+    	     buf = null;
+    	     System.out.println("Out of memory, no buffer created:"+Runtime.getRuntime().freeMemory());
+    	 }
+        return buf;    	 
+    }
+    
     /**
      * Construct a resource input stream for accessing objects in the jar file.
      *
@@ -114,9 +137,31 @@ public class ResourceInputStream extends InputStream {
     public ResourceInputStream(String name) throws IOException {
         String fixedName = fixResourceName(name);
         System.out.println("ResourceInputStream("+name+")");
+        if (bufferCache == null) {
+            bufferCache = new Hashtable();
+        }
+        WeakReference wf = (WeakReference)bufferCache.get(fixedName);
+        if (wf != null) {
+            byte[] buf = (byte[])wf.get();
+            if (buf != null) {
+                pos = 0;
+                mark = -1;
+                buffer = buf;
+                return;
+            }
+        }
+        
         fileDecoder = open(fixedName);
         if (fileDecoder == null) {
             throw new IOException();
+        }
+        buffer = createBuffer();
+        if (buffer != null) {
+            wf = new WeakReference(buffer);
+            WeakReference oldwf = (WeakReference)bufferCache.put(fixedName, wf);
+            if (oldwf != null) {
+                oldwf.clear();
+            }
         }
      }
 
@@ -128,6 +173,15 @@ public class ResourceInputStream extends InputStream {
      * @exception  IOException  if an I/O error occurs.
      */
     public int read() throws IOException {
+        if (buffer != null) {
+            if (pos >= buffer.length) {
+                return -1;
+            }
+            int ret = (int)buffer[pos++];
+            ret &= 0xff;
+            return ret;
+        }
+        
         // Fix for CR 6303054
         if (fileDecoder == null) {
             throw new IOException();
@@ -142,6 +196,10 @@ public class ResourceInputStream extends InputStream {
      * @exception  IOException  if an I/O error occurs.
      */
     public int available() throws IOException {
+        if (buffer != null) {
+            return buffer.length - pos;
+        }
+        
         if (fileDecoder == null) {
             throw new IOException();
         }
@@ -159,21 +217,38 @@ public class ResourceInputStream extends InputStream {
      * @exception  IOException  if an I/O error occurs.
      */
     public int read(byte b[], int off, int len) throws IOException {
-        // Fix for CR 6303054
-        if (fileDecoder == null) {
-            throw new IOException();
-        }
         if (b == null) {
             throw new NullPointerException();
         } else if ((off < 0) || (off > b.length) || (len < 0) ||
                    ((off + len) > b.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         }
+        
+        if (buffer != null) {
+            if (pos >= buffer.length) {
+                return -1;
+            }
+            if (pos + len >= buffer.length) {
+                len = buffer.length - pos;
+            }
+            System.arraycopy(buffer, pos, b, off, len);
+            pos += len;
+            return len;
+        }
+        
+        // Fix for CR 6303054
+        if (fileDecoder == null) {
+            throw new IOException();
+        }
+        
         return readBytes(fileDecoder, b, off, len);
     }
 
     public void close() throws IOException {
+    	 pos = 0;
+    	 mark = -1;
         fileDecoder = null;
+        buffer = null;
     }
 
     /**
@@ -185,6 +260,11 @@ public class ResourceInputStream extends InputStream {
      * @see   java.io.InputStream#reset()
      */
     public void mark(int readlimit) {
+        if (buffer != null) {
+            mark = pos;
+            return;
+        }
+        
         if (fileDecoder != null) {
             savedDecoder = clone(fileDecoder);
         }
@@ -198,6 +278,14 @@ public class ResourceInputStream extends InputStream {
      * @see   java.io.InputStream#mark(int)
      */
     public void reset() throws IOException {
+        if (buffer != null) {
+            if (mark < 0) {
+                throw new IOException();
+            }
+            pos = mark;
+            return;
+        }
+        
         if (fileDecoder == null || savedDecoder == null) {
             throw new IOException();
         }
@@ -224,6 +312,15 @@ public class ResourceInputStream extends InputStream {
     static private byte[] dummy_buffer = new byte[64*1024];
     public long skip(long n) throws IOException
     {
+        if (buffer != null) {            
+            pos += n;
+            if (pos >= buffer.length) {
+                n = buffer.length - pos;
+                pos = buffer.length;
+            }
+            return n;
+        }
+        
         int readBytesTotal = 0;        
         int readBytes = 0;
         while (n > 0){     
