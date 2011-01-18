@@ -398,6 +398,7 @@ static int socket_read_thread(SceSize args, void *argp) {
                             
                             if (bytesToRead > 0) {
         		        	status = recv(sock, p->pData+writepos, bytesToRead, 0);
+        		        	int err = errno;
         		        	if (status > 0) {
         		        	    writepos += status;        		        	    
 #ifdef DEBUG_JAVACALL_NETWORK
@@ -417,7 +418,7 @@ static int socket_read_thread(SceSize args, void *argp) {
 
         		        	p->writepos = writepos;
         		        	
-        		        	if (status >= 0 || (status < 0 && errno != EWOULDBLOCK && errno != EINPROGRESS)) {
+        		        	if (status >= 0 || (status < 0 && err != EWOULDBLOCK && err != EINPROGRESS)) {
         		        	    if ((status <= 0) || !p->pending_socket_event) {
                                            if (status > 0) {
         		        	            p->pending_socket_event = 1;
