@@ -38,6 +38,9 @@ public class VMConfigMidlet extends MIDlet implements CommandListener {
 			GraphicalInstaller.getImageFromInternalStorage("conffonts"));
 		selector.append("Keymap settings",
 			GraphicalInstaller.getImageFromInternalStorage("keymaps"));
+		String memoryinfo = new String ("Free Java heap size="+Runtime.getRuntime().freeMemory());
+		memoryinfo += new String("Total Java heap size="+Runtime.getRuntime().totalMemory());
+		selector.append(memoryinfo, null);
 		selector.addCommand(launchFormCmd);
 		selector.addCommand(exitCmd);
 		selector.setCommandListener(this); }
