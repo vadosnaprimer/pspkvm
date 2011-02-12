@@ -116,6 +116,7 @@ static SceUInt alarm_handler(void *common)
 	return 0;
 }
 
+#if 0
 #define log_buf_size 65536
 static char logs[log_buf_size]={0};
 static int log_cur = 0;
@@ -137,6 +138,7 @@ static void display_log(int show) {
 		//sceGuDisplay(1);
 	}
 }
+#endif
 
 int mp3codec_enabled = 1;
 

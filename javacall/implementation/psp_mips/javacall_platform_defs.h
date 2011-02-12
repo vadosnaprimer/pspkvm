@@ -135,7 +135,6 @@ typedef struct _PSPGlobalINFO {
 extern PSPGlobalINFO _psp_global_info;
 */
 
-#define javacall_printf printf
 /**
  * @}
  */

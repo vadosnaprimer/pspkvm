@@ -28,7 +28,7 @@
 #include "KNICommon.h"
 #include "commonKNIMacros.h"
 
-#define MMP_DEBUG_STR printf
+//#define MMP_DEBUG_STR printf
 
 /* Global Variables ************************************************************************/
 

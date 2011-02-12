@@ -100,6 +100,6 @@ char* midpFixMidpHome(char *cmd) {
     pcsl_string_free (&str);
 
     midpRealHome[len] = 0;
-    printf("midpFixMidpHome: %s, len=%d\n", midpRealHome, len);
+    //printf("midpFixMidpHome: %s, len=%d\n", midpRealHome, len);
     return midpRealHome;
 }
