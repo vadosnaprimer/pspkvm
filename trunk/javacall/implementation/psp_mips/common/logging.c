@@ -25,6 +25,7 @@
 
 #include "javacall_logging.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,18 @@ extern "C" {
 void javacall_print(const char *s) {
 //pspDebugScreenPrintf(s);
 printf(s);
+}
+
+void javacall_printf (const char* format, ...) {
+#define log_buf_size 65536
+  static char logs[log_buf_size]={0};
+
+  va_list ap;
+  va_start(ap, format);
+  vsnprintf(logs, log_buf_size, format, ap);
+  va_end(ap);
+
+  javacall_print(logs);
 }
 
 

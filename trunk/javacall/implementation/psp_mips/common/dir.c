@@ -95,7 +95,7 @@ javacall_handle javacall_dir_open(const javacall_utf16* path, int pathLen) {
     DIR* handle = opendir(szPath);
 
 #ifdef DEBUG_JAVACALL_DIR
-    printf("return %x\n", handle);
+    javacall_printf("return %x\n", handle);
 #endif
     return (javacall_handle)handle;
 }

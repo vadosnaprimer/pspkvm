@@ -138,8 +138,6 @@ int
 storageInitialize(char *config_home, char *midp_home) {
     jchar fsep = storageGetFileSeparator();
 
-printf("storageInitilize: config_home:%s, midp_home:%s\n", config_home, midp_home);
-
     if (storageInitDone) {
         /* Already initialized */
         return 0;

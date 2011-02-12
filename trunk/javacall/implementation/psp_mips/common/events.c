@@ -129,7 +129,7 @@ javacall_result javacall_event_send(unsigned char* binaryBuffer,
         
         sceKernelWaitSemaCB(_psp_semaID, 1, NULL);
         if (NEXT(_mbxid_send) == _mbxid_recv) {
-        	printf("javacall_event_send: discard event\n");
+        	javacall_printf("javacall_event_send: discard event\n");
         	sceKernelSignalSema(_psp_semaID, 1);
         	return JAVACALL_FAIL;
         }

@@ -53,14 +53,14 @@ javacall_result javacall_initialize_configurations(void) {
     int file_name_len = sizeof(property_file_name)/sizeof(unsigned short);
     property_was_updated = 0;
 
-    printf("javacall_configdb_load...\n");
+    javacall_printf("javacall_configdb_load...\n");
 
     handle = javacall_configdb_load(property_file_name, file_name_len);
     if (handle == NULL) {
-    	printf("load fail\n");
+    	javacall_printf("load fail\n");
         return JAVACALL_FAIL;
     }
-    printf("load ok\n");
+    javacall_printf("load ok\n");
     return JAVACALL_OK;
 }
 

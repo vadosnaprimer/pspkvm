@@ -143,7 +143,7 @@ javacall_keymap javacall_keymap_set(int iJavakey, int iNativeKey) {
 }
 
 void javacall_keymap_setDefaultKeymap(){
-	printf("javacall_keymap_setDefaultKeymap\n");
+	javacall_printf("javacall_keymap_setDefaultKeymap\n");
 	javacall_keymap_init();
 }
 
@@ -152,7 +152,7 @@ void javacall_keymap_resetKeymap(){
     const javacall_keymap* ref = 
 			(vmsettings_key_equals("com.pspkvm.default_keymap", "western")) ?
 				default_keymap_western : default_keymap;
-    printf("javacall_keymap_resetKeymap\n");
+    javacall_printf("javacall_keymap_resetKeymap\n");
     for (i = 0; i < PSP_KEY_NUMBER; i++ ) {
         current_keymap[i] = ref[i];
         current_keymap[i].javaKey = JAVACALL_KEY_INVALID;
