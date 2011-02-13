@@ -150,9 +150,9 @@ public class ImageToRawConverter {
      */
     private short RGB888TORGB565(int x) 
     {
-        return ((short)(((x & 0x00F80000) >> 8) + 
+        return ((short)(((x & 0x00F80000) >> 19) + 
                 ((x & 0x0000FC00) >> 5) + 
-                ((x & 0x000000F8) >> 3)));
+                ((x & 0x000000F8) << 8)));
     }
 
     /**
