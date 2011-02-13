@@ -44,6 +44,13 @@ extern "C" {
  *  @{
  */    
 
+
+#define JAVACALL_LOG_CHANNEL_NONE 0
+#define JAVACALL_LOG_CHANNEL_CONSOLE 1
+#define JAVACALL_LOG_CHANNEL_STARTUP 2
+#define JAVACALL_LOG_CHANNEL_STDOUT 4
+#define JAVACALL_LOG_CHANNEL_FILE 8
+
 /**
  * Prints out a string to a system specific output strream
  *
@@ -58,6 +65,8 @@ typedef enum {
     javacall_channel_trace_in,
     javacall_channel_trace_out
 } midp_log_channels;
+
+void javacall_logging_channel(int channel);
 
 
 /** @} */

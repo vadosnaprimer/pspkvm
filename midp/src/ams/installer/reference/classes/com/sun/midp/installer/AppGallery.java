@@ -283,6 +283,11 @@ final class SplashScreen extends Canvas {
         
         g.drawString("Loading...", 0, 0, Graphics.LEFT | Graphics.TOP);
         System.out.println("Loading from jarlist");
+
+        if (splashScreen == null) {
+            splashScreen = 
+            GraphicalInstaller.getImageFromInternalStorage("appgal_splash_screen");
+        }
         
         if (splashScreen != null) {
             g.drawImage(splashScreen, 0, 0, Graphics.LEFT | Graphics.TOP);
@@ -304,8 +309,7 @@ final class SplashScreen extends Canvas {
      */
     protected  void  sizeChanged(int w, int h) {
         splashScreen = 
-            GraphicalInstaller.getImageFromInternalStorage("splash_screen_" 
-            + getWidth() + "x" + getHeight());
+            GraphicalInstaller.getImageFromInternalStorage("appgal_splash_screen");
         
     }
 

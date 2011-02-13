@@ -83,6 +83,12 @@ public class JVM {
      */
     public static final int STATUS_VERIFY_FAILED = 3;
 
+    public static final int VM_LOGGING_CHANNEL_NONE = 0;
+    public static final int VM_LOGGING_CHANNEL_CONSOLE = 1;
+    public static final int VM_LOGGING_CHANNEL_STARTUP = 2;
+    public static final int VM_LOGGING_CHANNEL_STDOUT = 4;
+    public static final int VM_LOGGING_CHANNEL_FILE = 8;
+    
     /**
      * Creates an application image file. It loads the Java classes
      * from the <code>jarFile</code> into the heap, verify the class
@@ -286,5 +292,7 @@ public class JVM {
 
     private static native int verifyNextChunk(String jar, int nextChunkID,
                                               int chunkSize);
+
+    public static native void setLogChannel(int channel);
 
 }

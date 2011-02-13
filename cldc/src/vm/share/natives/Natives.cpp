@@ -472,6 +472,10 @@ void Java_com_sun_cldchi_io_ConsoleOutputStream_write() {
 }
 
   // com.sun.cldchi.jvm natives
+void Java_com_sun_cldchi_jvm_JVM_setLogChannel() {
+  int channel = KNI_GetParameterAsInt(1);
+  JVM_SetLogChannel(channel);
+}
 
 void Java_com_sun_cldchi_jvm_JVM_loadLibrary(JVM_SINGLE_ARG_TRAPS) {
 #if ENABLE_DYNAMIC_NATIVE_METHODS

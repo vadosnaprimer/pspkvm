@@ -25,11 +25,17 @@
 
 #include "javacall_logging.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+static int log_channel_consle = 0;
+static int log_channel_startup = 0;
+static int log_channel_stdout = 0;
+static int log_channel_file = 0;
     
 /**
  * Prints out a string to a system specific output strream
@@ -37,8 +43,12 @@ extern "C" {
  * @param s a NULL terminated character buffer to be printed
 */
 void javacall_print(const char *s) {
-//pspDebugScreenPrintf(s);
-printf(s);
+    
+    if (log_channel_consle) pspDebugScreenPrintf(s);
+    if (log_channel_startup) pspkvm_screen_log(s);
+    if (log_channel_stdout) printf(s);
+    //if (log_channel_file) log_2_file(s);
+
 }
 
 void javacall_printf (const char* format, ...) {
@@ -53,6 +63,16 @@ void javacall_printf (const char* format, ...) {
   javacall_print(logs);
 }
 
+void javacall_logging_channel(int channel) {
+  if (channel & JAVACALL_LOG_CHANNEL_CONSOLE) log_channel_consle = 1;
+  else log_channel_consle = 0;
+  if (channel & JAVACALL_LOG_CHANNEL_STARTUP) log_channel_startup = 1;
+  else log_channel_startup = 0;
+  if (channel & JAVACALL_LOG_CHANNEL_STDOUT) log_channel_stdout = 1;
+  else log_channel_stdout = 0;
+  if (channel & JAVACALL_LOG_CHANNEL_FILE) log_channel_file = 1;
+  else log_channel_file = 0;
+}
 
 #ifdef __cplusplus
 }

@@ -742,6 +742,8 @@ jboolean JVM_SetUseVerifier(jboolean use_verifier);
  */
 jboolean JVM_GetUseVerifier();
 
+void JVM_SetLogChannel(int channel);
+
 #if ENABLE_FLOAT
 
 JVM_SOFTFP_LINKAGE jfloat  jvm_fadd(jfloat x, jfloat y);

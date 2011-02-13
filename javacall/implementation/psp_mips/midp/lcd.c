@@ -228,7 +228,7 @@ javacall_result javacall_lcd_init(void) {
            } else {
         	p = (unsigned short*)DukeTango + 2;
            }
-           */
+           
         
            p = NULL;
         	
@@ -237,6 +237,7 @@ javacall_result javacall_lcd_init(void) {
      			vram[x + y * 512] = p?p[x+y*480]:0x0000; 
      		} 
            }
+           */
     
     
           //scbuff = (javacall_pixel*)malloc(vscr_w*vscr_h*sizeof(javacall_pixel));
@@ -246,7 +247,6 @@ javacall_result javacall_lcd_init(void) {
        } else {
            //printf("Setup GU\n");
 	    //setup_gu();
-	    memset(scbuff, 0, sizeof(_offscreen));
           sceGuDisplay(1);
        }
 
@@ -470,6 +470,21 @@ void javacall_set_new_screen_size(int w, int h) {
 
 void javacall_lcd_enable_flush(int enable) {
     _enable_lcd_flush = enable;
+}
+
+void javacall_lcd_show_splash() {
+	unsigned short* p;
+	int x, y;
+	
+	memset(scbuff, 0, sizeof(_offscreen));
+           p = (unsigned short*)DukeTango + 2;
+           for (y = 0; y < 272; y++) { 
+        	for (x = 0; x < 480; x++) { 
+     			scbuff[x + y * 480] = p[x+y*480]; 
+     		} 
+           }
+          sceGuDisplay(1);
+          javacall_lcd_flush();
 }
 
 #ifdef __cplusplus
