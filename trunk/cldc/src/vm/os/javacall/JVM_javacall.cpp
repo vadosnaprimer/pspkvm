@@ -36,6 +36,7 @@
 
 #include "incls/_precompiled.incl"
 #include "incls/_JVM_javacall.cpp.incl"
+#include "javacall_logging.h"
 
 extern "C" int JVM_Start(const JvmPathChar *classpath, char *main_class, int argc,
                          char **argv) {
@@ -59,3 +60,8 @@ extern "C" int JVM_Start2(const JvmPathChar *classpath, char *main_class, int ar
 
   return result;
 }
+
+extern "C" void JVM_SetLogChannel(int channel) {
+  javacall_logging_channel(channel);
+}
+

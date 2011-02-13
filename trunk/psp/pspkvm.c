@@ -37,6 +37,7 @@
 #include <javacall_lifecycle.h>
 #include <javacall_file.h>
 #include <javacall_properties.h>
+#include <javacall_logging.h>
 
 /* Define the module info section */
 #if _PSP_FW_VERSION >= 200
@@ -52,10 +53,23 @@ PSP_HEAP_SIZE_KB(-3048);
 /* Define the main thread's attribute value (optional) */
 //PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
+#define DEBUG_SCREEN_WIDTH 60
+static char BLANK_DEBUG_LINE[DEBUG_SCREEN_WIDTH+1];
 
-/* Define printf, just to make typing easier */
-//#define printf	pspDebugScreenPrintf
-//#define printf(x)
+static void test_mem(const char* msg) {
+	int ii=64*1024*1024;
+	char* tmpp=NULL;
+	       javacall_printf("Wait..\n");
+	       javacall_printf("Sys memory free:%d(total), %d(max)\n", sceKernelTotalFreeMemSize(), sceKernelMaxFreeMemSize());
+		while(ii-=1024*1024) {
+			if ((tmpp=malloc(ii))!=NULL) {
+				
+				free(tmpp);
+				break;
+			}
+		}
+		javacall_printf("[%s]MAX HEAP:%d\n",msg, ii);
+}
 
 /* Exit callback */
 int exit_callback(int arg1, int arg2, void *common)
@@ -111,7 +125,7 @@ int SetupCallbacks(void)
 
 static SceUInt alarm_handler(void *common)
 {
-	//printf("javanotify_start...\n");
+	//javacall_printf("javanotify_start...\n");
 	javanotify_start();
 	return 0;
 }
@@ -163,22 +177,22 @@ static void updateDisplay (gpsdata* data, satdata* sat)
  pspDebugScreenSetXY(0,currentY);
 
  // Show texts
- printf("\n\nUSB State = 0x%X %s\n",usbState,(usbState & PSP_USB_ACTIVATED) ? "[activated]    " : "[deactivated]");
- printf("GPS State = 0x%X\n",gpsState);
- printf("Satellite(s) count = %d\n\n",sat->satellites_in_view);
+ javacall_printf("\n\nUSB State = 0x%X %s\n",usbState,(usbState & PSP_USB_ACTIVATED) ? "[activated]    " : "[deactivated]");
+ javacall_printf("GPS State = 0x%X\n",gpsState);
+ javacall_printf("Satellite(s) count = %d\n\n",sat->satellites_in_view);
 
- printf("Data :\n------\n");
+ javacall_printf("Data :\n------\n");
  
- printf("Date: %d/%d/%d %d:%d:%d\n", data->year, data->month, data->date,
+ javacall_printf("Date: %d/%d/%d %d:%d:%d\n", data->year, data->month, data->date,
  								data->hour, data->minute, data->second);
- printf("HDOP: %f\tSpeed: %f\n", data->hdop, data->speed);
- printf("latitude:%f, longtitude:%f, altitude:%f\n", data->latitude, data->longitude, data->altitude);
+ javacall_printf("HDOP: %f\tSpeed: %f\n", data->hdop, data->speed);
+ javacall_printf("latitude:%f, longtitude:%f, altitude:%f\n", data->latitude, data->longitude, data->altitude);
  
- printf("\n\n[CROSS to activate/deactivate USB device | TRIANGLE to quit]\n");
+ javacall_printf("\n\n[CROSS to activate/deactivate USB device | TRIANGLE to quit]\n");
 }
 
 static int gpsmngr (SceSize args, void *argp) {
-  printf("Initialize_gps...\n");
+  javacall_printf("Initialize_gps...\n");
 
   sceUsbActivate(PSP_USBGPS_PID);
   for (;;) {
@@ -195,7 +209,7 @@ static int gpsmngr (SceSize args, void *argp) {
      // Get data of GPS
      if (gpsState == 0x3) {
      	//sceUsbGpsGetData(&gpsd,&satd);
-     	//printf("latitude:%f, longtitude:%f, altitude:%f\n", gpsd.latitude, gpsd.longitude, gpsd.altitude);
+     	//javacall_printf("latitude:%f, longtitude:%f, altitude:%f\n", gpsd.latitude, gpsd.longitude, gpsd.altitude);
      	usbgps_status = JAVACALL_GPS_STATUS_INITIALIZED;
        break;
      }
@@ -206,7 +220,7 @@ static int gpsmngr (SceSize args, void *argp) {
     
   }
 
-  printf("GPS Initialize OK\n");
+  javacall_printf("GPS Initialize OK\n");
   sceKernelExitDeleteThread(0);
 
   return 0;
@@ -231,17 +245,17 @@ static int startUSBGPSDrivers() {
 	int res = 0;
 	
 	if (res = sceUsbStart(PSP_USBBUS_DRIVERNAME,0,0)) {
-		printf(PSP_USBBUS_DRIVERNAME" start failed\n");
+		javacall_printf(PSP_USBBUS_DRIVERNAME" start failed\n");
 		return res;
 	}
 
 	if (res = sceUsbStart("USBAccBaseDriver",0,0)) {
-		printf("USBAccBaseDriver start failed\n");
+		javacall_printf("USBAccBaseDriver start failed\n");
 		return res;
 	}
 
 	if (res = sceUsbStart(PSP_USBGPS_DRIVERNAME,0,0)) {
-		printf(PSP_USBGPS_DRIVERNAME" start failed\n");
+		javacall_printf(PSP_USBGPS_DRIVERNAME" start failed\n");
 		return res;
 	}
 
@@ -266,11 +280,11 @@ int java_main(void)
 
 	id = sceKernelSetAlarm(3000000, alarm_handler, (void*)0);
 	if (id < 0) {
-		printf("sceKernelSetAlarm error!\n");
+		javacall_printf("sceKernelSetAlarm error!\n");
 		return -1;
 	}
 
-	printf("timezone:%s\n", javacall_time_get_local_timezone());
+	javacall_printf("timezone:%s\n", javacall_time_get_local_timezone());
 		test_mem("JavaTask");
 
 		
@@ -331,7 +345,7 @@ for (;;)
  // USB Deactivate
  //sceUsbDeactivate(PSP_USBGPS_PID);
  //sceUsbWaitCancel();
- printf("PSP_CTRL_TRIANGLE\n");
+ javacall_printf("PSP_CTRL_TRIANGLE\n");
  sceKernelExitGame();
 #endif
 	return 0;
@@ -486,7 +500,7 @@ int oskDialog(unsigned short* in, int inlen, unsigned short* title, int titlelen
 		buttonSwap = PSP_UTILITY_ACCEPT_CROSS; }
 
 	suspend_key_input = 1;
-	//printf("oskDialog: inlen=%d\n", inlen);
+	//javacall_printf("oskDialog: inlen=%d\n", inlen);
 
 	if (inlen >= maxoutlen) {
 		inlen = maxoutlen - 1;
@@ -607,23 +621,30 @@ int main(void)
 	SceUID thid;
 	int res = 0;
 	int ret_val = 0;
+	int i;
 
 	pspDebugScreenInit();
+	for (i = 0; i < DEBUG_SCREEN_WIDTH; i++) BLANK_DEBUG_LINE[i] = ' ';
+       BLANK_DEBUG_LINE[DEBUG_SCREEN_WIDTH] = '\0';
 
-test_mem("Before setup GU");
-       printf("Setup GU\n");
-	setup_gu();       
-test_mem("After setup GU");
+       javacall_logging_channel(JAVACALL_LOG_CHANNEL_STARTUP);
 
-	printf("Loading network modules\n");
+
+       javacall_printf("Setup GU\n");
+	setup_gu();
+
+	javacall_lcd_show_splash();
+
+	javacall_printf("Loading network modules\n");
+	
 #if _PSP_FW_VERSION >= 200
        if ((ret_val = sceUtilityLoadNetModule(PSP_NET_MODULE_COMMON)) < 0) {
-    		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_COMMON);    		
+    		javacall_printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_COMMON);    		
     		goto fail;
     	}
 
 	if ((ret_val = sceUtilityLoadNetModule(PSP_NET_MODULE_INET)) < 0) {
-		printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_INET);
+		javacall_printf("Error, could not load inet modules %d\n", PSP_NET_MODULE_INET);
 		goto fail;
 	}
 
@@ -631,49 +652,49 @@ test_mem("After setup GU");
        usbgps_enabled = 0;
 
 	if (res = moduleLoadStart("usbacc.prx")) {
-		printf("Error, could not load usbacc.prx: %x\n", res);
+		javacall_printf("Error, could not load usbacc.prx: %x\n", res);
 	}
 
 	if (res == 0 && (res = moduleLoadStart("usbgps.prx"))) {
-		printf("Error, could not load usbgps.prx: %x\n", res);		
+		javacall_printf("Error, could not load usbgps.prx: %x\n", res);		
 	}
 
 	if (res == 0 && (res = startUSBGPSDrivers())) {
-		printf("Error, could not start USB GPS drivers: %x\n", res);
+		javacall_printf("Error, could not start USB GPS drivers: %x\n", res);
 	} else if (res == 0) {
 		if (res = sceUsbGpsOpen()) {
-			printf("Error, sceUsbGpsOpen: %x\n",  res);
+			javacall_printf("Error, sceUsbGpsOpen: %x\n",  res);
 		} else {
-			printf("USB GPS enabled\n");
+			javacall_printf("USB GPS enabled\n");
 			usbgps_enabled = 1;
 		}
 	} else {
-		printf("Module loading failed. Can not use GPS device!\n");
+		javacall_printf("Module loading failed. Can not use GPS device!\n");
 	}
 #endif //ENABLE_GPS
 
 #else	
     	if(ret_val = pspSdkLoadInetModules() < 0)	{	
-    		printf("Error, could not load inet modules\n");
+    		javacall_printf("Error, could not load inet modules\n");
     		goto fail;
     	}
 #endif
 	
 
-    	printf("Network module loaded\n");
+    	javacall_printf("Network module loaded\n");
     	
     	mp3codec_enabled = 1;
 	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC);
 	if (ret_val<0)
 	{
-		printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC) returned 0x%08X\n", ret_val);
+		javacall_printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_AVCODEC) returned 0x%08X\n", ret_val);
 		mp3codec_enabled = 0;
 	}
 	
 	ret_val = sceUtilityLoadModule(PSP_MODULE_AV_MPEGBASE);
 	if (ret_val<0)
 	{
-		printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_MP3) returned 0x%08X\n", ret_val);
+		javacall_printf("ERROR: sceUtilityLoadModule(PSP_MODULE_AV_MP3) returned 0x%08X\n", ret_val);
 		mp3codec_enabled = 0;
 	}
 	
@@ -689,7 +710,7 @@ test_mem("After setup GU");
 	// start user thread, then wait for it to do everything else
 	sceKernelStartThread(thid, 0, 0);
 	test_mem("java thread started");
-	printf("sceKernelWaitThreadEnd...\n");
+	javacall_printf("sceKernelWaitThreadEnd...\n");
 	sceKernelWaitThreadEnd(thid, NULL);
 	printf("sceKernelWaitThreadEnd OK\n");
 
@@ -729,19 +750,28 @@ int rm_dir(const char* dir)
     	return sceIoRmdir(dir);
 }
 
-void test_mem(const char* msg) {
-	int ii=64*1024*1024;
-	char* tmpp=NULL;
-	       printf("Wait..\n");
-	       printf("Sys memory free:%d(total), %d(max)\n", sceKernelTotalFreeMemSize(), sceKernelMaxFreeMemSize());
-		while(ii-=1024*1024) {
-			if ((tmpp=malloc(ii))!=NULL) {
-				
-				free(tmpp);
-				break;
-			}
-		}
-		printf("[%s]MAX HEAP:%d\n",msg, ii);
-}
 
+void pspkvm_screen_log(char* s) {
+	static int x = 0;
+	const int y = 2;
+	static char buf[2] = {0, 0};
+	while (*s) {
+		
+		if (x == 0) {
+			pspDebugScreenSetXY(0, y);
+			pspDebugScreenPrintf(BLANK_DEBUG_LINE);	
+		}
+		
+		if (*s != '\r' && *s != '\n') {
+			pspDebugScreenSetXY(x++, y);
+			if (x >= DEBUG_SCREEN_WIDTH) x = 0;
+			buf[0] = *s;
+			pspDebugScreenPrintf(&buf[0]);
+		} else {
+			x = 0;
+		}
+		
+		s++;
+	}
+}
 

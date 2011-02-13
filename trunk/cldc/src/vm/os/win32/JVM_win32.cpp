@@ -204,3 +204,7 @@ extern "C" int JVM_Start2(const JvmPathChar *classpath, char *main_class,
 
   return result;
 }
+
+extern "C" void JVM_SetLogChannel(int channel) {
+}
+

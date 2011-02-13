@@ -52,6 +52,18 @@ void javacall_print(const char *s) {
     printf("%s", s);
 }
 
+void javacall_printf (const char* format, ...) {
+#define log_buf_size 65536
+  static char logs[log_buf_size]={0};
+
+  va_list ap;
+  va_start(ap, format);
+  vprintf(format, ap);
+  va_end(ap);
+}
+
+void javacall_logging_channel(int channel) {
+}
 
 #ifdef __cplusplus
 }

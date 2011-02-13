@@ -477,8 +477,10 @@ class AppManagerUI extends Form
       
       midletSwitcher = new MIDletSwitcher(this, manager, display);
       midletSuiteStorage = MIDletSuiteStorage.getMIDletSuiteStorage();
+      System.out.println("PSPKVM initialize settings");
       initSettings();
       setTitle(Resource.getString(ResourceConstants.AMS_MGR_TITLE));
+      System.out.println("PSPKVM is preparing application lists");
       createFolders();
       addCommand(exitCmd);
       setCommandListener(this);
@@ -488,12 +490,15 @@ class AppManagerUI extends Form
       // the folder system. At startup, we automatically look for them...
       addUnattachedMidlets(rootFolder);
 
+      System.out.println("PSPKVM is ready to go!!!");
+
       if (first) {
           display.setCurrent(this);
 
           new Thread(new Runnable() {
 						public void run() {
       				updateContent(true); } }).start();
+      	   
           return; }
 
       // if a MIDlet was just installed
@@ -525,9 +530,13 @@ class AppManagerUI extends Form
   	 if (first) {
   	 	int suiteId = getLastPlayedMIDlet();
   	 	AMSMidletCustomItem mi = rootFolder.find(suiteId);
-			if (mi != null) {
-				mi.select(); } }
-      first = false; }
+		if (mi != null) {
+		    mi.select(); 
+		} 
+		com.sun.cldchi.jvm.JVM.setLogChannel(com.sun.cldchi.jvm.JVM.VM_LOGGING_CHANNEL_NONE);
+  	 }
+        first = false; 
+    }
 
     /**
      * Called when midlet selector needed.
@@ -953,10 +962,12 @@ class AppManagerUI extends Form
      */
     private void updateContent(boolean loadIcon) {
     	systemFolder.updateDisplay();
+    	try {
+	   Thread.sleep(50); 
+	} catch (InterruptedException e) {}
+    	
     	rootFolder.updateDisplay();
-			try {
-				Thread.sleep(50); }
-			catch (InterruptedException e) {} }
+    }
 
     /**
      * Removes a midlet from the App Selector Screen
