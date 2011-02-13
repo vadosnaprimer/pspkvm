@@ -102,7 +102,7 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	void createMSI(int suiteID) throws IOException, IllegalArgumentException {
 		MIDletSuiteInfo temp =
 			MIDletSuiteStorage.getMIDletSuiteStorage().getMIDletSuiteInfo(suiteID);
-		msi = new RunningMIDletSuiteInfo(temp, MIDletSuiteStorage.getMIDletSuiteStorage(), true) {
+		msi = new RunningMIDletSuiteInfo(temp, MIDletSuiteStorage.getMIDletSuiteStorage(), false) {
 					public boolean equals(MIDletProxy midlet) {
 						return super.equals(midlet); } } ; }
 						
@@ -173,6 +173,17 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	void drawIcons(Graphics g) {
 	
 		// TODO: Provide system icon for those we don't have
+		if (icon == null) {
+			try {
+			    MIDletSuiteInfo info =
+			        MIDletSuiteStorage.getMIDletSuiteStorage().getMIDletSuiteInfo(msi.suiteId);
+			    msi.iconName = info.iconName;		
+			} catch (Exception e) {
+			}
+		       msi.loadIcon(MIDletSuiteStorage.getMIDletSuiteStorage());
+		       icon = msi.icon;
+		}
+		
 		if (icon != null) {
 			g.drawImage(icon, indent + (bgIconW - icon.getWidth())/2,
 			(bgIconH - icon.getHeight())/2,
