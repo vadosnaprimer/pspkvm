@@ -352,7 +352,7 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
   javacall_pixel* point = destbuf + (y + yoffset) * w + x + xoffset;
 
   if (mode == FT_PIXEL_MODE_MONO) {
-		unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width/8;
+		unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->pitch;
 		
 		int bitOffset = xoffset%8;
 		int pitch = bitmap->pitch*8;
@@ -370,7 +370,7 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 		return; }
   // Handle rendering anti-aliased bitmaps
 	ALPHA_BLEND_PREP
-  unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->width + xoffset;
+  unsigned char* fontpoint = &bitmap->buffer[0] + yoffset * bitmap->pitch + xoffset;
 
 	int block = xnum / 8;
 	int rem  = xnum % 8;
@@ -395,7 +395,7 @@ static void draw_small_bitmap(FTC_SBit bitmap, javacall_pixel color,
 			case 1: ALPHA_BLEND }
 	
 		point += (w - xnum);
-		fontpoint += (bitmap->width - xnum); } }
+		fontpoint += (bitmap->pitch - xnum); } }
 		
 // Init/check init--returns 1 only if we're good to go
 int _ftc_check_init(javacall_font_face lface) {
@@ -470,18 +470,21 @@ javacall_result ftc_javacall_font_draw(javacall_pixel   color,
 	unsigned int glyph_idx;
 	FTC_SBit irec;
 	FTC_ScalerRec* selected_ic;
-  for(i=0; i<textLen; i++) {
+  	for(i=0; i<textLen; i++) {
 		glyph_idx = cmap_cache_lookup_fb(cmap_cache, &current_ic, &current_fallback_ic,
 			&selected_ic, text[i]);
 		if (FTC_SBitCache_LookupScaler(sbit_cache, selected_ic, FT_LOAD_DEFAULT,
 			glyph_idx, &irec, (FTC_Node*)NULL)) {
-			return JAVACALL_FAIL; }
+			return JAVACALL_FAIL; 
+		}
 		draw_small_bitmap(irec, color, clipX1, clipY1, clipX2, clipY2,
-       destBuffer,
-       destBufferHoriz, destBufferVert, x, 
-       y - irec->top + current_ic.height - 2, irec->format);
-		x += irec->xadvance; }
-	return JAVACALL_OK; }
+       						destBuffer,
+       						destBufferHoriz, destBufferVert, x, 
+       						y - irec->top + current_ic.height - 2, irec->format);
+		x += irec->xadvance; 
+	}
+	return JAVACALL_OK; 
+}
 
 #define _MIN_LEADING 2			
 
