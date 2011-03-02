@@ -116,6 +116,12 @@ static int isNetConnected() {
 	return state==4?1:0;
 }
 
+void apctl_callback(int oldState, int newState, int event, int error, void *pArg) {
+#ifdef DEBUG_JAVACALL_NETWORK
+	javacall_printf("apctl_callback: oldstate:%d, newstate:%d, event:%d, error:%d\n", oldState, newState, event, error);
+#endif
+}
+
 /**
  * Performs platform-specific initialization of the networking system.
  * Will be called ONCE during VM startup before opening a network connection.
@@ -156,6 +162,8 @@ javacall_result javacall_network_init_start(void) {
     	javacall_printf(": Error, could not sceNetApctlInit the network %08X\n", err);		
 	return JAVACALL_FAIL;
     }
+
+    sceNetApctlAddHandler(apctl_callback, NULL);
 
     socket_read_buffer_init();
     
@@ -497,19 +505,13 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
 
     struct in_addr addr;
     (void)pContext;
-    static int selected = 0;
     int connected = isNetConnected();
 
     if (!connected) {
-    	if (!selected) {
         	connected = netDialog(0);
-        	selected = 1;
         	if (!connected) {
         		return JAVACALL_FAIL;
         	}
-    	} else {
-    		return JAVACALL_FAIL;
-    	}
     } else {
        //netDialog(1);
     }

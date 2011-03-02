@@ -709,7 +709,6 @@ int main(void)
 
 	// start user thread, then wait for it to do everything else
 	sceKernelStartThread(thid, 0, 0);
-	test_mem("java thread started");
 	javacall_printf("sceKernelWaitThreadEnd...\n");
 	sceKernelWaitThreadEnd(thid, NULL);
 	printf("sceKernelWaitThreadEnd OK\n");
