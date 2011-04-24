@@ -352,6 +352,10 @@ abstract class AbstractKeyboardLayer extends PopupLayer implements VirtualKeyboa
         return 0;
     }
 
+    public String getTips() {
+    	return null;
+    }
+
 		final static int EPAD = 2;
 
     /**

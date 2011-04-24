@@ -187,6 +187,11 @@ public class MIDPWindow extends CWindow {
         requestRepaint();
     }
 
+    public void setTips(String tip) {
+    	 buttonLayer.setTips(tip);
+    	 buttonLayer.setTipsColor(0x00402040);
+    }
+
     /**
      * Alert this MIDPWindow that the given displayable is now current
      * and should be shown on the screen.

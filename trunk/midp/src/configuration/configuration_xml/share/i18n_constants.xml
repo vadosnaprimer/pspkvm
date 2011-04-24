@@ -1129,6 +1129,9 @@
   <constant Type="int"
             Name="SR_SUSPEND_ALERT_MSG"
             Comment="Suspend/resume: com.sun.midp.suspend.SuspendResumeUI"/>
+  <constant Type="int"
+            Name="VK_TIPS_AWF"
+            Comment="Virtual Keyboard tips of AWF"/>
 </constant_class>
 </constants>
 </configuration>

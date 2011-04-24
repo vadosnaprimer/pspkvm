@@ -160,6 +160,9 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
     private boolean soft_btn1_pressed;
     private boolean soft_btn2_pressed;
 
+    private String tips;
+    private int tipsColor = 0;
+
     /**
      * Construct a SoftButtonLayer. The layer's background image and color
      * information is obtained directly from the SoftButtonSkin class,
@@ -846,6 +849,19 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
                     SoftButtonSkin.BUTTON_SHD_ALIGN, buttonw);
             g.translate(-buttonx, -buttony);
         }
+
+        if (tips != null) {
+
+            int tipw = SoftButtonSkin.FONT.stringWidth(tips);
+    
+            g.translate((bounds[W]-tipw)/2, 0);
+    
+            Text.drawTruncStringShadowed(g, tips, SoftButtonSkin.FONT,
+                        tipsColor, SoftButtonSkin.COLOR_FG_SHD,
+                        SoftButtonSkin.BUTTON_SHD_ALIGN, tipw);
+            
+            g.translate(-(bounds[W]-tipw)/2, 0);
+        }
     }
 
     /**
@@ -895,6 +911,14 @@ public class SoftButtonLayer extends CLayer implements CommandListener {
         if (null != menuLayer) {
             menuLayer.update(layers);
         }
+    }
+
+    public void setTips(String tip) {
+    	tips = tip;
+    }
+
+    public void setTipsColor(int color) {
+    	tipsColor = color;
     }
 }
 
