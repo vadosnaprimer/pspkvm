@@ -86,4 +86,6 @@ public interface InstallListener {
      * @return true if the user wants to continue, false to stop the install
      */
     public boolean confirmAuthPath(InstallState state);
+
+    public void updateDeviceType(InstallState state);
 }

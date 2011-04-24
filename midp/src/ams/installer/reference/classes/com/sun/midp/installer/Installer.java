@@ -466,6 +466,10 @@ public abstract class Installer {
                 state.previousSuite.close();
             }
 
+            //If MIDlet has property of MIDlet-Device-Type, 
+            //GraphicalInstaller will not ask user for Device Selecting again
+            state.listener.updateDeviceType(state);
+
             System.out.println("info.jarFilename:"+info.jarFilename);
 
             if (info.jarFilename != null && !notCopyJarFile) {
