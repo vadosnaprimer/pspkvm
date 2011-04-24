@@ -1906,6 +1906,10 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
         /** Signals that a proxyAuth is needed. */
         boolean proxyAuth;
 
+        private static final String PROP_NAME_DEVICE_TYPE = "MIDlet-Device-Type";
+
+        private int preferredDispId = -1;
+
         /**
          * Construct a BackgroundInstaller.
          *
@@ -1966,10 +1970,17 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                         // Let the manager know what suite was installed
                         GraphicalInstaller.saveSettings(null,
                                                         lastInstalledMIDletId);
+                        
+                        if (preferredDispId < 0) {
 
-                        //parent.displaySuccessMessage(successMessage);
-                        parent.displayDeviceSelector(lastInstalledMIDletId);
-                        waitForUser();
+                           //parent.displaySuccessMessage(successMessage);
+                           parent.displayDeviceSelector(lastInstalledMIDletId);
+                           waitForUser();
+                        } else {
+                           System.out.println("dispID="+preferredDispId);
+                           saveDeviceSettings(DeviceDesc.dispIdToDevId(preferredDispId), lastInstalledMIDletId);
+                           parent.displaySuccessMessage(successMessage);
+                        }
 
                         /*
                          * We need to prevent "flashing" on fast development
@@ -2257,6 +2268,19 @@ public class GraphicalInstaller extends MIDlet implements CommandListener {
                 // go back to app list
                 parent.exit(false);
             }
+        }
+
+        public void updateDeviceType(InstallState state) {
+            int nDispId = -1;
+            String devType = state.getAppProperty(PROP_NAME_DEVICE_TYPE);
+            if (devType != null) {
+                 try {
+                      nDispId = Integer.valueOf(devType).intValue();
+                 } catch (NumberFormatException nfe) {
+                 }
+             }
+
+             preferredDispId = nDispId;
         }
     }
 }
