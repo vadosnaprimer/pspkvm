@@ -13,7 +13,8 @@ import com.sun.midp.chameleon.skins.DateEditorSkin;
 import com.sun.midp.chameleon.skins.ChoiceGroupSkin;
 import com.sun.midp.chameleon.layers.PopupLayer;
 import com.sun.midp.chameleon.input.*;
-
+import com.sun.midp.i18n.Resource;
+import com.sun.midp.i18n.ResourceConstants;
 /**
  * This is a popup layer that handles a sub-popup within the text tfContext
  * @author Amir Uval
@@ -518,6 +519,10 @@ class KeyboardLayer_awf extends AbstractKeyboardLayer implements CommandListener
 
     public void paintCandidateBar(Graphics g, int width, int height) {
         /** Nothing but a stub */
+    }
+
+    public String getTips() {
+    	return Resource.getString(ResourceConstants.VK_TIPS_AWF);
     }
     
 		boolean selectOn() {

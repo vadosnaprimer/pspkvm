@@ -519,6 +519,10 @@ class KeyboardLayer_AWF_F extends AbstractKeyboardLayer implements CommandListen
         /** Nothing but a stub */
     }
 
+    public String getTips() {
+    	return "L+O: Switch input";
+    }
+
     /**
      * Sets the bounds of the popup layer.
      *

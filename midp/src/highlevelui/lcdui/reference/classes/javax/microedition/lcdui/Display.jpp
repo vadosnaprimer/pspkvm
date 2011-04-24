@@ -2488,6 +2488,7 @@ public class Display {
             showPopup(keyboardLayer);
             keyboardLayer.open = true;
             keyboardLayer.justOpened = true;
+            window.setTips(keyboardLayer.getTips());
         }
 
         return true;
@@ -2504,6 +2505,7 @@ public class Display {
         {
             keyboardLayer.open = false;
             hidePopup(keyboardLayer);
+            window.setTips(null);
         }
         return true;
     }

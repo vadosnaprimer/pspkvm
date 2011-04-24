@@ -757,5 +757,7 @@
                 Value="Suspending java..."/>
 <localized_string Key="SR_SUSPEND_ALERT_MSG"
                 Value="Java VM is suspended by system request. Applications may be either paused or destroyed."/>
+<localized_string Key="VK_TIPS_AWF"
+                Value="L+O:Switch"/>
 </localized_strings>
 </configuration>
