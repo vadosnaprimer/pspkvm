@@ -32,6 +32,7 @@ import com.sun.midp.i18n.Resource;
 import com.sun.midp.i18n.ResourceConstants;
 import com.sun.midp.main.MIDletProxy;
 import javax.microedition.lcdui.Command;
+import java.util.Vector;
 
 class AMSMidletCustomItem extends AMSCustomItem {
 
@@ -70,6 +71,8 @@ class AMSMidletCustomItem extends AMSCustomItem {
   RunningMIDletSuiteInfo msi; // = null
   /** The parent folder */
   AMSFolderCustomItem parent;
+
+  static iconLoadingThread iconloadth = null;
   
 	/**
 	 * The icon to be used to draw this midlet representation.
@@ -180,8 +183,15 @@ class AMSMidletCustomItem extends AMSCustomItem {
 			    msi.iconName = info.iconName;		
 			} catch (Exception e) {
 			}
-		       msi.loadIcon(MIDletSuiteStorage.getMIDletSuiteStorage());
-		       icon = msi.icon;
+
+			if (iconloadth == null) {
+				iconloadth = new iconLoadingThread();
+				Thread th = new Thread(iconloadth);
+				th.setPriority(Thread.MIN_PRIORITY);
+				th.start();
+			}
+
+			iconloadth.addItem(this);
 		}
 		
 		if (icon != null) {
@@ -244,5 +254,43 @@ class AMSMidletCustomItem extends AMSCustomItem {
 	void select() {
 		ensureVisible();
 		owner.display.setCurrentItem(this); }
+
+	private class iconLoadingThread implements Runnable {
+		Vector icons;
+
+		iconLoadingThread() {
+			icons = new Vector(50);
+		}
+		
+		public void addItem(AMSMidletCustomItem item) {
+			if (!icons.contains(item)) {
+				icons.addElement(item);
+				synchronized (this) {				
+					notifyAll();
+				}
+			}
+		}
+
+		public void run() {
+
+		    do {
+        		while(!icons.isEmpty()) {
+              		AMSMidletCustomItem info = (AMSMidletCustomItem)icons.firstElement();
+              		icons.removeElementAt(0);
+              		info.msi.loadIcon(MIDletSuiteStorage.getMIDletSuiteStorage());
+                     	info.icon = info.msi.icon;
+                     	info.invalidate();
+                     	try {
+                     	Thread.sleep(50);
+                     	}catch(InterruptedException ie) {}
+              	}
+        		try {
+               	  synchronized (this) {        			
+              		wait();
+               	  }
+              	} catch (InterruptedException e) {}
+		    } while(true);
+              }
+	}
 		
 }
