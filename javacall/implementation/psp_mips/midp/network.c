@@ -505,13 +505,19 @@ javacall_result javacall_network_gethostbyname_start(char *hostname,
 
     struct in_addr addr;
     (void)pContext;
+    static int selected = 0;
     int connected = isNetConnected();
 
     if (!connected) {
+        if (!selected) {
         	connected = netDialog(0);
-        	if (!connected) {
+        	if (!connected) {        		
+        		selected = 1;
         		return JAVACALL_FAIL;
         	}
+        } else {
+        	return JAVACALL_FAIL;
+        }
     } else {
        //netDialog(1);
     }
