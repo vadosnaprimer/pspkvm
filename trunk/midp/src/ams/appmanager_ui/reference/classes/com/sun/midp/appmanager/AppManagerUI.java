@@ -706,7 +706,7 @@ class AppManagerUI extends Form
 				return; }
 		
 			if (c == AMSMidletCustomItem_Installer.launchInstallCmd) {
-				setLastInstalledMIDlet(MIDletSuite.UNUSED_SUITE_ID);
+				//setLastInstalledMIDlet(MIDletSuite.UNUSED_SUITE_ID);
 				manager.installSuite();
 				return; }
 			if (c == launchCaManagerCmd) {
@@ -859,7 +859,10 @@ class AppManagerUI extends Form
           AMSMidletCustomItem mci = getLastInstalledMidletItem();
           if (mci != null) {
               askUserIfLaunchMidlet();
-              return; } }
+              return; } 
+          } else {
+             	setLastInstalledMIDlet(MIDletSuite.UNUSED_SUITE_ID);
+          }
 	          
         if (CA_MANAGER.equals(midletClassName)) {
             updateContent(true);
