@@ -236,4 +236,7 @@ public class CommandLineInstaller extends MIDlet implements InstallListener,
     public boolean confirmAuthPath(InstallState state) {
         return true;
     }
+
+    public void updateDeviceType(InstallState state) {          
+    }
 }
