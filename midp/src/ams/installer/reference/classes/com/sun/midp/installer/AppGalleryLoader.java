@@ -12,7 +12,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
  abstract class AppGalleryLoader implements Runnable {
-    	//private final String url = "http://pspkvm.org/appgal/jarlist.php";
     	private String url;
     	private DefaultHandler parser;
 
@@ -22,30 +21,35 @@ import org.xml.sax.helpers.DefaultHandler;
        }
 
        protected abstract void onParserDone();
+
+       protected abstract void onParserException(Exception ex);
        
     	public void run() {
+    		HttpConnection conn = null;
+    		InputStream in = null;
           try {
-          	System.out.println("loader.run...");
-    		HttpConnection conn = (HttpConnection)Connector.open(url);
-    		InputStream in = conn.openInputStream();
+          	//com.sun.cldchi.jvm.JVM.setLogChannel(com.sun.cldchi.jvm.JVM.VM_LOGGING_CHANNEL_CONSOLE);
+          	System.out.println("Connecting to "+url);
+    		conn = (HttpConnection)Connector.open(url);
+    		in = conn.openInputStream();
     		
     		SAXParserFactory factory = SAXParserFactory.newInstance();
-    		//FirstPageHandler pagehandler = new FirstPageHandler();
-    			SAXParser saxParser = factory.newSAXParser();
-    			saxParser.parse(in,parser);
-    		/*
-    		int i = pagehandler.getJarEntryNum();
-    		while (i-- != 0) {
-    			JarEntry e = pagehandler.getJarEntry(i);
-    			nextScreen.appendJarList(e);
-    	       }*/
+    		SAXParser saxParser = factory.newSAXParser();
+    		saxParser.parse(in,parser);
     	       onParserDone();
     	    } catch (IOException ioe) {
-    	       ioe.printStackTrace();
+    	       onParserException(ioe);
     	    } catch (SAXException se) {
-    		se.printStackTrace();
+    		onParserException(se);
     	    } catch (ParserConfigurationException pe) {
-    	       pe.printStackTrace();
+    	       onParserException(pe);
+    	    } finally {
+    	       //com.sun.cldchi.jvm.JVM.setLogChannel(com.sun.cldchi.jvm.JVM.VM_LOGGING_CHANNEL_NONE);
+    	       try {
+    	         if (in != null) in.close();
+    	         if (conn != null) conn.close();
+    	       } catch (IOException e) {
+    	       }
     	    }
     		
     	    //display.setCurrent(nextScreen);

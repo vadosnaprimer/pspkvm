@@ -11,6 +11,10 @@ import javax.microedition.io.ConnectionNotFoundException;
 
 public final class AppGallery extends MIDlet {
 
+    private final static String AppGalleryURL = "http://pspkvm.org/appgal/";
+    private final static String LocaleString = com.sun.midp.main.Configuration.getProperty("microedition.locale");
+    private final static String LOCALE = "?locale=" + LocaleString;
+
     private AppGalleryJarList chooseApp = new AppGalleryJarList("Please select install location", List.IMPLICIT);
     private Display display;
     private SplashScreen splashScreen;
@@ -69,7 +73,7 @@ public final class AppGallery extends MIDlet {
 
 
     void showFirstPage() {
-      String url = "http://pspkvm.org/appgal/appgal.php";
+      String url = AppGalleryURL+"appgal.php"+LOCALE;
 
       String attr[] = {"text", "action"};
       final FirstPageHandler handler = new FirstPageHandler("entry", attr) {
@@ -82,17 +86,43 @@ public final class AppGallery extends MIDlet {
       };
          new Thread(new AppGalleryLoader(url, handler) {
 
+         					private boolean selected = false;
+         	
+                                          protected void onParserException(Exception ex) {
+                                          	final Form form = new Form("Error");
+
+                                          	ex.printStackTrace();
+                                          	System.out.println(ex);
+                                          	
+                                          	form.addCommand(backCmd);
+                                          	form.setCommandListener(new CommandListener() {
+                                          			public void commandAction(Command c, Displayable d) {
+										if (c == backCmd) {
+											AppGallery.this.notifyDestroyed();
+										}
+                                          			}
+                                          		});
+
+							form.append(new StringItem(Resource.getString(ResourceConstants.EXCEPTION), ""));
+                                          	form.append(new StringItem("", ex.getMessage()));
+
+                                          	display.setCurrent(form);
+                                          };
+                                          
          	                            protected void onParserDone() {
          	                            	final List list = new List("Welcome", List.IMPLICIT);
-         	                            	final Command backCmd;
-	
-							backCmd = new Command("Back", Command.BACK, 0);
 							list.addCommand(backCmd);
+							Command selectCmd = new Command(Resource.getString(ResourceConstants.OPEN), 
+								                                    Command.OK, 0);
+							list.addCommand(selectCmd);
 							list.setCommandListener(new CommandListener() {
 									public void commandAction(Command c, Displayable d) {
 										int type = c.getCommandType();
 											
-										if (c == List.SELECT_COMMAND) {
+										if (selected == false && 
+											(type == Command.OK || c == List.SELECT_COMMAND)) {
+											
+											selected = true;
 											int sel = list.getSelectedIndex();											
 											String action = (String)((Vector)handler.getElement(sel)).elementAt(1);
 
@@ -102,7 +132,7 @@ public final class AppGallery extends MIDlet {
 												showJarList(true);
 											} else if ("ShowNews".equals(action)) {
 											}
-										} else if (c == backCmd) {
+										} else if (type == Command.BACK) {
 											AppGallery.this.notifyDestroyed();
 										}
 									}
@@ -120,7 +150,7 @@ public final class AppGallery extends MIDlet {
 
     private void showInformation(final JarEntry entry) {
       
-      String url = "http://pspkvm.org/appgal/showinfo.php?id="+entry.getID();
+      String url = AppGalleryURL+"showinfo.php?id="+entry.getID();
 
       System.out.println("Get information:"+url);
       
@@ -131,14 +161,20 @@ public final class AppGallery extends MIDlet {
          	}
       };
          new Thread(new AppGalleryLoader(url, handler) {
+         					protected void onParserException(Exception ex) {
+         						ex.printStackTrace();
+         						Alert errAlert = new Alert("Error", "Error when getting application information", null, AlertType.ERROR);
+         						errAlert.setTimeout(3000);
+         						errAlert.addCommand(Alert.DISMISS_COMMAND);
+         						display.setCurrent(errAlert);
+         					}
 
          	                            protected void onParserDone() {
          	                            	Form form = new Form("Information");
-         	                            	Command backCmd;
 							Command installCmd;
-	
-							backCmd = new Command("Back", Command.BACK, 1);
-							installCmd = new Command("Install", Command.OK, 0);
+							
+							installCmd = new Command(Resource.getString(ResourceConstants.INSTALL), 
+								                                    Command.OK, 0);
 							form.addCommand(backCmd);
 							form.addCommand(installCmd);
 							form.setCommandListener(new CommandListener() {
@@ -171,8 +207,8 @@ public final class AppGallery extends MIDlet {
     }
 
     private void showJarList(boolean featured) {
-    	  final String SHOWJAR_URL = "http://pspkvm.org/appgal/jarlist.php";
-    	  final String SHOWFEATURED_URL = "http://pspkvm.org/appgal/jarlist.php?featured=1";
+    	  final String SHOWJAR_URL = AppGalleryURL+"jarlist.php";
+    	  final String SHOWFEATURED_URL = AppGalleryURL+"jarlist.php?featured=1";
     	  
          String attr[] = {"id", "name", "title", "smalldesc", "filesize"};
 
@@ -193,6 +229,13 @@ public final class AppGallery extends MIDlet {
          else url = SHOWJAR_URL;
          
          new Thread(new AppGalleryLoader(url, handler) {
+         					protected void onParserException(Exception ex) {
+         						ex.printStackTrace();
+         						Alert errAlert = new Alert("Error", "Error when getting application list", null, AlertType.ERROR);
+         						errAlert.setTimeout(3000);
+         						errAlert.addCommand(Alert.DISMISS_COMMAND);
+         						display.setCurrent(errAlert);
+         					} 
 
          	                            protected void onParserDone() {
          	                            	int i = handler.getElementNum();
@@ -209,7 +252,7 @@ public final class AppGallery extends MIDlet {
 
     private void downloadJar(JarEntry entry) {
       try {
-      	 String url = "http://pspkvm.org/appgal/test.php?name="+entry.getName();
+      	 String url = AppGalleryURL+"download.php?name="+entry.getName();
 
       	 System.out.println("platformRequest to:"+url);
         if (platformRequest(url)) {
@@ -218,6 +261,10 @@ public final class AppGallery extends MIDlet {
         }
       } catch (ConnectionNotFoundException e) {
         e.printStackTrace();
+        Alert errAlert = new Alert("Error", e.toString(), null, AlertType.ERROR);
+        errAlert.setTimeout(3000);
+        errAlert.addCommand(Alert.DISMISS_COMMAND);
+        display.setCurrent(errAlert);
       }
     }
 
@@ -278,11 +325,6 @@ final class SplashScreen extends Canvas {
         g.setColor(255, 255, 0);
         g.fillRect(0, 0, getWidth(), getHeight());
         System.out.println("paint");
-        g.setColor(0,0,0);
-        System.out.println("draw string");
-        
-        g.drawString("Loading...", 0, 0, Graphics.LEFT | Graphics.TOP);
-        System.out.println("Loading from jarlist");
 
         if (splashScreen == null) {
             splashScreen = 
@@ -292,6 +334,10 @@ final class SplashScreen extends Canvas {
         if (splashScreen != null) {
             g.drawImage(splashScreen, 0, 0, Graphics.LEFT | Graphics.TOP);
         }
+        
+        g.setColor(255,255,255);
+        g.drawString("Loading...", 200, 25, Graphics.LEFT | Graphics.TOP);
+        System.out.println("Loading from server");
     }
 
     /**
