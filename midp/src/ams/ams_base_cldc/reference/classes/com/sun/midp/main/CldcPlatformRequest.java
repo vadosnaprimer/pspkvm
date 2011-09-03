@@ -354,13 +354,22 @@ class CldcPlatformRequest implements PlatformRequest {
                 httpConnection.setRequestProperty("User-Agent",
                 "Profile/" + profile + " Configuration/" + configuration);
             }
-            httpConnection.setRequestProperty("Accept-Charset",
-                                              "UTF-8, ISO-8859-1");
 
+            /**
+             * M@x: Do not set Accept-Charset for PSPKVM
+             *
+             **/
+            //httpConnection.setRequestProperty("Accept-Charset",
+            //                                  "UTF-8, ISO-8859-1");
+
+            /**
+             * M@x: Do not set Accept-Language for PSPKVM
+             *
+             **/             
             /* locale can be null */
-            locale = System.getProperty("microedition.locale");
-            if (locale != null) {
-                httpConnection.setRequestProperty("Accept-Language", locale);
-            }
+            //locale = System.getProperty("microedition.locale");
+            //if (locale != null) {
+            //    httpConnection.setRequestProperty("Accept-Language", locale);
+            //}
     }
 }
