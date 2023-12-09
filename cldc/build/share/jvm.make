@@ -49,7 +49,8 @@ NATIVES_TABLE        = $(GEN_DIR)/NativesTable.cpp
 BUILDTOOLS_DIR       = $(BuildSpace)/$(BUILD_DIR_NAME)/tools
 BUILDTOOL_JAR        = $(BUILDTOOLS_DIR)/buildtool.jar
 ifeq ($(USE_VS2005), true)
-VC_MANIFEST_EMBED_EXE = mt.exe -nologo -manifest $@.manifest "-outputresource:$@"
+VC_MANIFEST_EMBED_EXE = true
+#VC_MANIFEST_EMBED_EXE = mt.exe -nologo -manifest $@.manifest "-outputresource:$@"
 else
 VC_MANIFEST_EMBED_EXE = true
 endif
@@ -847,7 +848,7 @@ ifeq ($(USE_VS2005), true)
 CPP_DEF_FLAGS          += -D_CRT_SECURE_NO_DEPRECATE
 endif
 
-CPP_DEF_FLAGS          += -DWIN32 -D_WINDOWS
+CPP_DEF_FLAGS          += -DWIN32 -D_WINDOWS /Zc:preprocessor
 CPP_DEF_FLAGS          += $(CPP_DEF_FLAGS_$(BUILD))
 CPP_DEF_FLAGS          += /W3 /nologo  \
                           $(SAVE_TEMPS_CFLAGS) \
@@ -974,7 +975,7 @@ else
 $(LOOP_GENERATOR): $(BUILD_PCH) $(Obj_Files) \
 		   InterpreterSkeleton.obj OopMapsSkeleton.obj
 	$(A)$(LINK) $(PCSL_LIBS) $(LINK_FLAGS) /out:$@ $(Obj_Files) \
-		   InterpreterSkeleton.obj OopMapsSkeleton.obj
+		   InterpreterSkeleton.obj OopMapsSkeleton.obj $(BUILD_PCH)
 	$(A)$(VC_MANIFEST_EMBED_EXE)
 	$(A)echo generated `pwd`/$@
 endif
@@ -999,30 +1000,30 @@ endif
 $(ROM_GENERATOR): $(CLDC_ZIP) $(Obj_Files) OopMapsSkeleton.obj $(GP_TABLE_OBJ)
 	$(A)echo "linking ROM generator: $(ROM_GENERATOR)"
 	$(A)$(LINK) $(PCSL_LIBS) $(LINK_FLAGS) /out:$@ \
-		$(Obj_Files) OopMapsSkeleton.obj $(GP_TABLE_OBJ)
+		$(Obj_Files) OopMapsSkeleton.obj $(GP_TABLE_OBJ) $(BUILD_PCH)
 	$(A)$(ROM_GENERATOR) +GenerateOopMaps
 	$(A)$(MAKE) OopMaps.obj
 	$(A)echo "re-linking ROM generator: $(ROM_GENERATOR)"
 	$(A)$(LINK) $(PCSL_LIBS) $(LINK_FLAGS) /out:$@ $(Obj_Files) \
-                OopMaps.obj \
+                OopMaps.obj $(BUILD_PCH)\
                 $(GP_TABLE_OBJ)
 	$(A)echo generated `pwd`/$@
 else
 $(ROM_GENERATOR): $(BUILD_PCH) $(Obj_Files) InterpreterSkeleton.obj \
                                             OopMapsSkeleton.obj
 	$(A)$(LINK) $(PCSL_LIBS) $(LINK_FLAGS) /out:$@ $(Obj_Files) \
-		InterpreterSkeleton.obj OopMapsSkeleton.obj
+		InterpreterSkeleton.obj OopMapsSkeleton.obj $(BUILD_PCH)
 	$(A)$(ROM_GENERATOR) $(LOOP_GEN_ARG)
 	$(A)$(ROM_GENERATOR) +GenerateOopMaps
 	$(A)$(MAKE) Interpreter_$(arch).obj
 	$(A)$(MAKE) OopMaps.obj
 	$(A)$(LINK) $(PCSL_LIBS) $(LINK_FLAGS) /out:$@ \
-		$(Obj_Files) Interpreter_$(arch).obj OopMaps.obj
+		$(Obj_Files) Interpreter_$(arch).obj OopMaps.obj $(BUILD_PCH)
 	$(A)$(VC_MANIFEST_EMBED_EXE)
 	$(A)echo generated `pwd`/$@
 
 endif
-endif
+endif # IsRomGen
 
 MAKE_EXPORT_LINK_OUT_SWITCH1     =
 MAKE_EXPORT_LINK_OUT_SWITCH2     = /out:
@@ -1038,7 +1039,7 @@ $(DIST_LIB_DIR)/$(JVM_LOG_NAME)::
 #     - LIBX_OBJS: the ones that are exported privately in $(JVMX_LIB)
 #     - LIBTEST_OBJS: the ones that are exported privately in $(JVMTEST_LIB)
 #     - EXE_OBJS:  the ones that are used only by $(JVM_EXE)
-LIB_OBJS := $(Obj_Files) OopMaps.obj
+LIB_OBJS := $(Obj_Files) OopMaps.obj $(BUILD_PCH)
 LIB_OBJS := $(subst BSDSocket.obj,,$(LIB_OBJS))
 LIBX_OBJS +=        BSDSocket.obj
 LIB_OBJS := $(subst ReflectNatives.obj,,$(LIB_OBJS))
