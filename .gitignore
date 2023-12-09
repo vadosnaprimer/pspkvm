@@ -1,0 +1,14 @@
+javacall/configuration/phoneMEFeature/*/output
+pcsl/output
+cldc/build/win32_i386_ide
+cldc/build/*/dist
+cldc/build/*/loopgen
+cldc/build/*/romgen
+cldc/build/*/target
+cldc/build/*/tools
+cldc/build/classes
+cldc/build/tmpclasses
+cldc/build/classes.zip
+midp/build/*/output
+tools/output
+*.pdb
